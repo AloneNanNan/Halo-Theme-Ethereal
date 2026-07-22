@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://halo.run">
-    <img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/master/theme.yaml&color=8B5CF6&logo=halo" alt="Halo"/>
+    <img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/main/theme.yaml&color=8B5CF6&logo=halo" alt="Halo"/>
   </a>
   <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
     <img src="https://img.shields.io/github/v/release/AloneNanNan/halo-theme-ethereal?color=8B5CF6&label=Release" alt="Release"/>
