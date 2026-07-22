@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 templates/
 _ethereal
+
+# CodeBuddy IDE guide file
+AGENTS.md
