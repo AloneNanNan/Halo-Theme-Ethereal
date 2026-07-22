@@ -1,0 +1,61 @@
+<div
+  th:if="${theme.config?.base?.banner?.enable != false && theme.config?.style?.styleSwitches?.banner_wave != false}"
+  id="wave-container"
+  class="pointer-events-none absolute z-20 block left-0 right-0 h-32 sm:h-28 md:h-32 lg:h-36 overflow-hidden"
+>
+  <!-- 第1层：纯色背景波浪 -->
+  <svg
+    id="wave-svg-1"
+    viewBox="0 0 1440 200"
+    preserveAspectRatio="none"
+    class="absolute bottom-0 left-0 h-full w-full"
+  >
+    <path
+      d="M0,120 Q360,160 720,120 T1440,120 T2160,120 T2880,120 T3600,120 T4320,120 L4320,200 L0,200 Z"
+      fill="var(--page-bg)"></path>
+  </svg>
+  <!-- 第2层：半透明波浪 -->
+  <svg
+    id="wave-svg-2"
+    viewBox="0 0 1440 200"
+    preserveAspectRatio="none"
+    class="absolute bottom-0 left-0 h-full w-full"
+    style="opacity:0.75"
+  >
+    <defs>
+      <linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--page-bg)" stop-opacity="0.15"
+        ></stop>
+        <stop offset="100%" stop-color="var(--page-bg)" stop-opacity="0.75"
+        ></stop>
+      </linearGradient>
+    </defs>
+    <path
+      d="M0,80 Q240,120 480,80 T960,80 T1440,80 T1920,80 T2400,80 T2880,80 T3360,80 T3840,80 T4320,80 L4320,200 L0,200 Z"
+      fill="url(#wg2)"></path>
+  </svg>
+  <!-- 第3层：半透明波浪 -->
+  <svg
+    id="wave-svg-3"
+    viewBox="0 0 1440 200"
+    preserveAspectRatio="none"
+    class="absolute bottom-0 left-0 h-full w-full"
+    style="opacity:0.6"
+  >
+    <defs>
+      <linearGradient id="wg3" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--page-bg)" stop-opacity="0.12"
+        ></stop>
+        <stop offset="100%" stop-color="var(--page-bg)" stop-opacity="0.65"
+        ></stop>
+      </linearGradient>
+    </defs>
+    <path
+      d="M0,60 Q180,95 360,60 T720,60 T1080,60 T1440,60 T1800,60 T2160,60 T2520,60 T2880,60 T3240,60 T3600,60 T3960,60 T4320,60 L4320,200 L0,200 Z"
+      fill="url(#wg3)"></path>
+  </svg>
+</div>
+
+<script
+  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wave.js`}
+  defer></script>

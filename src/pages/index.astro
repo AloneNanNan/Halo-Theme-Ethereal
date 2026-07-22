@@ -1,0 +1,15 @@
+---
+import PostList from "../components/PostList.astro";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout
+  title="${site.title}"
+  isHomePage={true}
+  description="${theme.config?.sidebar?.profile?.bio}"
+>
+  <Fragment slot="head">
+    <title th:text="${site.title}"></title>
+  </Fragment>
+  <PostList />
+</MainGridLayout>

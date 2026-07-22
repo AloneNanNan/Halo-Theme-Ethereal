@@ -1,0 +1,128 @@
+<div
+  id="nav-menu-panel"
+  th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+  class="float-panel float-panel-closed fixed right-4 px-2 py-2 w-40"
+>
+  <div class="contents" th:if="${menu != null}">
+    <div th:each="menuItem, itemStat : ${menu.menuItems}">
+      <div class="flex items-center">
+        <a
+          th:href="@{${menuItem.status.href}}"
+          th:target="${menuItem.spec.target?.value}"
+          class="group flex-1 flex items-center justify-between gap-3 rounded-lg py-2 pl-3 pr-1 transition hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)"
+        >
+          <span
+            class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
+            th:text="${menuItem.status.displayName}">Menu</span
+          >
+          <span
+            th:if="${menuItem.spec.target?.value == '_blank'}"
+            class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
+          ></span>
+        </a>
+        <!-- 子菜单展开按钮 -->
+        <button
+          th:if="${menuItem.children != null && !menuItem.children.isEmpty()}"
+          type="button"
+          th:onclick="|event.stopPropagation(); toggleSubmenu(this, 'submenu-' + ${itemStat.index});|"
+          th:aria-label="${menuItem.status.displayName}"
+          aria-expanded="false"
+          class="px-2 py-2 submenu-toggle flex-shrink-0"
+        >
+          <span
+            class="icon-[material-symbols--chevron-right-rounded] text-[1.3rem] text-black/20 transition-transform duration-200 dark:text-white/20 inline-block"
+          ></span>
+        </button>
+      </div>
+      <!-- 子菜单内容 -->
+      <div
+        th:if="${menuItem.children != null && !menuItem.children.isEmpty()}"
+        th:id="'submenu-' + ${itemStat.index}"
+        class="hidden pl-4"
+      >
+        <a
+          th:each="childItem : ${menuItem.children}"
+          th:href="@{${childItem.status.href}}"
+          th:target="${childItem.spec.target?.value}"
+          class="group flex items-center justify-between gap-3 rounded-lg py-2 pl-3 pr-1 transition hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)"
+        >
+          <span
+            class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
+            th:text="${childItem.status.displayName}">子菜单</span
+          >
+          <span
+            th:if="${childItem.spec.target?.value == '_blank'}"
+            class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
+          ></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    // 切换子菜单显示/隐藏（手风琴：同时只展开一个）
+    window.toggleSubmenu = function (buttonEl, submenuId) {
+      var submenu = document.getElementById(submenuId);
+      if (!submenu) return;
+      var arrow = buttonEl.querySelector("span");
+      var isExpanded = !submenu.classList.contains("hidden");
+
+      // 收起其他已展开的子菜单
+      var panel = document.getElementById("nav-menu-panel");
+      if (panel) {
+        var openSubmenus = panel.querySelectorAll(
+          '[id^="submenu-"]:not(.hidden)',
+        );
+        openSubmenus.forEach(function (openSm) {
+          if (openSm.id !== submenuId) {
+            openSm.classList.add("hidden");
+            var flexDiv = openSm.previousElementSibling;
+            if (flexDiv) {
+              var toggleBtn = flexDiv.querySelector(".submenu-toggle");
+              if (toggleBtn) {
+                var btnArrow = toggleBtn.querySelector("span");
+                if (btnArrow) btnArrow.classList.remove("rotate-90");
+                toggleBtn.setAttribute("aria-expanded", "false");
+              }
+            }
+          }
+        });
+      }
+
+      // 切换当前子菜单
+      submenu.classList.toggle("hidden");
+      if (arrow) {
+        arrow.classList.toggle("rotate-90");
+      }
+      buttonEl.setAttribute("aria-expanded", String(!isExpanded));
+    };
+
+    // 初始化菜单面板
+    function initNavMenuPanel() {
+      var panel = document.getElementById("nav-menu-panel");
+      if (!panel) return;
+
+      // 为所有菜单链接添加点击事件，点击后关闭面板
+      var links = panel.querySelectorAll("a");
+      links.forEach(function (link) {
+        link.addEventListener("click", function () {
+          panel.classList.add("float-panel-closed");
+        });
+      });
+    }
+
+    // 确保 DOM 加载完成后初始化
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initNavMenuPanel);
+    } else {
+      initNavMenuPanel();
+    }
+
+    // Swup 页面切换后重新初始化
+    document.addEventListener("swup:contentReplaced", function () {
+      setTimeout(initNavMenuPanel, 100);
+    });
+  })();
+</script>

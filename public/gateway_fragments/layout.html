@@ -1,0 +1,413 @@
+<!doctype html>
+<html
+  th:lang="${#locale.toLanguageTag}"
+  th:fragment="layout (title,head,body)"
+  th:data-hue="${theme.config?.style?.themeColor?.hue}"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${title}">Login</title>
+
+    <!-- 主题认证界面模式：自定义样式 -->
+    <th:block
+      th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
+    >
+      <style>
+        :root {
+          --hue: 250;
+          --primary: oklch(0.6 0.16 var(--hue));
+          --primary-light: oklch(0.7 0.12 var(--hue));
+          --bg-outer: oklch(0.85 0.06 var(--hue));
+          --card-bg: #fff;
+          --text-main: oklch(0.15 0.01 var(--hue) / 0.9);
+          --text-dim: oklch(0.15 0.01 var(--hue) / 0.55);
+          --text-faint: oklch(0.15 0.01 var(--hue) / 0.35);
+          --border: oklch(0.15 0.01 var(--hue) / 0.08);
+          --glass-bg: rgb(255 255 255 / 0.1);
+          --glass-border: rgb(255 255 255 / 0.5);
+          --p-hex: #806ac4;
+        }
+        html.dark {
+          --primary: oklch(0.7 0.16 var(--hue));
+          --primary-light: oklch(0.78 0.12 var(--hue));
+          --bg-outer: oklch(0.18 0.02 var(--hue));
+          --card-bg: oklch(0.23 0.015 var(--hue));
+          --text-main: oklch(0.95 0.01 var(--hue) / 0.9);
+          --text-dim: oklch(0.95 0.01 var(--hue) / 0.55);
+          --text-faint: oklch(0.95 0.01 var(--hue) / 0.3);
+          --border: oklch(0.95 0.01 var(--hue) / 0.1);
+          --glass-bg: rgb(255 255 255 / 0.05);
+          --glass-border: rgb(255 255 255 / 0.25);
+          --p-hex: #a78bfa;
+        }
+        @media (prefers-color-scheme: dark) {
+          html:not(.light) {
+            --primary: oklch(0.7 0.16 var(--hue));
+            --primary-light: oklch(0.78 0.12 var(--hue));
+            --bg-outer: oklch(0.18 0.02 var(--hue));
+            --card-bg: oklch(0.23 0.015 var(--hue));
+            --text-main: oklch(0.95 0.01 var(--hue) / 0.9);
+            --text-dim: oklch(0.95 0.01 var(--hue) / 0.55);
+            --text-faint: oklch(0.95 0.01 var(--hue) / 0.3);
+            --border: oklch(0.95 0.01 var(--hue) / 0.1);
+            --glass-bg: rgb(255 255 255 / 0.05);
+            --glass-border: rgb(255 255 255 / 0.25);
+            --p-hex: #a78bfa;
+          }
+        }
+
+        * {
+          padding: 0;
+          margin: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family:
+            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+            "Microsoft YaHei", sans-serif;
+          background: var(--bg-outer);
+          min-height: 100vh;
+          transition: background 0.3s;
+        }
+        .content {
+          width: 100vw;
+          height: 100vh;
+          position: relative;
+        }
+        .login-wrapper {
+          width: 70vw;
+          max-width: 1100px;
+          height: 80vh;
+          max-height: 650px;
+          background: var(--card-bg);
+          border-radius: 40px;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          box-shadow: 0 10px 60px oklch(0 0 0 / 0.08);
+          overflow: hidden;
+          transition: background 0.3s, box-shadow 0.3s;
+          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+          }
+        }
+        .left-img {
+          border-radius: 40px;
+          flex: 1;
+          background: linear-gradient(
+            135deg,
+            oklch(0.65 0.14 var(--hue)),
+            oklch(0.5 0.18 var(--hue)),
+            oklch(0.4 0.2 calc(var(--hue) + 30))
+          );
+          background-size: cover;
+          position: relative;
+          overflow: hidden;
+        }
+        @supports not (color: oklch(0.65 0.14 250)) {
+          .left-img {
+            background: linear-gradient(135deg, #9b8ae5, #6a55d4, #4e38a8);
+          }
+        }
+        .left-img::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            circle at 30% 40%,
+            oklch(0.7 0.12 var(--hue) / 0.3),
+            transparent 60%
+          );
+        }
+        .glass {
+          width: 70%;
+          padding: 22px;
+          color: #fff;
+          position: absolute;
+          top: 20%;
+          left: 50%;
+          transform: translate(-50%, 0);
+          background: var(--glass-bg);
+          box-shadow: 0 8px 32px 0 oklch(0.15 0.02 var(--hue) / 0.3);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-radius: 18px;
+          border: 1px solid var(--glass-border);
+        }
+        .glass .tag {
+          display: inline-block;
+          font-weight: 600;
+          font-size: 13px;
+          padding: 8px 14px;
+          border-radius: 15px;
+          background: var(--glass-bg);
+          box-shadow: 0 8px 32px 0 oklch(0.15 0.02 var(--hue) / 0.25);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid var(--glass-border);
+        }
+        .glass h1 {
+          margin: 15px 0 8px;
+          font-size: 1.5rem;
+          line-height: 1.35;
+        }
+        .glass p {
+          font-weight: 300;
+          font-size: 0.9rem;
+          opacity: 0.9;
+          line-height: 1.6;
+        }
+        .right-form {
+          flex: 1;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .form-inner {
+          width: 80%;
+          max-width: 340px;
+        }
+        .form-inner h1 {
+          font-size: 28px;
+          text-align: center;
+          color: var(--text-main);
+          margin-bottom: 24px;
+        }
+        .form-inner input[type="text"],
+        .form-inner input[type="password"],
+        .form-inner input[type="email"] {
+          width: 100%;
+          height: 50px;
+          border-radius: 12px;
+          border: 1px solid oklch(0.15 0.01 var(--hue) / 0.12);
+          padding: 0 16px;
+          font-size: 14px;
+          outline: none;
+          background: var(--card-bg);
+          color: var(--text-main);
+          transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+          margin: 8px 0;
+        }
+        .form-inner input:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.12);
+        }
+        html.dark .form-inner input[type="text"],
+        html.dark .form-inner input[type="password"],
+        html.dark .form-inner input[type="email"] {
+          border-color: oklch(0.95 0.01 var(--hue) / 0.12);
+        }
+        .form-inner input::placeholder {
+          color: var(--text-faint);
+        }
+        .form-inner label {
+          display: inline-block;
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--text-dim);
+          margin: 4px 0 2px;
+        }
+        .form-inner button[type="submit"],
+        .form-inner input[type="submit"] {
+          width: 100%;
+          height: 50px;
+          border: 0;
+          border-radius: 12px;
+          background: var(--primary);
+          color: #fff;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          margin: 12px 0;
+          transition: transform 0.12s, box-shadow 0.3s;
+          box-shadow: var(--primary) 0 8px 24px -6px;
+        }
+        .form-inner button[type="submit"]:hover,
+        .form-inner input[type="submit"]:hover {
+          box-shadow: var(--primary) 0 4px 16px -4px;
+        }
+        .form-inner button[type="submit"]:active,
+        .form-inner input[type="submit"]:active {
+          transform: scale(0.98);
+        }
+        .form-inner img,
+        .form-inner svg {
+          display: none !important;
+        }
+        .form-inner .alert-danger,
+        .form-inner [class*="error"] {
+          padding: 10px 14px;
+          border-radius: 10px;
+          font-size: 13px;
+          margin: 6px 0;
+          background: oklch(0.55 0.2 25 / 0.08);
+          border: 1px solid oklch(0.55 0.2 25 / 0.18);
+          color: oklch(0.5 0.22 25);
+        }
+        html.dark .form-inner .alert-danger,
+        html.dark .form-inner [class*="error"] {
+          background: oklch(0.55 0.2 25 / 0.14);
+          border-color: oklch(0.55 0.2 25 / 0.25);
+          color: oklch(0.8 0.14 25);
+        }
+        .form-inner .alert-success {
+          padding: 10px 14px;
+          border-radius: 10px;
+          font-size: 13px;
+          margin: 6px 0;
+          background: oklch(0.55 0.18 145 / 0.08);
+          border: 1px solid oklch(0.55 0.18 145 / 0.18);
+          color: oklch(0.48 0.18 145);
+        }
+        .form-inner input[type="checkbox"] {
+          accent-color: var(--p-hex);
+        }
+        .form-inner a {
+          color: var(--primary);
+          font-size: 13px;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .form-inner a:hover {
+          text-decoration: underline;
+        }
+        .auth-foot {
+          text-align: center;
+          margin-top: 18px;
+          padding-top: 12px;
+          border-top: 1px solid var(--border);
+        }
+        .auth-foot a {
+          color: var(--text-faint);
+          font-size: 0.85rem;
+          transition: color 0.2s;
+        }
+        .auth-foot a:hover {
+          color: var(--primary);
+        }
+        @media (max-width: 1024px) {
+          .login-wrapper {
+            width: 90vw;
+            height: auto;
+            min-height: 500px;
+            flex-direction: column;
+          }
+          .left-img {
+            display: none;
+          }
+          .right-form {
+            padding: 30px 20px;
+          }
+          .form-inner {
+            width: 100%;
+            max-width: 400px;
+          }
+        }
+        @media (max-width: 480px) {
+          .login-wrapper {
+            width: 94vw;
+            border-radius: 24px;
+          }
+          .form-inner h1 {
+            font-size: 22px;
+          }
+        }
+      </style>
+
+      <script>
+        (function () {
+          try {
+            var h = document.documentElement.getAttribute("data-hue") || "250";
+            var s = localStorage.getItem("color-scheme");
+            var tc = document.getElementById("theme-config");
+            var ds = "auto",
+              ac = true;
+            if (tc) {
+              try {
+                var c = JSON.parse(tc.textContent);
+                ds = c.defaultColorScheme || "auto";
+                ac = c.allowChangeColorScheme !== false;
+              } catch (e) {}
+            }
+            var sch = ac && s ? s : ds;
+            if (
+              sch === "dark" ||
+              (sch === "auto" &&
+                matchMedia("(prefers-color-scheme:dark)").matches)
+            )
+              document.documentElement.classList.add("dark");
+            if (sch === "light") document.documentElement.classList.add("light");
+            document.documentElement.style.setProperty("--hue", h);
+          } catch (e) {}
+        })();
+      </script>
+    </th:block>
+
+    <!-- Halo默认模式：加载 Halo 自带 CSS + JS -->
+    <th:block
+      th:if="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
+    >
+      <th:block th:replace="~{gateway_fragments/common::basicStaticResources}"></th:block>
+    </th:block>
+    <!-- 主题模式：只加载 JS，样式由下方 <style> 提供 -->
+    <th:block
+      th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
+    >
+      <th:block th:replace="~{gateway_fragments/common::basicScriptResources}"></th:block>
+    </th:block>
+
+    <th:block th:if="${head != null}"
+      ><th:block th:replace="${head}"
+    /></th:block>
+  </head>
+
+  <body>
+    <!-- 主题认证界面 -->
+    <th:block
+      th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
+    >
+      <div class="content">
+        <div class="login-wrapper">
+          <div
+            class="left-img"
+            th:style="${#strings.isEmpty(theme.config?.auth?.loginBgImage) ? '' : 'background:url(' + theme.config?.auth?.loginBgImage + ') center/cover no-repeat'}"
+          >
+            <div class="glass">
+              <div class="tag" th:text="${site.title}">Ethereal</div>
+              <h1>欢迎回来</h1>
+              <p>请登录你的账号</p>
+            </div>
+          </div>
+          <div class="right-form">
+            <div class="form-inner">
+              <h1>登录</h1>
+              <th:block th:replace="${body}" />
+              <div class="auth-foot">
+                <a th:href="@{/}">← 返回首页</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </th:block>
+
+    <!-- Halo 默认认证界面 -->
+    <th:block
+      th:if="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
+    >
+      <th:block th:replace="${body}" />
+    </th:block>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<div
+  class="mx-8 my-10 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 md:mx-32"
+>
+</div>
+<footer
+  class="mb-12 flex flex-col items-center justify-center rounded-2xl px-6 text-center text-sm text-50 transition"
+>
+  <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+    <span
+      >&copy; <span id="copyright-year">{currentYear}</span>
+      <span th:text="${site.title}">Ethereal</span>.
+      <span th:text="#{footer.rights}">All Rights Reserved.</span></span
+    >
+    <span class="whitespace-nowrap">
+      <span
+        th:if="${theme.config?.footer?.displayLinks?.enable_privacy != null ? theme.config?.footer?.displayLinks?.enable_privacy : false}"
+        th:remove="tag"
+        >/&nbsp;<a
+          class="link font-medium text-(--primary)"
+          th:href="@{${theme.config?.footer?.displayLinks?.privacy_url != null ? theme.config?.footer?.displayLinks?.privacy_url : '/privacy'}}"
+          >隐私政策</a
+        ></span
+      >
+      <span
+        th:if="${pluginFinder.available('PluginFeed') && (theme.config?.footer?.displayLinks?.enable_rss == null || theme.config?.footer?.displayLinks?.enable_rss)}"
+        th:remove="tag"
+        >&nbsp;/&nbsp;<a
+          class="link font-medium text-(--primary)"
+          target="_blank"
+          th:href="@{/rss.xml}">RSS</a
+        ></span
+      >
+      <span
+        th:if="${pluginFinder.available('PluginSitemap') && (theme.config?.footer?.displayLinks?.enable_sitemap == null || theme.config?.footer?.displayLinks?.enable_sitemap)}"
+        th:remove="tag"
+        >&nbsp;/&nbsp;<a
+          class="link font-medium text-(--primary)"
+          target="_blank"
+          th:href="@{/sitemap.xml}">Sitemap</a
+        ></span
+      >
+    </span>
+  </div>
+  <!-- 自定义页脚链接 -->
+  <div
+    th:if="${theme.config?.footer?.customLinks != null && not #lists.isEmpty(theme.config?.footer?.customLinks?.items)}"
+    class="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1"
+  >
+    <span
+      th:each="link, stat : ${theme.config?.footer?.customLinks?.items}"
+      th:remove="tag"
+    >
+      <span
+        th:if="${not #strings.isEmpty(link.html)}"
+        th:remove="tag"
+        th:utext="${link.html}"></span>
+      <span th:unless="${not #strings.isEmpty(link.html)}" th:remove="tag">
+        <span th:if="${not stat.first}"> / </span>
+        <a
+          th:if="${not #strings.isEmpty(link.url)}"
+          class="link font-medium text-(--primary)"
+          target="_blank"
+          th:href="${link.url}"
+          th:text="${link.name}">Link</a
+        >
+        <span
+          th:unless="${not #strings.isEmpty(link.url)}"
+          class="link font-medium text-(--primary)"
+          th:text="${link.name}">Link</span
+        >
+      </span>
+    </span>
+  </div>
+  <div
+    class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+    th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text) or not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
+  >
+    <a
+      th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text)}"
+      class="inline-flex items-center gap-1 link font-medium text-(--primary)"
+      th:href="${theme.config?.footer?.beian?.icp_link}"
+      target="_blank"
+    >
+      <span class="icon-[material-symbols--verified-outline-rounded] h-4 w-4"
+      ></span>
+      <span class="text-sm" th:text="${theme.config?.footer?.beian?.icp_text}"
+      ></span>
+    </a>
+    <a
+      th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
+      class="inline-flex items-center gap-1 link font-medium text-(--primary)"
+      th:href="${theme.config?.footer?.beian?.gongan_link}"
+      target="_blank"
+    >
+      <img
+        src="/themes/Ethereal/assets/images/ghs.png"
+        alt="公安备案图标"
+        loading="lazy"
+        decoding="async"
+        width="16"
+        height="16"
+        class="inline-block h-4 w-4"
+      />
+      <span
+        class="text-sm"
+        th:text="${theme.config?.footer?.beian?.gongan_text}"></span>
+    </a>
+  </div>
+  <div class="mt-2">
+    <span th:text="#{footer.poweredBy}">Powered by</span>
+    <a
+      class="link font-medium text-(--primary)"
+      target="_blank"
+      href="https://www.halo.run">Halo</a
+    >
+    &
+    <a
+      class="link font-medium text-(--primary)"
+      target="_blank"
+      href="https://github.com/AloneNanNan/halo-theme-ethereal">Ethereal</a
+    >
+  </div>
+</footer>

@@ -1,0 +1,322 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<div class="floating-controls block">
+  <!-- 回顶按钮 - 排在前面，方便 sibling selector 联动 -->
+  <div
+    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_top}"
+    id="back-to-top-btn"
+    class="floating-btn to-top-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
+    onclick="backToTop()"
+  >
+    <button
+      th:aria-label="#{fragment.layout.toTop}"
+      aria-label="Back to Top"
+      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+    >
+      <Icon name="material-symbols:keyboard-arrow-up-rounded" class="mx-auto" />
+    </button>
+  </div>
+
+  <!-- 首页按钮 -->
+  <div
+    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_home}"
+    id="back-to-home-btn"
+    class="floating-btn home-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
+    onclick="backToHome()"
+  >
+    <button
+      aria-label="Back to Home"
+      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+    >
+      <Icon name="material-symbols:home-outline-rounded" class="mx-auto" />
+    </button>
+  </div>
+
+  <!-- 评论区按钮 - 仅文章页面显示 -->
+  <div
+    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_comment}"
+    id="back-to-comment-btn"
+    class="floating-btn comment-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
+    onclick="backToComment()"
+  >
+    <button
+      aria-label="Jump to Comments"
+      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+    >
+      <Icon name="mdi:comment-text-outline" class="mx-auto" />
+    </button>
+  </div>
+
+  <!-- 自定义按钮 - 显示在评论区按钮上方 -->
+  <div
+    class="custom-btns-wrapper"
+    th:if="${theme.config?.style?.floatingButtons != null && theme.config?.style?.floatingButtons?.customButtons != null}"
+  >
+    <div
+      th:each="btn : ${theme.config?.style?.floatingButtons?.customButtons}"
+      class="floating-btn custom-btn flex items-center rounded-2xl overflow-hidden pointer-events-none"
+    >
+      <a
+        th:href="${btn.url}"
+        th:aria-label="${btn.name}"
+        target="_blank"
+        rel="noopener"
+        class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl flex items-center justify-center pointer-events-auto"
+      >
+        <span
+          th:if="${btn.icon != null && btn.icon.value != null}"
+          th:utext="${btn.icon.value}"
+          class="custom-btn-icon"></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .floating-controls {
+    position: fixed;
+    bottom: 2rem;
+    right: 0.75rem;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .floating-btn {
+    position: absolute;
+    right: 0;
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .floating-btn:active {
+    transform: scale(0.9);
+  }
+
+  .floating-btn i {
+    font-size: 1.75rem;
+  }
+
+  /* 回顶按钮：默认隐藏在下方 */
+  .to-top-btn {
+    bottom: calc(-3.5rem - 0.75rem);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .to-top-btn:not(.hide) {
+    bottom: 0;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 首页按钮：默认占据底部 */
+  .home-btn {
+    bottom: 0;
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
+  }
+
+  .home-btn.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 评论区按钮：默认在首页按钮上方 */
+  .comment-btn {
+    bottom: calc(3.5rem + 0.75rem);
+    font-size: 1.8rem;
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
+  }
+
+  /* 当首页按钮不存在时，评论按钮占据其位置 */
+  .floating-controls:not(:has(.home-btn)) .comment-btn {
+    bottom: 0;
+  }
+
+  .comment-btn.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 回顶按钮出现 → 首页按钮上移一层 */
+  .to-top-btn:not(.hide) ~ .home-btn {
+    bottom: calc(3.5rem + 0.75rem);
+  }
+
+  /* 回顶按钮出现 → 评论区按钮上移两层 */
+  .to-top-btn:not(.hide) ~ .comment-btn {
+    bottom: calc(7rem + 1.5rem);
+  }
+
+  /* 当首页按钮不存在且回顶按钮出现 → 评论区按钮仅上移一层 */
+  .floating-controls:not(:has(.home-btn))
+    .to-top-btn:not(.hide)
+    ~ .comment-btn {
+    bottom: calc(3.5rem + 0.75rem);
+  }
+
+  /* 自定义按钮包装器：JS 动态计算 bottom，CSS 仅提供过渡 */
+  .custom-btns-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: calc(7rem + 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+    transition: bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* 自定义按钮：flex 布局内相对定位 */
+  .custom-btn {
+    position: relative;
+    right: auto;
+    bottom: auto;
+  }
+
+  /* 自定义按钮图标：约束 SVG 尺寸 */
+  .custom-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+  }
+  .custom-btn-icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  /* 全局模糊开关：按钮薄雾效果，与导航栏同款模糊值 */
+  body.navbar-blur-enabled .floating-btn .btn-card {
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  :root.dark body.navbar-blur-enabled .floating-btn .btn-card {
+    background-color: rgb(0 0 0 / 0.65) !important;
+  }
+</style>
+
+<script is:raw is:inline>
+  function __moveFloatingControls() {
+    var ctrl = document.querySelector(".floating-controls");
+    if (ctrl && ctrl.parentElement !== document.body) {
+      document.body.appendChild(ctrl);
+    }
+  }
+  __moveFloatingControls();
+  document.addEventListener("swup:contentReplaced", __moveFloatingControls);
+
+  function backToTop() {
+    window.scroll({ top: 0, behavior: "smooth" });
+  }
+
+  function backToHome() {
+    if (window.swup) {
+      window.swup.navigate("/");
+    } else {
+      window.location.href = "/";
+    }
+  }
+
+  function backToComment() {
+    var el = document.getElementById("comment");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // 非首页时显示首页按钮
+  (function () {
+    function updateHomeBtn() {
+      var btn = document.getElementById("back-to-home-btn");
+      if (!btn) return;
+      var path = window.location.pathname;
+      var normalized =
+        path
+          .replace(/\/+$/, "")
+          .replace(/\/index\.html$/, "")
+          .replace(/\/index$/, "") || "/";
+      btn.classList.toggle("hide", normalized === "/");
+    }
+    updateHomeBtn();
+    document.addEventListener("swup:contentReplaced", updateHomeBtn);
+  })();
+
+  // 有评论区时显示评论按钮
+  (function () {
+    function updateCommentBtn() {
+      var btn = document.getElementById("back-to-comment-btn");
+      if (!btn) return;
+      btn.classList.toggle("hide", !document.getElementById("comment"));
+    }
+    updateCommentBtn();
+    document.addEventListener("swup:contentReplaced", updateCommentBtn);
+  })();
+
+  // 自定义按钮位置：根据下方可见按钮数量自动计算
+  (function () {
+    var BTN_STEP = 4.25; // 按钮高度 3.5rem + 间距 0.75rem
+
+    function updateCustomBtnsPosition() {
+      var wrapper = document.querySelector(".custom-btns-wrapper");
+      if (!wrapper) return;
+
+      // 计数可见的内置按钮（从下到上：回顶 → 首页 → 评论）
+      // 直接用 classList 判断，不读取 computed style，避免 CSS 过渡中的中间值
+      var visibleCount = 0;
+      var builtins = [
+        document.getElementById("back-to-top-btn"),
+        document.getElementById("back-to-home-btn"),
+        document.getElementById("back-to-comment-btn"),
+      ];
+      builtins.forEach(function (btn) {
+        if (btn && !btn.classList.contains("hide")) visibleCount++;
+      });
+
+      // 自定义按钮 = 可见内置按钮数量 × 步长，全部隐藏时贴底
+      wrapper.style.bottom =
+        visibleCount === 0 ? "0" : visibleCount * BTN_STEP + "rem";
+    }
+
+    updateCustomBtnsPosition();
+
+    // 滚动时回顶按钮状态变化
+    var tick = false;
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (!tick) {
+          requestAnimationFrame(function () {
+            updateCustomBtnsPosition();
+            tick = false;
+          });
+          tick = true;
+        }
+      },
+      { passive: true },
+    );
+
+    // 页面切换后 DOM 更新
+    document.addEventListener("swup:contentReplaced", function () {
+      setTimeout(updateCustomBtnsPosition, 50);
+    });
+  })();
+</script>

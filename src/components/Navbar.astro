@@ -1,0 +1,163 @@
+---
+import LightDarkSwitch from "./LightDarkSwitch.svelte";
+import Search from "./Search.svelte";
+import DisplaySettings from "./widget/DisplaySettings.svelte";
+import NavMenuPanel from "./widget/NavMenuPanel.astro";
+
+const className = Astro.props.class;
+---
+
+<div id="navbar" class="z-50">
+  <!-- 顶部延伸层（始终 blur） -->
+  <div
+    class="absolute left-0 right-0 -top-8 h-8 bg-(--card-bg) transition"
+    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? 'navbar-blur' : ''"
+  >
+  </div>
+
+  <!-- 分离的模糊背景层：承载 backdrop-filter，避免 Backdrop Root 阻断子元素 -->
+  <div
+    class="absolute left-0 right-0 top-0 h-[4.5rem] transition"
+    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? 'navbar-blur rounded-(--radius-large) !rounded-t-none' : 'bg-(--card-bg) rounded-(--radius-large) !rounded-t-none'"
+    style="max-width: var(--page-width); margin: 0 auto;"
+  >
+  </div>
+
+  <!-- 内容层：无 backdrop-filter，z-index 高于模糊层 -->
+  <div
+    class:list={[
+      className,
+      "relative z-10 mx-auto flex h-[4.5rem] max-w-(--page-width) items-center justify-between px-4 rounded-(--radius-large) !rounded-t-none",
+    ]}
+    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? '!bg-transparent' : 'bg-(--card-bg)'"
+  >
+    <a
+      th:href="@{/}"
+      class="btn-plain scale-animation h-[3.25rem] rounded-lg px-5 font-bold active:scale-95"
+      th:aria-label="#{nav.home}"
+      aria-label="Home"
+    >
+      <div
+        class="site-title flex flex-row items-center text-md text-(--primary)"
+      >
+        <span class="icon-[tabler--smart-home] mb-1 mr-2 text-[1.75rem]"></span>
+        <span th:text="${site.title}">Ethereal</span>
+      </div>
+    </a>
+
+    <div
+      class="invisible md:visible flex md:w-auto w-0 overflow-hidden md:overflow-visible"
+      th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+    >
+      <div class="contents" th:if="${menu != null}">
+        <div
+          th:each="menuItem, itemStat : ${menu.menuItems}"
+          th:with="hasChildren = ${menuItem.children != null && !menuItem.children.isEmpty()}"
+          class="relative group"
+        >
+          <a
+            th:href="@{${menuItem.status.href}}"
+            th:target="${menuItem.spec.target?.value}"
+            th:attr="data-swup-ignore=${#strings.contains(menuItem.status.href, '/links') ? 'true' : ''}"
+            class="btn-plain scale-animation h-11 rounded-lg px-5 font-bold active:scale-95 flex items-center gap-1"
+          >
+            <div class="flex items-center">
+              <span th:text="${menuItem.status.displayName}">Menu</span>
+              <span
+                th:if="${hasChildren}"
+                class="icon-[material-symbols--expand-more-rounded] text-sm transition-transform duration-200 group-hover:rotate-180"
+              ></span>
+              <span
+                th:if="${menuItem.spec.target?.value == '_blank' && !hasChildren}"
+                class="icon-[tabler--external-link] ml-1 -translate-y-px text-[1.3rem] text-black/20 transition dark:text-white/20"
+              ></span>
+            </div>
+          </a>
+          <!-- PC 端子菜单下拉 -->
+          <div
+            th:if="${hasChildren}"
+            class="submenu-panel absolute left-0 top-full mt-5 w-44 rounded-(--radius-large) p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 z-50"
+            th:id="'pc-submenu-' + ${itemStat.index}"
+          >
+            <!-- 父页面概览链接（仅触控设备显示） -->
+            <a
+              th:href="@{${menuItem.status.href}}"
+              th:target="${menuItem.spec.target?.value}"
+              class="touch-only group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap"
+            >
+              <span
+                class="font-medium text-(--primary) truncate"
+                th:text="${menuItem.status.displayName}">概览</span
+              >
+              <span
+                class="text-xs text-black/40 dark:text-white/40 flex-shrink-0"
+                >概览</span
+              >
+            </a>
+            <div
+              class="touch-only my-1 border-t border-black/10 dark:border-white/10"
+            >
+            </div>
+            <a
+              th:each="childItem : ${menuItem.children}"
+              th:href="@{${childItem.status.href}}"
+              th:target="${childItem.spec.target?.value}"
+              class="group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap"
+            >
+              <span
+                class="font-medium text-black/75 dark:text-white/75 truncate"
+                th:text="${childItem.status.displayName}">子菜单</span
+              >
+              <span
+                th:if="${childItem.spec.target?.value == '_blank'}"
+                class="icon-[tabler--external-link] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
+              ></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center">
+      <Search client:only="svelte" />
+      <button
+        th:unless="${theme.config?.style?.themeColor?.fixed}"
+        th:aria-label="#{nav.displaySettings}"
+        aria-label="Display Settings"
+        class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90"
+        id="display-settings-switch"
+        type="button"
+        onclick="toggleNavbarPanel('display-setting')"
+      >
+        <span class="icon-[material-symbols--palette-outline] text-[1.25rem]"
+        ></span>
+      </button>
+      <span
+        th:if="${theme.config?.style?.colorScheme?.enable_change_color_scheme == null || theme.config?.style?.colorScheme?.enable_change_color_scheme}"
+        th:remove="tag"
+      >
+        <LightDarkSwitch client:only="svelte" />
+      </span>
+      <button
+        th:aria-label="#{nav.menu}"
+        th:name="#{nav.navMenu}"
+        aria-label="Menu"
+        name="Nav Menu"
+        class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90 md:!hidden"
+        id="nav-menu-switch"
+        type="button"
+        onclick="toggleNavbarPanel('nav-menu-panel')"
+      >
+        <span class="icon-[material-symbols--menu-rounded] text-[1.25rem]"
+        ></span>
+      </button>
+    </div>
+
+    <NavMenuPanel />
+    <DisplaySettings client:only="svelte" />
+  </div>
+</div>
+
+<script
+  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/navbar.js`}
+  defer></script>

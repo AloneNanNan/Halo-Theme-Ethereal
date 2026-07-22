@@ -1,0 +1,86 @@
+---
+import Categories from "./Categories.astro";
+import Hitokoto from "./Hitokoto.astro";
+import MusicPlayer from "./MusicPlayer.astro";
+import PopularPosts from "./PopularPosts.astro";
+import Profile from "./Profile.astro";
+import SiteStats from "./SiteStats.astro";
+import Tags from "./Tags.astro";
+import Weather from "./Weather.astro";
+
+interface Props {
+  class?: string;
+}
+
+const className = Astro.props.class;
+const thClassappend = Astro.props["th:classappend"] || "";
+---
+
+<aside
+  id="sidebar"
+  class:list={[className, "w-full"]}
+  th:classappend={thClassappend}
+>
+  <div
+    th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.display_position != 'right'}"
+    class="mb-4 flex w-full flex-col gap-4"
+  >
+    <Profile />
+  </div>
+  <div
+    th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.display_position == 'right'}"
+    class="mb-4 xl:!hidden flex w-full flex-col gap-4"
+  >
+    <Profile />
+  </div>
+  <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
+    <div
+      class="contents"
+      th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.widgets}"
+    >
+      <div class="contents" th:switch="${widget.value}">
+        <div class="contents" th:case="'categories'">
+          <Categories class="onload-animation" />
+        </div>
+        <div class="contents" th:case="'tag'">
+          <Tags class="onload-animation" />
+        </div>
+        <div class="contents" th:case="'music'">
+          <MusicPlayer
+            class="onload-animation"
+            th:style="|animation-delay: calc(var(--content-delay) + ${widgetStat.index * 50}ms)|"
+          />
+        </div>
+        <div class="contents" th:case="'hitokoto'">
+          <Hitokoto class="onload-animation" />
+        </div>
+        <div class="contents" th:case="'site-stats'">
+          <SiteStats class="onload-animation" />
+        </div>
+        <div class="contents" th:case="'weather'">
+          <Weather
+            class="onload-animation"
+            th:style="|animation-delay: calc(var(--content-delay) + ${widgetStat.index * 50}ms)|"
+          />
+        </div>
+        <div class="contents" th:case="'popular-posts'">
+          <PopularPosts class="onload-animation" />
+        </div>
+        <div
+          th:case="'html'"
+          class="card-base onload-animation p-4"
+          th:utext="${widget.html}"
+        >
+        </div>
+      </div>
+    </div>
+    <!-- 默认小组件（新安装主题未保存设置时显示） -->
+    <div
+      th:if="${theme.config?.sidebar?.widgetsConfig?.widgets == null}"
+      class="contents"
+    >
+      <div class="contents"><Categories class="onload-animation" /></div>
+      <div class="contents"><Tags class="onload-animation" /></div>
+    </div>
+  </div>
+</aside>

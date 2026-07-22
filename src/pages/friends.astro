@@ -1,0 +1,308 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout title="${singlePage.spec.title + ' - ' + site.title}">
+  <Fragment slot="head">
+    <title th:text="${singlePage.spec.title + ' - ' + site.title}"></title>
+  </Fragment>
+
+  <th:block
+    th:with="allItems = ${linkFeedFinder.list({limit: theme.config?.friends.fetchLimit})}"
+  >
+    <section class="card-base onload-animation mb-4 px-5 py-5 md:px-7 md:py-6">
+      <div
+        class="mb-5 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      >
+        <div>
+          <h1
+            class="text-3xl font-bold text-90"
+            th:text="${singlePage.spec.title}"
+          >
+            朋友圈
+          </h1>
+          <div class="mt-1 text-sm text-50">
+            <span th:text="#{page.friends.description}">关注博主的最新动态</span
+            >
+          </div>
+        </div>
+        <button
+          th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
+          type="button"
+          id="random-fish-btn"
+          class="random-fish-btn btn-regular h-11 w-fit rounded-lg px-4 text-sm font-bold active:scale-95"
+          title="随机钓鱼"
+        >
+          <span
+            class="icon-[material-symbols--phishing-outline-rounded] mr-1.5 text-base"
+          ></span>
+          <span>随机钓鱼</span>
+        </button>
+      </div>
+
+      <div
+        th:if="${not #lists.isEmpty(allItems.items)}"
+        id="friends-list"
+        class="friends-list grid gap-4 sm:grid-cols-2 onload-animation"
+      >
+        <article
+          th:each="item : ${allItems.items}"
+          class="friends-item btn-card btn-card-outline card-tilt group items-start! justify-start! min-h-24 rounded-xl p-4"
+        >
+          <div class="flex items-start gap-3">
+            <div class="relative shrink-0">
+              <img
+                th:if="${not #strings.isEmpty(item.authorLogo)}"
+                th:src="${item.authorLogo}"
+                th:alt="${item.author}"
+                class="h-10 w-10 rounded-xl bg-(--btn-regular-bg) object-cover transition group-hover:scale-105"
+              />
+              <div
+                th:unless="${not #strings.isEmpty(item.authorLogo)}"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
+              >
+                <span class="icon-[material-symbols--account-circle] text-2xl"
+                ></span>
+              </div>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <a
+                    href="#"
+                    class="friend-author block truncate text-sm font-bold text-(--primary) hover:underline"
+                    th:attr="data-site=${item.url}"
+                  >
+                    <span th:text="${item.author}"></span>
+                  </a>
+                  <time
+                    class="mt-0.5 block text-xs text-50"
+                    th:datetime="${item.publishedAt}"
+                    th:text="${item.publishedAt != null ? #dates.format(item.publishedAt, 'yyyy-MM-dd') : ''}"
+                  ></time>
+                </div>
+              </div>
+
+              <a
+                th:href="${item.url}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-2 block line-clamp-2 text-sm font-medium text-90 transition hover:text-(--primary) hover:underline"
+              >
+                <span th:text="${item.title}">Title</span>
+                <span
+                  class="icon-[fa6-solid--arrow-up-right-from-square] ml-0.5 inline-block text-xs text-30 align-middle"
+                ></span>
+              </a>
+
+              <div
+                th:if="${not #strings.isEmpty(item.summary)}"
+                class="mt-1.5 line-clamp-2 text-xs text-50"
+                th:text="${item.summary}"
+              >
+              </div>
+
+              <div class="mt-2 flex items-center gap-1 text-[0.65rem] text-30">
+                <span class="icon-[material-symbols--link-rounded] text-xs"
+                ></span>
+                <span th:text="#{page.friends.source}">来自朋友圈</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div
+        th:if="${#lists.isEmpty(allItems.items)}"
+        class="py-12 text-center text-50"
+      >
+        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
+        ></span>
+        <p class="mt-4" th:text="#{page.friends.empty}">暂无朋友圈动态</p>
+      </div>
+    </section>
+
+    <nav
+      id="friends-pagination"
+      class="mb-4 flex flex-row justify-center gap-3 onload-animation"
+      style="display:none"
+      th:attr="data-page-size=${theme.config?.friends.pageSize}"
+      th:aria-label="#{pagination.label}"
+    >
+    </nav>
+
+    <script is:raw is:inline>
+      // 链接管理插件原生仅支持游标分页（beforePublishedAt），无 offset/page 跳页。
+      // 当前采用客户端分页：一次性拉取全部数据（上限由 settings.fetchLimit 控制），
+      // 通过 display:none 切换可见页。
+      function __initFriendsPagination() {
+        var list = document.getElementById("friends-list");
+        var nav = document.getElementById("friends-pagination");
+        if (!list || !nav) return;
+
+        var items = list.querySelectorAll(".friends-item");
+        var total = items.length;
+        var pageSize = parseInt(nav.dataset.pageSize) || 30;
+        var totalPages = Math.ceil(total / pageSize);
+
+        if (totalPages <= 1) {
+          nav.style.display = "none";
+          return;
+        }
+
+        nav.style.display = "";
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var currentPage = Math.max(0, parseInt(urlParams.get("page")) - 1) || 0;
+        if (currentPage >= totalPages) currentPage = 0;
+
+        function showPage() {
+          items.forEach(function (item, i) {
+            item.style.display =
+              i >= currentPage * pageSize && i < (currentPage + 1) * pageSize
+                ? ""
+                : "none";
+          });
+        }
+
+        function buildNav() {
+          nav.innerHTML = "";
+
+          // 上一页
+          if (currentPage > 0) {
+            var prev = document.createElement("a");
+            prev.href =
+              currentPage === 1
+                ? window.location.pathname
+                : "?page=" + currentPage;
+            prev.className =
+              "btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)";
+            prev.innerHTML =
+              '<span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"></span>';
+            nav.appendChild(prev);
+          } else {
+            var d = document.createElement("span");
+            d.className =
+              "btn-card disabled h-11 w-11 overflow-hidden rounded-lg text-(--primary)";
+            d.innerHTML =
+              '<span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"></span>';
+            nav.appendChild(d);
+          }
+
+          // 页码
+          var box = document.createElement("div");
+          box.className =
+            "flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300";
+
+          // 窗口计算：对齐 Pagination.astro 逻辑，显示最多 5 个页码
+          // currentPage、totalPages 是 0-based，下面逻辑用 1-based
+          var cp = currentPage + 1; // 1-based 当前页
+          var ws =
+            cp <= 3
+              ? 1
+              : cp >= totalPages - 2
+                ? Math.max(totalPages - 4, 1)
+                : cp - 2;
+          var we =
+            cp <= 3
+              ? Math.min(totalPages, 5)
+              : cp >= totalPages - 2
+                ? totalPages
+                : cp + 2;
+
+          function makePageLink(pageNum, cls) {
+            var a = document.createElement("a");
+            a.href =
+              pageNum === 1 ? window.location.pathname : "?page=" + pageNum;
+            a.className =
+              cls ||
+              "btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]";
+            a.textContent = pageNum;
+            return a;
+          }
+
+          function makeCurrentPage(pageNum) {
+            var div = document.createElement("div");
+            div.className =
+              "flex h-11 w-11 items-center justify-center rounded-lg bg-(--primary) font-bold text-white dark:text-black/70";
+            div.textContent = pageNum;
+            return div;
+          }
+
+          function makeEllipsis() {
+            var span = document.createElement("span");
+            span.className = "icon-[material-symbols--more-horiz] mx-1";
+            return span;
+          }
+
+          // 首页
+          if (ws > 1) {
+            box.appendChild(makePageLink(1));
+          }
+          if (ws === 3) {
+            box.appendChild(makePageLink(2));
+          }
+          if (ws > 3) {
+            box.appendChild(makeEllipsis());
+          }
+
+          // 窗口页码
+          for (var p = ws; p <= we; p++) {
+            if (p === cp) {
+              box.appendChild(makeCurrentPage(p));
+            } else {
+              box.appendChild(makePageLink(p));
+            }
+          }
+
+          // 尾页
+          if (we < totalPages - 2) {
+            box.appendChild(makeEllipsis());
+          }
+          if (we === totalPages - 2) {
+            box.appendChild(makePageLink(totalPages - 1));
+          }
+          if (we < totalPages) {
+            box.appendChild(makePageLink(totalPages));
+          }
+
+          nav.appendChild(box);
+
+          // 下一页
+          if (currentPage < totalPages - 1) {
+            var next = document.createElement("a");
+            next.href = "?page=" + (currentPage + 2);
+            next.className =
+              "btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)";
+            next.innerHTML =
+              '<span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"></span>';
+            nav.appendChild(next);
+          } else {
+            var d2 = document.createElement("span");
+            d2.className =
+              "btn-card disabled h-11 w-11 overflow-hidden rounded-lg text-(--primary)";
+            d2.innerHTML =
+              '<span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"></span>';
+            nav.appendChild(d2);
+          }
+        }
+
+        buildNav();
+        showPage();
+      }
+      __initFriendsPagination();
+      document.addEventListener(
+        "swup:contentReplaced",
+        __initFriendsPagination,
+      );
+    </script>
+  </th:block>
+
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js`}
+    defer></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-fish.js`}
+    defer></script>
+</MainGridLayout>

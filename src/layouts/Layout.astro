@@ -1,0 +1,238 @@
+---
+import ConfigCarrier from "../components/ConfigCarrier.astro";
+import WaveEffect from "../components/WaveEffect.astro";
+import {
+  AUTO_MODE,
+  BANNER_HEIGHT_EXTEND,
+  DARK_MODE,
+  DEFAULT_THEME,
+  LIGHT_MODE,
+  PAGE_WIDTH,
+} from "../constants/constants";
+
+interface Props {
+  title?: string;
+  description?: string;
+  setOGTypeArticle?: boolean;
+  isHomePage?: boolean;
+}
+
+const {
+  title = "${site.title}",
+  description = "",
+  setOGTypeArticle = false,
+  isHomePage = false,
+} = Astro.props;
+
+const i18nInlineScript = `<script th:inline="javascript">
+  window.i18nResources = {
+    "search.loading": \`[(#{search.loading})]\`,
+    "search.noResults": \`[(#{search.noResults})]\`,
+    "search.panel": \`[(#{search.panel})]\`,
+    "search.placeholder": \`[(#{search.placeholder})]\`,
+    "theme.color": \`[(#{theme.color})]\`,
+    "theme.dark": \`[(#{theme.dark})]\`,
+    "theme.light": \`[(#{theme.light})]\`,
+    "theme.resetDefault": \`[(#{theme.resetDefault})]\`,
+    "theme.system": \`[(#{theme.system})]\`,
+    "nav.lightDark": \`[(#{nav.lightDark})]\`,
+    "widget.music.noPlaying": \`[(#{widget.music.noPlaying})]\`,
+    "widget.music.lyrics": \`[(#{widget.music.lyrics})]\`,
+    "widget.music.volume": \`[(#{widget.music.volume})]\`,
+    "widget.music.playMode": \`[(#{widget.music.playMode})]\`,
+    "widget.music.prev": \`[(#{widget.music.prev})]\`,
+    "widget.music.next": \`[(#{widget.music.next})]\`,
+    "widget.music.playlist": \`[(#{widget.music.playlist})]\`,
+    "widget.music.noLyrics": \`[(#{widget.music.noLyrics})]\`,
+    "widget.music.loadingLyrics": \`[(#{widget.music.loadingLyrics})]\`,
+    "widget.music.failedLyrics": \`[(#{widget.music.failedLyrics})]\`,
+    "widget.music.noSongs": \`[(#{widget.music.noSongs})]\`,
+    "widget.music.error": \`[(#{widget.music.error})]\`,
+    "widget.music.play": \`[(#{widget.music.play})]\`,
+    "widget.music.pause": \`[(#{widget.music.pause})]\`,
+    "widget.music.progress": \`[(#{widget.music.progress})]\`,
+    "widget.music.noCover": \`[(#{widget.music.noCover})]\`,
+    "widget.music.cover": \`[(#{widget.music.cover})]\`,
+  };
+</script>`;
+
+const themeSettingScript = `<script type="application/json" id="theme-config" th:inline="javascript">
+       /*[[\${theme.config}]]*/
+    </script>`;
+---
+
+<!doctype html>
+<html
+  th:lang="${#locale.toLanguageTag}"
+  th:data-hue="${theme.config?.style?.themeColor?.hue}"
+  th:data-hue-fixed="${theme.config?.style?.themeColor?.fixed}"
+  class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
+  data-overlayscrollbars-initialize
+>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Guard against duplicate Custom Element registration during Swup page transitions -->
+    <script>
+      (function () {
+        var _define = customElements.define.bind(customElements);
+        customElements.define = function (name, constructor, options) {
+          if (customElements.get(name)) return;
+          return _define(name, constructor, options);
+        };
+      })();
+    </script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
+    <meta name="description" content={description} />
+    <meta property="og:site_name" th:content="${site.title}" />
+    <meta property="og:title" th:content={title} />
+    <meta
+      property="og:type"
+      content={setOGTypeArticle ? "article" : "website"}
+    />
+    <meta property="og:url" th:content="${#httpServletRequest.requestURL}" />
+    <title th:text={title}></title>
+    <link rel="icon" th:href="${site.favicon}" />
+
+    <Fragment set:html={themeSettingScript} />
+    <Fragment set:html={i18nInlineScript} />
+    <script th:inline="javascript">
+      // Thymeleaf 运行时注入后台配色配置（Elvis 操作符同时覆盖两种可能的路径）
+      var __ecs =
+        /*[[${theme.config?.style?.colorScheme?.color_scheme ?: theme.config?.style?.color_scheme}]]*/ "auto";
+      var __eecs = /*[[${theme.config?.style?.colorScheme?.enable_change_color_scheme ?: theme.config?.style?.enable_change_color_scheme}]]*/ true;
+    </script>
+    <script
+      is:inline
+      define:vars={{
+        DEFAULT_THEME,
+        LIGHT_MODE,
+        DARK_MODE,
+        AUTO_MODE,
+        BANNER_HEIGHT_EXTEND,
+        PAGE_WIDTH,
+      }}
+    >
+      (() => {
+        const configHue = document.documentElement.dataset.hue || "250";
+        const fixedHue = document.documentElement.dataset.hueFixed === "true";
+
+        // 读取并校验 Thymeleaf 注入的后台配置（null 表示路径不存在，用 DEFAULT_THEME 兜底）
+        var defaultScheme = DEFAULT_THEME;
+        if (
+          typeof __ecs !== "undefined" &&
+          __ecs !== null &&
+          (__ecs === LIGHT_MODE || __ecs === DARK_MODE || __ecs === AUTO_MODE)
+        ) {
+          defaultScheme = __ecs;
+        }
+        var enableChange =
+          typeof __eecs !== "undefined" && __eecs !== null ? __eecs : true;
+        // 允许切换时：仅当用户手动选择过才读 localStorage，否则始终用后台默认
+        var storedTheme;
+        if (enableChange && localStorage.getItem("__user_chose_theme")) {
+          storedTheme = localStorage.getItem("theme") || defaultScheme;
+        } else {
+          storedTheme = defaultScheme;
+        }
+
+        const preferredDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+
+        if (
+          storedTheme === DARK_MODE ||
+          (storedTheme === AUTO_MODE && preferredDark)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+
+        const hue = fixedHue
+          ? configHue
+          : localStorage.getItem("hue") || configHue;
+        document.documentElement.style.setProperty("--hue", hue);
+        document.documentElement.style.setProperty(
+          "--page-width",
+          `${PAGE_WIDTH}rem`,
+        );
+
+        // 与 constants.ts calcBannerHeightExtend 保持一致
+        let offset = Math.floor(
+          window.innerHeight * (BANNER_HEIGHT_EXTEND / 100),
+        );
+        offset = offset - (offset % 4);
+        document.documentElement.style.setProperty(
+          "--banner-height-extend",
+          `${offset}px`,
+        );
+
+        window.__etherealOriginalHistory ??= {
+          pushState: window.history.pushState,
+          replaceState: window.history.replaceState,
+        };
+
+        console.log(
+          "%c🌙 Ethereal %cv1.0.0",
+          "color:#8b5cf6;font-weight:bold;",
+          "color:#888;",
+        );
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+  <body
+    class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
+    th:classappend="${(theme.config?.base?.banner?.enable ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '')}"
+    th:style="|--bannerOffset: ${theme.config?.base?.banner?.position == 'top' ? '30vh' : (theme.config?.base?.banner?.position == 'bottom' ? '0' : '15vh')};|"
+    data-overlayscrollbars-initialize
+  >
+    <ConfigCarrier />
+    <slot />
+    <WaveEffect />
+    <div id="page-height-extend" class="hidden h-[300vh]"></div>
+    <style is:global>
+      /* 移动端强制导航栏始终可见 */
+      @media (max-width: 767px) {
+        #navbar-wrapper {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 50 !important;
+        }
+        #navbar-wrapper.navbar-hidden {
+          translate: none !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+        /* 防止内容被固定导航栏遮挡 */
+        #top-row {
+          height: 4.5rem !important;
+        }
+      }
+    </style>
+    <script>
+      // 右侧边栏入场动画，仅首次加载执行一次
+      if (!window.__rsAnimated) {
+        window.__rsAnimated = true;
+        var rs = document.getElementById("right-sidebar");
+        if (rs) rs.classList.add("onload-animation");
+      }
+      // Swup 切换后清除动画类
+      document.addEventListener("swup:contentReplaced", function () {
+        var rs = document.getElementById("right-sidebar");
+        if (rs && rs.classList.contains("onload-animation")) {
+          rs.classList.remove("onload-animation");
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<script>
+  import "../scripts/app";
+</script>

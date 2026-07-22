@@ -1,0 +1,391 @@
+@reference "./global.css";
+
+@layer components {
+  .card-base {
+    @apply overflow-hidden rounded-(--radius-large) bg-(--card-bg) transition;
+  }
+
+  .expand-animation {
+    @apply relative z-0 before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-[inherit] before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
+  }
+
+  .link {
+    @apply relative z-0 -m-1 rounded-md p-1 transition before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-[inherit] before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
+  }
+
+  .link-lg {
+    @apply relative z-0 -m-1.5 rounded-md p-1.5 transition before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-[inherit] before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
+  }
+
+  .float-panel {
+    @apply top-[4.875rem] overflow-hidden rounded-(--radius-large) bg-(--card-bg) shadow-xl transition;
+    will-change: transform, opacity;
+  }
+
+  :root.dark .float-panel {
+    @apply shadow-none;
+  }
+
+  /* navbar_blur 开启：显式 transition 不含 background-color，消除模糊延迟 */
+  body.navbar-blur-enabled .float-panel {
+    transition:
+      transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      translate 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+
+  :root.dark body.navbar-blur-enabled .float-panel {
+    transition:
+      transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      translate 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background-color: rgb(0 0 0 / 0.65) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+
+  .float-panel-closed {
+    @apply pointer-events-none -translate-y-1 opacity-0;
+  }
+
+  .search-panel mark {
+    @apply bg-transparent text-(--primary);
+  }
+
+  .btn-card {
+    @apply flex items-center justify-center bg-(--card-bg) transition hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active);
+  }
+
+  .btn-card.disabled {
+    @apply pointer-events-none text-black/10 dark:text-white/10;
+  }
+
+  .btn-card-outline {
+    border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  }
+
+  /* 卡片 3D 倾斜 - transition 由 .btn-card 的 Tailwind transition 处理 */
+  .card-tilt {
+    transform-style: preserve-3d;
+  }
+
+  .btn-plain {
+    @apply relative flex items-center justify-center bg-transparent text-black/75 transition hover:text-(--primary) dark:text-white/75 dark:hover:text-(--primary);
+  }
+
+  .btn-plain:not(.scale-animation) {
+    @apply hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active);
+  }
+
+  .scale-animation {
+    @apply relative z-0 before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-[inherit] before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
+  }
+
+  .btn-plain.scale-animation.current-theme-btn {
+    @apply text-(--primary) before:scale-100 before:bg-(--btn-plain-bg-hover) before:opacity-100;
+  }
+
+  .btn-regular {
+    @apply flex items-center justify-center bg-(--btn-regular-bg) text-(--btn-content) transition hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) dark:text-white/75;
+  }
+
+  .text-90 {
+    @apply text-black/90 dark:text-white/90;
+  }
+
+  .text-75 {
+    @apply text-black/75 dark:text-white/75;
+  }
+
+  .text-50 {
+    @apply text-black/60 dark:text-white/60;
+  }
+
+  .text-30 {
+    @apply text-black/30 dark:text-white/30;
+  }
+
+  .meta-icon {
+    @apply mr-2 flex h-8 w-8 items-center justify-center rounded-md bg-(--btn-regular-bg) text-(--btn-content) transition;
+  }
+
+  .with-divider {
+    @apply before:mx-1.5 before:text-sm before:font-medium before:text-(--meta-divider) before:content-['/'];
+  }
+
+  .toc-hide,
+  .toc-not-ready {
+    @apply pointer-events-none opacity-0;
+  }
+
+  #toc-inner-wrapper {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 2rem,
+      black calc(100% - 2rem),
+      transparent 100%
+    );
+  }
+
+  /* 右侧边栏音乐播放器 - 彻底取消所有 overflow:hidden 层级 */
+  #right-sidebar .firefly-music-player,
+  #right-sidebar widget-layout:has(.firefly-music-player),
+  #right-sidebar widget-layout:has(.firefly-music-player) .collapse-wrapper,
+  #right-sidebar .firefly-music-player .music-cover,
+  #right-sidebar .firefly-music-player .lrc-drawer {
+    overflow: visible !important;
+  }
+
+  #right-sidebar .firefly-music-player .vol-container {
+    @apply w-12;
+  }
+
+  #right-sidebar .firefly-music-player .btn-lrc-toggle {
+    @apply hidden;
+  }
+
+  /* 双栏布局页面宽度：与 72002dd 一致，使用默认 --page-width: 75rem */
+  .layout-two-column {
+    /* 使用默认 --page-width，无需覆盖 */
+  }
+
+  /* 三栏布局页面宽度：中间内容宽度 = 双栏右页面宽度 (75 - 17.5 - 1 = 56.5) */
+  /* 总宽 = 17.5 + 1 + 56.5 + 1 + 17.5 = 93.5 */
+  .layout-three-column {
+    --page-width: 93.5rem !important;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .enable-banner #main-panel-wrapper {
+    @apply top-[calc(var(--banner-height)-3.5rem)];
+  }
+
+  #wave-container {
+    top: var(--banner-height);
+    -webkit-transform: translateY(calc(-100% + 1px));
+    transform: translateY(calc(-100% + 1px));
+    -webkit-transition: -webkit-transform 700ms
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+    transition: transform 700ms
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+  }
+
+  .enable-banner #banner-wrapper {
+    @apply h-(--banner-height-home);
+  }
+
+  .enable-banner #banner {
+    @apply h-(--banner-height-home) translate-y-(--bannerOffset);
+  }
+
+  .enable-banner #top-row {
+    @apply h-[calc(var(--banner-height-home)-4.5rem)] transition-all duration-300;
+  }
+
+  /* 标题/副标题淡入淡出 */
+  #banner-overlay {
+    transition: opacity 0.5s ease;
+  }
+
+  #banner-overlay.banner-text-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .navbar-hidden {
+    @apply -translate-y-[4.5rem] pointer-events-none;
+  }
+
+  /* 触控设备子菜单展开 */
+  .group.submenu-open > .submenu-panel {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    translate: none !important;
+  }
+
+  /* 触控设备子菜单展开时箭头旋转 */
+  .group.submenu-open > a span[class*="expand-more"] {
+    rotate: 180deg;
+  }
+
+  /* PC 端隐藏触控专属元素（概览链接等） */
+  @media (pointer: fine) {
+    .touch-only {
+      display: none !important;
+    }
+  }
+
+  /* 深浅色面板间隙桥接：overflow:visible 避免裁切，pointer-events 继承 group-hover 状态 */
+  #light-dark-panel {
+    overflow: visible !important;
+  }
+  #light-dark-panel::before {
+    content: "";
+    position: absolute;
+    top: -1.25rem;
+    left: 0;
+    right: 0;
+    height: 1.25rem;
+    background: transparent;
+  }
+
+  .link-underline {
+    @apply underline decoration-2 decoration-dashed underline-offset-4 transition;
+    text-decoration-color: var(--link-underline);
+  }
+
+  .link-underline:hover {
+    text-decoration-color: var(--link-hover);
+  }
+
+  .link-underline:active {
+    text-decoration-color: var(--link-active);
+  }
+
+  .navbar-blur {
+    transition: none !important;
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.04);
+    border-bottom: 1px solid rgb(0 0 0 / 0.06);
+  }
+
+  :root.dark .navbar-blur {
+    background-color: rgb(0 0 0 / 0.65) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.2);
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .submenu-panel {
+    /* navbar_blur 关闭：纯色背景，无模糊 */
+    background-color: var(--card-bg) !important;
+    transition:
+      opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      translate 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* 伪元素桥接 mt-5 间隙，防止鼠标穿过间隙时 group-hover 丢失 */
+  .submenu-panel::before {
+    content: "";
+    position: absolute;
+    top: -1.25rem;
+    left: 0;
+    right: 0;
+    height: 1.25rem;
+    background: transparent;
+  }
+
+  :root.dark .submenu-panel {
+    background-color: var(--card-bg) !important;
+  }
+
+  /* navbar_blur 开启 */
+  body.navbar-blur-enabled .submenu-panel {
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+
+  :root.dark body.navbar-blur-enabled .submenu-panel {
+    background-color: rgb(0 0 0 / 0.65) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+
+  #navbar-wrapper.backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(16px) !important;
+    backdrop-filter: blur(16px) !important;
+    border-radius: 0 0 var(--radius-large) var(--radius-large);
+  }
+
+  /* 文章摘要 */
+  .summary-box {
+    @apply relative mb-5 overflow-hidden rounded-xl;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--primary) 5%, var(--card-bg)),
+      var(--card-bg)
+    );
+    border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  }
+
+  .summary-header {
+    @apply flex items-center gap-2 px-5 pt-4 pb-1 text-sm font-semibold;
+    color: var(--primary);
+  }
+
+  .summary-icon {
+    @apply text-lg;
+  }
+
+  .summary-content {
+    @apply px-5 pb-4 pt-4 text-sm leading-relaxed;
+    color: var(--deep-text);
+  }
+
+  .summary-header + .summary-content {
+    @apply pt-1;
+  }
+
+  :root.dark .summary-content {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* 打字机光标 */
+  .summary-caret {
+    @apply font-bold;
+    color: var(--primary);
+    animation: caret-blink 0.8s step-end infinite;
+  }
+
+  @keyframes caret-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+/* TOC 目录项样式 - 仅三栏布局生效 */
+.layout-three-column [data-toc-entry] {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+
+.layout-three-column [data-toc-entry].visible {
+  background: color-mix(in oklab, var(--primary) 10%, transparent) !important;
+}
+
+.layout-three-column [data-toc-entry].visible .toc-title {
+  color: var(--primary) !important;
+}
+
+/* 三栏布局下友情链接一行2个 - 通过 th:classappend 在 friends.astro 中控制 */
+
+/* 瞬间动态内容样式 */
+.moment-feed-content :where(p) {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.moment-feed-content :where(a) {
+  font-weight: 600;
+}

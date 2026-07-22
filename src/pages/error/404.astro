@@ -1,0 +1,35 @@
+---
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout title="|#{page.404.title} - ${site.title}|">
+  <Fragment slot="head">
+    <title th:text="|#{page.404.title} - ${site.title}|"></title>
+  </Fragment>
+
+  <div
+    class="card-base onload-animation flex flex-col items-center justify-center px-8 py-16 text-center min-h-[50vh]"
+  >
+    <div
+      class="text-[8rem] font-black leading-none tracking-tighter text-(--primary)/20 md:text-[12rem]"
+    >
+      404
+    </div>
+    <h1
+      class="mt-4 text-2xl font-bold text-90 md:text-3xl"
+      th:text="#{page.404.title}"
+    >
+      Page Not Found
+    </h1>
+    <p class="mt-3 max-w-md text-50" th:text="#{page.404.description}">
+      The page you are looking for does not exist or has been moved.
+    </p>
+    <a
+      th:href="@{/}"
+      class="btn-regular mt-8 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition active:scale-95"
+    >
+      <span class="icon-[material-symbols--arrow-back-rounded] text-lg"></span>
+      <span th:text="#{page.404.backHome}">Back to Home</span>
+    </a>
+  </div>
+</MainGridLayout>

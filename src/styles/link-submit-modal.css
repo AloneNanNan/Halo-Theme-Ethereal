@@ -1,0 +1,300 @@
+/* 友链申请模态框 */
+#link-submit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+#link-submit-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: ls-fade-in 0.25s ease;
+}
+
+#link-submit-card {
+  position: relative;
+  background: var(--card-bg);
+  border-radius: var(--radius-large);
+  padding: 2rem 1.5rem 1.5rem;
+  max-width: 30rem;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+  color: var(--deep-text);
+  animation: ls-slide-up 0.3s ease;
+}
+
+#link-submit-card .ls-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  color: var(--deep-text);
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+#link-submit-card .ls-close-btn:hover {
+  opacity: 0.8;
+}
+
+#link-submit-card .ls-title {
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--deep-text);
+}
+
+/* 表单通用样式 */
+#link-submit-form-actual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#link-submit-form-actual .ls-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+#link-submit-form-actual .ls-form-label {
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--deep-text);
+}
+
+#link-submit-form-actual .ls-form-label .ls-required {
+  color: #ef4444;
+}
+
+#link-submit-form-actual .ls-input,
+#link-submit-form-actual .ls-select,
+#link-submit-form-actual .ls-textarea {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 2px solid color-mix(in oklab, var(--primary) 22%, transparent);
+  background: transparent;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--deep-text);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+#link-submit-form-actual .ls-input::placeholder,
+#link-submit-form-actual .ls-textarea::placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+:root.dark #link-submit-form-actual .ls-input::placeholder,
+:root.dark #link-submit-form-actual .ls-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+#link-submit-form-actual .ls-input:focus,
+#link-submit-form-actual .ls-select:focus,
+#link-submit-form-actual .ls-textarea:focus {
+  border-color: var(--primary) !important;
+  outline: none;
+}
+
+#link-submit-form-actual .ls-select {
+  height: 2.5rem;
+  cursor: pointer;
+  appearance: auto;
+}
+
+#link-submit-form-actual .ls-textarea {
+  resize: none;
+  min-height: 2.5rem;
+}
+
+/* 两列布局 */
+#link-submit-form-actual .ls-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* 申请类型单选 */
+#link-submit-form-actual .ls-type-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ls-type-label {
+  display: flex;
+  flex: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  background-color: color-mix(in oklab, var(--primary) 6%, transparent);
+  color: var(--btn-content);
+  border: 2px solid color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.ls-type-label:has(input:checked) {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+  font-weight: 700;
+  border-color: var(--primary) !important;
+}
+
+.ls-type-label input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ls-type-label .ls-type-icon {
+  font-size: 1rem;
+}
+
+/* 提交按钮 */
+#link-submit-form-actual .ls-submit-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+#submit-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--primary);
+  padding: 0.75rem 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    filter 0.2s,
+    transform 0.15s;
+  line-height: 1;
+  min-width: 9rem;
+  min-height: 2.75rem;
+}
+
+#submit-link-btn:hover {
+  filter: brightness(1.1);
+}
+
+#submit-link-btn:active {
+  transform: scale(0.98);
+}
+
+#submit-link-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* 加载 spinner */
+#submit-btn-loading .ls-spinner {
+  animation: ls-spin 1s linear infinite;
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 状态消息（错误 + 成功共用位置） */
+.ls-status-error {
+  font-size: 0.8125rem;
+  color: #ef4444;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  display: none;
+}
+
+.ls-status-success {
+  font-size: 0.8125rem;
+  color: #22c55e;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  display: none;
+}
+
+/* 隐藏更新说明默认状态 */
+#update-description-wrapper.hidden {
+  display: none;
+}
+
+/* 动画 */
+@keyframes ls-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ls-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ls-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 480px) {
+  #link-submit-card {
+    padding: 1.5rem 1rem 1rem;
+    max-width: 100%;
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+    max-height: 92vh;
+  }
+
+  #link-submit-form-actual .ls-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}

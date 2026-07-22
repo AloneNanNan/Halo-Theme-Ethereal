@@ -1,0 +1,217 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+}
+
+const className = Astro.props.class;
+---
+
+<WidgetLayout
+  name="一言"
+  nameKey="widget.hitokoto.title"
+  id="hitokoto"
+  class={className}
+>
+  <style>
+    .hitokoto-card {
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .hitokoto-main-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .hitokoto-text {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      color: var(--deep-text);
+      word-break: break-word;
+      margin: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .hitokoto-refresh {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--deep-text);
+      opacity: 0.4;
+      transition:
+        color 0.2s,
+        background 0.2s,
+        opacity 0.2s;
+      padding: 0;
+      margin-top: 1px;
+      font-size: 15px;
+    }
+
+    .hitokoto-refresh:hover {
+      opacity: 0.7;
+      background: rgba(128, 128, 128, 0.1);
+    }
+
+    .hitokoto-refresh:active {
+      transform: scale(0.9);
+    }
+
+    .hitokoto-refresh .iconify-spin {
+      transition: transform 0.4s ease;
+    }
+
+    .hitokoto-refresh.spinning .iconify-spin {
+      transform: rotate(360deg);
+    }
+
+    .hitokoto-author-row {
+      margin-top: 6px;
+    }
+
+    .hitokoto-author {
+      font-size: 12px;
+      color: var(--deep-text);
+      opacity: 0.5;
+      display: block;
+      text-align: right;
+    }
+
+    .hitokoto-author::before {
+      content: "—— ";
+    }
+
+    .hitokoto-loading .hitokoto-text {
+      opacity: 0.5;
+    }
+  </style>
+
+  <div class="hitokoto-card px-3" id="hitokotoCard">
+    <div class="hitokoto-main-row">
+      <p class="hitokoto-text" id="hitokotoText">加载中...</p>
+      <button
+        class="hitokoto-refresh"
+        id="hitokotoRefresh"
+        title="换一句"
+        aria-label="换一句"
+      >
+        <span class="icon-[material-symbols--refresh-rounded] iconify-spin"
+        ></span>
+      </button>
+    </div>
+    <div class="hitokoto-author-row">
+      <span class="hitokoto-author" id="hitokotoAuthor"></span>
+    </div>
+  </div>
+</WidgetLayout>
+
+<script is:inline>
+  (function () {
+    var hitokotoBound = false;
+    var CACHE_KEY = "hitokoto_cache";
+
+    function getCachedData() {
+      try {
+        var raw = sessionStorage.getItem(CACHE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return null;
+    }
+
+    function setCachedData(data) {
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function initHitokoto() {
+      var card = document.getElementById("hitokotoCard");
+      if (!card) return;
+
+      var textEl = document.getElementById("hitokotoText");
+      var authorEl = document.getElementById("hitokotoAuthor");
+      var refreshBtn = document.getElementById("hitokotoRefresh");
+
+      var API = "https://v1.hitokoto.cn/";
+
+      function fetchHitokoto() {
+        return fetch(API, { signal: AbortSignal.timeout(5000) })
+          .then(function (resp) {
+            if (resp.ok) return resp.json();
+            throw new Error("Network response was not ok.");
+          })
+          .then(function (data) {
+            return {
+              content: data.hitokoto || data.content || "",
+              author: data.from || data.author || data.source || "",
+            };
+          })
+          .catch(function (e) {
+            console.warn("一言获取失败，使用默认句子", e.message);
+            return {
+              content: "世界很大，开心第一。",
+              author: "楠南NanNan",
+            };
+          });
+      }
+
+      function updateCard(data) {
+        textEl.textContent = data.content;
+        authorEl.textContent = data.author || "";
+        card.classList.remove("hitokoto-loading");
+      }
+
+      function refresh() {
+        card.classList.add("hitokoto-loading");
+        refreshBtn.classList.add("spinning");
+        fetchHitokoto().then(function (data) {
+          setCachedData(data);
+          updateCard(data);
+          setTimeout(function () {
+            refreshBtn.classList.remove("spinning");
+          }, 400);
+        });
+      }
+
+      // 只绑定一次 click 事件
+      if (!hitokotoBound) {
+        hitokotoBound = true;
+        refreshBtn.addEventListener("click", refresh);
+      }
+
+      // 优先使用缓存数据，无缓存时才请求
+      var cached = getCachedData();
+      if (cached) {
+        updateCard(cached);
+      } else {
+        refresh();
+      }
+    }
+
+    // 初始化
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initHitokoto);
+    } else {
+      initHitokoto();
+    }
+
+    // Swup 页面切换后仅重新绑定 DOM，不重新请求
+    document.addEventListener("swup:contentReplaced", function () {
+      setTimeout(initHitokoto, 100);
+    });
+  })();
+</script>

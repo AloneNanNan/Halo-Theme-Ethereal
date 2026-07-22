@@ -1,0 +1,147 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+  style?: string;
+}
+
+const className = Astro.props.class;
+const style = Astro.props.style;
+const MAX_POSTS = 5;
+---
+
+<div class="contents">
+  <WidgetLayout
+    name="热门文章"
+    nameKey="widget.popularPosts.title"
+    id="popular-posts"
+    class={className}
+    style={style}
+  >
+    <div id="popular-posts-list" class="flex flex-col gap-1">
+      <div
+        class="flex items-center justify-center py-4 text-sm text-neutral-400"
+      >
+        <span
+          class="icon-[material-symbols--hourglass-top] mr-2 animate-spin text-base"
+        ></span>
+        加载中...
+      </div>
+    </div>
+  </WidgetLayout>
+</div>
+
+<script is:inline>
+  (function () {
+    var MAX_POSTS = 5;
+    var container = document.getElementById("popular-posts-list");
+    if (!container) return;
+
+    // 读取主题配置获取 base path
+    var themeConfig = document.getElementById("theme-config");
+    var basePath = "";
+    if (themeConfig) {
+      try {
+        var cfg = JSON.parse(themeConfig.textContent || "{}");
+        basePath = cfg.base || "";
+      } catch (e) {}
+    }
+
+    function formatCount(num) {
+      if (num >= 10000) return (num / 10000).toFixed(1) + "万";
+      if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+      return String(num);
+    }
+
+    function renderList(posts) {
+      if (!posts.length) {
+        container.innerHTML =
+          '<div class="py-4 text-center text-sm text-neutral-400">暂无文章</div>';
+        return;
+      }
+
+      var html = "";
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      for (var i = 0; i < posts.length; i++) {
+        var post = posts[i];
+        var title = post.spec.title || "无标题";
+        var safeTitle = escapeHtml(title);
+        var visits = (post.stats && post.stats.visit) || 0;
+        var permalink = (post.status && post.status.permalink) || "";
+        var href =
+          permalink ||
+          basePath + "/archives/" + (post.spec.slug || post.metadata.name);
+
+        html +=
+          '<a href="' +
+          href +
+          '" class="group block" aria-label="' +
+          safeTitle +
+          '">' +
+          '<div class="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all group-hover:bg-(--btn-plain-bg-hover) group-hover:pl-4 group-active:bg-(--btn-plain-bg-active)">' +
+          '<span class="ml-1 flex h-6 min-w-7 shrink-0 items-center justify-center rounded-lg px-1.5 text-xs font-bold ' +
+          (i < 3
+            ? "bg-(--primary) text-white"
+            : "bg-(--btn-regular-bg) text-(--btn-content)") +
+          '">' +
+          (i + 1) +
+          "</span>" +
+          '<div class="min-w-0 flex-1">' +
+          '<span class="block overflow-hidden overflow-ellipsis whitespace-nowrap text-sm text-neutral-700 transition group-hover:text-(--primary) dark:text-neutral-300 dark:group-hover:text-(--primary)">' +
+          safeTitle +
+          "</span>" +
+          "</div>" +
+          '<span class="shrink-0 text-xs text-neutral-400 dark:text-neutral-500">' +
+          '<span class="icon-[material-symbols--visibility-outline] mr-0.5 align-[-2px] text-sm"></span>' +
+          formatCount(visits) +
+          "</span>" +
+          "</div>" +
+          "</a>";
+      }
+      container.innerHTML = html;
+    }
+
+    // 获取第一页文章（50 篇足够选出 Top 5 热门文章）
+    var size = 50;
+
+    fetch(
+      "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=" +
+        size +
+        "&sort=metadata.creationTimestamp,desc",
+    )
+      .then(function (res) {
+        if (!res.ok) {
+          console.warn("[PopularPosts] API error:", res.status);
+          renderList([]);
+          return;
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        var items = data.items || [];
+        var published = items.filter(function (p) {
+          return p.spec && p.spec.publish && p.spec.visible === "PUBLIC";
+        });
+        published.sort(function (a, b) {
+          var va = (a.stats && a.stats.visit) || 0;
+          var vb = (b.stats && b.stats.visit) || 0;
+          return vb - va;
+        });
+        renderList(published.slice(0, MAX_POSTS));
+      })
+      .catch(function (e) {
+        console.warn("[PopularPosts] Fetch failed:", e);
+        renderList([]);
+      });
+  })();
+</script>

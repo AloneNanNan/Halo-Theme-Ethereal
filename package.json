@@ -1,0 +1,64 @@
+{
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "nodemon --config nodemon.json --exec 'astro build'",
+    "build": "astro build && pnpm package",
+    "build:pkg": "pnpm build",
+    "build:only": "astro build",
+    "package": "theme-package",
+    "astro": "astro",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "prettier": {
+    "plugins": [
+      "prettier-plugin-astro"
+    ],
+    "overrides": [
+      {
+        "files": "*.astro",
+        "options": {
+          "parser": "astro"
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^8.1.0",
+    "@halo-dev/api-client": "^2.24.0",
+    "@swup/astro": "^1.8.0",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^6.2.1",
+    "astro-icon": "^1.1.5",
+    "overlayscrollbars": "^2.15.1",
+    "photoswipe": "^5.4.4",
+    "sharp": "^0.34.5",
+    "stylus": "^0.64.0",
+    "svelte": "^5.55.5",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@halo-dev/theme-package-cli": "^1.0.4",
+    "@iconify-json/fa6-brands": "^1.2.6",
+    "@iconify-json/fa6-regular": "^1.2.4",
+    "@iconify-json/fa6-solid": "^1.2.4",
+    "@iconify-json/material-symbols": "^1.2.69",
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify-json/tabler": "^1.2.33",
+    "@iconify/tailwind4": "^1.2.3",
+    "@tailwindcss/typography": "^0.5.19",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "nodemon": "^3.1.14",
+    "prettier": "3.8.1",
+    "prettier-plugin-astro": "0.14.1",
+    "unplugin-icons": "^23.0.1"
+  },
+  "lint-staged": {
+    "*.{astro,css,js,mjs,cjs,ts,svelte,json,yaml,yml,md}": "prettier --write --ignore-unknown"
+  }
+}

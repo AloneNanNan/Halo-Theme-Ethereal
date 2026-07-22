@@ -1,0 +1,44 @@
+@reference "./global.css";
+
+@layer base {
+  .theme-switching,
+  .theme-switching *,
+  .theme-switching *::before,
+  .theme-switching *::after {
+    transition: none !important;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    background: var(--page-bg);
+  }
+
+  a,
+  button {
+    @apply transition;
+  }
+}
+
+::selection {
+  background-color: var(--selection-bg);
+}
+
+.dash-line {
+  position: relative;
+}
+
+.dash-line::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 1px);
+  width: 10%;
+  height: 100%;
+  border-left: 2px dashed var(--line-color);
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: all 0.3s;
+}

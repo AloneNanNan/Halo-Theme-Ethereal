@@ -1,0 +1,420 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+  style?: string;
+}
+
+const className = Astro.props.class;
+const style = Astro.props.style;
+---
+
+<div
+  class="contents"
+  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}"
+>
+  <WidgetLayout
+    name="站点统计"
+    nameKey="widget.siteStats.title"
+    id="site-stats"
+    class={className}
+    style={style}
+  >
+    <div class="flex flex-col gap-1">
+      <!-- 文章数 -->
+      <a
+        th:href="@{/archives}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--article-outline] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.posts}">文章</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${posts.total}">0</span
+        >
+      </a>
+
+      <!-- 分类数 -->
+      <a
+        th:href="@{/categories}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--folder-outline] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.categories}">分类</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${#lists.size(categories)}">0</span
+        >
+      </a>
+
+      <!-- 标签数 -->
+      <a
+        th:href="@{/tags}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--label-outline] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.tags}">标签</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${#lists.size(tags)}">0</span
+        >
+      </a>
+
+      <!-- 总字数（客户端计算） -->
+      <div
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--text-ad-outline-rounded] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.totalWords}">总字数</span
+          >
+        </div>
+        <span
+          id="site-stats-total-words"
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          >--</span
+        >
+      </div>
+
+      <!-- 最后活动（客户端计算) -->
+      <div
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--history-rounded] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.lastActivity}">最后活动</span
+          >
+        </div>
+        <span
+          id="site-stats-last-activity"
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          >--</span
+        >
+      </div>
+
+      <!-- 运行天数 -->
+      <div
+        id="site-stats-running-days-row"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+        th:if="${widget.site_start_date != null and widget.site_start_date != ''}"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--calendar-clock-outline] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.runningDays}">运行天数</span
+          >
+        </div>
+        <div class="flex items-center">
+          <span
+            id="site-stats-running-days"
+            class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+            th:attr="data-start-date=${widget.site_start_date}">--</span
+          >
+          <span
+            class="ml-1 text-sm text-neutral-500 dark:text-neutral-400"
+            th:text="#{widget.siteStats.days}">天</span
+          >
+        </div>
+      </div>
+    </div>
+  </WidgetLayout>
+</div>
+
+<script is:inline>
+  (function () {
+    // 站点统计工具函数
+    function formatNumber(num) {
+      if (num >= 10000) {
+        return (num / 10000).toFixed(1).replace(/\.0$/, "") + "w";
+      }
+      return num.toLocaleString();
+    }
+
+    function countWords(text) {
+      if (!text) return 0;
+      var cleaned = text
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/`[^`]*`/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      var chinese = cleaned.match(/[\u4e00-\u9fa5]/g) || [];
+      var english = cleaned.match(/[a-zA-Z]+/g) || [];
+      return chinese.length + english.length;
+    }
+
+    function formatRelativeDate(dateStr) {
+      if (!dateStr) return "--";
+      var date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "--";
+      var now = new Date();
+      var diffMs = now.getTime() - date.getTime();
+      var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return "今天";
+      if (diffDays === 1) return "昨天";
+      if (diffDays < 30) return diffDays + " 天前";
+      if (diffDays < 365) return Math.floor(diffDays / 30) + " 个月前";
+      return Math.floor(diffDays / 365) + " 年前";
+    }
+
+    // 缓存已计算的统计数据
+    if (!window.__siteStatsCache) {
+      window.__siteStatsCache = null;
+    }
+
+    // localStorage 持久化缓存（24小时有效期，避免每次刷新都发 N+1 请求）
+    var STORAGE_KEY = "site_stats_v1";
+    var STATS_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+    function getCachedStats() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        var d = JSON.parse(raw);
+        if (Date.now() - d.t > STATS_CACHE_TTL) {
+          localStorage.removeItem(STORAGE_KEY);
+          return null;
+        }
+        return d.stats;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function setCachedStats(stats) {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ stats: stats, t: Date.now() }),
+        );
+      } catch (e) {}
+    }
+
+    function applyStatsToDOM(stats) {
+      var wordsEl = document.getElementById("site-stats-total-words");
+      var activityEl = document.getElementById("site-stats-last-activity");
+      if (wordsEl && stats.totalWords !== null) {
+        wordsEl.textContent = formatNumber(stats.totalWords);
+      }
+      if (activityEl && stats.lastActivity) {
+        activityEl.textContent = stats.lastActivity;
+      }
+    }
+
+    function updateSiteStats() {
+      if (window.__siteStatsCache) {
+        applyStatsToDOM(window.__siteStatsCache);
+        return;
+      }
+
+      // 优先读取 localStorage 缓存，避免重复抓取
+      var stored = getCachedStats();
+      if (stored) {
+        window.__siteStatsCache = stored;
+        applyStatsToDOM(stored);
+        return;
+      }
+
+      var allPosts = [];
+      var page = 0;
+      var size = 50;
+
+      function fetchPage() {
+        fetch(
+          "/apis/api.content.halo.run/v1alpha1/posts?page=" +
+            page +
+            "&size=" +
+            size +
+            "&sort=metadata.creationTimestamp,desc",
+        )
+          .then(function (res) {
+            if (!res.ok) {
+              console.warn("[SiteStats] List API error:", res.status);
+              processPosts(allPosts);
+              return;
+            }
+            return res.json();
+          })
+          .then(function (data) {
+            if (!data) return;
+            var items = data.items || [];
+            allPosts = allPosts.concat(items);
+            if (!data.last && page < 10) {
+              page++;
+              fetchPage();
+            } else {
+              processPosts(allPosts);
+            }
+          })
+          .catch(function (e) {
+            console.warn("[SiteStats] Fetch failed:", e);
+            processPosts(allPosts);
+          });
+      }
+
+      function processPosts(posts) {
+        if (posts.length === 0) return;
+
+        var latestDate = null;
+        var totalWords = 0;
+        var pending = posts.length;
+        var CONCURRENCY = 6;
+        var queue = posts.slice();
+        var running = 0;
+
+        function finish() {
+          var formattedActivity = latestDate
+            ? formatRelativeDate(latestDate)
+            : "--";
+
+          window.__siteStatsCache = {
+            totalWords: totalWords,
+            lastActivity: formattedActivity,
+          };
+          setCachedStats(window.__siteStatsCache);
+          applyStatsToDOM(window.__siteStatsCache);
+        }
+
+        function next() {
+          while (running < CONCURRENCY && queue.length > 0) {
+            running++;
+            var post = queue.shift();
+
+            var pub =
+              (post.spec && post.spec.publishTime) ||
+              (post.metadata && post.metadata.creationTimestamp);
+            if (pub && (!latestDate || pub > latestDate)) {
+              latestDate = pub;
+            }
+
+            var permalink = post.status && post.status.permalink;
+            if (!permalink) {
+              running--;
+              pending--;
+              if (pending === 0) finish();
+              else next();
+              continue;
+            }
+
+            (function (url) {
+              fetch(url)
+                .then(function (res) {
+                  if (!res.ok) throw new Error("HTTP " + res.status);
+                  return res.text();
+                })
+                .then(function (html) {
+                  var parser = new DOMParser();
+                  var doc = parser.parseFromString(html, "text/html");
+                  var content =
+                    doc.querySelector(".post-content") ||
+                    doc.querySelector(".markdown-body") ||
+                    doc.querySelector("article") ||
+                    doc.querySelector(".content") ||
+                    doc.querySelector("main");
+                  var text = content
+                    ? content.textContent || ""
+                    : doc.body
+                      ? doc.body.textContent || ""
+                      : "";
+                  totalWords += countWords(text);
+                  running--;
+                  pending--;
+                  if (pending === 0) finish();
+                  else next();
+                })
+                .catch(function (e) {
+                  console.warn(
+                    "[SiteStats] 文章字数获取失败:",
+                    url,
+                    e.message || e,
+                  );
+                  running--;
+                  pending--;
+                  if (pending === 0) finish();
+                  else next();
+                });
+            })(permalink);
+          }
+        }
+
+        next();
+      }
+
+      fetchPage();
+    }
+
+    function updateRunningDays() {
+      var el = document.getElementById("site-stats-running-days");
+      if (!el) return;
+      var startDate = el.getAttribute("data-start-date");
+      if (!startDate) return;
+      var now = new Date();
+      var start = new Date(startDate);
+      if (isNaN(start.getTime())) return;
+      var diffMs = Math.abs(now.getTime() - start.getTime());
+      var days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      el.textContent = String(days);
+    }
+
+    function refreshSiteStats() {
+      // 检查元素是否存在（可能在 swup 容器外或内）
+      var wordsEl = document.getElementById("site-stats-total-words");
+      var activityEl = document.getElementById("site-stats-last-activity");
+      if (wordsEl || activityEl) {
+        updateSiteStats();
+        updateRunningDays();
+      }
+    }
+
+    // 初始加载
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", refreshSiteStats);
+    } else {
+      refreshSiteStats();
+    }
+
+    // swup 页面切换后刷新（使用 DOM 事件，兼容 swup 4.x）
+    // SwupScriptsPlugin 会重新执行内联脚本，用全局标记防止重复注册
+    if (!window.__siteStatsSwupBound) {
+      window.__siteStatsSwupBound = true;
+      document.addEventListener("swup:contentReplaced", function () {
+        setTimeout(refreshSiteStats, 150);
+      });
+    } else {
+      // 脚本被 SwupScriptsPlugin 重新执行，直接刷新
+      refreshSiteStats();
+    }
+  })();
+</script>

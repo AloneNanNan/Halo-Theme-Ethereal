@@ -1,0 +1,26 @@
+apiVersion: theme.halo.run/v1alpha1
+kind: Theme
+metadata:
+  name: Ethereal
+spec:
+  displayName: Ethereal
+  author:
+    name: 楠南NanNan
+    website: https://www.nannax.top
+  description: 一个基于 Fuwari 二次开发，好看且实用的 Halo 主题。
+  logo: /themes/Ethereal/assets/images/favicon-light-192.png
+  homepage: https://github.com/AloneNanNan/halo-theme-ethereal#readme
+  repo: https://github.com/AloneNanNan/halo-theme-ethereal
+  issues: https://github.com/AloneNanNan/halo-theme-ethereal/issues
+  customTemplates:
+    page:
+      - name: "朋友圈"
+        description: "朋友圈动态页面"
+        file: "friends.html"
+  settingName: "Ethereal-setting"
+  configMapName: "Ethereal-configMap"
+  version: "1.0.0"
+  requires: ">=2.25.0"
+  license:
+    - name: "MIT"
+      url: "https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE"
