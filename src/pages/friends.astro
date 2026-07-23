@@ -47,7 +47,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       >
         <article
           th:each="item : ${allItems.items}"
-          class="friends-item btn-card btn-card-outline card-tilt group items-start! justify-start! min-h-24 rounded-xl p-4"
+          class="friends-item btn-card btn-card-outline card-tilt group items-start! justify-start! min-h-24 overflow-hidden rounded-xl p-4"
         >
           <div class="flex items-start gap-3">
             <div class="relative shrink-0">
@@ -88,7 +88,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                 th:href="${item.url}"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mt-2 block line-clamp-2 text-sm font-medium text-90 transition hover:text-(--primary) hover:underline"
+                class="mt-2 block break-all line-clamp-2 text-sm font-medium text-90 transition hover:text-(--primary) hover:underline"
               >
                 <span th:text="${item.title}">Title</span>
                 <span
@@ -98,7 +98,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
               <div
                 th:if="${not #strings.isEmpty(item.summary)}"
-                class="mt-1.5 line-clamp-2 text-xs text-50"
+                class="mt-1.5 break-all line-clamp-2 text-xs text-50"
                 th:text="${item.summary}"
               >
               </div>
