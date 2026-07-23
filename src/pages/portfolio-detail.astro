@@ -1,0 +1,273 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout
+  title="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
+>
+  <Fragment slot="head">
+    <title
+      th:text="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
+    >
+    </title>
+  </Fragment>
+
+  <th:block
+    th:with="platformLabels=${projectFinder.platformLabels()},
+             typeLabels=${projectFinder.typeLabels()},
+             content=${projectFinder.renderContent(project)}"
+  >
+    <article class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+      <!-- 头部：标签 + 标题 + 元信息 -->
+      <header class="mb-8">
+        <!-- 标签行 -->
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <span
+            th:if="${project.featured}"
+            class="inline-flex items-center gap-1 rounded-lg bg-(--primary)/10 px-3 py-1 text-sm font-medium text-(--primary)"
+          >
+            <span class="icon-[material-symbols--star-rounded] text-base"
+            ></span>
+            推荐
+          </span>
+          <span
+            th:if="${not #strings.isEmpty(project.platform)}"
+            class="inline-flex items-center rounded-lg bg-(--btn-regular-bg) px-3 py-1 text-sm font-medium text-(--btn-content)"
+            th:text="${platformLabels[project.platform] ?: project.platform}"
+            >Platform</span
+          >
+          <span
+            th:if="${not #strings.isEmpty(project.type)}"
+            class="inline-flex items-center rounded-lg bg-(--btn-regular-bg) px-3 py-1 text-sm font-medium text-(--btn-content)"
+            th:text="${typeLabels[project.type] ?: project.type}">Type</span
+          >
+        </div>
+
+        <!-- 标题 -->
+        <div class="relative">
+          <h1
+            class="mb-3 block w-full text-3xl font-bold text-black/90 transition before:absolute before:-left-4.5 before:top-3 before:h-5 before:rounded-md before:bg-(--primary) dark:text-white/90 md:text-[2.25rem]/[2.75rem] md:before:w-1"
+            th:text="${project.title}"
+          >
+            Project Title
+          </h1>
+        </div>
+
+        <!-- 元信息行 -->
+        <div
+          class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-50"
+        >
+          <!-- 创建日期 -->
+          <div
+            th:if="${not #strings.isEmpty(project.createTime)}"
+            class="flex items-center"
+          >
+            <div class="meta-icon">
+              <span
+                class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"
+              ></span>
+            </div>
+            <span
+              class="text-sm font-medium text-50"
+              th:text="${#strings.substring(project.createTime, 0, 10)}"
+              >2026-01-01</span
+            >
+          </div>
+
+          <!-- 外链 -->
+          <div class="flex items-center gap-4">
+            <a
+              th:if="${not #strings.isEmpty(project.repoUrl)}"
+              th:href="${project.repoUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+            >
+              <span class="icon-[material-symbols--code-rounded] text-lg"
+              ></span>
+              <span class="font-medium">仓库</span>
+              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
+              ></span>
+            </a>
+            <a
+              th:if="${not #strings.isEmpty(project.demoUrl)}"
+              th:href="${project.demoUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+            >
+              <span class="icon-[material-symbols--play-circle-rounded] text-lg"
+              ></span>
+              <span class="font-medium">演示</span>
+              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
+              ></span>
+            </a>
+            <a
+              th:if="${not #strings.isEmpty(project.docsUrl)}"
+              th:href="${project.docsUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+            >
+              <span class="icon-[material-symbols--description-rounded] text-lg"
+              ></span>
+              <span class="font-medium">文档</span>
+              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
+              ></span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <!-- 封面图 -->
+      <div
+        th:if="${not #strings.isEmpty(project.cover)}"
+        class="mb-5 overflow-hidden rounded-xl"
+      >
+        <img
+          th:src="${project.cover}"
+          th:alt="${project.title}"
+          loading="eager"
+          class="w-full max-h-[28rem] object-cover"
+        />
+      </div>
+
+      <!-- 正文内容 -->
+      <div
+        th:if="${not #strings.isEmpty(content)}"
+        class="prose-custom portfolio-content"
+      >
+        <div th:utext="${content}">Content</div>
+      </div>
+
+      <!-- 底部：技术栈 + 标签 -->
+      <div
+        th:if="${not #lists.isEmpty(project.techStacks) or not #lists.isEmpty(project.tags)}"
+        class="mt-8 border-t border-black/10 pt-6 dark:border-white/10"
+      >
+        <!-- 技术栈 -->
+        <div th:if="${not #lists.isEmpty(project.techStacks)}" class="mb-4">
+          <h3 class="mb-3 text-sm font-bold text-50">技术栈</h3>
+          <div class="flex flex-wrap gap-2">
+            <span
+              th:each="tech : ${project.techStacks}"
+              class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content) transition hover:bg-(--primary) hover:text-white dark:hover:text-black/70"
+              th:text="${tech}">Tech</span
+            >
+          </div>
+        </div>
+
+        <!-- 标签 -->
+        <div th:if="${not #lists.isEmpty(project.tags)}">
+          <h3 class="mb-3 text-sm font-bold text-50">标签</h3>
+          <div class="flex flex-wrap gap-2">
+            <span
+              th:each="tag : ${project.tags}"
+              class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
+              th:text="${tag}">Tag</span
+            >
+          </div>
+        </div>
+      </div>
+    </article>
+  </th:block>
+</MainGridLayout>
+
+<style is:global>
+  /* 正文内容样式 - 与文章页保持一致 */
+  .portfolio-content {
+    color: var(--content-color, inherit);
+    line-height: 1.8;
+  }
+
+  .portfolio-content h1,
+  .portfolio-content h2,
+  .portfolio-content h3,
+  .portfolio-content h4,
+  .portfolio-content h5,
+  .portfolio-content h6 {
+    color: var(--heading-color, var(--text-90));
+    font-weight: 700;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .portfolio-content h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid rgb(0 0 0 / 0.08);
+    padding-bottom: 0.3em;
+  }
+
+  :global(html.dark) .portfolio-content h2 {
+    border-bottom-color: rgb(255 255 255 / 0.08);
+  }
+
+  .portfolio-content p {
+    margin-bottom: 1em;
+  }
+
+  .portfolio-content a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .portfolio-content a:hover {
+    opacity: 0.8;
+  }
+
+  .portfolio-content img {
+    max-width: 100%;
+    border-radius: var(--radius-large, 0.75rem);
+    margin: 1.5em 0;
+  }
+
+  .portfolio-content pre {
+    border-radius: var(--radius-large, 0.75rem);
+    margin: 1em 0;
+    overflow-x: auto;
+  }
+
+  .portfolio-content code {
+    font-size: 0.875em;
+  }
+
+  .portfolio-content blockquote {
+    border-left: 3px solid var(--primary);
+    padding-left: 1em;
+    margin: 1em 0;
+    color: var(--text-50);
+  }
+
+  .portfolio-content ul,
+  .portfolio-content ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  .portfolio-content li {
+    margin-bottom: 0.25em;
+  }
+
+  .portfolio-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+  }
+
+  .portfolio-content th,
+  .portfolio-content td {
+    border: 1px solid rgb(0 0 0 / 0.1);
+    padding: 0.5em 0.75em;
+  }
+
+  :global(html.dark) .portfolio-content th,
+  :global(html.dark) .portfolio-content td {
+    border-color: rgb(255 255 255 / 0.1);
+  }
+
+  .portfolio-content th {
+    background: var(--btn-regular-bg);
+    font-weight: 600;
+  }
+</style>
