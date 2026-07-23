@@ -12,15 +12,26 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   </Fragment>
 
   <section
-    class="card-base onload-animation mb-4 overflow-hidden px-5 py-5 md:px-7 md:py-6"
+    class="card-base onload-animation mb-4 overflow-hidden px-6 py-6 md:px-9"
   >
     <div
       class="mb-5 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
     >
-      <div>
-        <h1 class="text-3xl font-bold text-90" th:text="${title}">瞬间</h1>
-        <div class="mt-1 text-sm text-50">
-          <span th:text="#{page.moments.count(${moments.total})}">0 条动态</span
+      <div class="min-w-0">
+        <h1
+          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+          th:text="${title}"
+        >
+          瞬间
+        </h1>
+        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+          <span
+            class="icon-[material-symbols--update-rounded] text-base text-(--primary)"
+          ></span>
+          <span class="font-bold text-(--primary)">我的动态</span>
+          <span class="text-30">·</span>
+          <span class="text-50" th:text="'共 ' + ${moments.total} + ' 条动态'"
+            >共 0 条动态</span
           >
         </div>
       </div>

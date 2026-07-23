@@ -10,17 +10,32 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <!-- 标题区域 -->
-    <div class="mb-6 flex flex-col gap-2">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex flex-col gap-2">
-          <h1 class="text-3xl font-bold text-90" th:text="${title}">
-            装备管理
-          </h1>
-          <div class="text-sm text-50">
-            <span class="icon-[material-symbols--settings-suggest-rounded] mr-1"
-            ></span>
-            <span>Equipment</span>
-          </div>
+    <div
+      class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+    >
+      <div class="min-w-0">
+        <h1
+          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+          th:text="${title}"
+        >
+          装备管理
+        </h1>
+        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+          <span
+            class="icon-[material-symbols--devices-rounded] text-base text-(--primary)"
+          ></span>
+          <span class="font-bold text-(--primary)">我的装备</span>
+          <span class="text-30">·</span>
+          <span
+            th:if="${not #lists.isEmpty(param.group) and equipments != null}"
+            th:text="${'共 ' + equipments.total + ' 个装备'}"
+            class="text-50">0 个装备</span
+          >
+          <span
+            th:if="${#lists.isEmpty(param.group) and groups != null and not #lists.isEmpty(groups)}"
+            th:text="${'共 ' + #aggregates.sum(groups.![status.equipmentCount]) + ' 个装备'}"
+            class="text-50">0 个装备</span
+          >
         </div>
       </div>
     </div>

@@ -33,13 +33,24 @@ import "../styles/link-submit-modal.css";
     <div
       class="mb-6 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
     >
-      <div>
-        <h1 class="text-3xl font-bold text-90" th:text="${linksTitle}">
+      <div class="min-w-0">
+        <h1
+          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+          th:text="${linksTitle}"
+        >
           友情链接
         </h1>
-        <div class="mt-1 text-sm text-50">
-          <span class="icon-[material-symbols--link-rounded] mr-1"></span>
-          <span>Friends links</span>
+        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+          <span
+            class="icon-[material-symbols--diversity-3-rounded] text-base text-(--primary)"
+          ></span>
+          <span class="font-bold text-(--primary)">朋友们</span>
+          <span class="text-30">·</span>
+          <span
+            th:if="${groups != null and not #lists.isEmpty(groups)}"
+            th:text="${'共 ' + #aggregates.sum(groups.![links.size()]) + ' 个链接'}"
+            class="text-50">0 个链接</span
+          >
         </div>
       </div>
       <button

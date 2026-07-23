@@ -28,34 +28,23 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
       >
         <div class="min-w-0">
-          <div
-            class="mb-2 flex flex-wrap items-center gap-2 text-sm font-bold text-(--primary)"
-          >
-            <span class="icon-[material-symbols--inventory-2-rounded] text-xl"
-            ></span>
-            <span>我的项目</span>
-          </div>
           <h1
-            class="text-3xl font-bold text-90 md:text-4xl"
+            class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
             th:text="${projectFinder.setting().seoTitle ?: '作品集'}"
           >
             作品集
           </h1>
-          <div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-50">
+          <div class="flex flex-wrap items-center gap-1.5 text-sm">
+            <span
+              class="icon-[material-symbols--inventory-2-rounded] text-base text-(--primary)"
+            ></span>
+            <span class="font-bold text-(--primary)">我的项目</span>
+            <span class="text-30">·</span>
             <span
               th:if="${projects != null}"
-              th:text="${projects.total + ' 个项目'}">0 个项目</span
+              th:text="${'共 ' + projects.total + ' 个项目'}"
+              class="text-50">0 个项目</span
             >
-            <span
-              th:if="${projects != null and projects.totalPages gt 0}"
-              class="text-30">/</span
-            >
-            <span
-              th:if="${projects != null and projects.totalPages gt 0}"
-              th:text="${'第 ' + projects.page + ' / ' + projects.totalPages + ' 页'}"
-            >
-              第 1 / 1 页
-            </span>
             <span
               th:if="${not #strings.isEmpty(platform) or not #strings.isEmpty(type)}"
               class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
