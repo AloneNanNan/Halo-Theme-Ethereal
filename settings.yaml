@@ -228,6 +228,33 @@ spec:
                   name: url
                   label: 跳转链接
                   validation: required
+        - $formkit: group
+          name: externalFont
+          label: 外部字体
+          value:
+            enable: false
+            family: ""
+          children:
+            - $formkit: switch
+              name: enable
+              id: externalFont_enable
+              label: 启用外部字体
+              value: false
+              help: "使用第三方字体替换浏览器默认字体，当前仅支持全局替换"
+            - $formkit: attachment
+              name: fontFile
+              if: "$get(externalFont_enable).value"
+              label: 字体资源
+              value: ""
+              validation: required
+              help: "上传字体文件（TTF/OTF/WOFF/WOFF2），或粘贴 Google Fonts 等 CSS 链接地址"
+            - $formkit: text
+              name: family
+              if: "$get(externalFont_enable).value"
+              label: font-family 名称
+              value: ""
+              validation: required
+              help: "填写要应用的字体名称"
     - group: sidebar
       label: 侧边栏
       formSchema:

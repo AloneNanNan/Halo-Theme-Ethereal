@@ -54,6 +54,13 @@ export interface Style {
   enable_change_color_scheme: boolean;
   styleSwitches?: StyleSwitches;
   floatingButtons?: FloatingButtons;
+  externalFont?: ExternalFont;
+}
+
+export interface ExternalFont {
+  enable?: boolean;
+  fontFile?: string;
+  family?: string;
 }
 
 export interface StyleSwitches {

@@ -19,7 +19,7 @@ spec:
         file: "friends.html"
   settingName: "Ethereal-setting"
   configMapName: "Ethereal-configMap"
-  version: "1.0.1"
+  version: "1.0.2"
   requires: ">=2.25.0"
   license:
     - name: "MIT"

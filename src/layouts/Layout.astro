@@ -176,10 +176,60 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         };
 
         console.log(
-          "%c🌙 Ethereal %cv1.0.1",
+          "%c🌙 Ethereal %cv1.0.2",
           "color:#8b5cf6;font-weight:bold;",
           "color:#888;",
         );
+      })();
+    </script>
+    <!-- 外部字体：自动检测 CSS 链接 / 字体文件 -->
+    <script
+      th:if="${theme.config?.style?.externalFont?.enable and not #strings.isEmpty(theme.config?.style?.externalFont?.fontFile)}"
+      th:inline="javascript"
+    >
+      (function () {
+        var FORMAT_MAP = {
+          woff2: "woff2",
+          woff: "woff",
+          ttf: "truetype",
+          otf: "opentype",
+          eot: "embedded-opentype",
+          svg: "svg",
+        };
+        var url = /*[[${theme.config.style.externalFont.fontFile}]]*/ "";
+        var family = /*[[${theme.config.style.externalFont.family}]]*/ "";
+        if (!url) return;
+        // CSS 链接模式：.css 结尾或包含 fonts.googleapis.com
+        if (
+          /\.css(\?|$)/.test(url) ||
+          url.indexOf("fonts.googleapis.com") !== -1
+        ) {
+          var link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = url;
+          document.head.appendChild(link);
+          if (family) {
+            var s = document.createElement("style");
+            s.textContent = "body{font-family:" + family + "}";
+            document.head.appendChild(s);
+          }
+        } else {
+          // 字体文件模式：根据扩展名自动检测字体格式
+          if (family) {
+            var ext = (url.split(".").pop().split("?")[0] || "").toLowerCase();
+            var fmt = FORMAT_MAP[ext] || "woff2";
+            var s = document.createElement("style");
+            s.textContent =
+              '@font-face{font-family:"EtherealCustomFont";src:url(' +
+              url +
+              ') format("' +
+              fmt +
+              '");font-weight:400;font-style:normal;font-display:swap}body{font-family:"EtherealCustomFont",' +
+              family +
+              "}";
+            document.head.appendChild(s);
+          }
+        }
       })();
     </script>
     <slot name="head" />
