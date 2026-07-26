@@ -66,7 +66,6 @@ export interface ExternalFont {
 export interface StyleSwitches {
   banner_wave?: boolean;
   navbar_blur?: boolean;
-  card_tilt?: boolean;
 }
 
 export interface FloatingButtons {

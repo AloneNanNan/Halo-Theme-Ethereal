@@ -171,7 +171,6 @@ spec:
           value:
             banner_wave: true
             navbar_blur: true
-            card_tilt: true
           children:
             - $formkit: switch
               name: banner_wave
@@ -183,11 +182,7 @@ spec:
               label: 高级材质
               value: true
               help: "启用后导航栏等元素变为半透明磨砂模糊效果"
-            - $formkit: switch
-              name: card_tilt
-              label: 卡片3D倾斜效果
-              value: true
-              help: "鼠标悬停时部分卡片跟随鼠标产生3D倾斜动画，触控设备自动禁用"
+
         - $formkit: group
           name: floatingButtons
           label: 浮动导航按钮

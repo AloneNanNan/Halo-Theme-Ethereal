@@ -30,9 +30,10 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
       <a
-        th:each="category : ${categories}"
+        th:each="category, stat : ${categories}"
         th:href="@{${category.status.permalink}}"
-        class="btn-card btn-card-outline card-tilt group min-h-24 justify-between! rounded-2xl px-5 py-4 text-left"
+        th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
+        class="btn-card btn-card-outline group min-h-24 justify-between! rounded-2xl px-5 py-4 text-left onload-animation"
       >
         <div>
           <div

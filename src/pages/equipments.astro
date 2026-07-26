@@ -1,5 +1,5 @@
 ---
-import Pagination from "../components/control/Pagination.astro";
+import EquipmentPagination from "../components/EquipmentPagination.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -27,17 +27,28 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <span class="font-bold text-(--primary)">我的装备</span>
           <span class="text-30">·</span>
           <span
-            th:if="${not #lists.isEmpty(param.group) and equipments != null}"
+            th:if="${equipments != null}"
             th:text="${'共 ' + equipments.total + ' 个装备'}"
             class="text-50">0 个装备</span
           >
           <span
-            th:if="${#lists.isEmpty(param.group) and groups != null and not #lists.isEmpty(groups)}"
-            th:text="${'共 ' + #aggregates.sum(groups.![status.equipmentCount]) + ' 个装备'}"
-            class="text-50">0 个装备</span
+            th:if="${not #lists.isEmpty(param.group)}"
+            class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
           >
+            筛选中
+          </span>
         </div>
       </div>
+
+      <a
+        th:if="${not #lists.isEmpty(param.group)}"
+        th:href="@{/equipments}"
+        class="btn-card h-11 w-fit rounded-lg px-4 text-sm font-bold text-75"
+      >
+        <span class="icon-[material-symbols--close-rounded] mr-1 text-xl"
+        ></span>
+        <span>清除筛选</span>
+      </a>
     </div>
 
     <!-- 分组标签 -->
@@ -64,185 +75,81 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       </a>
     </div>
 
-    <!-- 按分组展示（无group筛选） -->
-    <div th:if="${#lists.isEmpty(param.group)}">
-      <div th:if="${not #lists.isEmpty(groups)}" class="space-y-8">
-        <section
-          th:each="group, groupStat : ${groups}"
-          th:if="${not #lists.isEmpty(group.equipments)}"
-          th:style="|animation-delay: calc(var(--content-delay) + ${groupStat.index * 50}ms)|"
-          class="onload-animation"
-        >
-          <div class="mb-4 flex items-center justify-between gap-4">
-            <div>
-              <h2 class="text-xl font-bold text-90">
-                <span th:text="${group.spec.displayName}">Group</span>
-              </h2>
-              <div
-                th:if="${not #strings.isEmpty(group.spec.description)}"
-                class="mt-0.5 text-sm text-50"
-                th:text="${group.spec.description}"
-              >
-              </div>
-            </div>
-            <span
-              class="rounded-lg bg-(--btn-regular-bg) px-2.5 py-1 text-xs font-bold text-(--btn-content)"
-              th:text="${group.status.equipmentCount}">0</span
-            >
-          </div>
-
-          <div
-            class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
-          >
-            <div
-              th:each="equipment, equipStat : ${group.equipments}"
-              th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + equipStat.index) * 35}ms)|"
-              class="btn-card btn-card-outline card-tilt group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95"
-            >
-              <!-- 封面 -->
-              <div
-                th:if="${not #strings.isEmpty(equipment.spec.cover)}"
-                class="w-full overflow-hidden rounded-lg bg-(--btn-regular-bg) -mt-1"
-              >
-                <img
-                  th:src="${equipment.spec.cover}"
-                  th:alt="${equipment.spec.displayName}"
-                  loading="lazy"
-                  class="h-36 w-full object-cover transition group-hover:scale-105"
-                />
-              </div>
-              <div class="w-full min-w-0">
-                <!-- 名称+链接 -->
-                <div class="flex items-start gap-2">
-                  <a
-                    th:href="${equipment.spec.url}"
-                    th:title="${equipment.spec.displayName}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="min-w-0 flex-1 text-base font-bold text-90 transition hover:text-(--primary)"
-                  >
-                    <span
-                      class="line-clamp-2"
-                      th:text="${equipment.spec.displayName}"
-                    >
-                      Equipment
-                    </span>
-                  </a>
-                  <span
-                    th:if="${not #strings.isEmpty(equipment.spec.url)}"
-                    class="icon-[fa6-solid--arrow-up-right-from-square] mt-0.5 shrink-0 text-sm text-30 transition group-hover:text-(--primary)"
-                  ></span>
-                </div>
-                <!-- 规格 -->
-                <div
-                  th:if="${not #strings.isEmpty(equipment.spec.specification)}"
-                  class="mt-1.5 text-sm font-medium text-(--primary)"
-                  th:text="${equipment.spec.specification}"
-                >
-                  Specification
-                </div>
-                <!-- 描述 -->
-                <div
-                  th:if="${not #strings.isEmpty(equipment.spec.description)}"
-                  class="mt-1 line-clamp-2 text-sm leading-6 text-50"
-                  th:text="${equipment.spec.description}"
-                >
-                  Description
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div th:if="${#lists.isEmpty(groups)}" class="py-12 text-center text-50">
-        <span
-          class="icon-[material-symbols--inventory-2-rounded] text-5xl text-30"
-        ></span>
-        <p class="mt-4">暂无装备</p>
-      </div>
-    </div>
-
-    <!-- 分页列表（有group筛选时） -->
-    <div th:if="${not #lists.isEmpty(param.group)}">
+    <!-- 装备卡片网格（统一分页） -->
+    <div
+      th:if="${equipments != null and not #lists.isEmpty(equipments.items)}"
+      class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
+    >
       <div
-        th:if="${not #lists.isEmpty(equipments.items)}"
-        class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
+        th:each="equipment, equipStat : ${equipments.items}"
+        th:style="|animation-delay: calc(var(--content-delay) + ${equipStat.index * 50}ms)|"
+        class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation"
       >
+        <!-- 封面 -->
         <div
-          th:each="equipment, equipStat : ${equipments.items}"
-          th:style="|animation-delay: calc(var(--content-delay) + ${equipStat.index * 50}ms)|"
-          class="btn-card btn-card-outline card-tilt group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95"
+          th:if="${not #strings.isEmpty(equipment.spec.cover)}"
+          class="w-full overflow-hidden rounded-lg bg-(--btn-regular-bg) -mt-1"
         >
-          <!-- 封面 -->
-          <div
-            th:if="${not #strings.isEmpty(equipment.spec.cover)}"
-            class="w-full overflow-hidden rounded-lg bg-(--btn-regular-bg) -mt-1"
-          >
-            <img
-              th:src="${equipment.spec.cover}"
-              th:alt="${equipment.spec.displayName}"
-              loading="lazy"
-              class="h-36 w-full object-cover transition group-hover:scale-105"
-            />
-          </div>
-          <div class="w-full min-w-0">
-            <!-- 名称+链接 -->
-            <div class="flex items-start gap-2">
-              <a
-                th:href="${equipment.spec.url}"
-                th:title="${equipment.spec.displayName}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="min-w-0 flex-1 text-base font-bold text-90 transition hover:text-(--primary)"
-              >
-                <span
-                  class="line-clamp-2"
-                  th:text="${equipment.spec.displayName}"
-                >
-                  Equipment
-                </span>
-              </a>
+          <img
+            th:src="${equipment.spec.cover}"
+            th:alt="${equipment.spec.displayName}"
+            loading="lazy"
+            class="h-36 w-full object-cover transition group-hover:scale-105"
+          />
+        </div>
+        <div class="w-full min-w-0">
+          <!-- 名称+链接 -->
+          <div class="flex items-start gap-2">
+            <a
+              th:href="${equipment.spec.url}"
+              th:title="${equipment.spec.displayName}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="min-w-0 flex-1 text-base font-bold text-90 transition hover:text-(--primary)"
+            >
               <span
-                th:if="${not #strings.isEmpty(equipment.spec.url)}"
-                class="icon-[fa6-solid--arrow-up-right-from-square] mt-0.5 shrink-0 text-sm text-30 transition group-hover:text-(--primary)"
-              ></span>
-            </div>
-            <!-- 规格 -->
-            <div
-              th:if="${not #strings.isEmpty(equipment.spec.specification)}"
-              class="mt-1.5 text-sm font-medium text-(--primary)"
-              th:text="${equipment.spec.specification}"
-            >
-              Specification
-            </div>
-            <!-- 描述 -->
-            <div
-              th:if="${not #strings.isEmpty(equipment.spec.description)}"
-              class="mt-1 line-clamp-2 text-sm leading-6 text-50"
-              th:text="${equipment.spec.description}"
-            >
-              Description
-            </div>
+                class="line-clamp-2"
+                th:text="${equipment.spec.displayName}"
+              >
+                Equipment
+              </span>
+            </a>
+            <span
+              th:if="${not #strings.isEmpty(equipment.spec.url)}"
+              class="icon-[fa6-solid--arrow-up-right-from-square] mt-0.5 shrink-0 text-sm text-30 transition group-hover:text-(--primary)"
+            ></span>
+          </div>
+          <!-- 规格 -->
+          <div
+            th:if="${not #strings.isEmpty(equipment.spec.specification)}"
+            class="mt-1.5 text-sm font-medium text-(--primary)"
+            th:text="${equipment.spec.specification}"
+          >
+            Specification
+          </div>
+          <!-- 描述 -->
+          <div
+            th:if="${not #strings.isEmpty(equipment.spec.description)}"
+            class="mt-1 line-clamp-2 text-sm leading-6 text-50"
+            th:text="${equipment.spec.description}"
+          >
+            Description
           </div>
         </div>
       </div>
+    </div>
 
-      <div
-        th:if="${#lists.isEmpty(equipments.items)}"
-        class="py-12 text-center text-50"
-      >
-        <span
-          class="icon-[material-symbols--inventory-2-rounded] text-5xl text-30"
-        ></span>
-        <p class="mt-4">暂无装备</p>
-      </div>
+    <!-- 空状态 -->
+    <div
+      th:if="${equipments == null or #lists.isEmpty(equipments.items)}"
+      class="py-16 text-center text-50"
+    >
+      <span
+        class="icon-[material-symbols--inventory-2-rounded] text-5xl text-30"
+      ></span>
+      <p class="mt-4">暂无装备</p>
     </div>
   </section>
 
-  <Pagination
-    th:if="${not #lists.isEmpty(param.group)}"
-    context="equipments"
-    class="mb-4 onload-animation"
-  />
+  <EquipmentPagination context="equipments" class="mb-4 onload-animation" />
 </MainGridLayout>

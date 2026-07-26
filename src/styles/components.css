@@ -67,11 +67,6 @@
     border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
   }
 
-  /* 卡片 3D 倾斜 - transition 由 .btn-card 的 Tailwind transition 处理 */
-  .card-tilt {
-    transform-style: preserve-3d;
-  }
-
   .btn-plain {
     @apply relative flex items-center justify-center bg-transparent text-black/75 transition hover:text-(--primary) dark:text-white/75 dark:hover:text-(--primary);
   }

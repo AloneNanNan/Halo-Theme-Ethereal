@@ -98,7 +98,7 @@ import "../styles/photos-gallery-lightbox.css";
       >
         <article
           th:each="photo, photoStat : ${photos.items}"
-          class="photo-gallery-item group/photo-item relative mb-4 block w-full break-inside-avoid"
+          class="photo-gallery-item group/photo-item relative mb-4 block w-full break-inside-avoid onload-animation"
           th:style="|animation-delay: calc(var(--content-delay) + ${photoStat.index * 50}ms)|"
         >
           <a

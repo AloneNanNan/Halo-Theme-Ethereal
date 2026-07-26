@@ -1,5 +1,4 @@
 ---
-import Pagination from "../components/control/Pagination.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -18,11 +17,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
              typeLabels=${projectFinder.typeLabels()},
              platform=${#strings.isEmpty(param.platform) ? '' : param.platform},
              type=${#strings.isEmpty(param.type) ? '' : param.type},
-             currentPage=${#strings.isEmpty(param.page) ? 1 : param.page},
-             pageSize=${#strings.isEmpty(param.size) ? 12 : param.size},
-             projects=${projectFinder.listBy('', platform, type, '', currentPage, pageSize)}"
+             projects=${projectFinder.listBy('', platform, type, '', 1, 999)}"
   >
-    <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+    <section class="card-base mb-4 px-6 py-6 md:px-9 onload-animation">
       <!-- 标题区域 -->
       <div
         class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
@@ -103,7 +100,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
       <!-- 推荐项目（仅首页无筛选时展示） -->
       <th:block
-        th:if="${#strings.isEmpty(platform) and #strings.isEmpty(type) and (#strings.isEmpty(param.page) or param.page == '1')}"
+        th:if="${#strings.isEmpty(platform) and #strings.isEmpty(type)}"
       >
         <th:block th:with="featured=${projectFinder.featured(1, 6)}">
           <div
@@ -121,8 +118,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
               <div
                 th:each="project, stat : ${featured.items}"
-                th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 60}ms)|"
-                class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation"
+                th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
+                class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95"
               >
                 <!-- 封面 -->
                 <a
@@ -204,7 +201,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <div
           th:each="project, stat : ${projects.items}"
           th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
-          class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation"
+          class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95"
         >
           <!-- 封面 -->
           <a
@@ -315,7 +312,5 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </p>
       </div>
     </section>
-
-    <Pagination context="projects" class="mb-4 onload-animation" />
   </th:block>
 </MainGridLayout>
