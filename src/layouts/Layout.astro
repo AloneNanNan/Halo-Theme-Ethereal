@@ -236,7 +236,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   </head>
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
-    th:classappend="${(theme.config?.base?.banner?.enable ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '')}"
+    th:classappend="${(theme.config?.base?.banner?.enable ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
     th:style="|--bannerOffset: ${theme.config?.base?.banner?.position == 'top' ? '30vh' : (theme.config?.base?.banner?.position == 'bottom' ? '0' : '15vh')};|"
     data-overlayscrollbars-initialize
   >

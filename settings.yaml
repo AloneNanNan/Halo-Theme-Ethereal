@@ -171,6 +171,7 @@ spec:
           value:
             banner_wave: true
             navbar_blur: true
+            card_hover_lift: true
           children:
             - $formkit: switch
               name: banner_wave
@@ -182,6 +183,11 @@ spec:
               label: 高级材质
               value: true
               help: "启用后导航栏等元素变为半透明磨砂模糊效果"
+            - $formkit: switch
+              name: card_hover_lift
+              label: 卡片悬浮效果
+              value: true
+              help: "卡片悬停时轻微上移并显示主题色阴影"
 
         - $formkit: group
           name: floatingButtons

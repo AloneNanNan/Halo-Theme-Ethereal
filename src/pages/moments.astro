@@ -69,7 +69,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <article
         th:each="moment, momentStat : ${moments.items}"
         th:with="content=${moment.spec.content}"
-        class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation"
+        class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation card-hover-lift"
         th:style="|animation-delay: calc(var(--content-delay) + ${momentStat.index * 50}ms)|"
       >
         <div class="flex items-start gap-4">

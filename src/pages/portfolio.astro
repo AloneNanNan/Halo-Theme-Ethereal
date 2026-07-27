@@ -119,7 +119,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               <div
                 th:each="project, stat : ${featured.items}"
                 th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
-                class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95"
+                class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95 card-hover-lift"
               >
                 <!-- 封面 -->
                 <a
@@ -201,7 +201,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <div
           th:each="project, stat : ${projects.items}"
           th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
-          class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95"
+          class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95 card-hover-lift"
         >
           <!-- 封面 -->
           <a

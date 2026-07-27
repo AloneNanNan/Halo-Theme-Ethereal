@@ -115,10 +115,10 @@ import "../styles/link-submit-modal.css";
             th:href="${link.spec.url}"
             th:title="${link.spec.displayName}"
             th:attr="data-link-group=${group.spec.displayName}"
-            th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + linkStat.index) * 35}ms)|"
+            th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + linkStat.index) * 50}ms)|"
             target="_blank"
             rel="noopener noreferrer"
-            class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation"
+            class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation card-hover-lift"
           >
             <img
               alt=""

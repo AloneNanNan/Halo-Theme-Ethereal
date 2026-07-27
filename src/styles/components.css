@@ -464,19 +464,9 @@
   letter-spacing: 0.02em;
 }
 
-/* 条目卡片 */
-.friends-card {
-  transition:
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.friends-card:hover {
+/* 卡片悬浮上移 + 主题色阴影（受样式开关控制） */
+body.card-hover-lift-enabled .card-hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
-}
-
-:root.dark .friends-card:hover {
   box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
 }
 

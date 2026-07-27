@@ -80,10 +80,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       th:if="${equipments != null and not #lists.isEmpty(equipments.items)}"
       class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
     >
-      <div
+      <a
         th:each="equipment, equipStat : ${equipments.items}"
+        th:href="${equipment.spec.url}"
+        th:title="${equipment.spec.displayName}"
+        target="_blank"
+        rel="noopener noreferrer"
         th:style="|animation-delay: calc(var(--content-delay) + ${equipStat.index * 50}ms)|"
-        class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation"
+        class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation card-hover-lift"
       >
         <!-- 封面 -->
         <div
@@ -100,12 +104,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <div class="w-full min-w-0">
           <!-- 名称+链接 -->
           <div class="flex items-start gap-2">
-            <a
-              th:href="${equipment.spec.url}"
-              th:title="${equipment.spec.displayName}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="min-w-0 flex-1 text-base font-bold text-90 transition hover:text-(--primary)"
+            <div
+              class="min-w-0 flex-1 text-base font-bold text-90 transition group-hover:text-(--primary)"
             >
               <span
                 class="line-clamp-2"
@@ -113,7 +113,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               >
                 Equipment
               </span>
-            </a>
+            </div>
             <span
               th:if="${not #strings.isEmpty(equipment.spec.url)}"
               class="icon-[fa6-solid--arrow-up-right-from-square] mt-0.5 shrink-0 text-sm text-30 transition group-hover:text-(--primary)"
@@ -136,7 +136,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             Description
           </div>
         </div>
-      </div>
+      </a>
     </div>
 
     <!-- 空状态 -->

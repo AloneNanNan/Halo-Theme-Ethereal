@@ -20,12 +20,12 @@ html.is-animating #right-sidebar {
 
 @keyframes fade-in-up {
   0% {
-    transform: translateY(2rem);
+    translate: 0 2rem;
     opacity: 0;
   }
 
   100% {
-    transform: translateY(0);
+    translate: 0 0;
     opacity: 1;
   }
 }

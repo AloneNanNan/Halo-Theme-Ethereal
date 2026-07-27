@@ -3,7 +3,7 @@ import PostMeta from "./PostMeta.astro";
 ---
 
 <article
-  class="card-base relative flex w-full flex-col-reverse overflow-hidden rounded-(--radius-large) md:flex-col"
+  class="card-base relative flex w-full flex-col-reverse rounded-(--radius-large) md:flex-col card-hover-lift overflow-hidden"
   th:classappend="${#strings.isEmpty(post.spec.cover) ? ' no-cover' : ' has-cover'}"
 >
   <div

@@ -102,7 +102,7 @@ import "../styles/photos-gallery-lightbox.css";
           th:style="|animation-delay: calc(var(--content-delay) + ${photoStat.index * 50}ms)|"
         >
           <a
-            class="photo-gallery-link group block w-full cursor-zoom-in overflow-hidden rounded-xl bg-black/5 text-left transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--primary) active:scale-[0.99] dark:bg-white/5"
+            class="photo-gallery-link group block w-full cursor-zoom-in overflow-hidden rounded-xl bg-black/5 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--primary) active:scale-95 dark:bg-white/5 card-hover-lift"
             data-no-swup
             th:href="${photo.spec.url}"
             th:attr="data-pswp-src=${photo.spec.url},data-pswp-width=${photo.exif != null and photo.exif.imageWidth != null ? photo.exif.imageWidth : 0},data-pswp-height=${photo.exif != null and photo.exif.imageHeight != null ? photo.exif.imageHeight : 0}"
@@ -156,7 +156,7 @@ import "../styles/photos-gallery-lightbox.css";
                 th:src="${not #strings.isEmpty(photo.spec.cover) ? photo.spec.cover : photo.spec.url}"
                 th:alt="${photo.spec.displayName}"
                 loading="lazy"
-                class="photo-cover w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                class="photo-cover w-full object-cover transition duration-300 group-hover:scale-105"
               />
               <figcaption
                 th:if="${not #strings.isEmpty(photo.spec.displayName) or not #strings.isEmpty(photo.spec.description) or not #lists.isEmpty(photo.spec.tags) or (photo.exif != null and (photo.exif.dateTimeOriginal != null or not #strings.isEmpty(photo.exif.make) or not #strings.isEmpty(photo.exif.model)))}"
