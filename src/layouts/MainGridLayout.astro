@@ -221,410 +221,93 @@ const {
     }
   </div>
 
-  <script is:inline>
-    // Banner 叠加层：首页可见 + 居中 + 响应式字号 + 空间不足隐藏
-    (function () {
-      // ── Banner 响应式常量 ──
-      var MIN_BANNER_HEIGHT = 180;
-      var BP_TABLET = 768;
-      var TITLE_MIN_REM = 1.8;
-      var TITLE_MAX_REM = 3.5;
-      var TITLE_VW_FACTOR = 0.007;
-      var SUB_SIZE_480 = 1.0;
-      var SUB_SIZE_640 = 1.125;
-      var SUB_SIZE_767 = 1.25;
-      var SUB_SIZE_DEFAULT = 1.5;
-
-      // 保存 th:style 原始字号，PC 端原样还原
-      var origTitleSize = null;
-      var origSubSize = null;
-      var origCursorH = null;
-
-      function getEl(id) {
-        return document.getElementById(id);
-      }
-
-      function isHomepage() {
-        var p = window.location.pathname;
-        return (
-          (p
-            .replace(/\/+$/, "")
-            .replace(/\/index\.html$/, "")
-            .replace(/\/index$/, "") || "/") === "/"
-        );
-      }
-
-      function saveOriginals() {
-        var t = getEl("banner-title");
-        var s = getEl("banner-subtitle");
-        var c = getEl("banner-cursor");
-        if (t && origTitleSize === null) origTitleSize = t.style.fontSize || "";
-        if (s && origSubSize === null) origSubSize = s.style.fontSize || "";
-        if (c && origCursorH === null) origCursorH = c.style.height || "";
-      }
-
-      function applyResponsive() {
-        saveOriginals();
-        var title = getEl("banner-title");
-        var sub = getEl("banner-subtitle");
-        var cursor = getEl("banner-cursor");
-
-        if (window.innerWidth <= BP_TABLET) {
-          // 标题：min(userSize, vw%) 响应式策略
-          // 10vw / 14px(移动端 root) → 乘数 0.007，上限 3.5rem，下限 1.8rem
-          var w = window.innerWidth;
-          var ts = Math.max(
-            TITLE_MIN_REM,
-            Math.min(TITLE_MAX_REM, w * TITLE_VW_FACTOR),
-          );
-
-          // 副标题：按断点逐级缩放
-          var ss;
-          if (w <= 480) ss = SUB_SIZE_480;
-          else if (w <= 640) ss = SUB_SIZE_640;
-          else if (w <= 767) ss = SUB_SIZE_767;
-          else ss = SUB_SIZE_DEFAULT;
-          if (title) title.style.fontSize = ts.toFixed(2) + "rem";
-          if (sub) sub.style.fontSize = ss.toFixed(2) + "rem";
-          if (cursor) cursor.style.height = ss.toFixed(2) + "rem";
-        } else {
-          // PC：还原 th:style 原始值
-          if (title && origTitleSize) title.style.fontSize = origTitleSize;
-          if (sub && origSubSize) sub.style.fontSize = origSubSize;
-          if (cursor && origCursorH) cursor.style.height = origCursorH;
-        }
-      }
-
-      function positionOverlay() {
-        var overlay = getEl("banner-overlay");
-        var wrapper = getEl("banner-wrapper");
-        if (overlay && wrapper) {
-          // overlay 本身有 absolute inset-0，覆盖整个 wrapper
-          // is-home 生效后 wrapper translate-y 将其带到视口顶部
-          // 仅做清理：移除可能由旧逻辑残留的 inline top/bottom
-          overlay.style.top = "";
-          overlay.style.bottom = "";
-        }
-      }
-
-      function updateVisibility() {
-        var overlay = getEl("banner-overlay");
-        if (!overlay) return;
-        if (!isHomepage()) {
-          // 非首页：淡出
-          overlay.classList.add("banner-text-hidden");
-          return;
-        }
-
-        var wrapper = getEl("banner-wrapper");
-        if (!wrapper) {
-          overlay.classList.remove("banner-text-hidden");
-          return;
-        }
-        var wasHidden = overlay.classList.contains("banner-text-hidden");
-        var rect = wrapper.getBoundingClientRect();
-        if (rect.bottom >= MIN_BANNER_HEIGHT) {
-          overlay.classList.remove("banner-text-hidden");
-          // 从隐藏变为可见时，通知打字机/下坠脚本重新初始化
-          if (wasHidden) {
-            document.dispatchEvent(new CustomEvent("banner:visible"));
-          }
-        } else {
-          overlay.classList.add("banner-text-hidden");
-        }
-      }
-
-      function fullUpdate() {
-        updateVisibility();
-        applyResponsive();
-        positionOverlay();
-      }
-
-      // 清除 SSR 可能残留的 display:none，统一用 opacity 过渡
-      (function initOverlay() {
-        var overlay = getEl("banner-overlay");
-        if (overlay && overlay.style.display === "none") {
-          overlay.style.display = "";
-          overlay.classList.add("banner-text-hidden");
-        }
-      })();
-
-      fullUpdate();
-      document.addEventListener("swup:contentReplaced", fullUpdate);
-
-      var resizeTimer;
-      window.addEventListener("resize", function () {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(fullUpdate, 150);
-      });
-
-      var scrollTimer;
-      window.addEventListener(
-        "scroll",
-        function () {
-          clearTimeout(scrollTimer);
-          scrollTimer = setTimeout(function () {
-            updateVisibility();
-          }, 100);
-        },
-        { passive: true },
-      );
-    })();
-  </script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js`}
+  ></script>
   <script
     th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"
-    is:inline
-  >
-    // 打字机效果：Firefly 模式 —— init 立即执行 + 220ms 延迟
-    var TypewriterEffect = function (el, lines) {
-      this.el = el;
-      this.lines = lines;
-      this.index = 0;
-      this.charIdx = 0;
-      this.deleting = false;
-      this.timeoutId = null;
-      this.typeSpeed = 80;
-      this.deleteSpeed = 40;
-      this.pauseAfterType = 2000;
-      this.pauseAfterDelete = 500;
-
-      var self = this;
-      self.setText("");
-      self.timeoutId = setTimeout(function () {
-        self.type();
-      }, 500);
-    };
-
-    TypewriterEffect.prototype.setText = function (text) {
-      this.el.textContent = text || "\u00A0";
-    };
-
-    TypewriterEffect.prototype.type = function () {
-      var self = this;
-      var text = self.lines[self.index];
-      if (!self.deleting) {
-        self.charIdx++;
-        self.setText(text.substring(0, self.charIdx));
-        if (self.charIdx >= text.length) {
-          if (self.lines.length > 1) {
-            self.deleting = true;
-            self.timeoutId = setTimeout(function () {
-              self.type();
-            }, self.pauseAfterType);
-          }
-          return;
-        }
-        self.timeoutId = setTimeout(function () {
-          self.type();
-        }, self.typeSpeed);
-      } else {
-        self.charIdx--;
-        self.setText(text.substring(0, self.charIdx));
-        if (self.charIdx <= 0) {
-          self.deleting = false;
-          self.index = (self.index + 1) % self.lines.length;
-          self.timeoutId = setTimeout(function () {
-            self.type();
-          }, self.pauseAfterDelete);
-          return;
-        }
-        self.timeoutId = setTimeout(function () {
-          self.type();
-        }, self.deleteSpeed);
-      }
-    };
-
-    TypewriterEffect.prototype.destroy = function () {
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
-      }
-    };
-
-    function initTypewriter() {
-      var el = document.getElementById("banner-subtitle");
-      if (!el) return;
-
-      var overlay = el.closest("#banner-overlay");
-      if (overlay && overlay.classList.contains("banner-text-hidden")) return;
-
-      if (el.__twInstance) {
-        el.__twInstance.destroy();
-        delete el.__twInstance;
-      }
-      el.textContent = "";
-
-      var cursor = document.getElementById("banner-cursor");
-      if (cursor) {
-        if (cursor.__blinkInterval) {
-          clearInterval(cursor.__blinkInterval);
-          delete cursor.__blinkInterval;
-        }
-        cursor.style.opacity = "1";
-        var vis = true;
-        cursor.__blinkInterval = setInterval(function () {
-          if (cursor) cursor.style.opacity = vis ? "1" : "0";
-          vis = !vis;
-        }, 530);
-      }
-
-      var dc = document.getElementById("banner-subtitles-data");
-      if (!dc) return;
-      var raw = dc.textContent.trim();
-      if (!raw) return;
-      var lines = raw
-        .split("\n")
-        .map(function (l) {
-          return l.trim();
-        })
-        .filter(Boolean);
-      if (lines.length === 0) return;
-
-      el.__twInstance = new TypewriterEffect(el, lines);
-    }
-
-    function runInitTW() {
-      initTypewriter();
-      setTimeout(initTypewriter, 220);
-    }
-
-    runInitTW();
-    document.addEventListener("swup:contentReplaced", runInitTW);
-    document.addEventListener("banner:visible", runInitTW);
-  </script>
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js`}
+  ></script>
   <script
     th:if="${theme.config?.base?.bannerText != null and theme.config?.base?.bannerText?.subtitleEffect == 'drop'}"
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js`}
+  ></script>
+
+  <script
+    th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
     is:inline
   >
-    // 文字下坠效果：Firefly 模式 —— init 立即执行 + 220ms 延迟
-    function DropEffect(el, lines) {
-      this.el = el;
-      this.lines = lines;
-      this.index = 0;
-      this.delay = 40;
-      this.timeoutId = null;
-
-      if (el.parentElement) {
-        el.parentElement.style.animation = "none";
-        el.parentElement.style.opacity = "1";
-        el.parentElement.style.transform = "none";
+    // 随机钓鱼 - 点击按钮随机跳转朋友圈文章
+    // 放到 swup-container 外部 + 事件委托，保证直接访问和 Swup 导航都生效
+    (function () {
+      function getUrls() {
+        var links = document.querySelectorAll(".friends-item-title");
+        var urls = [];
+        for (var i = 0; i < links.length; i++) {
+          var href = links[i].getAttribute("href");
+          if (href && href !== "#") urls.push(href);
+        }
+        return urls;
       }
 
-      this.start();
-    }
+      function handleClick(e) {
+        var btn = e.target.closest("#random-fish-btn");
+        if (!btn) return;
+        e.preventDefault();
 
-    DropEffect.prototype.destroy = function () {
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
+        var urls = getUrls();
+        if (urls.length === 0) {
+          alert("暂无朋友圈文章可随机跳转");
+          return;
+        }
+        var chosen = urls[Math.floor(Math.random() * urls.length)];
+        // 通过创建临时 <a> 元素并点击，让外链跳转模态框（external-link-redirect）拦截
+        var a = document.createElement("a");
+        a.href = chosen;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
-      // 恢复占位符维持行高，避免布局抖动
-      this.el.innerHTML = "&nbsp;";
-    };
 
-    DropEffect.prototype.doDrop = function (text) {
-      var self = this;
-      self.el.innerHTML = "";
-      text.split("").forEach(function (ch, i) {
-        var span = document.createElement("span");
-        span.textContent = ch === " " ? "\u00A0" : ch;
-        span.style.display = "inline-block";
-        span.style.opacity = "0";
-        span.style.transform = "translateY(-1.2em)";
-        span.style.transition =
-          "opacity 0.1s ease-out, transform 0.35s ease-out";
-        self.el.appendChild(span);
-        setTimeout(
-          function () {
-            span.style.opacity = "1";
-            span.style.transform = "translateY(0)";
-          },
-          (i + 1) * self.delay,
-        );
-      });
-    };
+      var bound = false;
 
-    DropEffect.prototype.dropOut = function (cb) {
-      var self = this;
-      var spans = Array.from(self.el.children);
-      if (spans.length === 0) {
-        if (cb) cb.call(self);
-        return;
+      function ensureBound() {
+        if (bound) return;
+        document.addEventListener("click", handleClick);
+        bound = true;
       }
-      spans.forEach(function (s) {
-        s.style.transition = "opacity 0.15s ease-in, transform 0.2s ease-in";
-        s.style.opacity = "0";
-        s.style.transform = "translateY(0.8em)";
-      });
-      self.timeoutId = setTimeout(function () {
-        if (cb) cb.call(self);
-      }, 250);
-    };
 
-    DropEffect.prototype.showNext = function () {
-      var self = this;
-      var text = self.lines[self.index];
-      var old = Array.from(self.el.children);
-      function next() {
-        self.index = (self.index + 1) % self.lines.length;
-        self.showNext();
-      }
-      if (old.length > 0) {
-        self.dropOut(function () {
-          self.doDrop(text);
-          self.timeoutId = setTimeout(next, text.length * self.delay + 2500);
-        });
+      // 初始加载
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", ensureBound);
       } else {
-        self.doDrop(text);
-        self.timeoutId = setTimeout(next, text.length * self.delay + 2500);
-      }
-    };
-
-    DropEffect.prototype.start = function () {
-      var self = this;
-      self.timeoutId = setTimeout(function () {
-        self.showNext();
-      }, 600);
-    };
-
-    function initDrop() {
-      var el = document.getElementById("banner-subtitle");
-      if (!el) return;
-
-      // 只有 overlay 可见时才初始化
-      var overlay = el.closest("#banner-overlay");
-      if (overlay && overlay.classList.contains("banner-text-hidden")) return;
-
-      // 销毁旧实例（destroy 内已恢复 &nbsp; 占位，维持行高）
-      if (el.__dropInstance) {
-        el.__dropInstance.destroy();
-        delete el.__dropInstance;
+        ensureBound();
       }
 
-      // 读取数据
-      var dc = document.getElementById("banner-subtitles-data");
-      if (!dc) return;
-      var raw = dc.textContent.trim();
-      if (!raw) return;
-      var lines = raw
-        .split("\n")
-        .map(function (l) {
-          return l.trim();
-        })
-        .filter(Boolean);
-      if (lines.length === 0) return;
-
-      el.__dropInstance = new DropEffect(el, lines);
-    }
-
-    // Firefly 的 runInitWithDelay
-    function runInitDrop() {
-      initDrop();
-      setTimeout(initDrop, 220);
-    }
-
-    runInitDrop();
-    document.addEventListener("swup:contentReplaced", runInitDrop);
-    document.addEventListener("banner:visible", runInitDrop);
+      // Swup 页面切换后重新确认（事件委托已在 document 上，只需确保已绑定）
+      document.addEventListener("swup:contentReplaced", ensureBound);
+    })();
   </script>
+
+  <!-- 朋友圈脚本：移到 swup-container 外加载，IIFE 只执行一次，后续靠 swup:contentReplaced 重新 init -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js`}
+  ></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js`}
+  ></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js`}
+  ></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js`}
+  ></script>
+
+  <!-- 友链随机访问：移到 swup-container 外加载 -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js`}
+  ></script>
 </Layout>

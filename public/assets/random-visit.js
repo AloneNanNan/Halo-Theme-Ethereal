@@ -1,65 +1,81 @@
-// 随机访问友链
+// 随机访问友链 - 使用 plugin-links 官方 REST API
+// 事件委托，不受 Swup 无刷新切换影响
 (function () {
-  function init() {
-    var btn = document.getElementById("random-visit-btn");
-    if (!btn || btn.dataset.randomBound) return;
-    btn.dataset.randomBound = "true";
+  // 通过临时 <a> 元素点击，让外链跳转模态框拦截
+  function openViaAnchor(url) {
+    var a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
-    btn.addEventListener("click", function () {
-      var allowedGroups = btn.getAttribute("data-random-groups") || "";
-      var groupFilter = allowedGroups
-        ? allowedGroups
-            .split(/[\n,]/)
-            .map(function (g) {
-              return g.trim();
-            })
-            .filter(Boolean)
-        : [];
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("#random-visit-btn");
+    if (!btn) return;
 
-      var links = [];
-      document
-        .querySelectorAll(".btn-card[data-link-group]")
-        .forEach(function (card) {
-          var groupName = card.getAttribute("data-link-group") || "";
-          if (groupFilter.length > 0 && groupFilter.indexOf(groupName) === -1) {
+    var allowedGroups = (btn.getAttribute("data-random-groups") || "").trim();
+
+    if (!allowedGroups) {
+      // 不限分组：直接使用官方随机 API
+      fetch("/apis/api.link.halo.run/v1alpha1/links/-/random?maxSize=1")
+        .then(function (r) {
+          if (!r.ok) throw new Error("API error");
+          return r.json();
+        })
+        .then(function (data) {
+          if (data && data[0] && data[0].spec && data[0].spec.url) {
+            openViaAnchor(data[0].spec.url);
+          } else {
+            alert("暂无可随机访问的友链");
+          }
+        })
+        .catch(function () {
+          alert("暂无可随机访问的友链");
+        });
+    } else {
+      // 限定了分组：分别请求各分组的链接
+      var groups = allowedGroups
+        .split(/[\n,]/)
+        .map(function (g) {
+          return g.trim();
+        })
+        .filter(Boolean);
+
+      var promises = groups.map(function (g) {
+        return fetch(
+          "/apis/api.link.halo.run/v1alpha1/links?group=" +
+            encodeURIComponent(g) +
+            "&size=100",
+        )
+          .then(function (r) {
+            return r.ok ? r.json() : { items: [] };
+          })
+          .catch(function () {
+            return { items: [] };
+          });
+      });
+
+      Promise.all(promises)
+        .then(function (results) {
+          var urls = [];
+          results.forEach(function (res) {
+            (res.items || []).forEach(function (link) {
+              if (link.spec && link.spec.url) urls.push(link.spec.url);
+            });
+          });
+          if (urls.length === 0) {
+            alert("暂无可随机访问的友链");
             return;
           }
-          var url = card.getAttribute("href");
-          if (url) {
-            links.push(url);
-          }
+          openViaAnchor(urls[Math.floor(Math.random() * urls.length)]);
+        })
+        .catch(function () {
+          alert("暂无可随机访问的友链");
         });
-
-      if (links.length === 0) {
-        alert("暂无可随机访问的友链");
-        return;
-      }
-
-      var randomIndex = Math.floor(Math.random() * links.length);
-      var randomUrl = links[randomIndex];
-
-      var a = document.createElement("a");
-      a.href = randomUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
-  }
-
-  // 初始化
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
-  // Swup 页面切换后重新初始化
-  document.addEventListener("swup:contentReplaced", function () {
-    var randomBtn = document.getElementById("random-visit-btn");
-    if (randomBtn) randomBtn.dataset.randomBound = "";
-    init();
+    }
   });
 })();
