@@ -113,6 +113,58 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       >
       </div>
 
+      <!-- 支持与分享卡片 -->
+      <div
+        th:if="${theme.config?.post?.enable_like != false}"
+        class="onload-animation mb-6"
+      >
+        <div
+          class="action-share-card relative overflow-hidden rounded-xl bg-(--license-block-bg) px-6 py-5 transition"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+            <!-- 左侧：心形点赞按钮 + 文案 -->
+            <div class="flex flex-1 items-center gap-3 min-w-0 md:gap-4">
+              <button
+                id="post-like-btn"
+                class="btn-card group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg active:scale-95"
+                th:attr="data-post=${post.metadata.name}"
+                th:data-count="${post.stats.upvote}"
+                aria-label="点赞"
+              >
+                <span
+                  id="post-like-icon"
+                  class="icon-[material-symbols--favorite-outline-rounded] text-xl text-red-400 transition group-[.liked]:icon-[material-symbols--favorite-rounded] group-[.liked]:text-red-500 group-[.liked]:scale-110"
+                ></span>
+                <span
+                  id="post-like-count"
+                  class="absolute -top-1 -right-1 hidden min-w-[1.1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[0.65rem] font-bold leading-4 text-white group-[.liked]:flex"
+                  th:text="${post.stats.upvote > 0 ? post.stats.upvote : ''}"
+                ></span>
+              </button>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-bold text-90 transition">
+                  支持与分享
+                </h3>
+                <p class="mt-1 text-sm leading-relaxed text-50 transition">
+                  如果这篇文章对你有帮助，欢迎分享给更多人或者给予支持！
+                </p>
+              </div>
+            </div>
+            <!-- 右侧：分享按钮（参考随机访问按钮样式） -->
+            <button
+              id="post-share-btn"
+              type="button"
+              class="btn-regular group flex h-11 w-fit shrink-0 items-center justify-center rounded-lg px-4 text-sm font-bold active:scale-95"
+              aria-label="分享文章"
+            >
+              <span
+                class="icon-[tabler--share] mr-1.5 text-base transition-transform group-hover:rotate-12"
+              ></span>
+              <span>分享</span>
+            </button>
+          </div>
+        </div>
+      </div>
       <div
         th:if="${theme.config?.post?.license?.enable}"
         class="license-container onload-animation relative mb-6 overflow-hidden rounded-xl bg-(--license-block-bg) px-6 py-5 transition"
@@ -175,28 +227,6 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         <span
           class="icon-[fa6-brands--creative-commons] pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-[15rem] text-black/5 transition dark:text-white/5"
         ></span>
-      </div>
-      <!-- 点赞按钮 -->
-      <div
-        th:if="${theme.config?.post?.enable_like != false}"
-        class="onload-animation mb-6 flex justify-center"
-      >
-        <button
-          id="post-like-btn"
-          class="group relative flex cursor-pointer items-center gap-2 rounded-2xl border border-(--line-color) px-5 py-2.5 transition hover:border-(--primary)/30 hover:bg-(--btn-card-bg-hover) active:scale-[0.97]"
-          th:attr="data-post=${post.metadata.name}"
-          th:data-count="${post.stats.upvote}"
-          aria-label="点赞"
-        >
-          <span
-            id="post-like-icon"
-            class="icon-[material-symbols--favorite-outline-rounded] text-2xl text-red-400 transition group-[.liked]:icon-[material-symbols--favorite-rounded] group-[.liked]:text-red-500 group-[.liked]:scale-110"
-          ></span>
-          <span
-            id="post-like-count"
-            class="text-sm font-medium text-50 transition group-[.liked]:text-red-500"
-            th:text="${post.stats.upvote > 0 ? post.stats.upvote : ''}"></span>
-        </button>
       </div>
     </div>
   </article>
@@ -270,8 +300,12 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     />
   </div>
 
+  <script src={`${basePath}/assets/qrcode.min.js?v=${Date.now()}`} defer
+  ></script>
   <script src={`${basePath}/assets/post-license.js`} defer></script>
   <script src={`${basePath}/assets/post-like.js`} defer></script>
+  <script src={`${basePath}/assets/post-share.js?v=${Date.now()}`} defer
+  ></script>
   <script
     is:inline
     th:if="${theme.config?.post?.summary == null or theme.config?.post?.summary?.summaryEffect == null or theme.config?.post?.summary?.summaryEffect == 'typewriter'}"

@@ -613,9 +613,9 @@ spec:
                   label: 文字下坠
         - $formkit: switch
           name: enable_like
-          label: 启用文章点赞
+          label: 启用文章操作栏
           value: true
-          help: "在文章版权声明下方显示点赞互动按钮"
+          help: "在文章版权声明上方显示点赞、分享操作卡片"
     - group: friends
       label: 朋友圈
       formSchema:

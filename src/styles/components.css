@@ -373,6 +373,17 @@
   color: var(--primary) !important;
 }
 
+/* TOC 目录项 hover 动效 - 文字变主题色 */
+[data-toc-entry]:hover .toc-title {
+  color: var(--primary);
+  transition: color 150ms ease;
+}
+
+/* 三栏 TOC hover 左内边距增加（覆盖 px-2 被 !important 重写的 padding） */
+.layout-three-column [data-toc-entry]:hover {
+  padding-left: 1.25rem !important;
+}
+
 /* 三栏布局下友情链接一行2个 - 通过 th:classappend 在 friends.astro 中控制 */
 
 /* 瞬间动态内容样式 */
@@ -466,7 +477,7 @@
 
 /* 卡片悬浮上移 + 主题色阴影（受样式开关控制） */
 body.card-hover-lift-enabled .card-hover-lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
 }
 

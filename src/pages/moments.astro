@@ -39,9 +39,10 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:href="@{/moments/rss.xml}"
         data-no-swup
         target="_blank"
-        class="btn-regular h-11 w-fit rounded-lg px-4 text-sm font-bold active:scale-95"
+        class="btn-regular group h-11 w-fit rounded-lg px-4 text-sm font-bold active:scale-95"
       >
-        <span class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base"
+        <span
+          class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base transition-transform group-hover:rotate-12"
         ></span>
         <span>RSS</span>
       </a>
@@ -69,9 +70,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <article
         th:each="moment, momentStat : ${moments.items}"
         th:with="content=${moment.spec.content}"
-        class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation card-hover-lift"
+        class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation card-hover-lift relative"
         th:style="|animation-delay: calc(var(--content-delay) + ${momentStat.index * 50}ms)|"
       >
+        <span
+          aria-hidden="true"
+          class="icon-[material-symbols--format-quote-rounded] pointer-events-none absolute right-5 top-4 text-[2.5rem] leading-none text-(--primary)/15 transition"
+        ></span>
         <div class="flex items-start gap-4">
           <div class="shrink-0">
             <img
