@@ -29,6 +29,11 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       id="post-container"
       class="card-base relative z-10 w-full px-6 pb-4 pt-6 md:px-9"
     >
+      <!-- 文章摘要（始终渲染，供分享海报使用） -->
+      <span
+        id="post-excerpt-data"
+        class="hidden"
+        th:attr="data-text=${post.status.excerpt}"></span>
       <div
         class="onload-animation mb-3 flex flex-row gap-5 text-black/30 transition dark:text-white/30"
         th:if="${post.stats != null}"

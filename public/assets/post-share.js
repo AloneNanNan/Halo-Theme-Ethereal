@@ -37,8 +37,8 @@
   }
 
   function getPageSummary() {
-    var el = document.getElementById("summary-text");
-    return el ? el.getAttribute("data-text") || "" : "";
+    var excerpt = document.getElementById("post-excerpt-data");
+    return excerpt ? excerpt.getAttribute("data-text") || "" : "";
   }
 
   function getCoverImageUrl() {
