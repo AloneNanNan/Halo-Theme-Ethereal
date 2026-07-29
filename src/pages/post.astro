@@ -73,12 +73,14 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           th:if="${not #strings.isEmpty(post.spec.cover)}"
           id="post-cover"
           class="mb-5 overflow-hidden rounded-xl"
-          th:with="imgProvider=${theme.config?.performance?.imageProcessing?.provider ?: 'none'}, imgWidth=${theme.config?.performance?.imageProcessing?.article_image_width ?: 800}, imgCustomFormat=${theme.config?.performance?.imageProcessing?.customFormat ?: ''}, imgSuffix=${imgProvider == 'none' ? '' : imgProvider == 'halo' ? '?width=' + imgWidth : imgProvider == 'aliyun_esa' ? '?image_process=resize,w_' + imgWidth : imgProvider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + imgWidth : imgProvider == 'tencent_eo' ? '?eo-img.resize=w/' + imgWidth : imgProvider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + imgWidth + 'x' : imgProvider == 'qiniu' ? '?imageView2/2/w/' + imgWidth : imgProvider == 'upyun' ? '!/fw/' + imgWidth : imgProvider == 'custom' ? #strings.replace(imgCustomFormat, '{width}', '' + imgWidth) : ''}"
+          th:with="imgProvider=${theme.config?.performance?.imageProcessing?.provider ?: 'none'}, imgWidth=${theme.config?.performance?.imageProcessing?.article_image_width ?: 800}, imgCustomFormat=${theme.config?.performance?.imageProcessing?.customFormat ?: ''}, imgSuffix=${imgProvider == 'none' || (imgWidth + '' == '0') ? '' : imgProvider == 'halo' ? '?width=' + imgWidth : imgProvider == 'aliyun_esa' ? '?image_process=resize,w_' + imgWidth : imgProvider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + imgWidth : imgProvider == 'tencent_eo' ? '?eo-img.resize=w/' + imgWidth : imgProvider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + imgWidth + 'x' : imgProvider == 'qiniu' ? '?imageView2/2/w/' + imgWidth : imgProvider == 'upyun' ? '!/fw/' + imgWidth : imgProvider == 'custom' ? #strings.replace(imgCustomFormat, '{width}', '' + imgWidth) : ''}"
         >
           <img
             alt=""
             th:src="|${post.spec.cover}${imgSuffix}|"
             th:alt="${post.spec.title}"
+            fetchpriority="high"
+            decoding="async"
             class="max-h-112 w-full object-cover"
           />
         </div>
@@ -305,11 +307,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     />
   </div>
 
-  <script src={`${basePath}/assets/qrcode.min.js?v=${Date.now()}`} defer
-  ></script>
-  <script src={`${basePath}/assets/post-license.js`} defer></script>
-  <script src={`${basePath}/assets/post-like.js`} defer></script>
-  <script src={`${basePath}/assets/post-share.js?v=${Date.now()}`} defer
+  <script src={`${basePath}/assets/post.bundle.js?v=${Date.now()}`} defer
   ></script>
   <script
     is:inline
@@ -367,7 +365,6 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       });
     })();
   </script>
-  <script src={`${basePath}/assets/copy.js`} defer></script>
 
   <!-- 给正文图片添加宽度限制，减少带宽消耗 -->
   <script>
@@ -384,7 +381,9 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       var customFmt =
         imgConfig?.performance?.imageProcessing?.custom_format || "";
       var imgWidth =
-        imgConfig?.performance?.imageProcessing?.article_image_width || 800;
+        imgConfig?.performance?.imageProcessing?.article_image_width;
+      // 0 = use original image (skip processing)
+      if (!imgWidth || imgWidth <= 0) return;
       var suffix = "";
       if (provider === "aliyun_esa")
         suffix = "?image_process=resize,w_" + imgWidth;

@@ -182,20 +182,12 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         );
       })();
     </script>
-    <!-- 外部字体：自动检测 CSS 链接 / 字体文件 -->
+    <!-- 外部字体：CSS-link 模式用静态 <link> + 非阻塞加载；字体文件模式维持 JS 注入 -->
     <script
       th:if="${theme.config?.style?.externalFont?.enable and not #strings.isEmpty(theme.config?.style?.externalFont?.fontFile)}"
       th:inline="javascript"
     >
       (function () {
-        var FORMAT_MAP = {
-          woff2: "woff2",
-          woff: "woff",
-          ttf: "truetype",
-          otf: "opentype",
-          eot: "embedded-opentype",
-          svg: "svg",
-        };
         var url = /*[[${theme.config.style.externalFont.fontFile}]]*/ "";
         var family = /*[[${theme.config.style.externalFont.family}]]*/ "";
         if (!url) return;
@@ -207,31 +199,65 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           var link = document.createElement("link");
           link.rel = "stylesheet";
           link.href = url;
+          link.media = "print";
+          link.onload = function () {
+            this.media = "all";
+          };
           document.head.appendChild(link);
+          // noscript fallback
+          var noscript = document.createElement("noscript");
+          var fallbackLink = document.createElement("link");
+          fallbackLink.rel = "stylesheet";
+          fallbackLink.href = url;
+          noscript.appendChild(fallbackLink);
+          document.head.appendChild(noscript);
           if (family) {
-            var s = document.createElement("style");
-            s.textContent = "body{font-family:" + family + "}";
-            document.head.appendChild(s);
+            var fs = document.createElement("style");
+            fs.textContent = "body{font-family:" + family + "}";
+            document.head.appendChild(fs);
           }
-        } else {
-          // 字体文件模式：根据扩展名自动检测字体格式
-          if (family) {
-            var ext = (url.split(".").pop().split("?")[0] || "").toLowerCase();
-            var fmt = FORMAT_MAP[ext] || "woff2";
-            var s = document.createElement("style");
-            s.textContent =
-              '@font-face{font-family:"EtherealCustomFont";src:url(' +
-              url +
-              ') format("' +
-              fmt +
-              '");font-weight:400;font-style:normal;font-display:swap}body{font-family:"EtherealCustomFont",' +
-              family +
-              "}";
-            document.head.appendChild(s);
-          }
+        } else if (family) {
+          // 字体文件模式：直接注入 @font-face
+          var ext = (url.split(".").pop().split("?")[0] || "").toLowerCase();
+          var fmtMap = {
+            woff2: "woff2",
+            woff: "woff",
+            ttf: "truetype",
+            otf: "opentype",
+            eot: "embedded-opentype",
+            svg: "svg",
+          };
+          var fmt = fmtMap[ext] || "woff2";
+          var s = document.createElement("style");
+          s.textContent =
+            '@font-face{font-family:"EtherealCustomFont";src:url(' +
+            url +
+            ') format("' +
+            fmt +
+            '");font-weight:400;font-style:normal;font-display:swap}body{font-family:"EtherealCustomFont",' +
+            family +
+            "}";
+          document.head.appendChild(s);
         }
       })();
     </script>
+    <!-- 仅当启用外部字体时才预连接常用字体 CDN -->
+    <link
+      rel="preconnect"
+      href="https://cdn.bootcdn.net"
+      th:if="${theme.config?.style?.externalFont?.enable}"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+      th:if="${theme.config?.style?.externalFont?.enable}"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+      th:if="${theme.config?.style?.externalFont?.enable}"
+    />
     <slot name="head" />
   </head>
   <body

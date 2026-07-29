@@ -33,10 +33,17 @@
 </div>
 
 <p align="center">
-  预览：<a href="https://www.nannax.top">楠枝小笺</a>
+  文档：<a href="https://www.nannax.top/docs/ethereal">主题文档</a>
 </p>
 
 ---
+
+## 预览
+
+| 站点                                 | 说明       |
+| :----------------------------------- | :--------- |
+| [楠枝小笺](https://www.nannax.top/)  | 主题开发者 |
+| [BoxCat](https://blog.lipei.online/) | 主题用户   |
 
 ## 介绍
 
