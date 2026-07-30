@@ -16,242 +16,463 @@
       <style>
         :root {
           --hue: 250;
-          --primary: oklch(0.6 0.16 var(--hue));
-          --primary-light: oklch(0.7 0.12 var(--hue));
-          --bg-outer: oklch(0.85 0.06 var(--hue));
+          /* 复用主题 variables.css 语义色，与前台同源 */
+          --primary: oklch(0.7 0.14 var(--hue));
+          --primary-soft: oklch(0.7 0.14 var(--hue) / 0.14);
+          --page-bg: oklch(0.95 0.01 var(--hue));
           --card-bg: #fff;
-          --text-main: oklch(0.15 0.01 var(--hue) / 0.9);
-          --text-dim: oklch(0.15 0.01 var(--hue) / 0.55);
-          --text-faint: oklch(0.15 0.01 var(--hue) / 0.35);
-          --border: oklch(0.15 0.01 var(--hue) / 0.08);
-          --glass-bg: rgb(255 255 255 / 0.1);
-          --glass-border: rgb(255 255 255 / 0.5);
+          --text-main: oklch(0.25 0.02 var(--hue));
+          --text-dim: oklch(0.25 0.02 var(--hue) / 0.6);
+          --text-faint: oklch(0.25 0.02 var(--hue) / 0.4);
+          --line-divider: rgba(0, 0, 0, 0.08);
+          --line-color: rgba(0, 0, 0, 0.1);
+          --input-bg: oklch(0.97 0.008 var(--hue));
+          --radius-large: 1rem;
           --p-hex: #806ac4;
+          /* 左栏（角色面板）配色：主题色纯色背景 + 网格装饰 */
+          --aside-bg: oklch(0.88 0.04 var(--hue));
+          --aside-text: oklch(0.32 0.06 var(--hue));
+          --aside-text-dim: oklch(0.32 0.06 var(--hue) / 0.65);
+          --glow: rgba(255, 255, 255, 0.5);
+          --char-black: #2d2d2d;
+          --shadow-card: 0 20px 60px oklch(0.4 0.05 var(--hue) / 0.16);
         }
         html.dark {
-          --primary: oklch(0.7 0.16 var(--hue));
-          --primary-light: oklch(0.78 0.12 var(--hue));
-          --bg-outer: oklch(0.18 0.02 var(--hue));
+          --primary: oklch(0.75 0.14 var(--hue));
+          --primary-soft: oklch(0.75 0.14 var(--hue) / 0.22);
+          --page-bg: oklch(0.16 0.014 var(--hue));
           --card-bg: oklch(0.23 0.015 var(--hue));
-          --text-main: oklch(0.95 0.01 var(--hue) / 0.9);
-          --text-dim: oklch(0.95 0.01 var(--hue) / 0.55);
-          --text-faint: oklch(0.95 0.01 var(--hue) / 0.3);
-          --border: oklch(0.95 0.01 var(--hue) / 0.1);
-          --glass-bg: rgb(255 255 255 / 0.05);
-          --glass-border: rgb(255 255 255 / 0.25);
+          --text-main: oklch(0.85 0.02 var(--hue));
+          --text-dim: oklch(0.85 0.02 var(--hue) / 0.6);
+          --text-faint: oklch(0.85 0.02 var(--hue) / 0.4);
+          --line-divider: rgba(255, 255, 255, 0.08);
+          --line-color: rgba(255, 255, 255, 0.1);
+          --input-bg: oklch(0.19 0.015 var(--hue));
           --p-hex: #a78bfa;
+          --aside-bg: oklch(0.28 0.04 var(--hue));
+          --aside-text: oklch(0.9 0.02 var(--hue));
+          --aside-text-dim: oklch(0.9 0.02 var(--hue) / 0.6);
+          --glow: rgba(255, 255, 255, 0.12);
+          --char-black: oklch(0.46 0.03 var(--hue));
+          --shadow-card: 0 20px 60px oklch(0 0 0 / 0.45);
         }
         @media (prefers-color-scheme: dark) {
           html:not(.light) {
-            --primary: oklch(0.7 0.16 var(--hue));
-            --primary-light: oklch(0.78 0.12 var(--hue));
-            --bg-outer: oklch(0.18 0.02 var(--hue));
+            --primary: oklch(0.75 0.14 var(--hue));
+            --primary-soft: oklch(0.75 0.14 var(--hue) / 0.22);
+            --page-bg: oklch(0.16 0.014 var(--hue));
             --card-bg: oklch(0.23 0.015 var(--hue));
-            --text-main: oklch(0.95 0.01 var(--hue) / 0.9);
-            --text-dim: oklch(0.95 0.01 var(--hue) / 0.55);
-            --text-faint: oklch(0.95 0.01 var(--hue) / 0.3);
-            --border: oklch(0.95 0.01 var(--hue) / 0.1);
-            --glass-bg: rgb(255 255 255 / 0.05);
-            --glass-border: rgb(255 255 255 / 0.25);
+            --text-main: oklch(0.85 0.02 var(--hue));
+            --text-dim: oklch(0.85 0.02 var(--hue) / 0.6);
+            --text-faint: oklch(0.85 0.02 var(--hue) / 0.4);
+            --line-divider: rgba(255, 255, 255, 0.08);
+            --line-color: rgba(255, 255, 255, 0.1);
+            --input-bg: oklch(0.19 0.015 var(--hue));
             --p-hex: #a78bfa;
+            --aside-bg: oklch(0.28 0.04 var(--hue));
+            --aside-text: oklch(0.9 0.02 var(--hue));
+            --aside-text-dim: oklch(0.9 0.02 var(--hue) / 0.6);
+            --glow: rgba(255, 255, 255, 0.12);
+            --char-black: oklch(0.46 0.03 var(--hue));
+            --shadow-card: 0 20px 60px oklch(0 0 0 / 0.45);
           }
         }
 
-        * {
-          padding: 0;
+        *,
+        *::before,
+        *::after {
           margin: 0;
+          padding: 0;
           box-sizing: border-box;
         }
         body {
           font-family:
             -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
             "Microsoft YaHei", sans-serif;
-          background: var(--bg-outer);
+          background: var(--page-bg);
           min-height: 100vh;
-          transition: background 0.3s;
-        }
-        .content {
-          width: 100vw;
-          height: 100vh;
-          position: relative;
-        }
-        .login-wrapper {
-          width: 70vw;
-          max-width: 1100px;
-          height: 80vh;
-          max-height: 650px;
-          background: var(--card-bg);
-          border-radius: 40px;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          display: flex;
-          box-shadow: 0 10px 60px oklch(0 0 0 / 0.08);
-          overflow: hidden;
-          transition: background 0.3s, box-shadow 0.3s;
-          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -50%) translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-          }
-        }
-        .left-img {
-          border-radius: 40px;
-          flex: 1;
-          background: linear-gradient(
-            135deg,
-            oklch(0.65 0.14 var(--hue)),
-            oklch(0.5 0.18 var(--hue)),
-            oklch(0.4 0.2 calc(var(--hue) + 30))
-          );
-          background-size: cover;
-          position: relative;
-          overflow: hidden;
-        }
-        @supports not (color: oklch(0.65 0.14 250)) {
-          .left-img {
-            background: linear-gradient(135deg, #9b8ae5, #6a55d4, #4e38a8);
-          }
-        }
-        .left-img::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(
-            circle at 30% 40%,
-            oklch(0.7 0.12 var(--hue) / 0.3),
-            transparent 60%
-          );
-        }
-        .glass {
-          width: 70%;
-          padding: 22px;
-          color: #fff;
-          position: absolute;
-          top: 20%;
-          left: 50%;
-          transform: translate(-50%, 0);
-          background: var(--glass-bg);
-          box-shadow: 0 8px 32px 0 oklch(0.15 0.02 var(--hue) / 0.3);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-radius: 18px;
-          border: 1px solid var(--glass-border);
-        }
-        .glass .tag {
-          display: inline-block;
-          font-weight: 600;
-          font-size: 13px;
-          padding: 8px 14px;
-          border-radius: 15px;
-          background: var(--glass-bg);
-          box-shadow: 0 8px 32px 0 oklch(0.15 0.02 var(--hue) / 0.25);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border: 1px solid var(--glass-border);
-        }
-        .glass h1 {
-          margin: 15px 0 8px;
-          font-size: 1.5rem;
-          line-height: 1.35;
-        }
-        .glass p {
-          font-weight: 300;
-          font-size: 0.9rem;
-          opacity: 0.9;
-          line-height: 1.6;
-        }
-        .right-form {
-          flex: 1;
-          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 1.5rem;
+          transition: background 0.3s;
+          -webkit-font-smoothing: antialiased;
         }
-        .form-inner {
-          width: 80%;
-          max-width: 340px;
+
+        /* ===== 悬浮矩形卡片 ===== */
+        .auth-shell {
+          width: 100%;
+          max-width: 960px;
+          height: 600px;
+          display: flex;
+          background: var(--card-bg);
+          border: 1px solid var(--line-divider);
+          border-radius: var(--radius-large);
+          overflow: hidden;
+          box-shadow: var(--shadow-card);
+          animation: shellIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          transition:
+            background 0.3s,
+            border-color 0.3s,
+            box-shadow 0.3s;
         }
-        .form-inner h1 {
-          font-size: 28px;
+        @keyframes shellIn {
+          from {
+            opacity: 0;
+            transform: translateY(18px) scale(0.99);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        /* ===== 左栏：动画角色面板（改编自 animatedlogin） ===== */
+        .auth-aside {
+          position: relative;
+          flex: 0 0 46%;
+          display: flex;
+          flex-direction: column;
+          background-color: var(--aside-bg);
+          background-image:
+            repeating-linear-gradient(
+              to right,
+              transparent 0 23px,
+              rgba(128, 128, 128, 0.08) 23px 24px
+            ),
+            repeating-linear-gradient(
+              to bottom,
+              transparent 0 23px,
+              rgba(128, 128, 128, 0.08) 23px 24px
+            );
+          padding: 2rem;
+          overflow: hidden;
+          isolation: isolate;
+        }
+        /* 装饰柔光斑 */
+        .auth-aside::before {
+          content: "";
+          position: absolute;
+          top: 12%;
+          right: 8%;
+          width: 240px;
+          height: 240px;
+          background: var(--glow);
+          border-radius: 50%;
+          filter: blur(80px);
+          z-index: 0;
+        }
+        .auth-aside::after {
+          content: "";
+          position: absolute;
+          bottom: 8%;
+          left: 4%;
+          width: 300px;
+          height: 300px;
+          background: var(--glow);
+          border-radius: 50%;
+          filter: blur(100px);
+          z-index: 0;
+        }
+
+        .aside-top {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          position: relative;
+          z-index: 10;
+          flex: none;
+        }
+        .aside-logo {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          object-fit: cover;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+        }
+        .aside-site {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: var(--aside-text);
+          letter-spacing: 0.01em;
+        }
+
+        .characters-wrapper {
+          position: relative;
+          z-index: 10;
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          min-height: 0;
+          margin-bottom: 1.5rem;
+        }
+        .characters-scene {
+          position: relative;
+          width: 480px;
+          height: 360px;
+          flex: none;
+          transform: scale(0.82);
+          transform-origin: bottom center;
+        }
+
+        .aside-bottom {
+          position: absolute;
+          left: 2rem;
+          bottom: 1.5rem;
+          font-size: 0.75rem;
+          color: var(--aside-text-dim);
+          z-index: 10;
+          line-height: 1.4;
+        }
+
+        /* ---- 角色（纯 CSS 图形，坐标系沿用 animatedlogin 原版） ---- */
+        .character {
+          position: absolute;
+          bottom: 0;
+          transition: all 0.7s ease-in-out;
+          transform-origin: bottom center;
+        }
+        .char-purple {
+          left: 60px;
+          width: 170px;
+          height: 370px;
+          background: #6c3ff5;
+          border-radius: 10px 10px 0 0;
+          z-index: 1;
+        }
+        .char-black {
+          left: 220px;
+          width: 115px;
+          height: 290px;
+          background: var(--char-black);
+          border-radius: 8px 8px 0 0;
+          z-index: 2;
+        }
+        .char-orange {
+          left: 0;
+          width: 230px;
+          height: 190px;
+          background: #ff9b6b;
+          border-radius: 115px 115px 0 0;
+          z-index: 3;
+        }
+        .char-yellow {
+          left: 290px;
+          width: 135px;
+          height: 215px;
+          background: #e8d754;
+          border-radius: 68px 68px 0 0;
+          z-index: 4;
+        }
+        .eyes {
+          position: absolute;
+          display: flex;
+          transition: all 0.7s ease-in-out;
+        }
+        .eyeball {
+          border-radius: 50%;
+          background: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: height 0.15s ease;
+          overflow: hidden;
+        }
+        .pupil {
+          border-radius: 50%;
+          background: #2d2d2d;
+          transition: transform 0.1s ease-out;
+        }
+        .bare-pupil {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #2d2d2d;
+          transition: transform 0.7s ease-in-out;
+        }
+        .yellow-mouth {
+          position: absolute;
+          width: 50px;
+          height: 4px;
+          background: #2d2d2d;
+          border-radius: 2px;
+          transition: all 0.7s ease-in-out;
+        }
+        .orange-mouth {
+          position: absolute;
+          width: 28px;
+          height: 14px;
+          border: 3px solid #2d2d2d;
+          border-top: none;
+          border-radius: 0 0 14px 14px;
+          opacity: 0;
+          transition: all 0.7s ease-in-out;
+        }
+        .orange-mouth.visible {
+          opacity: 1;
+        }
+        @keyframes shakeHead {
+          0%, 100% { translate: 0 0; }
+          10% { translate: -9px 0; }
+          20% { translate: 7px 0; }
+          30% { translate: -6px 0; }
+          40% { translate: 5px 0; }
+          50% { translate: -4px 0; }
+          60% { translate: 3px 0; }
+          70% { translate: -2px 0; }
+          80% { translate: 1px 0; }
+          90% { translate: -0.5px 0; }
+        }
+        .eyes.shake-head,
+        .yellow-mouth.shake-head,
+        .orange-mouth.shake-head {
+          animation: shakeHead 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        /* ===== 右栏：表单 ===== */
+        .auth-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 2.25rem 2.5rem;
+          overflow-y: auto;
+        }
+        .form-wrap {
+          width: 100%;
+          max-width: 330px;
+          margin: auto 0;
+        }
+        .form-head {
           text-align: center;
-          color: var(--text-main);
-          margin-bottom: 24px;
+          margin-bottom: 0;
         }
+        .form-head h1 {
+          font-size: 1.375rem;
+          font-weight: 700;
+          color: var(--text-main);
+          letter-spacing: -0.01em;
+        }
+
+        /* 输入框：圆角矩形 + 浅填充（Fuwari 卡片语言） */
         .form-inner input[type="text"],
         .form-inner input[type="password"],
         .form-inner input[type="email"] {
           width: 100%;
-          height: 50px;
-          border-radius: 12px;
-          border: 1px solid oklch(0.15 0.01 var(--hue) / 0.12);
-          padding: 0 16px;
-          font-size: 14px;
-          outline: none;
-          background: var(--card-bg);
+          height: 42px;
+          border-radius: 0.75rem;
+          border: 1px solid var(--line-color);
+          padding: 0 0.9rem;
+          font-size: 0.9rem;
+          font-family: inherit;
           color: var(--text-main);
-          transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-          margin: 8px 0;
+          background: var(--input-bg);
+          outline: none;
+          transition:
+            border-color 0.25s,
+            box-shadow 0.25s,
+            background 0.3s;
+          margin: 0.25rem 0;
         }
         .form-inner input:focus {
           border-color: var(--primary);
-          box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.12);
-        }
-        html.dark .form-inner input[type="text"],
-        html.dark .form-inner input[type="password"],
-        html.dark .form-inner input[type="email"] {
-          border-color: oklch(0.95 0.01 var(--hue) / 0.12);
+          box-shadow: 0 0 0 3px var(--primary-soft);
+          background: var(--card-bg);
         }
         .form-inner input::placeholder {
           color: var(--text-faint);
         }
         .form-inner label {
-          display: inline-block;
-          font-weight: 600;
-          font-size: 14px;
+          display: block;
+          font-size: 0.8rem;
+          font-weight: 500;
           color: var(--text-dim);
-          margin: 4px 0 2px;
+          margin: 0.35rem 0 0.1rem;
         }
+
+        /* 提交按钮：矩形圆角 + hover 文字滑出 */
         .form-inner button[type="submit"],
         .form-inner input[type="submit"] {
+          position: relative;
           width: 100%;
-          height: 50px;
-          border: 0;
-          border-radius: 12px;
+          height: 46px;
+          border-radius: 0.75rem;
+          border: 1.5px solid var(--text-main);
+          background: var(--text-main);
+          color: var(--card-bg);
+          font-size: 0.9rem;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          overflow: hidden;
+          margin: 0.9rem 0 0.35rem;
+          transition:
+            border-color 0.3s,
+            transform 0.12s;
+        }
+        .form-inner button[type="submit"] .btn-text {
+          display: inline-block;
+          transition: all 0.3s;
+        }
+        .form-inner button[type="submit"] .btn-hover-content {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
           background: var(--primary);
           color: #fff;
-          font-size: 18px;
-          font-weight: 600;
-          cursor: pointer;
-          margin: 12px 0;
-          transition: transform 0.12s, box-shadow 0.3s;
-          box-shadow: var(--primary) 0 8px 24px -6px;
+          opacity: 0;
+          transition: all 0.3s;
+          border-radius: 0.75rem;
         }
-        .form-inner button[type="submit"]:hover,
-        .form-inner input[type="submit"]:hover {
-          box-shadow: var(--primary) 0 4px 16px -4px;
+        .form-inner button[type="submit"] .btn-hover-content svg {
+          width: 16px;
+          height: 16px;
+        }
+        .form-inner button[type="submit"]:hover {
+          border-color: var(--primary);
+          background: var(--primary);
+        }
+        .form-inner button[type="submit"]:hover .btn-text {
+          transform: translateX(40px);
+          opacity: 0;
+        }
+        .form-inner button[type="submit"]:hover .btn-hover-content {
+          opacity: 1;
         }
         .form-inner button[type="submit"]:active,
         .form-inner input[type="submit"]:active {
           transform: scale(0.98);
         }
+        /* input[type=submit] 无法包裹滑出层，用简化 hover */
+        .form-inner input[type="submit"]:hover {
+          border-color: var(--primary);
+          background: var(--primary);
+          color: #fff;
+        }
+
+        /* 隐藏 Halo 注入的装饰图标，避免错位（按钮内 SVG 除外） */
         .form-inner img,
-        .form-inner svg {
+        .form-inner svg:not(.btn-hover-content svg) {
           display: none !important;
         }
+
+        /* 隐藏注入 body 内重复的标题（主题 .form-head h1 已显示） */
+        .form-inner h1,
+        .form-inner h2 {
+          display: none !important;
+        }
+
+        /* 错误 / 成功提示 */
         .form-inner .alert-danger,
         .form-inner [class*="error"] {
-          padding: 10px 14px;
-          border-radius: 10px;
-          font-size: 13px;
-          margin: 6px 0;
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          font-size: 0.78rem;
+          margin: 0.25rem 0;
           background: oklch(0.55 0.2 25 / 0.08);
           border: 1px solid oklch(0.55 0.2 25 / 0.18);
           color: oklch(0.5 0.22 25);
@@ -263,65 +484,187 @@
           color: oklch(0.8 0.14 25);
         }
         .form-inner .alert-success {
-          padding: 10px 14px;
-          border-radius: 10px;
-          font-size: 13px;
-          margin: 6px 0;
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          font-size: 0.78rem;
+          margin: 0.25rem 0;
           background: oklch(0.55 0.18 145 / 0.08);
           border: 1px solid oklch(0.55 0.18 145 / 0.18);
           color: oklch(0.48 0.18 145);
         }
         .form-inner input[type="checkbox"] {
           accent-color: var(--p-hex);
+          width: 0.9rem;
+          height: 0.9rem;
+          display: inline-block;
+          vertical-align: middle;
+          margin: 0;
+          flex: none;
         }
+
+        /* 用户名+名称 两列并排（Halo 标准 .form-item-group） */
+        .form-inner .form-item-group {
+          display: flex;
+          gap: 0.75rem;
+        }
+        .form-inner .form-item-group .form-item {
+          flex: 1;
+          margin-bottom: 0;
+        }
+
+        /* 验证码输入+发送按钮 同行（Halo 标准 .form-input-group） */
+        .form-inner .form-input-group {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
+        .form-inner .form-input-group .form-input {
+          flex: 1;
+        }
+        .form-inner .form-input-group button {
+          flex: none;
+          height: 42px;
+          padding: 0 0.85rem;
+          border-radius: 0.75rem;
+          border: 1.5px solid var(--text-main);
+          background: var(--text-main);
+          color: var(--card-bg);
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          font-family: inherit;
+          transition:
+            border-color 0.25s,
+            background 0.25s;
+        }
+        .form-inner .form-input-group button:hover {
+          border-color: var(--primary);
+          background: var(--primary);
+        }
+        .form-inner .form-input-group button:active {
+          transform: scale(0.98);
+        }
+
+        /* 语言选择器 & auth-footer 容器隐藏 */
+        .form-inner select,
+        .form-inner > .auth-footer {
+          display: none !important;
+        }
+
+        /* 统一样式 Halo 注入的返回链接 */
+        .form-inner a[href="/"] {
+          color: var(--text-faint);
+          font-size: 0.78rem;
+          text-decoration: none;
+        }
+        .form-inner a[href="/"]::before {
+          content: "← ";
+        }
+        .form-inner a[href="/"]:hover {
+          color: var(--primary);
+        }
+
         .form-inner a {
           color: var(--primary);
-          font-size: 13px;
+          font-size: 0.78rem;
           text-decoration: none;
           transition: color 0.2s;
         }
         .form-inner a:hover {
           text-decoration: underline;
         }
-        .auth-foot {
-          text-align: center;
-          margin-top: 18px;
-          padding-top: 12px;
-          border-top: 1px solid var(--border);
+
+
+        /* ===== 第三方登录（Halo 注入的 OAuth 按钮） ===== */
+        .divider-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin: 1rem 0;
+          color: var(--text-dim);
+          font-size: 0.78rem;
         }
-        .auth-foot a {
-          color: var(--text-faint);
-          font-size: 0.85rem;
-          transition: color 0.2s;
+        .divider-wrapper hr {
+          flex: 1;
+          border: 0;
+          border-top: 1px solid var(--line-divider);
         }
-        .auth-foot a:hover {
-          color: var(--primary);
+
+        .pill-items {
+          all: unset;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
-        @media (max-width: 1024px) {
-          .login-wrapper {
-            width: 90vw;
+        .pill-items li {
+          all: unset;
+        }
+        .pill-items li form {
+          all: unset;
+          display: block;
+        }
+        .pill-items li button,
+        .pill-items li a {
+          width: 100%;
+          height: 42px;
+          border-radius: 0.75rem;
+          border: 1px solid var(--line-color);
+          background: var(--input-bg);
+          color: var(--text-main);
+          font-size: 0.88rem;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition:
+            border-color 0.25s,
+            background 0.25s,
+            box-shadow 0.25s;
+        }
+        .pill-items li button:hover,
+        .pill-items li a:hover {
+          border-color: var(--primary);
+          background: var(--card-bg);
+          box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+        .pill-items li img {
+          width: 1.25rem;
+          height: 1.25rem;
+          display: inline-block !important;
+          flex: none;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 820px) {
+          .auth-shell {
             height: auto;
-            min-height: 500px;
-            flex-direction: column;
+            max-width: 440px;
           }
-          .left-img {
+          .auth-aside {
             display: none;
           }
-          .right-form {
-            padding: 30px 20px;
-          }
-          .form-inner {
-            width: 100%;
-            max-width: 400px;
+          .auth-main {
+            padding: 2rem 1.75rem;
           }
         }
         @media (max-width: 480px) {
-          .login-wrapper {
-            width: 94vw;
-            border-radius: 24px;
+          body {
+            padding: 0.75rem;
           }
-          .form-inner h1 {
-            font-size: 22px;
+          .auth-shell {
+            border-radius: 0.875rem;
+          }
+          .auth-main {
+            padding: 1.5rem 1.5rem;
+          }
+          .form-inner .form-item-group {
+            flex-direction: column;
+            gap: 0;
           }
         }
       </style>
@@ -361,7 +704,7 @@
     >
       <th:block th:replace="~{gateway_fragments/common::basicStaticResources}"></th:block>
     </th:block>
-    <!-- 主题模式：只加载 JS，样式由下方 <style> 提供 -->
+    <!-- 主题模式：只加载 JS，样式由上方 <style> 提供 -->
     <th:block
       th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
     >
@@ -371,6 +714,7 @@
     <th:block th:if="${head != null}"
       ><th:block th:replace="${head}"
     /></th:block>
+
   </head>
 
   <body>
@@ -378,29 +722,529 @@
     <th:block
       th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
     >
-      <div class="content">
-        <div class="login-wrapper">
-          <div
-            class="left-img"
-            th:style="${#strings.isEmpty(theme.config?.auth?.loginBgImage) ? '' : 'background:url(' + theme.config?.auth?.loginBgImage + ') center/cover no-repeat'}"
-          >
-            <div class="glass">
-              <div class="tag" th:text="${site.title}">Ethereal</div>
-              <h1>欢迎回来</h1>
-              <p>请登录你的账号</p>
-            </div>
+      <div class="auth-shell">
+        <!-- 左栏：动画角色面板 -->
+        <aside class="auth-aside">
+          <div class="aside-top">
+            <img
+              class="aside-logo"
+              th:src="${(theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png')}"
+              th:alt="${site.title}"
+              alt="Logo"
+            />
+            <span class="aside-site" th:text="${site.title}">Ethereal</span>
           </div>
-          <div class="right-form">
-            <div class="form-inner">
-              <h1>登录</h1>
-              <th:block th:replace="${body}" />
-              <div class="auth-foot">
-                <a th:href="@{/}">← 返回首页</a>
+
+          <div class="characters-wrapper">
+            <div class="characters-scene" id="characters-scene">
+              <!-- 紫色矩形角色 -->
+              <div class="character char-purple" id="char-purple">
+                <div class="eyes" id="purple-eyes" style="left: 45px; top: 40px; gap: 28px">
+                  <div class="eyeball" id="purple-eye-l" style="width: 18px; height: 18px">
+                    <div class="pupil" id="purple-pupil-l" style="width: 7px; height: 7px"></div>
+                  </div>
+                  <div class="eyeball" id="purple-eye-r" style="width: 18px; height: 18px">
+                    <div class="pupil" id="purple-pupil-r" style="width: 7px; height: 7px"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 黑色矩形角色 -->
+              <div class="character char-black" id="char-black">
+                <div class="eyes" id="black-eyes" style="left: 26px; top: 32px; gap: 20px">
+                  <div class="eyeball" id="black-eye-l" style="width: 16px; height: 16px">
+                    <div class="pupil" id="black-pupil-l" style="width: 6px; height: 6px"></div>
+                  </div>
+                  <div class="eyeball" id="black-eye-r" style="width: 16px; height: 16px">
+                    <div class="pupil" id="black-pupil-r" style="width: 6px; height: 6px"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 橙色半圆角色 -->
+              <div class="character char-orange" id="char-orange">
+                <div class="eyes" id="orange-eyes" style="left: 82px; top: 90px; gap: 28px">
+                  <div class="bare-pupil" id="orange-pupil-l"></div>
+                  <div class="bare-pupil" id="orange-pupil-r"></div>
+                </div>
+                <div class="orange-mouth" id="orange-mouth" style="left: 90px; top: 120px"></div>
+              </div>
+              <!-- 黄色圆角角色 -->
+              <div class="character char-yellow" id="char-yellow">
+                <div class="eyes" id="yellow-eyes" style="left: 52px; top: 40px; gap: 20px">
+                  <div class="bare-pupil" id="yellow-pupil-l"></div>
+                  <div class="bare-pupil" id="yellow-pupil-r"></div>
+                </div>
+                <div class="yellow-mouth" id="yellow-mouth" style="left: 40px; top: 88px"></div>
               </div>
             </div>
           </div>
-        </div>
+
+          <div class="aside-bottom">
+            <span th:text="'© ' + ${site.title}">© Ethereal</span>
+          </div>
+        </aside>
+
+        <!-- 右栏：Halo 注入的认证表单 -->
+        <main class="auth-main">
+          <div class="form-wrap">
+            <div class="form-head">
+              <h1 th:text="${#strings.substringBefore(title, ' - ')}">登录</h1>
+            </div>
+            <div class="form-inner">
+              <th:block th:replace="${body}" />
+            </div>
+          </div>
+        </main>
       </div>
+
+      <!-- 动画角色脚本（改编自 animatedlogin，已适配 Halo 注入表单） -->
+      <script>
+        (function () {
+          var $ = function (id) {
+            return document.getElementById(id);
+          };
+          if (!$("characters-scene")) return;
+
+          var mouseX = 0,
+            mouseY = 0;
+          var isTyping = false,
+            isLookingAtEachOther = false;
+          var isPurpleBlinking = false,
+            isBlackBlinking = false;
+          var isPasswordFocused = false,
+            isLoginError = false;
+          var typingTimer = null;
+
+          document.addEventListener("mousemove", function (e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            if (!isTyping && !isLoginError) updateCharacters();
+          });
+
+          // 监听 Halo 注入的输入框：聚焦用户名时角色对视，聚焦密码时转头回避
+          var haloInputs = document.querySelectorAll(
+            '.form-inner input[type="text"], .form-inner input[type="email"], .form-inner input[type="password"]'
+          );
+          for (var i = 0; i < haloInputs.length; i++) {
+            (function (inp) {
+              var isPwd = inp.type === "password";
+              inp.addEventListener("focus", function () {
+                if (isPwd) isPasswordFocused = true;
+                setTyping(true);
+              });
+              inp.addEventListener("blur", function () {
+                if (isPwd) isPasswordFocused = false;
+                setTyping(false);
+              });
+              inp.addEventListener("input", function () {
+                updateCharacters();
+              });
+            })(haloInputs[i]);
+          }
+
+          function setTyping(t) {
+            isTyping = t;
+            if (t) {
+              isLookingAtEachOther = true;
+              clearTimeout(typingTimer);
+              typingTimer = setTimeout(function () {
+                isLookingAtEachOther = false;
+                updateCharacters();
+              }, 800);
+            } else {
+              isLookingAtEachOther = false;
+            }
+            updateCharacters();
+          }
+
+          // 随机眨眼（紫色 / 黑色角色）
+          function scheduleBlink(setter) {
+            setTimeout(function () {
+              setter(true);
+              updateCharacters();
+              setTimeout(function () {
+                setter(false);
+                updateCharacters();
+                scheduleBlink(setter);
+              }, 150);
+            }, Math.random() * 4000 + 3000);
+          }
+          scheduleBlink(function (v) {
+            isPurpleBlinking = v;
+          });
+          scheduleBlink(function (v) {
+            isBlackBlinking = v;
+          });
+
+          function calcPosition(el) {
+            var r = el.getBoundingClientRect();
+            var cx = r.left + r.width / 2,
+              cy = r.top + r.height / 3;
+            var dx = mouseX - cx,
+              dy = mouseY - cy;
+            return {
+              faceX: Math.max(-15, Math.min(15, dx / 20)),
+              faceY: Math.max(-10, Math.min(10, dy / 30)),
+              bodySkew: Math.max(-6, Math.min(6, -dx / 120)),
+            };
+          }
+          function calcPupil(el, max) {
+            var r = el.getBoundingClientRect();
+            var cx = r.left + r.width / 2,
+              cy = r.top + r.height / 2;
+            var dx = mouseX - cx,
+              dy = mouseY - cy;
+            var d = Math.min(Math.sqrt(dx * dx + dy * dy), max);
+            var a = Math.atan2(dy, dx);
+            return { x: Math.cos(a) * d, y: Math.sin(a) * d };
+          }
+
+          function updateCharacters() {
+            var purple = $("char-purple"),
+              black = $("char-black"),
+              orange = $("char-orange"),
+              yellow = $("char-yellow");
+            if (!purple) return;
+            var pP = calcPosition(purple),
+              bP = calcPosition(black),
+              oP = calcPosition(orange),
+              yP = calcPosition(yellow);
+            var isLookingAway = isPasswordFocused && !isLoginError;
+
+            // ---- 紫色角色 ----
+            if (isLookingAway) {
+              purple.style.transform = "skewX(-14deg) translateX(-20px)";
+              purple.style.height = "410px";
+            } else if (isTyping) {
+              purple.style.transform =
+                "skewX(" + (pP.bodySkew - 12) + "deg) translateX(40px)";
+              purple.style.height = "410px";
+            } else {
+              purple.style.transform = "skewX(" + pP.bodySkew + "deg)";
+              purple.style.height = "370px";
+            }
+            var pEyes = $("purple-eyes"),
+              pEL = $("purple-eye-l"),
+              pER = $("purple-eye-r"),
+              pPL = $("purple-pupil-l"),
+              pPR = $("purple-pupil-r");
+            pEL.style.height = isPurpleBlinking ? "2px" : "18px";
+            pER.style.height = isPurpleBlinking ? "2px" : "18px";
+            if (isLoginError) {
+              pEyes.style.left = "30px";
+              pEyes.style.top = "55px";
+              pPL.style.transform = pPR.style.transform = "translate(-3px,4px)";
+            } else if (isLookingAway) {
+              pEyes.style.left = "20px";
+              pEyes.style.top = "25px";
+              pPL.style.transform = pPR.style.transform = "translate(-5px,-5px)";
+            } else if (isLookingAtEachOther) {
+              pEyes.style.left = "55px";
+              pEyes.style.top = "65px";
+              pPL.style.transform = pPR.style.transform = "translate(3px,4px)";
+            } else {
+              pEyes.style.left = 45 + pP.faceX + "px";
+              pEyes.style.top = 40 + pP.faceY + "px";
+              var po = calcPupil(pEL, 5);
+              pPL.style.transform = pPR.style.transform =
+                "translate(" + po.x + "px," + po.y + "px)";
+            }
+
+            // ---- 黑色角色 ----
+            if (isLookingAway) {
+              black.style.transform = "skewX(12deg) translateX(-10px)";
+            } else if (isLookingAtEachOther) {
+              black.style.transform =
+                "skewX(" + (bP.bodySkew * 1.5 + 10) + "deg) translateX(20px)";
+            } else if (isTyping) {
+              black.style.transform = "skewX(" + bP.bodySkew * 1.5 + "deg)";
+            } else {
+              black.style.transform = "skewX(" + bP.bodySkew + "deg)";
+            }
+            var bEyes = $("black-eyes"),
+              bEL = $("black-eye-l"),
+              bER = $("black-eye-r"),
+              bPL = $("black-pupil-l"),
+              bPR = $("black-pupil-r");
+            bEL.style.height = isBlackBlinking ? "2px" : "16px";
+            bER.style.height = isBlackBlinking ? "2px" : "16px";
+            if (isLoginError) {
+              bEyes.style.left = "15px";
+              bEyes.style.top = "40px";
+              bPL.style.transform = bPR.style.transform = "translate(-3px,4px)";
+            } else if (isLookingAway) {
+              bEyes.style.left = "10px";
+              bEyes.style.top = "20px";
+              bPL.style.transform = bPR.style.transform = "translate(-4px,-5px)";
+            } else if (isLookingAtEachOther) {
+              bEyes.style.left = "32px";
+              bEyes.style.top = "12px";
+              bPL.style.transform = bPR.style.transform = "translate(0px,-4px)";
+            } else {
+              bEyes.style.left = 26 + bP.faceX + "px";
+              bEyes.style.top = 32 + bP.faceY + "px";
+              var bo = calcPupil(bEL, 4);
+              bPL.style.transform = bPR.style.transform =
+                "translate(" + bo.x + "px," + bo.y + "px)";
+            }
+
+            // ---- 橙色角色 ----
+            orange.style.transform = "skewX(" + oP.bodySkew + "deg)";
+            var oEyes = $("orange-eyes"),
+              oPL = $("orange-pupil-l"),
+              oPR = $("orange-pupil-r");
+            if (isLoginError) {
+              oEyes.style.left = "60px";
+              oEyes.style.top = "95px";
+              oPL.style.transform = oPR.style.transform = "translate(-3px,4px)";
+            } else if (isLookingAway) {
+              oEyes.style.left = "50px";
+              oEyes.style.top = "75px";
+              oPL.style.transform = oPR.style.transform = "translate(-5px,-5px)";
+            } else {
+              oEyes.style.left = 82 + oP.faceX + "px";
+              oEyes.style.top = 90 + oP.faceY + "px";
+              var oo = calcPupil(oPL, 5);
+              oPL.style.transform = oPR.style.transform =
+                "translate(" + oo.x + "px," + oo.y + "px)";
+            }
+
+            // ---- 黄色角色 ----
+            yellow.style.transform = "skewX(" + yP.bodySkew + "deg)";
+            var yEyes = $("yellow-eyes"),
+              yPL = $("yellow-pupil-l"),
+              yPR = $("yellow-pupil-r"),
+              yMouth = $("yellow-mouth");
+            if (isLoginError) {
+              yEyes.style.left = "35px";
+              yEyes.style.top = "45px";
+              yPL.style.transform = yPR.style.transform = "translate(-3px,4px)";
+              yMouth.style.left = "30px";
+              yMouth.style.top = "92px";
+              yMouth.style.transform = "rotate(-8deg)";
+            } else if (isLookingAway) {
+              yEyes.style.left = "20px";
+              yEyes.style.top = "30px";
+              yPL.style.transform = yPR.style.transform = "translate(-5px,-5px)";
+              yMouth.style.left = "15px";
+              yMouth.style.top = "78px";
+              yMouth.style.transform = "rotate(0deg)";
+            } else {
+              yEyes.style.left = 52 + yP.faceX + "px";
+              yEyes.style.top = 40 + yP.faceY + "px";
+              var yo = calcPupil(yPL, 5);
+              yPL.style.transform = yPR.style.transform =
+                "translate(" + yo.x + "px," + yo.y + "px)";
+              yMouth.style.left = 40 + yP.faceX + "px";
+              yMouth.style.top = 88 + yP.faceY + "px";
+              yMouth.style.transform = "rotate(0deg)";
+            }
+          }
+
+          // ---- 登录失败：角色沮丧摇头 ----
+          var shakeIds = [
+            "purple-eyes",
+            "black-eyes",
+            "orange-eyes",
+            "yellow-eyes",
+            "yellow-mouth",
+            "orange-mouth",
+          ];
+          var errorTimer = null;
+          function triggerLoginError() {
+            if (errorTimer) clearTimeout(errorTimer);
+            var els = [];
+            for (var i = 0; i < shakeIds.length; i++) {
+              var el = $(shakeIds[i]);
+              if (el) els.push(el);
+            }
+            els.forEach(function (el) {
+              el.classList.remove("shake-head");
+            });
+            void document.body.offsetHeight;
+            isLoginError = true;
+            isPasswordFocused = false;
+            updateCharacters();
+            var om = $("orange-mouth");
+            if (om) om.classList.add("visible");
+            setTimeout(function () {
+              els.forEach(function (el) {
+                el.classList.add("shake-head");
+              });
+            }, 350);
+            errorTimer = setTimeout(function () {
+              isLoginError = false;
+              errorTimer = null;
+              if (om) om.classList.remove("visible");
+              els.forEach(function (el) {
+                el.classList.remove("shake-head");
+              });
+              updateCharacters();
+            }, 2500);
+          }
+
+          // Halo 登录失败会重定向回登录页并渲染错误提示：初始检测 + MutationObserver 兜底
+          function hasErrorNode() {
+            return !!document.querySelector(
+              '.form-inner .alert-danger, .form-inner [class*="error"]'
+            );
+          }
+          if (hasErrorNode()) {
+            setTimeout(triggerLoginError, 600);
+          }
+          if (window.MutationObserver) {
+            var formInner = document.querySelector(".form-inner");
+            if (formInner) {
+              new MutationObserver(function (muts) {
+                for (var i = 0; i < muts.length; i++) {
+                  var nodes = muts[i].addedNodes;
+                  for (var j = 0; j < nodes.length; j++) {
+                    var n = nodes[j];
+                    if (
+                      n.nodeType === 1 &&
+                      n.className &&
+                      (n.className.indexOf("alert-danger") > -1 ||
+                        n.className.indexOf("error") > -1)
+                    ) {
+                      triggerLoginError();
+                      return;
+                    }
+                  }
+                }
+              }).observe(formInner, { childList: true, subtree: true });
+            }
+          }
+
+          // ---- 提交按钮增强：包装 hover 滑出结构（渐进增强，失败不影响提交） ----
+          var submitBtn = document.querySelector(
+            '.form-inner button[type="submit"]'
+          );
+          if (submitBtn && !submitBtn.querySelector(".btn-text")) {
+            try {
+              var text = submitBtn.textContent.trim();
+              var textSpan = document.createElement("span");
+              textSpan.className = "btn-text";
+              textSpan.textContent = text;
+              var hoverSpan = document.createElement("span");
+              hoverSpan.className = "btn-hover-content";
+              var hoverText = document.createElement("span");
+              hoverText.textContent = text;
+              hoverSpan.appendChild(hoverText);
+              hoverSpan.insertAdjacentHTML(
+                "beforeend",
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
+              );
+              submitBtn.textContent = "";
+              submitBtn.appendChild(textSpan);
+              submitBtn.appendChild(hoverSpan);
+            } catch (e) {}
+          }
+
+          // ---- 修复注入表单布局：保持登录+忘记密码行 / 垂直居中 ----
+          (function () {
+            var fi = document.querySelector(".form-inner");
+            if (!fi) return;
+
+            // 表单垂直居中：margin:auto（CSS）自动居中，超出时切换顶部对齐
+            var am = document.querySelector(".auth-main");
+            var fw = am && am.querySelector(".form-wrap");
+            if (am && fw && fw.scrollHeight > am.clientHeight) {
+              fw.style.margin = "0";
+            }
+
+            // 注册页密码+确认密码 同行：用独立 wrapper，不动父级
+            var fits = fi.querySelectorAll(".form-item");
+            for (var fi_i = 0; fi_i < fits.length - 1; fi_i++) {
+              var fa = fits[fi_i], fb = fits[fi_i + 1];
+              if (
+                fa.parentNode === fb.parentNode &&
+                fa.querySelector('input[type="password"]') &&
+                fb.querySelector('input[type="password"]')
+              ) {
+                var pw = document.createElement("div");
+                pw.style.cssText = "display:flex;gap:0.75rem;";
+                fa.parentNode.insertBefore(pw, fa);
+                pw.appendChild(fa);
+                pw.appendChild(fb);
+                fa.style.cssText = "flex:1;margin:0;";
+                fb.style.cssText = "flex:1;margin:0;";
+                break;
+              }
+            }
+
+            var forgot = null;
+            // 识别忘记密码链接
+            var allLinks = fi.querySelectorAll("a");
+            for (var i = 0; i < allLinks.length; i++) {
+              var t = allLinks[i].textContent.toLowerCase();
+              if (t.indexOf("忘记") > -1 || t.indexOf("forgot") > -1) {
+                forgot = allLinks[i];
+                break;
+              }
+            }
+
+            var cb = fi.querySelector('input[type="checkbox"]');
+            if (!cb) {
+              // 无复选框：忘记密码单独一行居右
+              if (forgot) {
+                forgot.style.cssText =
+                  "display:block;text-align:right;font-size:0.8125rem;margin:0.5rem 0 0;";
+              }
+              return;
+            }
+
+            // 组装「保持登录」：复用现有 label 或新建行内容器
+            var remember = cb.closest("label");
+            if (remember) {
+              remember.style.cssText =
+                "display:inline-flex;align-items:center;gap:0.4rem;margin:0;font-size:0.8125rem;font-weight:400;color:var(--text-dim);cursor:pointer;line-height:1;white-space:nowrap;";
+            } else {
+              remember = document.createElement("span");
+              remember.style.cssText =
+                "display:inline-flex;align-items:center;gap:0.4rem;margin:0;font-size:0.8125rem;color:var(--text-dim);cursor:pointer;line-height:1;white-space:nowrap;";
+              cb.parentNode.insertBefore(remember, cb);
+              remember.appendChild(cb);
+              // 关联的 label（for 属性或相邻兄弟）
+              var lbl = cb.id
+                ? fi.querySelector('label[for="' + cb.id + '"]')
+                : null;
+              if (
+                !lbl &&
+                remember.nextElementSibling &&
+                remember.nextElementSibling.tagName === "LABEL"
+              ) {
+                lbl = remember.nextElementSibling;
+              }
+              if (lbl) {
+                lbl.style.cssText =
+                  "display:inline;margin:0;font:inherit;color:inherit;cursor:pointer;line-height:1;";
+                remember.appendChild(lbl);
+              }
+            }
+            cb.style.cssText =
+              "accent-color:var(--p-hex);width:0.9rem;height:0.9rem;margin:0;padding:0;display:inline-block;flex:none;";
+
+            // 组合行：左「保持登录」右「忘记密码」
+            var row = document.createElement("div");
+            row.style.cssText =
+              "display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin:0.6rem 0 0;";
+            remember.parentNode.insertBefore(row, remember);
+            row.appendChild(remember);
+            if (forgot) {
+              forgot.style.cssText =
+                "flex:none;font-size:0.8125rem;white-space:nowrap;line-height:1;margin:0;";
+              row.appendChild(forgot);
+            }
+          })();
+
+          updateCharacters();
+
+          // 连语言选择器的容器一起隐藏，不留空白
+          var langSel = document.querySelector(".form-inner select");
+          if (langSel && langSel.parentElement) {
+            langSel.parentElement.style.display = "none";
+          }
+        })();
+      </script>
     </th:block>
 
     <!-- Halo 默认认证界面 -->

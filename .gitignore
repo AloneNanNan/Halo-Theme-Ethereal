@@ -27,7 +27,6 @@ pnpm-debug.log*
 .codebuddy/
 
 templates/
-_ethereal
 
 # CodeBuddy IDE guide file
 AGENTS.md

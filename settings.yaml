@@ -981,8 +981,3 @@ spec:
               value: theme
             - label: Halo 默认
               value: halo
-        - $formkit: attachment
-          name: loginBgImage
-          if: "$get(login_page).value === 'theme'"
-          label: 登录页左侧背景图
-          help: "留空则使用主题色渐变"
