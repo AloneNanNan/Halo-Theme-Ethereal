@@ -83,7 +83,7 @@ const className = Astro.props.class;
             <a
               th:href="@{${menuItem.status.href}}"
               th:target="${menuItem.spec.target?.value}"
-              class="touch-only group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap"
+              class="touch-only group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
               <span
                 class="font-medium text-(--primary) truncate"
@@ -102,7 +102,7 @@ const className = Astro.props.class;
               th:each="childItem : ${menuItem.children}"
               th:href="@{${childItem.status.href}}"
               th:target="${childItem.spec.target?.value}"
-              class="group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap"
+              class="group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
               <span
                 class="font-medium text-black/75 dark:text-white/75 truncate"

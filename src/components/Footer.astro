@@ -110,7 +110,10 @@ const currentYear = new Date().getFullYear();
         th:text="${theme.config?.footer?.beian?.gongan_text}"></span>
     </a>
   </div>
-  <div class="mt-2">
+  <div
+    th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
+    class="mt-2"
+  >
     <span th:text="#{footer.poweredBy}">Powered by</span>
     <a
       class="link font-medium text-(--primary)"

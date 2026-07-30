@@ -702,6 +702,11 @@ spec:
               value: true
               label: 显示 Sitemap
               help: "在页脚显示 Sitemap 链接（需安装 Sitemap 插件）"
+            - $formkit: switch
+              name: enable_theme_credit
+              value: true
+              label: 显示主题署名
+              help: "开启后在页脚显示「Powered by Halo & Ethereal」标识，让访客了解您所使用的主题。希望您能保持开启以示支持，这将帮助作者更有动力持续维护与更新本主题。"
         - $formkit: group
           name: customLinks
           label: 自定义链接

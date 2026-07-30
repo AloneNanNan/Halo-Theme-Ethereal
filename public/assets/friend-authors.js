@@ -10,7 +10,7 @@
         var u = new URL(postLink);
         a.href = u.origin + "/";
       } catch (e) {
-        a.href = postLink;
+        // URL 不合法，不设置 href（防止 javascript: 等危险协议）
       }
       a.target = "_blank";
       a.rel = "noopener noreferrer";

@@ -23,6 +23,10 @@ function createActionLink({
   const link = document.createElement("a");
   link.className = `pswp-photo-action ${className}`.trim();
   link.href = href;
+  // 阻止 javascript: 等危险协议被设置为链接
+  if (/^javascript:/i.test(link.protocol || "")) {
+    link.removeAttribute("href");
+  }
   link.setAttribute("aria-label", label);
   if (target) {
     link.target = target;
