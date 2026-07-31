@@ -7,6 +7,18 @@ import CopyButton from "../components/CopyButton.astro";
   <Fragment slot="head">
     <title th:text="${linksTitle + ' - ' + site.title}"></title>
     <style is:global>
+      /* 随机访问按钮：点击后图标匀速旋转 */
+      .random-visit-btn.spinning .random-visit-icon {
+        animation: random-visit-spin 1s linear infinite;
+      }
+      @keyframes random-visit-spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
       .collapse-icon.is-expanded {
         transform: rotate(180deg);
       }
@@ -61,9 +73,9 @@ import CopyButton from "../components/CopyButton.astro";
         title="随机访问一个友链"
       >
         <span
-          class="icon-[material-symbols--shuffle-outline-rounded] mr-1.5 text-base transition-transform group-hover:rotate-12"
+          class="random-visit-icon icon-[material-symbols--shuffle-outline-rounded] mr-1.5 text-base transition-transform group-hover:rotate-12"
         ></span>
-        <span>随机访问</span>
+        <span class="random-visit-label">随机访问</span>
       </button>
     </div>
 

@@ -58,7 +58,6 @@ const className = Astro.props.class;
           <a
             th:href="@{${menuItem.status.href}}"
             th:target="${menuItem.spec.target?.value}"
-            th:attr="data-swup-ignore=${#strings.contains(menuItem.status.href, '/links') ? 'true' : ''}"
             class="btn-plain scale-animation h-11 rounded-lg px-5 font-bold active:scale-95 flex items-center gap-1"
           >
             <div class="flex items-center">

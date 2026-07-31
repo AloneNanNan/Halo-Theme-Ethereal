@@ -244,9 +244,12 @@ const {
     th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
     is:inline
   >
-    // 随机钓鱼 - 点击按钮随机跳转朋友圈文章
+    // 随机钓鱼 - 点击按钮鱼钩摇摆 1.5 秒后随机跳转朋友圈文章
     // 放到 swup-container 外部 + 事件委托，保证直接访问和 Swup 导航都生效
     (function () {
+      var SPIN_DELAY = 1500; // 摇摆等待时长（ms）
+      var spinning = false; // 防止重复点击
+
       function getUrls() {
         var links = document.querySelectorAll(".friends-item-title");
         var urls = [];
@@ -257,14 +260,29 @@ const {
         return urls;
       }
 
-      function handleClick(e) {
-        var btn = e.target.closest("#random-fish-btn");
-        if (!btn) return;
-        e.preventDefault();
+      // 停止摇摆，恢复按钮
+      function stopSwing(btn) {
+        spinning = false;
+        btn.classList.remove("spinning");
+        var label = btn.querySelector(".random-fish-label");
+        if (label) label.textContent = "随机钓鱼";
+      }
 
+      // 鱼钩摇摆动画：0.5s 一个来回，匀速晃动
+      function startSwing(btn, callback) {
+        var icon = btn.querySelector(".random-fish-icon");
+        var label = btn.querySelector(".random-fish-label");
+        btn.classList.add("spinning");
+        if (label) label.textContent = "正在钓...";
+        if (icon) icon.style.setProperty("--swing-duration", "0.5s");
+        setTimeout(callback, SPIN_DELAY);
+      }
+
+      function doRandomFish(btn) {
         var urls = getUrls();
         if (urls.length === 0) {
           alert("暂无朋友圈文章可随机跳转");
+          stopSwing(btn);
           return;
         }
         var chosen = urls[Math.floor(Math.random() * urls.length)];
@@ -277,6 +295,18 @@ const {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        stopSwing(btn);
+      }
+
+      function handleClick(e) {
+        var btn = e.target.closest("#random-fish-btn");
+        if (!btn || spinning) return;
+        e.preventDefault();
+
+        spinning = true;
+        startSwing(btn, function () {
+          doRandomFish(btn);
+        });
       }
 
       var bound = false;

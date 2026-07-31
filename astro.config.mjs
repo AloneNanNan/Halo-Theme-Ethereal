@@ -28,10 +28,16 @@ export default defineConfig({
       updateHead: true,
       updateBodyClass: false,
       globalInstance: true,
-      ignoreVisit: function (url) {
-        // 禁用 Swup 对友链页面的处理
-        return url.pathname === "/links" || url.pathname === "/links.html";
-      },
+      ignore: [
+        // 认证 / 后台 / 用户中心等非主题页面：直接整页跳转，
+        // 避免 Swup 先播放下场动画再跳转导致瞬间样式散架
+        "/login",
+        "/logout",
+        "/register",
+        "/console",
+        "/uc",
+        "/admin",
+      ],
     }),
     icon({
       include: {
