@@ -1,0 +1,30 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  appstore-release:
+    name: Sync to Halo App Store
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.event.release.tag_name, 'v') }}
+    steps:
+      # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
+      - uses: actions/checkout@v6
+
+      # 下载你手动上传到 GitHub Release 的制品附件（如 Ethereal-1.0.4.zip）
+      - name: Download Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download "${{ github.event.release.tag_name }}" --dir dist
+
+      # 同步到 Halo 应用市场
+      - name: Release to App Store
+        uses: halo-sigs/app-store-release-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          app-id: ${{ secrets.APP_ID }}
+          release-id: ${{ github.event.release.id }}
+          assets-dir: dist
+          halo-pat: ${{ secrets.HALO_PAT }}
