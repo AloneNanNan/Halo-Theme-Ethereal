@@ -73,11 +73,10 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           th:if="${not #strings.isEmpty(post.spec.cover)}"
           id="post-cover"
           class="mb-5 overflow-hidden rounded-xl"
-          th:with="imgProvider=${theme.config?.performance?.imageProcessing?.provider ?: 'none'}, imgWidth=${theme.config?.performance?.imageProcessing?.article_image_width ?: 800}, imgCustomFormat=${theme.config?.performance?.imageProcessing?.customFormat ?: ''}, imgSuffix=${imgProvider == 'none' || (imgWidth + '' == '0') ? '' : imgProvider == 'halo' ? '?width=' + imgWidth : imgProvider == 'aliyun_esa' ? '?image_process=resize,w_' + imgWidth : imgProvider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + imgWidth : imgProvider == 'tencent_eo' ? '?eo-img.resize=w/' + imgWidth : imgProvider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + imgWidth + 'x' : imgProvider == 'qiniu' ? '?imageView2/2/w/' + imgWidth : imgProvider == 'upyun' ? '!/fw/' + imgWidth : imgProvider == 'custom' ? #strings.replace(imgCustomFormat, '{width}', '' + imgWidth) : ''}"
+          th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.article_image_width ?: 1200}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
         >
           <img
-            alt=""
-            th:src="|${post.spec.cover}${imgSuffix}|"
+            th:src="|${post.spec.cover}${suffix}|"
             th:alt="${post.spec.title}"
             fetchpriority="high"
             decoding="async"
@@ -112,11 +111,33 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         </div>
       </div>
 
+      <!-- provider = halo 或 none：直接渲染，Halo 内核自行处理内容图片 -->
       <div
+        th:if="${theme.config?.performance?.imageProcessing?.provider == 'halo' or theme.config?.performance?.imageProcessing?.provider == 'none'}"
         id="content"
         class="custom-md markdown-content onload-animation prose prose-base mb-6 max-w-none! dark:prose-invert!"
         th:classappend="| ${theme.config?.post?.contentDisplay?.content_size} ${theme.config?.post?.contentDisplay?.content_theme}|"
         th:utext="${post.content.content}"
+      >
+      </div>
+
+      <!-- provider = CDN：用 <template> 包裹避免浏览器预加载扫描器触发双重加载 -->
+      <template
+        th:if="${theme.config?.performance?.imageProcessing?.provider != 'halo' and theme.config?.performance?.imageProcessing?.provider != 'none'}"
+        id="content-template"
+      >
+        <div
+          id="content"
+          class="custom-md markdown-content onload-animation prose prose-base mb-6 max-w-none! dark:prose-invert!"
+          th:classappend="| ${theme.config?.post?.contentDisplay?.content_size} ${theme.config?.post?.contentDisplay?.content_theme}|"
+          th:utext="${post.content.content}"
+        >
+        </div>
+      </template>
+      <div
+        th:if="${theme.config?.performance?.imageProcessing?.provider != 'halo' and theme.config?.performance?.imageProcessing?.provider != 'none'}"
+        id="content-placeholder"
+        class="min-h-[30vh]"
       >
       </div>
 
@@ -366,42 +387,81 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     })();
   </script>
 
-  <!-- 给正文图片添加宽度限制，减少带宽消耗 -->
-  <script>
+  <!-- CDN 图片处理：<template> 阻止预加载 → JS 加参数后插入 DOM，避免双加载 -->
+  <script is:inline>
     (function () {
-      var imgConfig = document.getElementById("theme-config");
-      if (!imgConfig) return;
-      try {
-        imgConfig = JSON.parse(imgConfig.textContent || imgConfig.innerText);
-      } catch (e) {
-        return;
-      }
-      var provider =
-        imgConfig?.performance?.imageProcessing?.provider || "none";
-      var customFmt =
-        imgConfig?.performance?.imageProcessing?.custom_format || "";
-      var imgWidth =
-        imgConfig?.performance?.imageProcessing?.article_image_width;
-      // 0 = use original image (skip processing)
-      if (!imgWidth || imgWidth <= 0) return;
-      var suffix = "";
-      if (provider === "aliyun_esa")
-        suffix = "?image_process=resize,w_" + imgWidth;
-      else if (provider === "aliyun_oss")
-        suffix = "?x-oss-process=image/resize,w_" + imgWidth;
-      else if (provider === "tencent_eo")
-        suffix = "?eo-img.resize=w/" + imgWidth;
-      else if (provider === "tencent_cos")
-        suffix = "?imageMogr2/thumbnail/" + imgWidth + "x";
-      else if (provider === "qiniu") suffix = "?imageView2/2/w/" + imgWidth;
-      else if (provider === "upyun") suffix = "!/fw/" + imgWidth;
-      else if (provider === "custom" && customFmt)
-        suffix = customFmt.replace("{width}", String(imgWidth));
-      document.querySelectorAll(".custom-md img").forEach(function (img) {
-        var src = img.getAttribute("src");
-        if (src && !src.includes("?") && !src.includes("!/")) {
-          img.setAttribute("src", src + suffix);
+      var TEMPLATE_ID = "content-template";
+      var PLACEHOLDER_ID = "content-placeholder";
+
+      function processAndInsert() {
+        var template = document.getElementById(TEMPLATE_ID);
+        var placeholder = document.getElementById(PLACEHOLDER_ID);
+        if (!template || !placeholder) return;
+
+        // 读取主题图片处理配置
+        var provider = "none",
+          imgWidth = 0,
+          customFmt = "";
+        var configEl = document.getElementById("theme-config");
+        if (configEl) {
+          try {
+            var config = JSON.parse(configEl.textContent || configEl.innerText);
+            var ip =
+              config &&
+              config.performance &&
+              config.performance.imageProcessing;
+            if (ip) {
+              provider = ip.provider || "none";
+              imgWidth = ip.article_image_width || 0;
+              customFmt = ip.custom_format || "";
+            }
+          } catch (e) {}
         }
+
+        // 按宽度生成 CDN 后缀
+        function makeSuffix(w) {
+          if (provider === "aliyun_esa") return "?image_process=resize,w_" + w;
+          if (provider === "aliyun_oss")
+            return "?x-oss-process=image/resize,w_" + w;
+          if (provider === "tencent_eo") return "?eo-img.resize=w/" + w;
+          if (provider === "tencent_cos")
+            return "?imageMogr2/thumbnail/" + w + "x";
+          if (provider === "qiniu") return "?imageView2/2/w/" + w;
+          if (provider === "upyun") return "!/fw/" + w;
+          if (provider === "custom" && customFmt)
+            return customFmt.replace("{width}", String(w));
+          return "";
+        }
+
+        var suffix = imgWidth > 0 ? makeSuffix(imgWidth) : "";
+
+        var fragment = template.content.cloneNode(true);
+        var contentEl = fragment.getElementById("content");
+        if (!contentEl) return;
+
+        // 在插入 DOM 前给内容图片加上 CDN 处理参数
+        if (suffix) {
+          contentEl.querySelectorAll("img").forEach(function (img) {
+            var src = img.getAttribute("src");
+            if (src && src.indexOf("?") === -1 && src.indexOf("!/") === -1) {
+              img.setAttribute("src", src + suffix);
+            }
+          });
+        }
+
+        placeholder.replaceWith(contentEl);
+        template.remove();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", processAndInsert);
+      } else {
+        processAndInsert();
+      }
+
+      // Swup 页面切换后重新处理
+      document.addEventListener("swup:contentReplaced", function () {
+        setTimeout(processAndInsert, 0);
       });
     })();
   </script>

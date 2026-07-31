@@ -58,7 +58,7 @@ const {
   <div
     id="banner-wrapper"
     th:if="${theme.config?.base?.banner?.enable}"
-    th:with="bannerWidth=${theme.config?.performance?.imageProcessing?.banner_width ?: 0}, imgProvider=${theme.config?.performance?.imageProcessing?.provider ?: 'none'}, imgCustomFormat=${theme.config?.performance?.imageProcessing?.customFormat ?: ''}, bannerSuffix=${(bannerWidth + '' != '0') ? (imgProvider == 'none' ? '' : imgProvider == 'halo' ? '?width=' + bannerWidth : imgProvider == 'aliyun_esa' ? '?image_process=resize,w_' + bannerWidth : imgProvider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + bannerWidth : imgProvider == 'tencent_eo' ? '?eo-img.resize=w/' + bannerWidth : imgProvider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + bannerWidth + 'x' : imgProvider == 'qiniu' ? '?imageView2/2/w/' + bannerWidth : imgProvider == 'upyun' ? '!/fw/' + bannerWidth : imgProvider == 'custom' ? #strings.replace(imgCustomFormat, '{width}', '' + bannerWidth) : '') : ''}"
+    th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.banner_width ?: 1920}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-700"
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
   >
@@ -66,11 +66,11 @@ const {
       rel="preload"
       as="image"
       fetchpriority="high"
-      th:href="${(theme.config?.base?.banner?.src ?: '') + bannerSuffix}"
+      th:href="${(theme.config?.base?.banner?.src ?: '') + suffix}"
     />
     <ImageWrapper
       id="banner"
-      src="${(theme.config?.base?.banner?.src ?: '') + bannerSuffix}"
+      src="${(theme.config?.base?.banner?.src ?: '') + suffix}"
       alt="${site.title}"
       position="${theme.config?.base?.banner?.position ?: 'center'}"
       loading="eager"

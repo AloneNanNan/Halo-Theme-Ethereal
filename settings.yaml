@@ -901,17 +901,17 @@ spec:
           value:
             provider: none
             card_cover_width: 400
-            article_image_width: 800
+            article_image_width: 1200
             custom_format: ""
             banner_width: 1920
-            avatar_size: 192
+            avatar_size: 512
           children:
             - $formkit: select
               name: provider
               id: image_processing_provider
               label: 图片处理服务
               value: none
-              help: "选择你的图片存储/CDN 服务，以启用实时图片压缩缩放。此功能会对文章封面图和文章内图片进行分辨率压缩处理，以便达到速度优化效果。需在对应服务端开启图片处理功能。建议值仅供参考，以实际显示效果自主调试为主"
+              help: "选择你的图片存储/CDN 服务，以启用实时图片压缩缩放。此功能会对文章封面图和文章内图片进行分辨率压缩处理，以便达到速度优化效果。\n如果图片存储在非halo内部存储，需在对应服务端开启图片处理功能。\n建议值仅供参考，以实际显示效果自主调试为准。\n此功能测试中，无法保证所有功能正常，如有问题请反馈。"
               options:
                 - label: 不处理（使用原图）
                   value: none
@@ -945,16 +945,16 @@ spec:
               min: 0
               max: 2000
               step: 50
-              help: "建议 200-600，设为 0 则使用原图不压缩。原图宽度不足时仅支持缩小"
+              help: "建议 300-800，设为 0 则使用原图不压缩。原图宽度不足时仅支持缩小"
             - $formkit: number
               name: article_image_width
               if: "$get(image_processing_provider).value !== 'none'"
               label: 文章页图片宽度 (px)
-              value: 800
+              value: 1200
               min: 0
               max: 2000
               step: 50
-              help: "建议 600-1600，设为 0 则使用原图不压缩。包含文章封面图和正文内图片，原图宽度不足时仅支持缩小"
+              help: "建议 800-2000，设为 0 则使用原图不压缩。当使用内部存储时仅处理文章封面图，正文图片宽度由系统自动优化；使用 CDN 时封面图与正文图片均生效。原图宽度不足时仅支持缩小"
             - $formkit: number
               name: banner_width
               if: "$get(image_processing_provider).value !== 'none'"
@@ -963,16 +963,16 @@ spec:
               min: 0
               max: 3840
               step: 160
-              help: "Banner 图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：1920，覆盖 1080p 及以下屏幕"
+              help: "Banner 图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：1920"
             - $formkit: number
               name: avatar_size
               if: "$get(image_processing_provider).value !== 'none'"
               label: 头像尺寸 (px)
-              value: 256
+              value: 512
               min: 0
               max: 512
               step: 32
-              help: "头像图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：256，侧边栏显示约 12rem，2x Retina 屏清晰"
+              help: "头像图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：512"
     - group: auth
       label: 认证
       formSchema:

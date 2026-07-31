@@ -6,7 +6,7 @@ import ImageWrapper from "../misc/ImageWrapper.astro";
   <a
     aria-label="Profile"
     th:href="${theme.config?.sidebar?.profile?.url ?: '/about'}"
-    th:with="avatarWidth=${theme.config?.performance?.imageProcessing?.avatar_size ?: 0}, imgProvider=${theme.config?.performance?.imageProcessing?.provider ?: 'none'}, imgCustomFormat=${theme.config?.performance?.imageProcessing?.customFormat ?: ''}, avatarSuffix=${(avatarWidth + '' != '0') ? (imgProvider == 'none' ? '' : imgProvider == 'halo' ? '?width=' + avatarWidth : imgProvider == 'aliyun_esa' ? '?image_process=resize,w_' + avatarWidth : imgProvider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + avatarWidth : imgProvider == 'tencent_eo' ? '?eo-img.resize=w/' + avatarWidth : imgProvider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + avatarWidth + 'x' : imgProvider == 'qiniu' ? '?imageView2/2/w/' + avatarWidth : imgProvider == 'upyun' ? '!/fw/' + avatarWidth : imgProvider == 'custom' ? #strings.replace(imgCustomFormat, '{width}', '' + avatarWidth) : '') : ''}"
+    th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.avatar_size ?: 512}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
     class="group relative mx-auto mb-3 mt-1 block max-w-[12rem] overflow-hidden rounded-xl active:scale-95 lg:mx-0 lg:mt-0 lg:max-w-none"
   >
     <div
@@ -17,7 +17,7 @@ import ImageWrapper from "../misc/ImageWrapper.astro";
       ></span>
     </div>
     <ImageWrapper
-      src="${(theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png') + avatarSuffix}"
+      src="${(theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png') + suffix}"
       alt="${theme.config?.sidebar?.profile?.name ?: 'Profile'}"
       class="mx-auto aspect-square h-full lg:mt-0 lg:w-full"
     />
