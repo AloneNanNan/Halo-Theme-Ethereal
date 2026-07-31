@@ -1,4 +1,5 @@
 ---
+import Announcement from "./Announcement.astro";
 import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
 import MusicPlayer from "./MusicPlayer.astro";
@@ -22,16 +23,24 @@ const thClassappend = Astro.props["th:classappend"] || "";
   th:classappend={thClassappend}
 >
   <div
-    th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.display_position != 'right'}"
+    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position != 'right'}"
     class="mb-4 flex w-full flex-col gap-4"
   >
     <Profile />
   </div>
   <div
-    th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.display_position == 'right'}"
-    class="mb-4 xl:!hidden flex w-full flex-col gap-4"
+    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position == 'right'}"
+    class="mb-4 flex w-full flex-col gap-4"
+    th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:!hidden'}"
   >
     <Profile />
+  </div>
+  <!-- 公告：非吸顶，Profile 之后、小组件之前；两栏布局时即使设置为右侧也显示在左侧 -->
+  <div
+    th:if="${theme.config?.sidebar?.announcement?.enable != false and (theme.config?.sidebar?.announcement?.position != 'right' or theme.config?.sidebar?.layout?.layoutMode == 'two-column')}"
+    class="mb-4 flex w-full flex-col gap-4"
+  >
+    <Announcement class="onload-animation" />
   </div>
   <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
     <div

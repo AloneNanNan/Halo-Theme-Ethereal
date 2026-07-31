@@ -1,0 +1,80 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<WidgetLayout
+  id="announcement"
+  name="公告"
+  nameKey="widget.announcement.title"
+  class={className}
+>
+  <div class="px-3">
+    <div
+      class="mb-3 leading-relaxed text-neutral-600 dark:text-neutral-300"
+      th:text="${theme.config?.sidebar?.announcement?.content ?: '欢迎来到我的博客！这是一则示例公告。'}"
+    >
+      欢迎来到我的博客！这是一则示例公告。
+    </div>
+
+    <div class="flex items-center justify-between gap-3">
+      <a
+        th:if="${theme.config?.sidebar?.announcement?.link?.enable != false}"
+        th:href="${theme.config?.sidebar?.announcement?.link?.url}"
+        th:target="${theme.config?.sidebar?.announcement?.link?.external != false ? '_blank' : '_self'}"
+        th:attr="rel=${theme.config?.sidebar?.announcement?.link?.external != false ? 'noopener noreferrer' : ''}"
+        class="btn-regular rounded-lg px-3 py-1.5 text-sm font-medium active:scale-95 transition-transform"
+        th:text="${theme.config?.sidebar?.announcement?.link?.text ?: '了解更多'}"
+      >
+      </a>
+
+      <button
+        th:if="${theme.config?.sidebar?.announcement?.closable != false}"
+        type="button"
+        class="announcement-close-btn btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+        th:attr="aria-label=#{widget.announcement.close}"
+        aria-label="关闭公告"
+      >
+        <span class="icon-[fa6-solid--xmark] text-sm"></span>
+      </button>
+    </div>
+  </div>
+</WidgetLayout>
+
+<script is:inline>
+  (function () {
+    // sessionStorage：当前标签页/会话内保持关闭，重新进入网站后恢复显示
+    var KEY = "ethereal-announcement-closed-v1";
+
+    function apply() {
+      try {
+        if (sessionStorage.getItem(KEY) === "1") {
+          var el = document.querySelector(
+            'widget-layout[data-id="announcement"]',
+          );
+          if (el && el.parentElement) el.parentElement.style.display = "none";
+        }
+      } catch (e) {}
+    }
+
+    apply();
+
+    // 脚本可能被 Swup 重复执行，全局标记保证只注册一次监听
+    if (window.__annInit) return;
+    window.__annInit = true;
+
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".announcement-close-btn")) return;
+      try {
+        sessionStorage.setItem(KEY, "1");
+      } catch (e) {}
+      apply();
+    });
+
+    document.addEventListener("swup:contentReplaced", apply);
+  })();
+</script>

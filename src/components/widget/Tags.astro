@@ -25,7 +25,7 @@ const COLLAPSE_THRESHOLD = 20;
     class={className}
     style={style}
   >
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2 pl-3">
       <a
         th:each="tag : ${tags}"
         th:href="@{${tag.status.permalink}}"

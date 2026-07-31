@@ -97,7 +97,13 @@ const className = Astro.props.class;
     }
   </style>
 
-  <div class="hitokoto-card px-3" id="hitokotoCard">
+  <div
+    class="hitokoto-card px-3"
+    id="hitokotoCard"
+    th:attr="data-api=${widget.api},
+      data-fallback-text=${widget.fallback_text},
+      data-fallback-source=${widget.fallback_source}"
+  >
     <div class="hitokoto-main-row">
       <p class="hitokoto-text" id="hitokotoText">加载中...</p>
       <button
@@ -119,19 +125,18 @@ const className = Astro.props.class;
 <script is:inline>
   (function () {
     var hitokotoBound = false;
-    var CACHE_KEY = "hitokoto_cache";
 
-    function getCachedData() {
+    function getCachedData(key) {
       try {
-        var raw = sessionStorage.getItem(CACHE_KEY);
+        var raw = sessionStorage.getItem(key);
         if (raw) return JSON.parse(raw);
       } catch (e) {}
       return null;
     }
 
-    function setCachedData(data) {
+    function setCachedData(key, data) {
       try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        sessionStorage.setItem(key, JSON.stringify(data));
       } catch (e) {}
     }
 
@@ -143,25 +148,50 @@ const className = Astro.props.class;
       var authorEl = document.getElementById("hitokotoAuthor");
       var refreshBtn = document.getElementById("hitokotoRefresh");
 
-      var API = "https://v1.hitokoto.cn/";
+      // 读取后台配置：留空则使用内置默认
+      var API = card.getAttribute("data-api") || "https://v1.hitokoto.cn/";
+      var fallbackText =
+        card.getAttribute("data-fallback-text") || "世界很大，开心第一。";
+      var fallbackSource =
+        card.getAttribute("data-fallback-source") || "楠南NanNan";
+
+      // 缓存按 API 区分，避免更换 API 后读到旧缓存
+      var CACHE_KEY = "hitokoto_cache_" + encodeURIComponent(API);
 
       function fetchHitokoto() {
         return fetch(API, { signal: AbortSignal.timeout(5000) })
           .then(function (resp) {
-            if (resp.ok) return resp.json();
-            throw new Error("Network response was not ok.");
-          })
-          .then(function (data) {
-            return {
-              content: data.hitokoto || data.content || "",
-              author: data.from || data.author || data.source || "",
-            };
+            if (!resp.ok) throw new Error("Network response was not ok.");
+            var contentType = resp.headers.get("content-type") || "";
+            // JSON 响应：兼容 hitokoto 标准字段与常见自定义字段
+            if (contentType.indexOf("application/json") !== -1) {
+              return resp.json().then(function (data) {
+                return {
+                  content:
+                    data.hitokoto ||
+                    data.content ||
+                    data.sentence ||
+                    data.text ||
+                    "",
+                  author:
+                    data.from ||
+                    data.author ||
+                    data.source ||
+                    data.from_who ||
+                    "",
+                };
+              });
+            }
+            // 纯文本响应
+            return resp.text().then(function (text) {
+              return { content: text.trim(), author: "" };
+            });
           })
           .catch(function (e) {
             console.warn("一言获取失败，使用默认句子", e.message);
             return {
-              content: "世界很大，开心第一。",
-              author: "楠南NanNan",
+              content: fallbackText,
+              author: fallbackSource,
             };
           });
       }
@@ -176,7 +206,7 @@ const className = Astro.props.class;
         card.classList.add("hitokoto-loading");
         refreshBtn.classList.add("spinning");
         fetchHitokoto().then(function (data) {
-          setCachedData(data);
+          setCachedData(CACHE_KEY, data);
           updateCard(data);
           setTimeout(function () {
             refreshBtn.classList.remove("spinning");
@@ -191,7 +221,7 @@ const className = Astro.props.class;
       }
 
       // 优先使用缓存数据，无缓存时才请求
-      var cached = getCachedData();
+      var cached = getCachedData(CACHE_KEY);
       if (cached) {
         updateCard(cached);
       } else {

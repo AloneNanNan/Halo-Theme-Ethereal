@@ -94,12 +94,11 @@ export interface Sidebar {
   layout: SidebarLayout;
   widgetsConfig: WidgetsConfig;
   profile: SidebarProfile;
+  announcement?: AnnouncementConfig;
 }
 
 export interface SidebarLayout {
   layoutMode: string;
-  enable_profile: boolean;
-  display_position?: string;
 }
 
 export interface WidgetsConfig {
@@ -107,7 +106,24 @@ export interface WidgetsConfig {
   rightWidgets?: Widget[];
 }
 
+export interface AnnouncementConfig {
+  enable?: boolean;
+  position?: string;
+  content?: string;
+  closable?: boolean;
+  link?: AnnouncementLink;
+}
+
+export interface AnnouncementLink {
+  enable?: boolean;
+  text?: string;
+  url?: string;
+  external?: boolean;
+}
+
 export interface SidebarProfile {
+  enable_profile?: boolean;
+  display_position?: string;
   name: string;
   bio: string;
   avatar: string;
@@ -128,6 +144,8 @@ export interface Widget {
   site_start_date?: string;
   tencent_key?: string;
   default_city?: string;
+  fallback_text?: string;
+  fallback_source?: string;
 }
 
 // ========== 社交媒体 ==========

@@ -274,22 +274,6 @@ spec:
                   value: two-column
                 - label: 三栏布局
                   value: three-column
-            - $formkit: switch
-              name: enable_profile
-              id: enable_profile_switch
-              value: true
-              label: 启用个人简介小组件
-            - $formkit: select
-              name: display_position
-              if: "$get(enable_profile_switch).value && $get(layoutMode).value === 'three-column'"
-              label: 个人简介小组件显示位置
-              value: left
-              help: "选择个人简介小组件显示在左侧还是右侧侧边栏，两栏布局时仅显示在左侧"
-              options:
-                - label: 左侧边栏
-                  value: left
-                - label: 右侧边栏
-                  value: right
         - $formkit: group
           name: widgetsConfig
           label: 小组件设置
@@ -340,6 +324,24 @@ spec:
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
+                - $formkit: url
+                  if: "$value.value === 'hitokoto'"
+                  name: api
+                  label: 一言 API 地址
+                  value: ""
+                  help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
+                - $formkit: text
+                  if: "$value.value === 'hitokoto'"
+                  name: fallback_text
+                  label: 获取失败文案
+                  value: "世界很大，开心第一。"
+                  help: "一言获取失败时显示的句子"
+                - $formkit: text
+                  if: "$value.value === 'hitokoto'"
+                  name: fallback_source
+                  label: 获取失败来源
+                  value: "楠南NanNan"
+                  help: "一言获取失败时显示的作者或来源"
                 - $formkit: text
                   if: "$value.value === 'music'"
                   name: title
@@ -456,6 +458,24 @@ spec:
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
+                - $formkit: url
+                  if: "$value.value === 'hitokoto'"
+                  name: api
+                  label: 一言 API 地址
+                  value: ""
+                  help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
+                - $formkit: text
+                  if: "$value.value === 'hitokoto'"
+                  name: fallback_text
+                  label: 获取失败文案
+                  value: "世界很大，开心第一。"
+                  help: "一言获取失败时显示的句子"
+                - $formkit: text
+                  if: "$value.value === 'hitokoto'"
+                  name: fallback_source
+                  label: 获取失败来源
+                  value: "楠南NanNan"
+                  help: "一言获取失败时显示的作者或来源"
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
@@ -463,27 +483,50 @@ spec:
                   value: "<p>自定义HTML</p>"
         - $formkit: group
           name: profile
-          if: "$get(enable_profile_switch).value"
-          label: 个人设置
+          label: 个人简介小组件
+          value:
+            enable_profile: true
+            display_position: left
           children:
+            - $formkit: switch
+              name: enable_profile
+              id: enable_profile_switch
+              value: true
+              label: 启用个人简介小组件
+            - $formkit: select
+              name: display_position
+              if: "$get(enable_profile_switch).value && $get(layoutMode).value === 'three-column'"
+              label: 个人简介小组件显示位置
+              value: left
+              help: "选择个人简介小组件显示在左侧还是右侧侧边栏，两栏布局时仅显示在左侧"
+              options:
+                - label: 左侧边栏
+                  value: left
+                - label: 右侧边栏
+                  value: right
             - $formkit: attachment
               name: avatar
+              if: "$get(enable_profile_switch).value"
               value: /themes/Ethereal/assets/images/demo-avatar.png
               label: 头像
             - $formkit: text
               name: name
+              if: "$get(enable_profile_switch).value"
               label: 昵称
               value: NanNan
             - $formkit: text
               name: bio
+              if: "$get(enable_profile_switch).value"
               label: 简介
               value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
             - $formkit: url
               name: url
+              if: "$get(enable_profile_switch).value"
               label: 链接(点击跳转登录和后台可使用 /login )
               value: /about
             - $formkit: array
               name: social_media
+              if: "$get(enable_profile_switch).value"
               label: 社交媒体
               children:
                 - $formkit: iconify
@@ -498,6 +541,74 @@ spec:
                   name: url
                   label: 链接
                   validation: "required"
+        - $formkit: group
+          name: announcement
+          label: 公告小组件
+          value:
+            enable: false
+            position: left
+            content: "欢迎来到我的博客！这是一则示例公告。"
+            closable: true
+            link:
+              enable: false
+              text: "了解更多"
+              url: ""
+              external: false
+          children:
+            - $formkit: switch
+              name: enable
+              id: announcement_enable
+              label: 启用公告
+              value: false
+              help: "开启后在侧边栏首位显示公告小组件，不参与吸顶，随页面滚动"
+            - $formkit: select
+              name: position
+              if: "$get(announcement_enable).value && $get(layoutMode).value === 'three-column'"
+              label: 显示位置
+              value: left
+              help: "公告仅可显示在左侧边栏首位或右侧边栏首位，两栏布局时仅显示在左侧"
+              options:
+                - label: 左侧边栏首位
+                  value: left
+                - label: 右侧边栏首位
+                  value: right
+            - $formkit: textarea
+              name: content
+              if: "$get(announcement_enable).value"
+              label: 公告内容
+              value: "欢迎来到我的博客！这是一则示例公告。"
+            - $formkit: switch
+              name: closable
+              if: "$get(announcement_enable).value"
+              label: 允许关闭
+              value: true
+              help: "开启后访客可点击关闭按钮隐藏公告"
+            - $formkit: group
+              name: link
+              if: "$get(announcement_enable).value"
+              label: 链接设置
+              children:
+                - $formkit: switch
+                  name: enable
+                  id: announcement_link_enable
+                  label: 启用链接
+                  value: false
+                - $formkit: text
+                  name: text
+                  if: "$get(announcement_link_enable).value"
+                  label: 链接文本
+                  value: "了解更多"
+                - $formkit: url
+                  name: url
+                  if: "$get(announcement_link_enable).value"
+                  label: 链接地址
+                  value: ""
+                - $formkit: switch
+                  name: external
+                  if: "$get(announcement_link_enable).value"
+                  label: 外部链接
+                  value: false
+                  help: "开启后在新标签页打开"
     - group: post
       label: 文章
       formSchema:

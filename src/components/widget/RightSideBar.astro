@@ -1,4 +1,5 @@
 ---
+import Announcement from "./Announcement.astro";
 import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
 import Profile from "./Profile.astro";
@@ -27,10 +28,17 @@ const thClassappend = Astro.props["th:classappend"] || "";
       <Fragment>
         {/* Profile：不吸顶，随页面滚动 */}
         <div
-          th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.layout?.display_position == 'right'}"
+          th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
           class="hidden xl:flex w-full flex-col gap-4"
         >
           <Profile />
+        </div>
+        {/* 公告：非吸顶，Profile 之后、小组件之前 */}
+        <div
+          th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
+          class="hidden xl:flex w-full flex-col gap-4"
+        >
+          <Announcement />
         </div>
         {/* 功能性小组件：吸顶显示 */}
         <div
@@ -100,10 +108,17 @@ const thClassappend = Astro.props["th:classappend"] || "";
       <Fragment>
         {/* Profile：不吸顶，随页面滚动 */}
         <div
-          th:if="${theme.config?.sidebar?.layout?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.layout?.display_position == 'right'}"
+          th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
           class="hidden xl:flex w-full flex-col gap-4"
         >
           <Profile />
+        </div>
+        {/* 公告：非吸顶，Profile 之后、小组件之前 */}
+        <div
+          th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
+          class="hidden xl:flex w-full flex-col gap-4"
+        >
+          <Announcement />
         </div>
         {/* 功能性小组件：吸顶显示 */}
         <div
