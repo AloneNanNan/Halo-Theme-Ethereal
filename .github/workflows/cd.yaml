@@ -3,21 +3,43 @@ name: CD
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要同步到应用市场的 Release tag（如 v1.0.4）"
+        required: true
+        type: string
 
 jobs:
   appstore-release:
     name: Sync to Halo App Store
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.event.release.tag_name, 'v') }}
+    if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') || github.event_name == 'workflow_dispatch' }}
     steps:
       # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
       - uses: actions/checkout@v6
+
+      # 解析 Release ID 和 tag（release 事件直接用，手动触发时按 tag 查询）
+      - name: Resolve Release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+            echo "release-id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
+          else
+            TAG="${{ github.event.inputs.tag }}"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            ID=$(gh api "/repos/{owner}/{repo}/releases/tags/$TAG" --jq .id)
+            echo "release-id=$ID" >> "$GITHUB_OUTPUT"
+          fi
 
       # 下载你手动上传到 GitHub Release 的制品附件（如 Ethereal-1.0.4.zip）
       - name: Download Release Assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release download "${{ github.event.release.tag_name }}" --dir dist
+        run: gh release download "${{ steps.release.outputs.tag }}" --dir dist
 
       # 同步到 Halo 应用市场
       - name: Release to App Store
@@ -25,6 +47,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           app-id: ${{ secrets.APP_ID }}
-          release-id: ${{ github.event.release.id }}
+          release-id: ${{ steps.release.outputs.release-id }}
           assets-dir: dist
           halo-pat: ${{ secrets.HALO_PAT }}
