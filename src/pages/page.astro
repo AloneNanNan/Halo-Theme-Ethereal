@@ -4,6 +4,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <MainGridLayout
   title="${singlePage.spec.title + ' - ' + site.title}"
+  description="${singlePage.spec.excerpt.raw ?: site.subtitle}"
   setOGTypeArticle={true}
   showToc={true}
 >
