@@ -11,6 +11,7 @@ import "../styles/markdown.css";
 import "../styles/transition.css";
 import "../styles/scrollbar.css";
 import "../styles/external-link-modal.css";
+import "../styles/link-apply-modal.css";
 
 // ── 第三方 ──
 import "overlayscrollbars/styles/overlayscrollbars.css";

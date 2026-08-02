@@ -3672,7 +3672,7 @@
     // 关闭按钮（右上角，无阴影；hover 图标旋转 90° + 变主题色）
     var closeBtn = document.createElement("button");
     closeBtn.style.cssText =
-      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:9999px;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
+      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
     closeBtn.setAttribute("aria-label", "关闭");
     closeBtn.innerHTML =
       '<span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>';
@@ -4406,7 +4406,7 @@
     // 关闭按钮（右上角，无阴影；hover 图标旋转 90° + 变主题色）
     var closeBtn = document.createElement("button");
     closeBtn.style.cssText =
-      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:9999px;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
+      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
     closeBtn.setAttribute("aria-label", "关闭");
     closeBtn.innerHTML =
       '<span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>';

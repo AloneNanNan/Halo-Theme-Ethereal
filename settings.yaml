@@ -909,6 +909,7 @@ spec:
           label: 功能开关
           value:
             enable_comment: true
+            enable_apply_btn: true
             enable_random_visit: true
             random_visit_groups: ""
           children:
@@ -917,6 +918,12 @@ spec:
               value: true
               label: 显示评论
               help: "在友链页面底部显示评论区"
+
+            - $formkit: switch
+              name: enable_apply_btn
+              value: true
+              label: 显示申请友链按钮
+              help: "在友链页面申请友链流程卡片下方显示「申请友链」按钮，点击弹出申请表单。需安装 Links 插件并开启访客提交友链功能"
 
             - $formkit: switch
               name: enable_random_visit

@@ -1,0 +1,330 @@
+/* 申请友链模态框 */
+.link-apply-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.link-apply-modal.is-open {
+  display: flex;
+}
+
+.link-apply-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: link-apply-fade-in 0.25s ease;
+}
+
+.link-apply-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 34rem;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-large);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  color: var(--deep-text, #333);
+  animation: link-apply-slide-up 0.3s ease;
+}
+
+/* 标题区：居中标题 + 主题色小横线（参考打赏模态框），关闭按钮 absolute 右上角 */
+.link-apply-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.link-apply-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/* 标题下方主题色横线装饰（对应打赏模态框 h-1 w-5 rounded-full bg-(--primary)） */
+.link-apply-title-divider {
+  width: 1.25rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+}
+
+.link-apply-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text-50, #999);
+  background: transparent;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease;
+  z-index: 2;
+}
+
+.link-apply-close:hover {
+  transform: rotate(90deg);
+  color: var(--primary);
+  background: var(--btn-regular-bg);
+}
+
+.link-apply-close:active {
+  transform: rotate(90deg) scale(0.92);
+}
+
+.link-apply-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 表单两列布局：移动端自动降为单列 */
+.link-apply-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem 0.75rem;
+  overflow-y: auto;
+  padding: 0.75rem 1.5rem 0.25rem;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 480px) {
+  .link-apply-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.link-apply-field {
+  display: block;
+  min-width: 0;
+}
+
+.link-apply-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.link-apply-label em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* 输入框：主题色边框 + 半透明底色，hover/focus 融入主题色，与 /links 卡片边框一致 */
+.link-apply-field input,
+.link-apply-field textarea {
+  width: 100%;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+  color: var(--deep-text, #333);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+
+.link-apply-field input::placeholder,
+.link-apply-field textarea::placeholder {
+  opacity: 0.4;
+}
+
+.link-apply-field input:hover,
+.link-apply-field textarea:hover {
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.link-apply-field input:focus,
+.link-apply-field textarea:focus {
+  border-color: var(--primary);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+.link-apply-field textarea {
+  min-height: 4.75rem;
+}
+
+/* 验证码：胶囊外框 = 输入框（透明融入） + 内嵌图片（点击刷新，无独立按钮） */
+.link-apply-captcha {
+  display: flex;
+  align-items: center;
+  min-height: 2.625rem;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+  padding: 0 0.25rem 0 0;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+
+.link-apply-captcha:hover {
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.link-apply-captcha:focus-within {
+  border-color: var(--primary);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+/* 输入框透明融入容器（覆盖 .link-apply-field input 的默认边框/背景/圆角） */
+.link-apply-field .link-apply-captcha input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.375rem 0.5rem 0.375rem 0.875rem;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.2em;
+  outline: none;
+}
+
+/* 去掉 placeholder 继承的 0.2em 字距，避免"验证码"三字在窄框内被挤压截断 */
+.link-apply-field .link-apply-captcha input::placeholder {
+  letter-spacing: 0;
+  opacity: 0.4;
+}
+
+/* 验证码图片：作为内嵌小卡片嵌入容器右侧，点击触发刷新 */
+.link-apply-captcha-img {
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 2.125rem;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  background: var(--card-bg, #fff);
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+/* 无 src（加载失败 / 被限流）时直接隐藏，避免显示破图图标 */
+.link-apply-captcha-img:not([src]) {
+  display: none;
+}
+
+.link-apply-message {
+  display: none;
+  margin: 0.25rem 1.5rem 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.link-apply-message.is-visible {
+  display: block;
+}
+
+.link-apply-message.is-error {
+  color: oklch(0.55 0.18 25);
+  background: color-mix(in oklab, oklch(0.55 0.18 25) 10%, transparent);
+}
+
+.link-apply-message.is-success {
+  color: oklch(0.6 0.15 150);
+  background: color-mix(in oklab, oklch(0.6 0.15 150) 10%, transparent);
+}
+
+.link-apply-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.link-apply-btn-submit {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  color: #fff;
+  background: var(--primary, #8b5cf6);
+  box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 28%, transparent);
+  transition:
+    background 0.2s,
+    filter 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s,
+    opacity 0.2s;
+}
+
+.link-apply-btn-submit:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 38%, transparent);
+}
+
+.link-apply-btn-submit:active {
+  transform: scale(0.97);
+}
+
+.link-apply-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes link-apply-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes link-apply-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
