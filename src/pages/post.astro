@@ -144,7 +144,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
 
       <!-- 支持与分享卡片 -->
       <div
-        th:if="${theme.config?.post?.enable_like != false}"
+        th:if="${theme.config?.post?.actionBar?.enable != false}"
         class="onload-animation mb-6"
       >
         <div
@@ -156,6 +156,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
               <button
                 id="post-like-btn"
                 class="btn-card group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg active:scale-95"
+                th:classappend="${theme.config?.post?.actionBar?.like == false ? ' pointer-events-none' : ''}"
                 th:attr="data-post=${post.metadata.name}"
                 th:data-count="${post.stats.upvote}"
                 aria-label="点赞"
@@ -179,18 +180,33 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 </p>
               </div>
             </div>
-            <!-- 右侧：分享按钮（参考随机访问按钮样式） -->
-            <button
-              id="post-share-btn"
-              type="button"
-              class="btn-regular group flex h-11 w-fit shrink-0 items-center justify-center rounded-lg px-4 text-sm font-bold active:scale-95"
-              aria-label="分享文章"
-            >
-              <span
-                class="icon-[tabler--share] mr-1.5 text-base transition-transform group-hover:rotate-12"
-              ></span>
-              <span>分享</span>
-            </button>
+            <!-- 右侧：分享 + 打赏按钮 -->
+            <div class="flex shrink-0 items-center gap-2">
+              <button
+                id="post-share-btn"
+                th:if="${theme.config?.post?.actionBar?.share != false}"
+                type="button"
+                class="btn-regular group flex h-11 w-fit items-center justify-center rounded-lg px-4 text-sm font-bold active:scale-95"
+                aria-label="分享文章"
+              >
+                <span
+                  class="icon-[tabler--share] mr-1.5 text-base transition-transform group-hover:scale-110"
+                ></span>
+                <span>分享</span>
+              </button>
+              <button
+                id="post-reward-btn"
+                th:if="${theme.config?.post?.actionBar?.reward != false}"
+                type="button"
+                class="btn-regular group flex h-11 w-fit items-center justify-center rounded-lg px-4 text-sm font-bold active:scale-95"
+                aria-label="打赏"
+              >
+                <span
+                  class="icon-[material-symbols--volunteer-activism-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+                ></span>
+                <span>打赏</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

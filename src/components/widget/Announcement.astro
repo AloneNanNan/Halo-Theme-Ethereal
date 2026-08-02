@@ -35,11 +35,13 @@ const { class: className } = Astro.props;
       <button
         th:if="${theme.config?.sidebar?.announcement?.closable != false}"
         type="button"
-        class="announcement-close-btn btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+        class="announcement-close-btn btn-regular group rounded-lg h-8 w-8 text-sm transition-all active:scale-95"
         th:attr="aria-label=#{widget.announcement.close}"
         aria-label="关闭公告"
       >
-        <span class="icon-[fa6-solid--xmark] text-sm"></span>
+        <span
+          class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
+        ></span>
       </button>
     </div>
   </div>

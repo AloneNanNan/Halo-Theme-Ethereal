@@ -722,11 +722,74 @@ spec:
                   label: 打字机效果
                 - value: drop
                   label: 文字下坠
-        - $formkit: switch
-          name: enable_like
-          label: 启用文章操作栏
-          value: true
-          help: "在文章版权声明上方显示点赞、分享操作卡片"
+        - $formkit: group
+          name: actionBar
+          label: 文章操作栏
+          value:
+            enable: true
+            like: true
+            share: true
+            reward: true
+            rewardSetting:
+              title: "如果这篇文章对你有帮助，可以请我喝杯咖啡！"
+              wechat_qr: ""
+              alipay_qr: ""
+          children:
+            - $formkit: switch
+              name: enable
+              id: actionbar_enable
+              label: 启用文章操作栏
+              value: true
+              help: "在文章版权声明上方显示点赞、分享、打赏操作卡片"
+            - $formkit: switch
+              name: like
+              if: "$get(actionbar_enable).value"
+              label: 启用点赞
+              value: true
+              help: "关闭后点赞图标仅展示、不可交互"
+            - $formkit: switch
+              name: share
+              if: "$get(actionbar_enable).value"
+              label: 启用分享
+              value: true
+              help: "显示分享按钮，点击生成分享海报"
+            - $formkit: switch
+              name: reward
+              id: actionbar_reward
+              if: "$get(actionbar_enable).value"
+              label: 启用打赏
+              value: true
+              help: "显示打赏按钮，点击弹出微信/支付宝收款二维码"
+            - $formkit: group
+              name: rewardSetting
+              label: 打赏设置
+              if: "$get(actionbar_reward).value"
+              value:
+                title: "如果这篇文章对你有帮助，可以请我喝杯咖啡！"
+                wechat_qr: ""
+                alipay_qr: ""
+              children:
+                - $formkit: textarea
+                  name: title
+                  label: 打赏文案
+                  value: "如果这篇文章对你有帮助，可以请我喝杯咖啡！"
+                  help: "打赏弹窗顶部的自定义文案"
+                - $formkit: attachment
+                  name: wechat_qr
+                  label: 微信收款码
+                  accepts:
+                    - "image/*"
+                  aspectRatio: "1/1"
+                  value: ""
+                  help: "上传微信收款二维码图片（建议 1:1 正方形）"
+                - $formkit: attachment
+                  name: alipay_qr
+                  label: 支付宝收款码
+                  accepts:
+                    - "image/*"
+                  aspectRatio: "1/1"
+                  value: ""
+                  help: "上传支付宝收款二维码图片（建议 1:1 正方形）"
     - group: friends
       label: 朋友圈
       formSchema:
