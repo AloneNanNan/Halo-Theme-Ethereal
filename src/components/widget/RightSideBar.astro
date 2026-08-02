@@ -23,149 +23,91 @@ const thClassappend = Astro.props["th:classappend"] || "";
   class:list={[className, "w-full"]}
   th:classappend={thClassappend}
 >
+  {/* Profile：不吸顶，随页面滚动（两种布局模式一致） */}
+  <div
+    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
+    class="hidden xl:flex w-full flex-col gap-4"
+  >
+    <Profile />
+  </div>
+  {/* 公告：非吸顶，Profile 之后、小组件之前 */}
+  <div
+    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
+    class="hidden xl:flex w-full flex-col gap-4"
+  >
+    <Announcement />
+  </div>
   {
-    showToc ? (
-      <Fragment>
-        {/* Profile：不吸顶，随页面滚动 */}
-        <div
-          th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
-          class="hidden xl:flex w-full flex-col gap-4"
-        >
-          <Profile />
-        </div>
-        {/* 公告：非吸顶，Profile 之后、小组件之前 */}
-        <div
-          th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
-          class="hidden xl:flex w-full flex-col gap-4"
-        >
-          <Announcement />
-        </div>
-        {/* 功能性小组件：吸顶显示 */}
-        <div
-          id="right-sidebar-sticky"
-          class="sticky top-4 flex max-h-[calc(100vh-2rem)] w-full flex-col gap-4 overflow-hidden"
-        >
-          <div
-            class="contents"
-            th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.rightWidgets}"
-            th:if="${widgetStat.index < 2}"
-          >
-            <div class="contents" th:switch="${widget.value}">
-              <div class="contents" th:case="'categories'">
-                <Categories />
-              </div>
-              <div class="contents" th:case="'tag'">
-                <Tags />
-              </div>
-              <div class="contents" th:case="'hitokoto'">
-                <Hitokoto />
-              </div>
-              <div class="contents" th:case="'site-stats'">
-                <SiteStats />
-              </div>
-              <div class="contents" th:case="'weather'">
-                <Weather />
-              </div>
-              <div
-                th:case="'html'"
-                class="card-base p-4"
-                th:utext="${widget.html}"
-              />
-            </div>
-          </div>
-          {/* 默认右侧小组件（新安装主题未保存设置时显示） */}
-          <div
-            th:if="${theme.config?.sidebar?.widgetsConfig?.rightWidgets == null}"
-            class="contents"
-          >
-            <div class="contents">
-              <Hitokoto />
-            </div>
-            <div class="contents">
-              <SiteStats />
-            </div>
-          </div>
-          {/* 目录：自适应剩余空间 */}
-          <th:block th:if="${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}">
-            <div class="card-base hidden md:flex min-h-0 flex-1 flex-col overflow-hidden pb-0">
-              <div class="relative mb-2 ml-8 mt-4 shrink-0 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-[5.5px] before:h-4 before:w-1 before:rounded-md before:bg-(--primary) dark:text-neutral-100">
-                目录
-              </div>
-              <div
-                id="toc-inner-wrapper-right"
-                data-toc-scroll
-                class="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-4"
-              >
-                <div class="toc-right w-full">
-                  <TOC />
-                </div>
-              </div>
-            </div>
-          </th:block>
-        </div>
-      </Fragment>
-    ) : (
-      <Fragment>
-        {/* Profile：不吸顶，随页面滚动 */}
-        <div
-          th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
-          class="hidden xl:flex w-full flex-col gap-4"
-        >
-          <Profile />
-        </div>
-        {/* 公告：非吸顶，Profile 之后、小组件之前 */}
-        <div
-          th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
-          class="hidden xl:flex w-full flex-col gap-4"
-        >
-          <Announcement />
-        </div>
-        {/* 功能性小组件：吸顶显示 */}
-        <div
-          id="right-sidebar-sticky"
-          class="sticky top-4 flex w-full flex-col gap-4"
-        >
-          <div
-            class="contents"
-            th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.rightWidgets}"
-          >
-            <div class="contents" th:switch="${widget.value}">
-              <div class="contents" th:case="'categories'">
-                <Categories />
-              </div>
-              <div class="contents" th:case="'tag'">
-                <Tags />
-              </div>
-              <div class="contents" th:case="'hitokoto'">
-                <Hitokoto />
-              </div>
-              <div class="contents" th:case="'site-stats'">
-                <SiteStats />
-              </div>
-              <div class="contents" th:case="'weather'">
-                <Weather />
-              </div>
-              <div
-                th:case="'html'"
-                class="card-base p-4"
-                th:utext="${widget.html}"
-              />
-            </div>
-          </div>
-          {/* 默认右侧小组件（新安装主题未保存设置时显示） */}
-          <div
-            th:if="${theme.config?.sidebar?.widgetsConfig?.rightWidgets == null}"
-            class="contents"
-          >
-            <div class="contents">
-              <Hitokoto />
-            </div>
-            <div class="contents">
-              <SiteStats />
-            </div>
-          </div>
-        </div>
-      </Fragment>
-    )
+    /* 功能性小组件：吸顶显示；文章页（showToc）限制高度并折叠为前 2 个，为目录腾出剩余空间 */
   }
+  <div
+    id="right-sidebar-sticky"
+    class:list={[
+      "sticky top-4 flex w-full flex-col gap-4",
+      showToc && "max-h-[calc(100vh-2rem)] overflow-hidden",
+    ]}
+  >
+    <div
+      class="contents"
+      th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.rightWidgets}"
+      th:if={showToc ? "${widgetStat.index < 2}" : "true"}
+    >
+      <div class="contents" th:switch="${widget.value}">
+        <div class="contents" th:case="'categories'">
+          <Categories />
+        </div>
+        <div class="contents" th:case="'tag'">
+          <Tags />
+        </div>
+        <div class="contents" th:case="'hitokoto'">
+          <Hitokoto />
+        </div>
+        <div class="contents" th:case="'site-stats'">
+          <SiteStats />
+        </div>
+        <div class="contents" th:case="'weather'">
+          <Weather />
+        </div>
+        <div th:case="'html'" class="card-base p-4" th:utext="${widget.html}">
+        </div>
+      </div>
+    </div>
+    {/* 默认右侧小组件（新安装主题未保存设置时显示） */}
+    <div
+      th:if="${theme.config?.sidebar?.widgetsConfig?.rightWidgets == null}"
+      class="contents"
+    >
+      <div class="contents">
+        <Hitokoto />
+      </div>
+      <div class="contents">
+        <SiteStats />
+      </div>
+    </div>
+    {/* 目录：仅文章页（showToc）且主题开启目录时显示，自适应剩余空间 */}
+    <th:block
+      th:if={showToc
+        ? "${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+        : "false"}
+    >
+      <div
+        class="card-base hidden md:flex min-h-0 flex-1 flex-col overflow-hidden pb-0"
+      >
+        <div
+          class="relative mb-2 ml-8 mt-4 shrink-0 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-[5.5px] before:h-4 before:w-1 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+        >
+          目录
+        </div>
+        <div
+          id="toc-inner-wrapper-right"
+          data-toc-scroll
+          class="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-4"
+        >
+          <div class="toc-right w-full">
+            <TOC />
+          </div>
+        </div>
+      </div>
+    </th:block>
+  </div>
 </aside>

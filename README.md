@@ -7,16 +7,19 @@
 
 <p align="center">
   <a href="https://halo.run">
-    <img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/main/theme.yaml&color=8B5CF6&logo=halo" alt="Halo"/>
+    <img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/main/theme.yaml&color=14B8A6&logo=halo" alt="Halo"/>
   </a>
   <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
-    <img src="https://img.shields.io/github/v/release/AloneNanNan/halo-theme-ethereal?color=8B5CF6&label=Release" alt="Release"/>
+    <img src="https://img.shields.io/github/v/release/AloneNanNan/halo-theme-ethereal?color=22C55E&label=Release" alt="Release"/>
   </a>
   <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/AloneNanNan/halo-theme-ethereal?color=8B5CF6&label=License" alt="MIT License"/>
+    <img src="https://img.shields.io/github/license/AloneNanNan/halo-theme-ethereal?color=EC4899&label=License" alt="MIT License"/>
   </a>
   <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
-    <img src="https://img.shields.io/github/downloads/AloneNanNan/halo-theme-ethereal/total?color=8B5CF6&label=Downloads" alt="Downloads"/>
+    <img src="https://img.shields.io/github/downloads/AloneNanNan/halo-theme-ethereal/total?color=F59E0B&label=Downloads" alt="Downloads"/>
+  </a>
+  <a href="https://www.halo.run/store/apps/app-zqvrlonl">
+    <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&query=%24.application.status.downloadCount&label=Store%20Downloads&color=3B82F6" alt="Store Downloads"/>
   </a>
 </p>
 

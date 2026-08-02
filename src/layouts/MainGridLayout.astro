@@ -7,6 +7,7 @@ import RightSideBar from "../components/widget/RightSideBar.astro";
 import SideBar from "../components/widget/SideBar.astro";
 import TOC from "../components/widget/TOC.astro";
 import { BANNER_HEIGHT, BANNER_HEIGHT_EXTEND } from "../constants/constants";
+import { imageSuffixThWith } from "../utils/image-suffix";
 import Layout from "./Layout.astro";
 
 interface Props {
@@ -58,7 +59,7 @@ const {
   <div
     id="banner-wrapper"
     th:if="${theme.config?.base?.banner?.enable}"
-    th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.banner_width ?: 1920}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
+    th:with={imageSuffixThWith("p?.banner_width ?: 1920")}
     class="absolute z-10 w-full overflow-hidden transition duration-700"
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
   >

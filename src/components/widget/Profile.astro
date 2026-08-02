@@ -1,12 +1,13 @@
 ---
 import ImageWrapper from "../misc/ImageWrapper.astro";
+import { imageSuffixThWith } from "../../utils/image-suffix";
 ---
 
 <div class="card-base p-3">
   <a
     aria-label="Profile"
     th:href="${theme.config?.sidebar?.profile?.url ?: '/about'}"
-    th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.avatar_size ?: 512}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
+    th:with={imageSuffixThWith("p?.avatar_size ?: 512")}
     class="group relative mx-auto mb-3 mt-1 block max-w-[12rem] overflow-hidden rounded-xl active:scale-95 lg:mx-0 lg:mt-0 lg:max-w-none"
   >
     <div

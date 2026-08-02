@@ -1,5 +1,6 @@
 ---
 import PostMeta from "./PostMeta.astro";
+import { imageSuffixThWith } from "../utils/image-suffix";
 ---
 
 <article
@@ -54,7 +55,7 @@ import PostMeta from "./PostMeta.astro";
     th:if="${not #strings.isEmpty(post.spec.cover)}"
     th:href="@{${post.status.permalink}}"
     th:aria-label="${post.spec.title}"
-    th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.card_cover_width ?: 400}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
+    th:with={imageSuffixThWith("p?.card_cover_width ?: 400")}
     class="group relative mx-4 -mb-2 mt-4 max-h-[20vh] overflow-hidden rounded-xl active:scale-95 md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
   >
     <div

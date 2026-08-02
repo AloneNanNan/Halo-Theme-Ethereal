@@ -31,6 +31,159 @@ function isWhitelisted(hostname: string, list?: string): boolean {
   });
 }
 
+/** 创建命名空间（SVG）元素 */
+function svgEl(tag: string, attrs: Record<string, string>): SVGElement {
+  const svgNs = "http://www.w3.org/2000/svg";
+  const node = document.createElementNS(svgNs, tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    node.setAttribute(key, value);
+  }
+  return node;
+}
+
+/** 外链图标（地球） */
+function buildGlobeIcon(): SVGSVGElement {
+  const svg = svgEl("svg", {
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2",
+  }) as SVGSVGElement;
+  svg.style.flexShrink = "0";
+  svg.appendChild(svgEl("circle", { cx: "12", cy: "12", r: "10" }));
+  svg.appendChild(svgEl("line", { x1: "2", y1: "12", x2: "22", y2: "12" }));
+  svg.appendChild(
+    svgEl("path", {
+      d: "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+    }),
+  );
+  return svg;
+}
+
+/** 返回按钮图标（关闭叉） */
+function buildCloseIcon(): SVGSVGElement {
+  const svg = svgEl("svg", {
+    width: "15",
+    height: "15",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2",
+  }) as SVGSVGElement;
+  svg.appendChild(svgEl("line", { x1: "18", y1: "6", x2: "6", y2: "18" }));
+  svg.appendChild(svgEl("line", { x1: "6", y1: "6", x2: "18", y2: "18" }));
+  return svg;
+}
+
+/** 继续访问图标（右箭头） */
+function buildArrowIcon(): SVGSVGElement {
+  const svg = svgEl("svg", {
+    width: "15",
+    height: "15",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "2",
+  }) as SVGSVGElement;
+  svg.appendChild(svgEl("line", { x1: "5", y1: "12", x2: "19", y2: "12" }));
+  svg.appendChild(svgEl("polyline", { points: "12 5 19 12 12 19" }));
+  return svg;
+}
+
+/**
+ * 构建模态框静态骨架。
+ * 注意：骨架中不含任何动态数据（外链 URL、站点名等全部留空），
+ * 动态内容一律在 createOrUpdateModal 中通过 textContent/setAttribute 写入，
+ * 从根本上杜绝 HTML 注入。
+ */
+function buildModal(): HTMLElement {
+  const modal = document.createElement("div");
+  modal.id = "ext-link-modal";
+
+  const backdrop = document.createElement("div");
+  backdrop.id = "ext-link-backdrop";
+  modal.appendChild(backdrop);
+
+  const card = document.createElement("div");
+  card.id = "ext-link-card";
+
+  const avatar = document.createElement("div");
+  avatar.className = "ext-avatar";
+  card.appendChild(avatar);
+
+  const title = document.createElement("div");
+  title.className = "ext-title";
+  title.textContent = "即将离开本站";
+  card.appendChild(title);
+
+  const desc = document.createElement("div");
+  desc.className = "ext-desc";
+  card.appendChild(desc);
+
+  const site = document.createElement("div");
+  site.className = "ext-site";
+  card.appendChild(site);
+
+  // URL 行：图标 + 文本 + 复制按钮
+  const urlBox = document.createElement("div");
+  urlBox.className = "ext-url-box";
+  urlBox.appendChild(buildGlobeIcon());
+  const urlText = document.createElement("span");
+  urlText.className = "ext-url-text";
+  urlBox.appendChild(urlText);
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "ext-copy";
+  copyBtn.id = "ext-copy-btn";
+  copyBtn.title = "复制";
+  const copyIcon = document.createElement("span");
+  copyIcon.className = "icon-[material-symbols--content-copy-outline-rounded]";
+  copyIcon.style.cssText = "font-size:13px;line-height:1";
+  copyBtn.appendChild(copyIcon);
+  copyBtn.appendChild(document.createTextNode("复制"));
+  urlBox.appendChild(copyBtn);
+  card.appendChild(urlBox);
+
+  // 进度条
+  const progressBar = document.createElement("div");
+  progressBar.className = "ext-progress-bar";
+  progressBar.id = "ext-progress-bar";
+  progressBar.style.display = "none";
+  const progressFill = document.createElement("div");
+  progressFill.className = "ext-progress-fill";
+  progressFill.id = "ext-progress-fill";
+  progressBar.appendChild(progressFill);
+  card.appendChild(progressBar);
+
+  // 按钮行
+  const btns = document.createElement("div");
+  btns.className = "ext-btns";
+  const backBtn = document.createElement("button");
+  backBtn.className = "ext-btn-back";
+  backBtn.id = "ext-btn-back";
+  backBtn.appendChild(buildCloseIcon());
+  backBtn.appendChild(document.createTextNode("返回"));
+  btns.appendChild(backBtn);
+  const goBtn = document.createElement("button");
+  goBtn.className = "ext-btn-go";
+  goBtn.id = "ext-btn-go";
+  goBtn.appendChild(document.createTextNode("继续访问"));
+  goBtn.appendChild(buildArrowIcon());
+  btns.appendChild(goBtn);
+  card.appendChild(btns);
+
+  // 倒计时
+  const countdown = document.createElement("div");
+  countdown.className = "ext-countdown";
+  countdown.id = "ext-countdown";
+  countdown.style.display = "none";
+  card.appendChild(countdown);
+
+  modal.appendChild(card);
+  return modal;
+}
+
 /** 复用已创建的模态框 DOM 节点（仅更新文本内容），避免每次重建 */
 function createOrUpdateModal(targetUrl: string) {
   const config = getConfig();
@@ -47,81 +200,59 @@ function createOrUpdateModal(targetUrl: string) {
     siteName = targetUrl;
   }
 
-  // 如果已存在模态框，仅更新动态内容
-  const existing = document.getElementById("ext-link-modal");
-  if (existing) {
-    // 更新显示
-    const siteEl = existing.querySelector(".ext-site");
-    if (siteEl) siteEl.textContent = siteName;
-    const urlText = existing.querySelector(".ext-url-text");
-    if (urlText) urlText.textContent = displayUrl;
-    const descEl = existing.querySelector(".ext-desc");
-    if (descEl)
-      descEl.textContent =
-        config?.redirect_prompt ||
-        "您即将访问外部链接，请注意保护个人隐私和信息安全";
-    const copyBtn = existing.querySelector<HTMLButtonElement>("#ext-copy-btn");
-    if (copyBtn) copyBtn.setAttribute("data-copy-text", targetUrl);
-    // 重置倒计时显示
-    const countdownEl = existing.querySelector<HTMLElement>("#ext-countdown");
-    const progressBar =
-      existing.querySelector<HTMLElement>("#ext-progress-bar");
-    const progressFill =
-      existing.querySelector<HTMLElement>("#ext-progress-fill");
-    if (countdownEl) countdownEl.textContent = delay + " 秒后自动跳转";
-    if (countdownEl) countdownEl.style.display = delay > 0 ? "block" : "none";
-    if (progressBar) progressBar.style.display = delay > 0 ? "block" : "none";
-    if (progressFill) {
-      progressFill.style.transition = "none";
-      progressFill.style.width = "100%";
-      requestAnimationFrame(() => {
-        progressFill.style.transition = `width ${delay}s linear`;
-        progressFill.style.width = "0%";
-      });
-    }
-    setupModalBehavior(existing, targetUrl, delay, openNew);
-    return;
+  // 已存在则复用 DOM，否则创建一次静态骨架（事件监听器只绑定一次）
+  let modal = document.getElementById("ext-link-modal") as HTMLElement | null;
+  if (!modal) {
+    modal = buildModal();
+    document.body.appendChild(modal);
+    bindStaticListeners(modal);
   }
 
-  const avatarHTML = avatarUrl
-    ? `<img src="${avatarUrl}" alt="" />`
-    : `<span class="icon-[material-symbols--open-in-new-rounded]" style="font-size:28px"></span>`;
+  // 更新动态内容：全部走 textContent / setAttribute，杜绝 HTML 注入
+  const siteEl = modal.querySelector(".ext-site");
+  if (siteEl) siteEl.textContent = siteName;
+  const urlText = modal.querySelector(".ext-url-text");
+  if (urlText) urlText.textContent = displayUrl;
+  const descEl = modal.querySelector(".ext-desc");
+  if (descEl)
+    descEl.textContent =
+      config?.redirect_prompt ||
+      "您即将访问外部链接，请注意保护个人隐私和信息安全";
+  const copyBtn = modal.querySelector<HTMLButtonElement>("#ext-copy-btn");
+  if (copyBtn) copyBtn.setAttribute("data-copy-text", targetUrl);
 
-  const modal = document.createElement("div");
-  modal.id = "ext-link-modal";
-  modal.innerHTML = `
-    <div id="ext-link-backdrop"></div>
-    <div id="ext-link-card">
-      <div class="ext-avatar">${avatarHTML}</div>
-      <div class="ext-title">即将离开本站</div>
-      <div class="ext-desc">${config?.redirect_prompt || "您即将访问外部链接，请注意保护个人隐私和信息安全"}</div>
-      <div class="ext-site">${siteName}</div>
-      <div class="ext-url-box">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="ext-url-text">${displayUrl}</span>
-        <button class="ext-copy" id="ext-copy-btn" title="复制" data-copy-text="${targetUrl}">
-          <span class="icon-[material-symbols--content-copy-outline-rounded]" style="font-size:13px;line-height:1"></span>
-          <span>复制</span>
-        </button>
-      </div>
-      <div class="ext-progress-bar" id="ext-progress-bar" style="display:none">
-        <div class="ext-progress-fill" id="ext-progress-fill"></div>
-      </div>
-      <div class="ext-btns">
-        <button class="ext-btn-back" id="ext-btn-back">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>返回
-        </button>
-        <button class="ext-btn-go" id="ext-btn-go">
-          继续访问<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
-      </div>
-      <div class="ext-countdown" id="ext-countdown" style="display:none">${delay} 秒后自动跳转</div>
-    </div>
-  `;
-  document.body.appendChild(modal);
+  // 头像：优先配置图片，否则用默认图标
+  const avatarEl = modal.querySelector(".ext-avatar");
+  if (avatarEl) {
+    avatarEl.textContent = "";
+    if (avatarUrl) {
+      const img = document.createElement("img");
+      img.src = avatarUrl;
+      img.alt = "";
+      avatarEl.appendChild(img);
+    } else {
+      const icon = document.createElement("span");
+      icon.className = "icon-[material-symbols--open-in-new-rounded]";
+      icon.style.fontSize = "28px";
+      avatarEl.appendChild(icon);
+    }
+  }
 
-  // 只绑定一次事件监听器（利用 DOM 持久化）
-  bindStaticListeners(modal);
+  // 重置倒计时显示
+  const countdownEl = modal.querySelector<HTMLElement>("#ext-countdown");
+  const progressBar = modal.querySelector<HTMLElement>("#ext-progress-bar");
+  const progressFill = modal.querySelector<HTMLElement>("#ext-progress-fill");
+  if (countdownEl) countdownEl.textContent = delay + " 秒后自动跳转";
+  if (countdownEl) countdownEl.style.display = delay > 0 ? "block" : "none";
+  if (progressBar) progressBar.style.display = delay > 0 ? "block" : "none";
+  if (progressFill) {
+    progressFill.style.transition = "none";
+    progressFill.style.width = "100%";
+    requestAnimationFrame(() => {
+      progressFill.style.transition = `width ${delay}s linear`;
+      progressFill.style.width = "0%";
+    });
+  }
 
   setupModalBehavior(modal, targetUrl, delay, openNew);
 }

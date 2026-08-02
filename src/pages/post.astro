@@ -1,6 +1,7 @@
 ---
 import PostMeta from "../components/PostMeta.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { imageSuffixThWith, CDN_SUFFIX_PATTERNS } from "../utils/image-suffix";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
 ---
@@ -73,7 +74,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           th:if="${not #strings.isEmpty(post.spec.cover)}"
           id="post-cover"
           class="mb-5 overflow-hidden rounded-xl"
-          th:with="p=${theme.config?.performance?.imageProcessing}, provider=${p?.provider ?: 'none'}, w=${p?.article_image_width ?: 1200}, fmt=${p?.custom_format ?: ''}, suffix=${w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(fmt, '{width}', '' + w) : ''}"
+          th:with={imageSuffixThWith("p?.article_image_width ?: 1200")}
         >
           <img
             th:src="|${post.spec.cover}${suffix}|"
@@ -388,7 +389,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   </script>
 
   <!-- CDN 图片处理：<template> 阻止预加载 → JS 加参数后插入 DOM，避免双加载 -->
-  <script is:inline>
+  <script is:inline define:vars={{ CDN_SUFFIX_PATTERNS }}>
     (function () {
       var TEMPLATE_ID = "content-template";
       var PLACEHOLDER_ID = "content-placeholder";
@@ -418,19 +419,12 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           } catch (e) {}
         }
 
-        // 按宽度生成 CDN 后缀
+        // 按宽度生成 CDN 后缀（provider 映射表与 image-suffix.ts 保持同步）
         function makeSuffix(w) {
-          if (provider === "aliyun_esa") return "?image_process=resize,w_" + w;
-          if (provider === "aliyun_oss")
-            return "?x-oss-process=image/resize,w_" + w;
-          if (provider === "tencent_eo") return "?eo-img.resize=w/" + w;
-          if (provider === "tencent_cos")
-            return "?imageMogr2/thumbnail/" + w + "x";
-          if (provider === "qiniu") return "?imageView2/2/w/" + w;
-          if (provider === "upyun") return "!/fw/" + w;
           if (provider === "custom" && customFmt)
             return customFmt.replace("{width}", String(w));
-          return "";
+          var pattern = CDN_SUFFIX_PATTERNS[provider] || "";
+          return pattern ? pattern.replace("{width}", String(w)) : "";
         }
 
         var suffix = imgWidth > 0 ? makeSuffix(imgWidth) : "";
