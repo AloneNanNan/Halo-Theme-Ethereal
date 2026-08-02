@@ -123,9 +123,9 @@
 
 #ext-link-card .ext-progress-bar {
   width: 100%;
-  height: 3px;
+  height: 4px;
   background: var(--btn-regular-bg);
-  border-radius: 1.5px;
+  border-radius: 2px;
   margin-bottom: 1rem;
   overflow: hidden;
 }

@@ -27,6 +27,8 @@
     submitting: false,
     // 点击冷却：防止连点刷出并发请求触发插件限流
     captchaCooldownUntil: 0,
+    // 验证码是否已加载过：仅首次打开自动加载，之后打开面板不刷新，手动点击图片才刷新
+    captchaLoaded: false,
   };
 
   function getModal() {
@@ -80,6 +82,7 @@
       })
       .then(function (payload) {
         state.challengeId = payload.challengeId || null;
+        state.captchaLoaded = true;
         var img = document.getElementById("link-apply-captcha-img");
         if (img) {
           if (payload.image) {
@@ -110,7 +113,8 @@
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
     clearMessage();
-    refreshCaptcha();
+    // 仅在首次打开时自动加载验证码，之后打开保留上次验证码不刷新
+    if (!state.captchaLoaded) refreshCaptcha();
     var input = modal.querySelector('input[name="displayName"]');
     if (input) {
       setTimeout(function () {
@@ -125,9 +129,7 @@
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
-    state.challengeId = null;
-    var img = document.getElementById("link-apply-captcha-img");
-    if (img) img.removeAttribute("src");
+    // 保留验证码与挑战 ID：再次打开时直接沿用，不重新请求；点击图片刷新才更新
   }
 
   function setSubmitting(submitting) {
@@ -266,6 +268,8 @@
     document.body.style.overflow = "";
     state.submitting = false;
     state.challengeId = null;
+    // 页面切换后模态框 DOM 被重建（图片无 src），需重新加载验证码
+    state.captchaLoaded = false;
     // 新页面若仍渲染了申请模态框（links 页面），重新挂载到 body
     mountModalToBody();
     // 离开 links 页面时，清理残留的模态框 DOM

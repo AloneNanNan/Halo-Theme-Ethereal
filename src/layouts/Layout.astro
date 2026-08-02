@@ -175,11 +175,15 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           replaceState: window.history.replaceState,
         };
 
-        console.log(
-          "%c🌙 Ethereal %cv1.0.4",
-          "color:#8b5cf6;font-weight:bold;",
-          "color:#888;",
-        );
+        // 版本横幅：仅首次加载输出一次（Swup 切换页面会重复执行本脚本）
+        if (!window.__etherealBannerLogged) {
+          window.__etherealBannerLogged = true;
+          console.log(
+            "%c🌙 Ethereal %cv1.0.5",
+            "color:#8b5cf6;font-weight:bold;",
+            "color:#888;",
+          );
+        }
       })();
     </script>
     <!-- 外部字体：CSS-link 模式用静态 <link> + 非阻塞加载；字体文件模式维持 JS 注入 -->

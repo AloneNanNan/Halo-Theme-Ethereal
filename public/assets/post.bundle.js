@@ -3599,21 +3599,34 @@
     var existing = document.getElementById("post-share-modal");
     if (existing) existing.remove();
 
-    // 遮罩层（参考外链模态框 ext-fade-in 动画）
+    // 遮罩层
     var backdrop = document.createElement("div");
     backdrop.style.cssText =
       "position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);animation:ps-fade-in 0.25s ease";
     backdrop.addEventListener("click", close);
 
-    // 卡片（参考外链模态框 ext-slide-up 动画）
+    // 卡片
     var card = document.createElement("div");
     card.style.cssText =
       "position:fixed;z-index:99999;background:var(--card-bg,#fff);border-radius:var(--radius-large,20px);max-width:440px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:ps-slide-up 0.3s ease;padding:0;overflow:hidden;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--deep-text,#333)";
 
+    // 标题：居中标题 + 主题色横线
+    var header = document.createElement("div");
+    header.style.cssText =
+      "display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;padding:24px 24px 0 24px";
+    var headerTitle = document.createElement("div");
+    headerTitle.className = "text-90";
+    headerTitle.style.cssText = "font-size:1.125rem;font-weight:700";
+    headerTitle.innerHTML = "<span>分享海报</span>";
+    var divider = document.createElement("div");
+    divider.className = "h-1 w-5 rounded-full bg-(--primary) transition";
+    header.appendChild(headerTitle);
+    header.appendChild(divider);
+
     // 图片区域
     var imgContainer = document.createElement("div");
     imgContainer.style.cssText =
-      "padding:24px 24px 0 24px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center";
+      "padding:16px 24px 0 24px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center";
     var img = document.createElement("img");
     img.src = imageDataUrl;
     img.style.cssText =
@@ -3687,6 +3700,7 @@
       closeBtn.style.background = "transparent";
     };
     card.appendChild(closeBtn);
+    card.appendChild(header);
 
     card.appendChild(imgContainer);
     card.appendChild(btnRow);
@@ -3790,6 +3804,71 @@
     RADIUS = 24;
   var PAD = 40;
 
+  // 海报最高限制：与原固定版本（1000）一致，超出部分摘要用省略号截断
+  var POSTER_MAX_H = 1000;
+  // Footer 预留高度：分割线间隙(8) + rowTop(22) + QR(110) + 水印下方余量
+  var POSTER_FOOTER_RESERVE = 200;
+
+  // 换行 + 限行，超出部分末行加省略号
+  function wrapTextLimited(ctx, text, maxWidth, maxLines) {
+    var lines = wrapText(ctx, text, maxWidth);
+    if (lines.length <= maxLines) return lines;
+    var out = lines.slice(0, maxLines);
+    var last = out[maxLines - 1];
+    while (ctx.measureText(last + "...").width > maxWidth && last.length)
+      last = last.slice(0, -1);
+    out[maxLines - 1] = last + "...";
+    return out;
+  }
+
+  // 摘要起始 Y → 摘要可用行数（保证 contentEnd ≤ MAX_H - FOOTER_RESERVE）
+  function summaryMaxLines(startY) {
+    var limit = POSTER_MAX_H - POSTER_FOOTER_RESERVE;
+    return Math.max(1, Math.floor((limit - startY - 16) / 36));
+  }
+
+  // 根据标题/摘要行数动态计算海报高度，避免固定高度导致摘要下方大面积留白
+  // 注意：wrapText 依赖 ctx.font 测量宽度，必须与绘制阶段（drawPoster）的字体一致，
+  // 否则行数算少会导致 footer 超出画布被裁剪
+  function calcPosterHeight(ctx, data) {
+    var hasCover = !!(data.coverImg && data.coverImg.naturalWidth > 0);
+    var iw = W - MARGIN * 2 - PAD * 2;
+    var baseFont = "-apple-system,'PingFang SC','Noto Sans SC',sans-serif";
+    var contentEnd;
+    if (hasCover) {
+      // 封面 360 + 标题覆于封面 + 摘要（摘要绘制字体 400 24px，行距 36）
+      ctx.font = "400 24px " + baseFont;
+      var summaryY = MARGIN + 360 + 28;
+      var sumLines = wrapTextLimited(
+        ctx,
+        data.summary,
+        iw - 24,
+        summaryMaxLines(summaryY),
+      );
+      contentEnd = summaryY + sumLines.length * 36 + 16;
+    } else {
+      // 顶部装饰/站点名/日期 + 分割线 + 标题 + 摘要
+      ctx.font = "700 48px " + baseFont;
+      var dividerY = MARGIN + 88;
+      var titleLines = wrapText(ctx, data.title, iw);
+      if (titleLines.length > 2) titleLines = titleLines.slice(0, 2);
+      var titleY = dividerY + 36;
+      ctx.font = "400 24px " + baseFont;
+      var summaryY2 = titleY + titleLines.length * 58 + 20;
+      var sumLines2 = wrapTextLimited(
+        ctx,
+        data.summary,
+        iw - 24,
+        summaryMaxLines(summaryY2),
+      );
+      contentEnd = summaryY2 + sumLines2.length * 36 + 16;
+    }
+    return Math.max(
+      Math.min(contentEnd + POSTER_FOOTER_RESERVE, POSTER_MAX_H),
+      560,
+    );
+  }
+
   function drawPoster(ctx, data) {
     var p = data.primaryRGB;
     var col = {
@@ -3798,16 +3877,17 @@
       primaryMid: "rgba(" + p.r + "," + p.g + "," + p.b + ",0.08)",
     };
     var hasCover = !!(data.coverImg && data.coverImg.naturalWidth > 0);
+    var posterH = ctx.canvas.height;
     var cx = MARGIN,
       cy = MARGIN,
       cw = W - MARGIN * 2,
-      ch = H - MARGIN * 2;
+      ch = posterH - MARGIN * 2;
     var ix = cx + PAD,
       iw = cw - PAD * 2;
 
     // 背景
     ctx.fillStyle = "#f4f5f7";
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, W, posterH);
     ctx.fillStyle = "#ffffff";
     roundedRect(ctx, cx, cy, cw, ch, RADIUS);
     ctx.fill();
@@ -3846,7 +3926,12 @@
       drawSummary(ctx, data.summary, ix, iw, summaryY, col);
 
       // Footer
-      var sumLines = data.summary ? wrapText(ctx, data.summary, iw - 24) : [];
+      var sumLines = wrapTextLimited(
+        ctx,
+        data.summary,
+        iw - 24,
+        summaryMaxLines(summaryY),
+      );
       var contentEnd = summaryY + sumLines.length * 36 + 16;
       drawFooter(ctx, data, cx, cy, cw, ch, ix, iw, PAD, col, contentEnd);
     } else {
@@ -3904,7 +3989,12 @@
       drawSummary(ctx, data.summary, ix, iw, summaryY2, col);
 
       // Footer
-      var sumLines2 = data.summary ? wrapText(ctx, data.summary, iw - 24) : [];
+      var sumLines2 = wrapTextLimited(
+        ctx,
+        data.summary,
+        iw - 24,
+        summaryMaxLines(summaryY2),
+      );
       var contentEnd2 = summaryY2 + sumLines2.length * 36 + 16;
       drawFooter(ctx, data, cx, cy, cw, ch, ix, iw, PAD, col, contentEnd2);
     }
@@ -3918,7 +4008,8 @@
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
     ctx.font = "400 24px -apple-system,'PingFang SC','Noto Sans SC',sans-serif";
-    var lines = wrapText(ctx, summary, iw - 24);
+    // 限行与 calcPosterHeight 一致：摘要过长省略号截断，海报高度不超过 1000
+    var lines = wrapTextLimited(ctx, summary, iw - 24, summaryMaxLines(startY));
     if (lines.length === 0) return;
     var lineH = 36;
     var textH = lines.length * lineH;
@@ -3937,7 +4028,7 @@
 
   // Footer（头像 + 昵称/日期 + QR）
   function drawFooter(ctx, data, cx, cy, cw, ch, ix, iw, PAD, col, contentEnd) {
-    var dividerY = Math.max(contentEnd + 8, cy + ch - 155);
+    var dividerY = contentEnd + 8;
 
     // 分割线
     ctx.strokeStyle = "#f0f0f0";
@@ -4135,8 +4226,8 @@
         try {
           var canvas = document.createElement("canvas");
           canvas.width = W;
-          canvas.height = H;
           var ctx = canvas.getContext("2d");
+          canvas.height = calcPosterHeight(ctx, posterData);
           drawPoster(ctx, posterData);
           createModal(canvas.toDataURL("image/png"), posterData.title);
         } catch (e) {

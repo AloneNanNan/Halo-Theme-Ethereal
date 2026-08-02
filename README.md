@@ -80,7 +80,10 @@
 - [x] 页面过渡动画（Swup）
 - [x] 丰富的小组件
 - [x] 外链跳转模态框（自定义延迟、域名白名单）
+- [x] 自定义字体
+- [x] 文章详细页分享海报与赞赏
 - [x] 图片速度优化（支持阿里云 ESA/OSS、腾讯云 EdgeOne/COS、七牛云、又拍云等主流 CDN 实时压缩）
+- [x] 等等……
 
 ### 视觉效果
 
@@ -126,16 +129,15 @@
 
 Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整体验：
 
-| 插件                         | 市场链接                                                 | 功能                  |
-| :--------------------------- | -------------------------------------------------------- | --------------------- |
-| 搜索插件                     | [应用市场](https://www.halo.run/store/apps/app-DlacW)    | 文章全文搜索          |
-| 评论插件                     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)    | 文章评论系统          |
-| 瞬间插件                     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)    | 瞬间/说说功能         |
-| 图库插件                     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)    | 图库展示              |
-| 链接管理插件                 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 |
-| 自助提交友链（暂时移除支持） | [应用市场](https://www.halo.run/store/apps/app-glejqzwk) | 访客自助提交友链      |
-| 装备管理                     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示              |
-| 项目集                       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示        |
+| 插件         | 市场链接                                                 | 功能                                 |
+| :----------- | -------------------------------------------------------- | ------------------------------------ |
+| 搜索插件     | [应用市场](https://www.halo.run/store/apps/app-DlacW)    | 文章全文搜索                         |
+| 评论插件     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)    | 文章评论系统                         |
+| 瞬间插件     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)    | 瞬间/说说功能                        |
+| 图库插件     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)    | 图库展示                             |
+| 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 & 自助提交友链 |
+| 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示                             |
+| 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示                       |
 
 ---
 
