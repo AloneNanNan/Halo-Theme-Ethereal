@@ -400,7 +400,7 @@ import CopyButton from "../components/CopyButton.astro";
           <!-- 申请友链按钮：步骤下方空白区域垂直居中，左右居中，上下间距一致。
                显示需同时满足：主题开关开启 且 插件申请功能可用（linkApplicationEnabled 为 true） -->
           <div
-            th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled}"
+            th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
             class="mt-3 flex flex-1 items-center justify-center"
           >
             <button
@@ -536,7 +536,7 @@ import CopyButton from "../components/CopyButton.astro";
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/copy.js`}
     defer></script>
   <script
-    th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled}"
+    th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/link-apply.js`}
     defer></script>
 
@@ -545,7 +545,7 @@ import CopyButton from "../components/CopyButton.astro";
     id="link-apply-modal"
     class="link-apply-modal"
     aria-hidden="true"
-    th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled}"
+    th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
   >
     <div id="link-apply-backdrop" class="link-apply-backdrop"></div>
     <div
