@@ -151,11 +151,13 @@ import "../styles/photos-gallery-lightbox.css";
             </span>
 
             <figure class="relative">
+              <!-- EXIF 宽高比预占高度：瀑布流列在图片加载前即按比例占位，避免逐列重排（CLS）；无 EXIF 时回退原行为 -->
               <img
                 alt=""
                 th:src="${not #strings.isEmpty(photo.spec.cover) ? photo.spec.cover : photo.spec.url}"
                 th:alt="${photo.spec.displayName}"
                 loading="lazy"
+                th:style="${photo.exif != null and photo.exif.imageWidth != null ? 'aspect-ratio: ' + photo.exif.imageWidth + ' / ' + photo.exif.imageHeight : ''}"
                 class="photo-cover w-full object-cover transition duration-300 group-hover:scale-105"
               />
               <figcaption

@@ -12,7 +12,7 @@ const style = Astro.props.style;
 
 <div
   class="contents"
-  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}"
+  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}, serverTotalWords = ${pluginFinder.available('extra-api', '3.*') ? extraApiStatsFinder.getPostWordCount() : null}"
 >
   <WidgetLayout
     name="站点统计"
@@ -95,8 +95,11 @@ const style = Astro.props.style;
             th:text="#{widget.siteStats.totalWords}">总字数</span
           >
         </div>
+        <!-- data-server-words：API 拓展包插件（app-di1jh8gd;extra-api ≥3.x）已安装时，
+             服务端在此注入全站总字数，客户端直接展示、不再逐篇抓正文 -->
         <span
           id="site-stats-total-words"
+          th:attr="data-server-words=${serverTotalWords != null ? serverTotalWords : ''}"
           class="text-base font-bold text-neutral-900 dark:text-neutral-100"
           >--</span
         >
@@ -225,7 +228,12 @@ const style = Astro.props.style;
     function applyStatsToDOM(stats) {
       var wordsEl = document.getElementById("site-stats-total-words");
       var activityEl = document.getElementById("site-stats-last-activity");
-      if (wordsEl && stats.totalWords !== null) {
+      // 插件已提供 data-server-words 时，服务端值优先（精确、零请求），仅做格式化
+      if (wordsEl && wordsEl.getAttribute("data-server-words")) {
+        wordsEl.textContent = formatNumber(
+          parseInt(wordsEl.getAttribute("data-server-words"), 10) || 0,
+        );
+      } else if (wordsEl && stats.totalWords !== null) {
         wordsEl.textContent = formatNumber(stats.totalWords);
       }
       if (activityEl && stats.lastActivity) {
@@ -234,6 +242,13 @@ const style = Astro.props.style;
     }
 
     function updateSiteStats() {
+      // 插件（API 拓展包 extra-api ≥3.x）已安装时，服务端在 data-server-words
+      // 注入全站总字数，客户端无需再逐篇抓正文，只需统计最后活动
+      var wordsEl0 = document.getElementById("site-stats-total-words");
+      var serverHasWords = !!(
+        wordsEl0 && wordsEl0.getAttribute("data-server-words")
+      );
+
       if (window.__siteStatsCache) {
         applyStatsToDOM(window.__siteStatsCache);
         return;
@@ -317,6 +332,15 @@ const style = Astro.props.style;
               (post.metadata && post.metadata.creationTimestamp);
             if (pub && (!latestDate || pub > latestDate)) {
               latestDate = pub;
+            }
+
+            // 插件已提供服务端总字数：跳过逐篇抓取正文，仅需最后活动
+            if (serverHasWords) {
+              running--;
+              pending--;
+              if (pending === 0) finish();
+              else next();
+              continue;
             }
 
             var permalink = post.status && post.status.permalink;

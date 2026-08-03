@@ -120,12 +120,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:aria-label="#{page.photos.openImage}"
         aria-label="Open full image"
       >
+        <!-- 用 EXIF 原始宽高比预占空间，避免大图加载瞬间黑色容器高度跳动（CLS）；无 EXIF 时不设 -->
         <img
           id="photo-detail-image"
           alt=""
           th:src="${not #strings.isEmpty(photo.spec.cover) ? photo.spec.cover : photo.spec.url}"
           th:attr="data-pswp-src=${photo.spec.url},data-pswp-width=${photo.exif != null and photo.exif.imageWidth != null ? photo.exif.imageWidth : 0},data-pswp-height=${photo.exif != null and photo.exif.imageHeight != null ? photo.exif.imageHeight : 0}"
           th:alt="${photo.spec.displayName}"
+          th:style="${photo.exif != null and photo.exif.imageWidth != null ? 'aspect-ratio: ' + photo.exif.imageWidth + ' / ' + photo.exif.imageHeight : ''}"
           class="block h-auto max-h-[70vh] max-w-full cursor-zoom-in object-contain md:max-h-[74vh]"
         />
       </div>
