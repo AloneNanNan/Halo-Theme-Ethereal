@@ -3,7 +3,10 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 import CopyButton from "../components/CopyButton.astro";
 ---
 
-<MainGridLayout title="${linksTitle + ' - ' + site.title}">
+<MainGridLayout
+  title="${linksTitle + ' - ' + site.title}"
+  description="#{page.links.description(${site.title})}"
+>
   <Fragment slot="head">
     <title th:text="${linksTitle + ' - ' + site.title}"></title>
     <style is:global>

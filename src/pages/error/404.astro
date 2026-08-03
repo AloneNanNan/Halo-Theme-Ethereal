@@ -2,7 +2,10 @@
 import MainGridLayout from "../../layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title="|#{page.404.title} - ${site.title}|">
+<MainGridLayout
+  title="|#{page.404.title} - ${site.title}|"
+  description="#{page.404.description}"
+>
   <Fragment slot="head">
     <title th:text="|#{page.404.title} - ${site.title}|"></title>
   </Fragment>

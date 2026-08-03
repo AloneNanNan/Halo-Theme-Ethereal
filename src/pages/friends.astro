@@ -2,7 +2,10 @@
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title="${singlePage.spec.title + ' - ' + site.title}">
+<MainGridLayout
+  title="${singlePage.spec.title + ' - ' + site.title}"
+  description="${singlePage.spec.excerpt.raw ?: #messages.msg('page.friends.description')}"
+>
   <Fragment slot="head">
     <title th:text="${singlePage.spec.title + ' - ' + site.title}"></title>
     <style is:global>

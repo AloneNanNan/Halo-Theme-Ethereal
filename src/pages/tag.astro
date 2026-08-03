@@ -5,6 +5,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <MainGridLayout
   title="|#{page.tag.title(${tag.spec.displayName})} - ${site.title}|"
+  description="#{page.tag.description(${site.title}, ${tag.spec.displayName})}"
 >
   <Fragment slot="head">
     <title

@@ -4,7 +4,10 @@ import PhotoI18n from "../components/photos/PhotoI18n.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title="${title + ' - ' + site.title}">
+<MainGridLayout
+  title="${title + ' - ' + site.title}"
+  description="${not #strings.isEmpty(photo.spec.description) ? #strings.abbreviate(photo.spec.description, 120) : (not #strings.isEmpty(photo.spec.displayName) ? photo.spec.displayName : #messages.msg('page.photo.description', site.title))}"
+>
   <Fragment slot="head">
     <title th:text="${title + ' - ' + site.title}"></title>
     <meta

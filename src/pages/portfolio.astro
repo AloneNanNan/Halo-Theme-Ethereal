@@ -4,6 +4,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <MainGridLayout
   title="${(projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
+  description="#{page.portfolio.description(${site.title})}"
 >
   <Fragment slot="head">
     <title
