@@ -13,8 +13,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   showToc={true}
 >
   <Fragment slot="head">
-    <title th:text="${post.spec.title + ' - ' + site.title}"></title>
-    <meta property="og:title" th:content="${post.spec.title}" />
+    <!-- og:title 由 Layout.astro 统一输出；此处仅保留文章特有 og 元数据 -->
     <meta property="og:description" th:content="${post.status.excerpt}" />
     <meta
       property="og:image"

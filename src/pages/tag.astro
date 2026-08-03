@@ -7,13 +7,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="|#{page.tag.title(${tag.spec.displayName})} - ${site.title}|"
   description="#{page.tag.description(${site.title}, ${tag.spec.displayName})}"
 >
-  <Fragment slot="head">
-    <title
-      th:text="|#{page.tag.title(${tag.spec.displayName})} - ${site.title}|"
-    >
-    </title>
-  </Fragment>
-
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <header class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <div class="text-sm font-medium text-50" th:text="#{page.tags.title}">
       标签

@@ -83,16 +83,19 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     </script>
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width" />
+    <!-- 必须含 initial-scale=1：缺失时 iOS Safari 会按视口宽度自动缩放页面 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
     <meta name="description" th:content={description} />
+    <!-- 注意：不在此输出 og:url / canonical。Halo 模板上下文不暴露请求对象
+         （#httpServletRequest 恒为 null，会导致空属性），canonical 由 Halo 核心自动注入 -->
     <meta property="og:site_name" th:content="${site.title}" />
     <meta property="og:title" th:content={title} />
     <meta
       property="og:type"
       content={setOGTypeArticle ? "article" : "website"}
     />
-    <meta property="og:url" th:content="${#httpServletRequest.requestURL}" />
+    <!-- 全站唯一 <title>：页面组件不再自行定义，避免重复输出 -->
     <title th:text={title}></title>
     <link rel="icon" th:href="${site.favicon}" />
 
@@ -310,9 +313,10 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       });
     </script>
+    <!-- 客户端入口脚本：必须位于 </body> 内。若写在 </html> 之外，Astro 会把打包后的
+         module 脚本排到文档末尾之后，产出非法 HTML（线上曾复现） -->
+    <script>
+      import "../scripts/app";
+    </script>
   </body>
 </html>
-
-<script>
-  import "../scripts/app";
-</script>

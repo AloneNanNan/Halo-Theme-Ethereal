@@ -6,13 +6,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
   description="#{page.portfolioDetail.description(${site.title}, ${project.title})}"
 >
-  <Fragment slot="head">
-    <title
-      th:text="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
-    >
-    </title>
-  </Fragment>
-
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <th:block
     th:with="platformLabels=${projectFinder.platformLabels()},
              typeLabels=${projectFinder.typeLabels()},
