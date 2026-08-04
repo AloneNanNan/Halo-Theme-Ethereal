@@ -8,7 +8,7 @@ import { imageSuffixThWith } from "../utils/image-suffix";
   th:classappend="${#strings.isEmpty(post.spec.cover) ? ' no-cover' : ' has-cover'}"
 >
   <div
-    class="relative w-full pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pr-2 md:pt-7 md:w-[calc(100%_-_var(--post-card-cover-width)_-_12px)]"
+    th:class="'relative w-full pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7 ' + (${#strings.isEmpty(post.spec.cover)} ? 'md:w-full md:pr-16' : 'md:pr-2 md:w-[calc(100%_-_var(--post-card-cover-width)_-_12px)]')"
   >
     <a
       th:href="@{${post.status.permalink}}"

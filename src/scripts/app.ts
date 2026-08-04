@@ -96,6 +96,26 @@ function restoreOriginalHistoryStateHandlers() {
     window.history.replaceState = originalHistory.replaceState;
 }
 
+// ── widget-layout 自定义元素（小组件折叠"更多"按钮）──
+// 必须在全局无条件注册，不能依赖任何具体小组件的渲染位置，
+// 否则公告等组件被 th:if 隐藏时，分类/标签等按钮会全部失效。
+class WidgetLayoutElement extends HTMLElement {
+  connectedCallback() {
+    if (this.dataset.isCollapsed !== "true") return;
+    const id = this.dataset.id;
+    const btn = this.querySelector(".expand-btn");
+    const wrapper = this.querySelector(`#${id}`);
+    btn?.addEventListener("click", () => {
+      wrapper?.classList.remove("collapsed");
+      btn.classList.add("hidden");
+    });
+  }
+}
+
+if (!customElements.get("widget-layout")) {
+  customElements.define("widget-layout", WidgetLayoutElement);
+}
+
 // ── Swup hooks ──
 function setupSwup() {
   if ((window as any).__etherealSwupHandlersBound) return;

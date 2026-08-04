@@ -29,7 +29,7 @@ const style = Astro.props.style;
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="icon-[material-symbols--article-outline] text-xl text-(--primary)"
+            class="icon-[material-symbols--library-books-outline-rounded] text-xl text-(--primary)"
           ></span>
           <span
             class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
@@ -49,7 +49,7 @@ const style = Astro.props.style;
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="icon-[material-symbols--folder-outline] text-xl text-(--primary)"
+            class="icon-[material-symbols--book-2-outline-rounded] text-xl text-(--primary)"
           ></span>
           <span
             class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
@@ -69,7 +69,7 @@ const style = Astro.props.style;
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="icon-[material-symbols--label-outline] text-xl text-(--primary)"
+            class="icon-[material-symbols--tag-rounded] text-xl text-(--primary)"
           ></span>
           <span
             class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
@@ -88,7 +88,7 @@ const style = Astro.props.style;
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="icon-[material-symbols--text-ad-outline-rounded] text-xl text-(--primary)"
+            class="icon-[material-symbols--draw-outline-rounded] text-xl text-(--primary)"
           ></span>
           <span
             class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
@@ -130,7 +130,7 @@ const style = Astro.props.style;
       >
         <div class="flex items-center gap-2.5">
           <span
-            class="icon-[material-symbols--calendar-clock-outline] text-xl text-(--primary)"
+            class="icon-[material-symbols--calendar-clock-outline-rounded] text-xl text-(--primary)"
           ></span>
           <span
             class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
@@ -319,8 +319,8 @@ const style = Astro.props.style;
               latestDate = pub;
             }
 
-            var permalink = post.status && post.status.permalink;
-            if (!permalink) {
+            var name = post.metadata && post.metadata.name;
+            if (!name) {
               running--;
               pending--;
               if (pending === 0) finish();
@@ -328,26 +328,23 @@ const style = Astro.props.style;
               continue;
             }
 
-            (function (url) {
-              fetch(url)
+            (function (postName) {
+              fetch("/apis/api.content.halo.run/v1alpha1/posts/" + postName)
                 .then(function (res) {
                   if (!res.ok) throw new Error("HTTP " + res.status);
-                  return res.text();
+                  return res.json();
                 })
-                .then(function (html) {
-                  var parser = new DOMParser();
-                  var doc = parser.parseFromString(html, "text/html");
-                  var content =
-                    doc.querySelector(".post-content") ||
-                    doc.querySelector(".markdown-body") ||
-                    doc.querySelector("article") ||
-                    doc.querySelector(".content") ||
-                    doc.querySelector("main");
-                  var text = content
-                    ? content.textContent || ""
-                    : doc.body
-                      ? doc.body.textContent || ""
-                      : "";
+                .then(function (data) {
+                  // 优先取 Markdown 原文统计：countWords 可正确剔除代码块，
+                  // 且完全不受主题 DOM 结构（如 template 包裹）影响
+                  var text = (data.content && data.content.raw) || "";
+                  if (!text) {
+                    // 兜底：取渲染后的 HTML，剥离标签后再统计
+                    var html = (data.content && data.content.content) || "";
+                    text = html.replace(/<[^>]*>/g, " ");
+                  }
+                  // 清理 Markdown 中残留的行内 HTML 标签
+                  text = text.replace(/<[^>]*>/g, " ");
                   totalWords += countWords(text);
                   running--;
                   pending--;
@@ -357,7 +354,7 @@ const style = Astro.props.style;
                 .catch(function (e) {
                   console.warn(
                     "[SiteStats] 文章字数获取失败:",
-                    url,
+                    postName,
                     e.message || e,
                   );
                   running--;
@@ -365,7 +362,7 @@ const style = Astro.props.style;
                   if (pending === 0) finish();
                   else next();
                 });
-            })(permalink);
+            })(name);
           }
         }
 

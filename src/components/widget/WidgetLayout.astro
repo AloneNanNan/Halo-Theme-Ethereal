@@ -85,21 +85,5 @@ const titleText = nameExpression
   }
 </style>
 
-<script>
-  class WidgetLayout extends HTMLElement {
-    connectedCallback() {
-      if (this.dataset.isCollapsed !== "true") return;
-      const id = this.dataset.id;
-      const btn = this.querySelector(".expand-btn");
-      const wrapper = this.querySelector(`#${id}`);
-      btn?.addEventListener("click", () => {
-        wrapper?.classList.remove("collapsed");
-        btn.classList.add("hidden");
-      });
-    }
-  }
-
-  if (!customElements.get("widget-layout")) {
-    customElements.define("widget-layout", WidgetLayout);
-  }
-</script>
+<!-- widget-layout 自定义元素已全局注册于 src/scripts/app.ts，
+     不在此处内联，避免注册脚本随组件渲染位置（如公告被 th:if 隐藏）而丢失 -->
