@@ -16,8 +16,8 @@ const themeYaml = fs.readFileSync(
   "utf8",
 );
 const themeVersion =
-  (themeYaml.match(/^version:\s*["']?([^"'\r\n]+)["']?/m) || [])[1]?.trim() ||
-  "0.0.0";
+  (themeYaml.match(/^[ \t]*version:\s*["']?([^"'\r\n]+)["']?/m) ||
+    [])[1]?.trim() || "0.0.0";
 
 export default defineConfig({
   base: "/themes/Ethereal",
