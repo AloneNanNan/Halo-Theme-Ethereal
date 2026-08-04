@@ -110,11 +110,9 @@ const MAX_POSTS = 5;
       container.innerHTML = html;
     }
 
-    // 获取第一页文章（50 篇足够选出 Top 5 热门文章）
-    var size = 50;
-
-    // sessionStorage 缓存：同会话内切换页面不再重复请求列表接口。
-    // （原实现每次导航都 fetch 50 篇，Swup 软导航下会造成反复请求。）
+    // 热门榜逻辑：先请求 1 篇获取文章总数，再按总数拉取全量，
+    // 保证全站访问量最高的文章都能进入榜单（不受固定 50 篇上限限制）。
+    // sessionStorage 缓存最终 Top 5：同会话内切换页面不再重复请求列表接口。
     var CACHE_KEY = "popular_posts_v1";
 
     function getCached() {
@@ -132,6 +130,18 @@ const MAX_POSTS = 5;
       } catch (e) {}
     }
 
+    // 统一的列表请求：失败时渲染空列表并返回 null（由后续 .then 兜底跳过）
+    function fetchPosts(url, signal) {
+      return fetch(url, { signal: signal }).then(function (res) {
+        if (!res.ok) {
+          console.warn("[PopularPosts] API error:", res.status);
+          renderList([]);
+          return null;
+        }
+        return res.json();
+      });
+    }
+
     function loadPopularPosts() {
       var cached = getCached();
       if (cached) {
@@ -145,20 +155,25 @@ const MAX_POSTS = 5;
       }
       var controller = new AbortController();
       window.__popularPostsAbort = controller;
+      var signal = controller.signal;
 
-      fetch(
-        "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=" +
-          size +
-          "&sort=metadata.creationTimestamp,desc",
-        { signal: controller.signal },
+      // 第一步：请求 1 篇拿到全站公开文章总数（响应包含 total 字段）
+      fetchPosts(
+        "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=1",
+        signal,
       )
-        .then(function (res) {
-          if (!res.ok) {
-            console.warn("[PopularPosts] API error:", res.status);
+        .then(function (meta) {
+          if (!meta) return null;
+          var total = meta.total || 0;
+          if (total <= 0) {
             renderList([]);
-            return;
+            return null;
           }
-          return res.json();
+          // 第二步：按文章总数拉取全量，再在内存按访问量排序
+          return fetchPosts(
+            "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=" + total,
+            signal,
+          );
         })
         .then(function (data) {
           if (!data) return;

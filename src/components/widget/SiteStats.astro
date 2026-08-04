@@ -156,7 +156,7 @@ const style = Astro.props.style;
   </WidgetLayout>
 </div>
 
-<script is:inline>
+<script is:inline th:inline="none">
   (function () {
     // 站点统计工具函数
     function formatNumber(num) {
@@ -166,15 +166,17 @@ const style = Astro.props.style;
       return num.toLocaleString();
     }
 
+    // 统计口径与 API 拓展包插件（extra-api 的 PostWordCountUtil）对齐
     function countWords(text) {
       if (!text) return 0;
       var cleaned = text
-        .replace(/```[\s\S]*?```/g, "")
-        .replace(/`[^`]*`/g, "")
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/&[a-zA-Z0-9#]+;/g, "")
         .replace(/\s+/g, " ")
         .trim();
       var chinese = cleaned.match(/[\u4e00-\u9fa5]/g) || [];
-      var english = cleaned.match(/[a-zA-Z]+/g) || [];
+      var english = cleaned.match(/[a-zA-Z0-9]+/g) || [];
       return chinese.length + english.length;
     }
 
@@ -198,7 +200,7 @@ const style = Astro.props.style;
     }
 
     // localStorage 持久化缓存（24小时有效期，避免每次刷新都发 N+1 请求）
-    var STORAGE_KEY = "site_stats_v1";
+    var STORAGE_KEY = "site_stats_v2";
     var STATS_CACHE_TTL = 24 * 60 * 60 * 1000;
 
     function getCachedStats() {
@@ -249,17 +251,32 @@ const style = Astro.props.style;
         wordsEl0 && wordsEl0.getAttribute("data-server-words")
       );
 
+      // 缓存可用性判断：totalWords 为 null 说明缓存生成时依赖插件服务端值；
+      // 若当前已无插件（无 data-server-words），该缓存不可用，须重新客户端统计
+      function cacheUsable(stats) {
+        return !(!serverHasWords && stats.totalWords === null);
+      }
+
       if (window.__siteStatsCache) {
-        applyStatsToDOM(window.__siteStatsCache);
-        return;
+        if (cacheUsable(window.__siteStatsCache)) {
+          applyStatsToDOM(window.__siteStatsCache);
+          return;
+        }
+        window.__siteStatsCache = null;
       }
 
       // 优先读取 localStorage 缓存，避免重复抓取
       var stored = getCachedStats();
       if (stored) {
-        window.__siteStatsCache = stored;
-        applyStatsToDOM(stored);
-        return;
+        if (cacheUsable(stored)) {
+          window.__siteStatsCache = stored;
+          applyStatsToDOM(stored);
+          return;
+        }
+        // 缓存依赖插件但插件已卸载：作废缓存，重新客户端统计
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
       }
 
       var allPosts = [];
@@ -360,8 +377,8 @@ const style = Astro.props.style;
                   return res.json();
                 })
                 .then(function (data) {
-                  // 优先取 Markdown 原文统计：countWords 可正确剔除代码块，
-                  // 且完全不受主题 DOM 结构（如 template 包裹）影响
+                  // 优先取 Markdown 原文统计：countWords 已与插件口径对齐
+                  // （含代码块与数字），且完全不受主题 DOM 结构（如 template 包裹）影响
                   var text = (data.content && data.content.raw) || "";
                   if (!text) {
                     // 兜底：取渲染后的 HTML，剥离标签后再统计
