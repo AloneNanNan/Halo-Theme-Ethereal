@@ -12,6 +12,7 @@
       }
       btn.addEventListener("click", function () {
         if (localStorage.getItem(key) === "1") return;
+        // 乐观更新：先本地标记已投、加高亮、禁用按钮、计数 +1（失败时回滚）
         localStorage.setItem(key, "1");
         btn.classList.add("text-(--primary)");
         btn.style.pointerEvents = "none";
@@ -26,7 +27,29 @@
             plural: "moments",
             name: name,
           }),
-        }).catch(function () {});
+        })
+          .then(function (res) {
+            // fetch 只在网络层失败时 reject，非 2xx 需显式检查（否则会静默失败）
+            if (!res.ok) throw new Error("HTTP " + res.status);
+          })
+          .catch(function (e) {
+            // 点赞失败：回滚乐观更新（计数 -1、撤销高亮、恢复按钮可点、清除本地标记），
+            // 并以短暂抖动闪烁提示用户（新增 upvote-failed 类，避免新增 i18n 键）。
+            // 参考 copy.js 的失败恢复写法（还原状态后复原）。
+            console.warn("[Upvote] 点赞失败", e && e.message);
+            localStorage.removeItem(key);
+            btn.classList.remove("text-(--primary)");
+            btn.style.pointerEvents = "";
+            if (countEl)
+              countEl.textContent = Math.max(
+                0,
+                parseInt(countEl.textContent || "0", 10) - 1,
+              );
+            btn.classList.add("upvote-failed");
+            setTimeout(function () {
+              btn.classList.remove("upvote-failed");
+            }, 1200);
+          });
       });
     });
   }

@@ -72,6 +72,9 @@
   --admonitions-color-important: oklch(0.7 0.14 310);
   --admonitions-color-warning: oklch(0.7 0.14 60);
   --admonitions-color-caution: oklch(0.6 0.2 25);
+
+  /* 点赞失败提示色（upvote-failed 闪烁），约 Tailwind red-400，与文章页点赞红心一致 */
+  --upvote-error: oklch(0.7 0.19 22);
 }
 
 :root.dark {

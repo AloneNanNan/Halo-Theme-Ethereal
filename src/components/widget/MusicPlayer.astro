@@ -794,7 +794,8 @@ const layoutId = `${widgetId}-layout`;
     ui.volContainer.addEventListener("keydown", (event) => {
       let v = state.volume;
       if (event.key === "ArrowRight" || event.key === "ArrowUp") v += 0.05;
-      else if (event.key === "ArrowLeft" || event.key === "ArrowDown") v -= 0.05;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowDown")
+        v -= 0.05;
       else if (event.key === "Home") v = 0;
       else if (event.key === "End") v = 1;
       else return;
@@ -806,7 +807,8 @@ const layoutId = `${widgetId}-layout`;
       const step = 5 / 100; // 每次移动 5%
       let r = audio.currentTime / audio.duration;
       if (event.key === "ArrowRight" || event.key === "ArrowUp") r += step;
-      else if (event.key === "ArrowLeft" || event.key === "ArrowDown") r -= step;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowDown")
+        r -= step;
       else if (event.key === "Home") r = 0;
       else if (event.key === "End") r = 1;
       else return;
@@ -910,7 +912,9 @@ const layoutId = `${widgetId}-layout`;
           false,
         );
       })
-      .catch(() => {
+      .catch((e) => {
+        // 对齐 Hitokoto 小组件先例：失败时输出告警便于排查，UI 保持 i18n 错误文案
+        console.warn("[MusicPlayer] 歌单加载失败", e && e.message);
         ui.title.textContent = cfg.i18n.error;
       })
       .finally(() => setLoading(false));

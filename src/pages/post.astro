@@ -144,6 +144,20 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         id="content-placeholder"
         class="min-h-[30vh]"
       >
+        <!-- 无 JS 降级：禁用脚本时直接渲染正文（图片不拼 CDN 参数，可用性优先）。
+             正常启用 JS 时 noscript 子树不产生 DOM 元素，processAndInsert 会用模板克隆整体
+             replaceWith 本占位符，因此 <template> 与 <noscript> 中重复的 id="content"
+             不会同时存在于最终 DOM，无 id 冲突（全库唯一查询在 fragment 作用域内）。
+             onload-animation 为纯 CSS 动画，禁用 JS 也能正常淡入。 -->
+        <noscript>
+          <div
+            id="content"
+            class="custom-md markdown-content onload-animation prose prose-base mb-6 max-w-none! dark:prose-invert!"
+            th:classappend="| ${theme.config?.post?.contentDisplay?.content_size} ${theme.config?.post?.contentDisplay?.content_theme}|"
+            th:utext="${post.content.content}"
+          >
+          </div>
+        </noscript>
       </div>
 
       <!-- 支持与分享卡片 -->

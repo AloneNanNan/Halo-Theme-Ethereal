@@ -1,10 +1,22 @@
-// 导航栏面板切换
-window.toggleNavbarPanel = function (panelId) {
-  var panel = document.getElementById(panelId);
-  if (panel) {
-    panel.classList.toggle("float-panel-closed");
-  }
-};
+// 导航栏面板切换：document 级事件委托，替代原先按钮上的内联 onclick（CSP 友好）。
+// 面板 id 由开关按钮 id 推导；导航栏位于 Swup 容器之外，脚本只执行一次（defer），
+// window 标志仅作防重复绑定的兜底（与 BackToTop/NavMenuPanel 的委托写法保持一致）。
+if (!window.__navbarPanelToggleBound) {
+  window.__navbarPanelToggleBound = true;
+  document.addEventListener("click", function (e) {
+    var target =
+      e.target && e.target.closest
+        ? e.target.closest("#display-settings-switch, #nav-menu-switch")
+        : null;
+    if (!target) return;
+    var panelId =
+      target.id === "display-settings-switch"
+        ? "display-setting"
+        : "nav-menu-panel";
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.toggle("float-panel-closed");
+  });
+}
 
 // 移动端导航栏子菜单交互
 (function () {
