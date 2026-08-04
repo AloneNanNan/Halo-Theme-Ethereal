@@ -182,9 +182,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             </div>
 
             <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-50">
-              <span
+<!-- 点赞按钮：原为不可聚焦的 span，改为 button 以支持键盘操作与可访问名称 -->
+              <button
+                type="button"
+                aria-label="点赞"
                 th:if="${moment.stats != null}"
-                class="moment-upvote-btn flex h-10 cursor-pointer items-center gap-1.5 select-none transition hover:text-(--primary) active:scale-95"
+                class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
                 th:attr="data-moment=${moment.metadata.name}"
                 th:data-count="${moment.stats.upvote}"
               >
@@ -195,10 +198,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   class="moment-upvote-count"
                   th:text="${moment.stats.upvote}">0</span
                 >
-              </span>
-              <span
+              </button>
+              <button
+                type="button"
+                aria-label="点赞"
                 th:unless="${moment.stats != null}"
-                class="moment-upvote-btn flex h-10 cursor-pointer items-center gap-1.5 select-none transition hover:text-(--primary) active:scale-95"
+                class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
                 th:attr="data-moment=${moment.metadata.name}"
                 th:data-count="0"
               >
@@ -206,7 +211,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   class="icon-[material-symbols--thumb-up-outline-rounded] text-xl"
                 ></span>
                 <span class="moment-upvote-count">0</span>
-              </span>
+              </button>
               <a
                 th:href="'/moments/' + ${moment.metadata.name} + '#comment'"
                 class="link flex h-10 items-center gap-1.5 text-50"

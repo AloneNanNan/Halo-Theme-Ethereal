@@ -59,7 +59,9 @@
     </div>
   </button>
 
-  <div id="light-dark-panel" class="float-panel absolute z-50 !top-16 -right-2 p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0">
+  <!-- 面板原为 hover-only（opacity-0 + group-hover 显示），键盘用户无法展开；
+       增加 group-focus-within：Tab 聚焦到面板内按钮时同样显示并可用 -->
+  <div id="light-dark-panel" class="float-panel absolute z-50 !top-16 -right-2 p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0">
     <button class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
             class:current-theme-btn={mode === LIGHT_MODE}
             onclick={() => switchScheme(LIGHT_MODE)}

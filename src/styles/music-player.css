@@ -37,6 +37,13 @@
   cursor: pointer;
 }
 
+/* 音量/进度滑块键盘聚焦可见焦点环（角色为 slider 的 div 现可聚焦） */
+.firefly-music-player .vol-container:focus-visible,
+.firefly-music-player .progress-container:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
 @keyframes firefly-music-spin {
   from {
     transform: rotate(0deg);

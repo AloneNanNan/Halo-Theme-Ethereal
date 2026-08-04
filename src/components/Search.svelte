@@ -145,8 +145,10 @@
   class="mr-2 hidden h-11 items-center rounded-lg bg-black/[0.04] transition-all hover:bg-black/[0.06] focus-within:bg-black/[0.06] dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10 lg:flex"
 >
   <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/30 transition dark:text-white/30"></span>
+  <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
   <input
     placeholder={t("search.placeholder", "搜索")}
+    aria-label={t("search.placeholder", "搜索")}
     bind:value={keywordDesktop}
     onfocus={() => search(keywordDesktop, true)}
     class="h-full w-40 bg-transparent pl-10 text-sm text-black/50 outline-0 transition-all active:w-60 focus:w-60 dark:text-white/50"
@@ -175,8 +177,10 @@
     class="relative flex h-11 items-center rounded-xl bg-black/[0.04] transition-all hover:bg-black/[0.06] focus-within:bg-black/[0.06] dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10 lg:hidden"
   >
     <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/30 transition dark:text-white/30"></span>
+    <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
     <input
       placeholder={t("search.placeholder", "搜索")}
+      aria-label={t("search.placeholder", "搜索")}
       bind:value={keywordMobile}
       class="absolute inset-0 bg-transparent pl-10 text-sm text-black/50 outline-0 focus:w-60 dark:text-white/50"
     />
@@ -184,9 +188,10 @@
 
   <div class="overflow-y-auto" style="max-height: calc(100vh - 132px)">
     {#if isSearching}
-      <div class="px-3 py-3 text-sm text-30">{t("search.loading", "搜索中...")}</div>
+      <!-- 状态消息是真实内容而非装饰，用更高对比度的 text-50 -->
+      <div class="px-3 py-3 text-sm text-50">{t("search.loading", "搜索中...")}</div>
     {:else if (keywordDesktop || keywordMobile) && result.length === 0}
-      <div class="px-3 py-3 text-sm text-30">{t("search.noResults", "没有搜索结果")}</div>
+      <div class="px-3 py-3 text-sm text-50">{t("search.noResults", "没有搜索结果")}</div>
     {/if}
 
     <!-- search results -->
@@ -208,8 +213,12 @@
 </div>
 
 <style>
-  input:focus {
-    outline: 0;
+  /* 键盘聚焦（focus-visible）时提供可见焦点环，替代原来无条件 outline:0 导致的
+     焦点不可见问题；鼠标点击不显示，避免视觉干扰 */
+  input:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+    border-radius: 0.5rem;
   }
 
 
