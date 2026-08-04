@@ -62,21 +62,23 @@
   <!-- 面板原为 hover-only（opacity-0 + group-hover 显示），键盘用户无法展开；
        增加 group-focus-within：Tab 聚焦到面板内按钮时同样显示并可用 -->
   <div id="light-dark-panel" class="float-panel absolute z-50 !top-16 -right-2 p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0">
-    <button class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
+    <!-- 面板内主题选择按钮：补 role="menuitem"（外层容器为 role="menu"，
+         菜单的直接子项需为 menuitem，否则触发 aria-required-children 违规） -->
+    <button role="menuitem" class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
             class:current-theme-btn={mode === LIGHT_MODE}
             onclick={() => switchScheme(LIGHT_MODE)}
     >
       <div class="icon-[material-symbols--wb-sunny-outline-rounded] text-[1.25rem] mr-3"></div>
       {t("theme.light", "亮色")}
     </button>
-    <button class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
+    <button role="menuitem" class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
             class:current-theme-btn={mode === DARK_MODE}
             onclick={() => switchScheme(DARK_MODE)}
     >
       <div class="icon-[material-symbols--dark-mode-outline-rounded] text-[1.25rem] mr-3"></div>
       {t("theme.dark", "暗色")}
     </button>
-    <button class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95"
+    <button role="menuitem" class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95"
             class:current-theme-btn={mode === AUTO_MODE}
             onclick={() => switchScheme(AUTO_MODE)}
     >

@@ -38,7 +38,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         class="hidden"
         th:attr="data-text=${post.status.excerpt}"></span>
       <div
-        class="onload-animation mb-3 flex flex-row gap-5 text-black/30 transition dark:text-white/30"
+        class="onload-animation mb-3 flex flex-row gap-5 text-black/50 transition dark:text-white/50"
         th:if="${post.stats != null}"
       >
         <div class="flex flex-row items-center">
@@ -248,7 +248,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         <div class="mt-2 flex flex-wrap gap-6">
           <div>
             <div
-              class="text-sm text-black/30 transition dark:text-white/30"
+              class="text-sm text-black/50 transition dark:text-white/50"
               th:text="#{common.author}"
             >
               作者
@@ -261,7 +261,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           </div>
           <div>
             <div
-              class="text-sm text-black/30 transition dark:text-white/30"
+              class="text-sm text-black/50 transition dark:text-white/50"
               th:text="#{common.publishedAt}"
             >
               发布于
@@ -274,7 +274,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           </div>
           <div>
             <div
-              class="text-sm text-black/30 transition dark:text-white/30"
+              class="text-sm text-black/50 transition dark:text-white/50"
               th:text="#{common.license}"
             >
               License

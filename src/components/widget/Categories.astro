@@ -26,11 +26,13 @@ const COLLAPSE_THRESHOLD = 5;
     style={style}
   >
     <div>
+      <!-- 分类链接：可见文本即分类名，作为天然可访问名；
+           原 th:aria-label（“查看 X 分类下的文章”）不以可见文本开头，
+           触发 WCAG 2.5.3 Label in Name 违规，删除后由可见文本自然命名 -->
       <a
         th:each="category : ${categories}"
         th:href="@{${category.status.permalink}}"
         class="group block"
-        th:aria-label="#{widget.categories.viewPosts(${category.spec.displayName})}"
       >
         <div
           class="h-10 rounded-lg px-3 transition-all group-hover:bg-(--btn-plain-bg-hover) group-hover:pl-4 group-active:bg-(--btn-plain-bg-active)"

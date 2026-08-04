@@ -144,7 +144,8 @@
   id="search-bar"
   class="mr-2 hidden h-11 items-center rounded-lg bg-black/[0.04] transition-all hover:bg-black/[0.06] focus-within:bg-black/[0.06] dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10 lg:flex"
 >
-  <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/30 transition dark:text-white/30"></span>
+  <!-- 搜索图标：text-black/30 对比度不足，升为 /50 提升可见性（与 PostCard 元信息处理一致） -->
+  <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/50 transition dark:text-white/50"></span>
   <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
   <input
     placeholder={t("search.placeholder", "搜索")}
@@ -176,7 +177,8 @@
     id="search-bar-inside"
     class="relative flex h-11 items-center rounded-xl bg-black/[0.04] transition-all hover:bg-black/[0.06] focus-within:bg-black/[0.06] dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10 lg:hidden"
   >
-    <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/30 transition dark:text-white/30"></span>
+    <!-- 搜索图标：同桌面端，升为 /50 提升可见性 -->
+    <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/50 transition dark:text-white/50"></span>
     <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
     <input
       placeholder={t("search.placeholder", "搜索")}
