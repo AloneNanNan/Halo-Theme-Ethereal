@@ -8,10 +8,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   setOGTypeArticle={true}
   showToc={true}
 >
-  <Fragment slot="head">
-    <title th:text="${singlePage.spec.title + ' - ' + site.title}"></title>
-  </Fragment>
-
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <article class="card-base relative z-10 mb-4 w-full px-6 pb-8 pt-7 md:px-9">
     <h1
       class="onload-animation relative mb-5 text-3xl font-bold text-black/90 transition before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) dark:text-white/90 md:text-[2.25rem]/[2.75rem]"

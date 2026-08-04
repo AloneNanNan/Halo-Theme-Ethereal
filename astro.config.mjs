@@ -1,11 +1,23 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import fs from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 
 import Icons from "unplugin-icons/vite";
 import svelte from "@astrojs/svelte";
 import icon from "astro-icon";
+
+// 从 theme.yaml 读取主题版本号（Halo 主题版本的唯一来源），构建期注入全局
+// ASSET_VERSION，用于静态资源缓存指纹（如 post.bundle.js?v=1.0.6）。
+// 后续升级主题只需改 theme.yaml 一处，避免两处版本号失步导致缓存不失效。
+const themeYaml = fs.readFileSync(
+  new URL("./theme.yaml", import.meta.url),
+  "utf8",
+);
+const themeVersion =
+  (themeYaml.match(/^version:\s*["']?([^"'\r\n]+)["']?/m) || [])[1]?.trim() ||
+  "0.0.0";
 
 export default defineConfig({
   base: "/themes/Ethereal",
@@ -152,6 +164,9 @@ export default defineConfig({
     svelte(),
   ],
   vite: {
+    define: {
+      ASSET_VERSION: JSON.stringify(themeVersion),
+    },
     plugins: [
       tailwindcss({
         safelist: ["navbar-blur"],

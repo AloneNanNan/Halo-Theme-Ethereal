@@ -2,9 +2,12 @@
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title="${singlePage.spec.title + ' - ' + site.title}">
+<MainGridLayout
+  title="${singlePage.spec.title + ' - ' + site.title}"
+  description="${singlePage.spec.excerpt.raw ?: #messages.msg('page.friends.description')}"
+>
   <Fragment slot="head">
-    <title th:text="${singlePage.spec.title + ' - ' + site.title}"></title>
+    <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
     <style is:global>
       /* 随机钓鱼按钮：点击后鱼钩图标左右摇摆（像鱼咬钩晃动） */
       .random-fish-btn.spinning .random-fish-icon {

@@ -4,6 +4,10 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 import { imageSuffixThWith, CDN_SUFFIX_PATTERNS } from "../utils/image-suffix";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
+// 静态资源版本号：构建期常量（需与 theme.yaml 的 version 保持一致）。
+// 用于替代原 `?v=${Date.now()}`——那会让浏览器每次访问都重新下载 156KB 的 post.bundle.js，
+// 击穿 CDN/浏览器缓存；改为随版本号变更是稳定的缓存指纹。
+const ASSET_VERSION = "1.0.6";
 ---
 
 <MainGridLayout
@@ -13,8 +17,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   showToc={true}
 >
   <Fragment slot="head">
-    <title th:text="${post.spec.title + ' - ' + site.title}"></title>
-    <meta property="og:title" th:content="${post.spec.title}" />
+    <!-- og:title 由 Layout.astro 统一输出；此处仅保留文章特有 og 元数据 -->
     <meta property="og:description" th:content="${post.status.excerpt}" />
     <meta
       property="og:image"
@@ -76,12 +79,14 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           class="mb-5 overflow-hidden rounded-xl"
           th:with={imageSuffixThWith("p?.article_image_width ?: 1200")}
         >
+          <!-- aspect-ratio 预占空间避免 CLS：封面图加载前按 16/9 预留高度，
+               max-h-112 保留原上限，两者结合不会发生布局跳动 -->
           <img
             th:src="|${post.spec.cover}${suffix}|"
             th:alt="${post.spec.title}"
             fetchpriority="high"
             decoding="async"
-            class="max-h-112 w-full object-cover"
+            class="aspect-[16/9] w-full max-h-112 object-cover"
           />
         </div>
       </div>
@@ -345,8 +350,11 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     />
   </div>
 
-  <script src={`${basePath}/assets/post.bundle.js?v=${Date.now()}`} defer
-  ></script>
+  <!-- 操作栏脚本：仅在启用操作栏时加载（含打赏/点赞/分享），关闭时不应请求该 156KB 文件 -->
+  <script
+    th:if="${theme.config?.post?.actionBar?.enable != false}"
+    src={`${basePath}/assets/post.bundle.js?v=${ASSET_VERSION}`}
+    defer></script>
   <script
     is:inline
     th:if="${theme.config?.post?.summary == null or theme.config?.post?.summary?.summaryEffect == null or theme.config?.post?.summary?.summaryEffect == 'typewriter'}"

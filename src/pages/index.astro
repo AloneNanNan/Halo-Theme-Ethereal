@@ -8,8 +8,6 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   isHomePage={true}
   description="${theme.config?.sidebar?.profile?.bio}"
 >
-  <Fragment slot="head">
-    <title th:text="${site.title}"></title>
-  </Fragment>
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <PostList />
 </MainGridLayout>

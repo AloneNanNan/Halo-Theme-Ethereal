@@ -138,6 +138,7 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 | 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 & 自助提交友链 |
 | 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示                             |
 | 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示                       |
+| API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd) | 文章字数统计 API & 降低后端压力      |
 
 ---
 

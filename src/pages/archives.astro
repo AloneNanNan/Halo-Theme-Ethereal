@@ -3,11 +3,11 @@ import Pagination from "../components/control/Pagination.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
-<MainGridLayout title="|#{page.archives.title} - ${site.title}|">
-  <Fragment slot="head">
-    <title th:text="|#{page.archives.title} - ${site.title}|"></title>
-  </Fragment>
-
+<MainGridLayout
+  title="|#{page.archives.title} - ${site.title}|"
+  description="#{page.archives.description(${site.title})}"
+>
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <th:block
     th:with="totalPosts=${#aggregates.sum(archives.items.![#aggregates.sum(months.![posts.size()])])}"
   >
