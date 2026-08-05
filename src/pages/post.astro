@@ -508,7 +508,10 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         }
 
         // I2：懒加载 + 宽高占位（width/height 属性提供 aspect-ratio 提示，
-        // 避免图片加载造成 CLS；与照片页 EXIF 占位先例同思路）
+        // 避免图片加载造成 CLS；与照片页 EXIF 占位先例同思路）。
+        // 正文 markdown 无宽高元数据，占位用 16:9 仅为加载前的比例提示；
+        // 加载完成后按真实比例（naturalWidth/naturalHeight）修正并移除占位属性，
+        // 避免固定比例与正文实际图片比例不符导致变形。
         contentEl.querySelectorAll("img").forEach(function (img) {
           if (!img.getAttribute("loading")) {
             img.setAttribute("loading", "lazy");
@@ -520,6 +523,14 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
             var w = imgWidth > 0 ? imgWidth : 800;
             img.setAttribute("width", String(w));
             img.setAttribute("height", String(Math.round((w * 9) / 16)));
+            img.addEventListener("load", function () {
+              if (img.naturalWidth && img.naturalHeight) {
+                img.style.aspectRatio =
+                  img.naturalWidth + " / " + img.naturalHeight;
+                img.removeAttribute("width");
+                img.removeAttribute("height");
+              }
+            });
           }
         });
 

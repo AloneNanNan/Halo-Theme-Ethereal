@@ -331,23 +331,4 @@ const {
       document.addEventListener("swup:contentReplaced", ensureBound);
     })();
   </script>
-
-  <!-- 朋友圈脚本：移到 swup-container 外加载，IIFE 只执行一次，后续靠 swup:contentReplaced 重新 init -->
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js?v=${ASSET_VERSION}`}
-  ></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js?v=${ASSET_VERSION}`}
-  ></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js?v=${ASSET_VERSION}`}
-  ></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js?v=${ASSET_VERSION}`}
-  ></script>
-
-  <!-- 友链随机访问：移到 swup-container 外加载 -->
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js?v=${ASSET_VERSION}`}
-  ></script>
 </Layout>
