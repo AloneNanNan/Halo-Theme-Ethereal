@@ -125,6 +125,21 @@
     setTimeout(initDrop, 220);
   }
 
+  // I24：后台标签页暂停（showNext 循环链；当前行状态保留，回前台继续循环。
+  // 对照 wave.js visibilitychange 守卫，动画本体不变）
+  document.addEventListener("visibilitychange", function () {
+    var subtitle = document.getElementById("banner-subtitle");
+    var inst = subtitle && subtitle.__dropInstance;
+    if (document.hidden) {
+      if (inst && inst.timeoutId) {
+        clearTimeout(inst.timeoutId);
+        inst.timeoutId = null;
+      }
+    } else if (inst && !inst.timeoutId) {
+      inst.showNext();
+    }
+  });
+
   runInitDrop();
   document.addEventListener("swup:contentReplaced", runInitDrop);
   document.addEventListener("banner:visible", runInitDrop);

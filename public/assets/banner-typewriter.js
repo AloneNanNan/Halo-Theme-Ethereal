@@ -65,6 +65,16 @@
     }
   };
 
+  // 光标闪烁（抽出供初始化与后台恢复共用）
+  function createCursorBlink(cursor) {
+    cursor.style.opacity = "1";
+    var vis = true;
+    cursor.__blinkInterval = setInterval(function () {
+      if (cursor) cursor.style.opacity = vis ? "1" : "0";
+      vis = !vis;
+    }, 530);
+  }
+
   function initTypewriter() {
     var el = document.getElementById("banner-subtitle");
     if (!el) return;
@@ -84,12 +94,7 @@
         clearInterval(cursor.__blinkInterval);
         delete cursor.__blinkInterval;
       }
-      cursor.style.opacity = "1";
-      var vis = true;
-      cursor.__blinkInterval = setInterval(function () {
-        if (cursor) cursor.style.opacity = vis ? "1" : "0";
-        vis = !vis;
-      }, 530);
+      createCursorBlink(cursor);
     }
 
     var dc = document.getElementById("banner-subtitles-data");
@@ -111,6 +116,38 @@
     initTypewriter();
     setTimeout(initTypewriter, 220);
   }
+
+  // I24：后台标签页暂停（打字链 + 光标闪烁；状态保留在实例字段，回前台继续。
+  // 对照 wave.js visibilitychange 守卫，动画本体不变）
+  document.addEventListener("visibilitychange", function () {
+    var subtitle = document.getElementById("banner-subtitle");
+    var cursor = document.getElementById("banner-cursor");
+    if (document.hidden) {
+      if (
+        subtitle &&
+        subtitle.__twInstance &&
+        subtitle.__twInstance.timeoutId
+      ) {
+        clearTimeout(subtitle.__twInstance.timeoutId);
+        subtitle.__twInstance.timeoutId = null;
+      }
+      if (cursor && cursor.__blinkInterval) {
+        clearInterval(cursor.__blinkInterval);
+        cursor.__blinkInterval = null;
+      }
+    } else {
+      if (
+        subtitle &&
+        subtitle.__twInstance &&
+        !subtitle.__twInstance.timeoutId
+      ) {
+        subtitle.__twInstance.type();
+      }
+      if (cursor && !cursor.__blinkInterval) {
+        createCursorBlink(cursor);
+      }
+    }
+  });
 
   runInitTW();
   document.addEventListener("swup:contentReplaced", runInitTW);

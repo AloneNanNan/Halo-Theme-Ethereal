@@ -56,8 +56,8 @@
       d="M0,60 Q180,95 360,60 T720,60 T1080,60 T1440,60 T1800,60 T2160,60 T2520,60 T2880,60 T3240,60 T3600,60 T3960,60 T4320,60 L4320,200 L0,200 Z"
       fill="url(#wg3)"></path>
   </svg>
+  <!-- I26：脚本移入 th:if 容器内——波浪关闭时（disabled/旧 false）不再下载 wave.js -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wave.js?v=${ASSET_VERSION}`}
+    defer></script>
 </div>
-
-<script
-  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wave.js?v=${ASSET_VERSION}`}
-  defer></script>

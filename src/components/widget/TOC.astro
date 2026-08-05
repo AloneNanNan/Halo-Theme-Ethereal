@@ -179,7 +179,27 @@ const className = Astro.props.class;
         this.tocEntries.push(link);
       });
 
-      this.scrollHandler = () => this.updateActiveByScroll();
+      // I23：用 IntersectionObserver 驱动高亮更新（声明未用的 observer 真正实例化），
+      // scroll 降为 rAF 节流兜底（IO 不触发/不支持的场景），消除每 tick 多次布局读取
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            this.updateActiveByScroll();
+          }
+        },
+        { rootMargin: "-96px 0px 0px 0px" },
+      );
+      this.headings.forEach((heading) => this.observer?.observe(heading));
+
+      let scrollTicking = false;
+      this.scrollHandler = () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          scrollTicking = false;
+          this.updateActiveByScroll();
+        });
+      };
       this.resizeHandler = () => this.updateActiveByScroll();
       window.addEventListener("scroll", this.scrollHandler, { passive: true });
       window.addEventListener("resize", this.resizeHandler);

@@ -35,7 +35,8 @@ export default defineConfig({
       containers: ["#swup-container", "#toc-container", "#right-sidebar"],
       smoothScrolling: true,
       cache: false, // 禁用缓存，避免友链页面内容不完整
-      preload: true, // 启用预加载，加快页面切换速度
+      // I25：删除 preload——cache:false 下 @swup/astro 强制禁用 preload（死配置），
+      // 保留会误导未来误启用（每 hover = 整页 HTML 拉取，成为带宽放大面）
       accessibility: true,
       updateHead: true,
       updateBodyClass: false,
