@@ -126,7 +126,7 @@ import CopyButton from "../components/CopyButton.astro";
         >
           <a
             th:each="link, linkStat : ${group.links}"
-            th:href="${link.spec.url}"
+            th:href="${link.spec.url.startsWith('http') or link.spec.url.startsWith('//') or link.spec.url.startsWith('/') ? link.spec.url : null}"
             th:title="${link.spec.displayName}"
             th:attr="data-link-group=${group.spec.displayName}"
             th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + linkStat.index) * 50}ms)|"
@@ -137,7 +137,7 @@ import CopyButton from "../components/CopyButton.astro";
             <img
               alt=""
               th:if="${not #strings.isEmpty(link.spec.logo)}"
-              th:src="${link.spec.logo}"
+              th:src="${link.spec.logo.startsWith('http') or link.spec.logo.startsWith('//') or link.spec.logo.startsWith('/') ? link.spec.logo : null}"
               th:alt="${link.spec.displayName}"
               loading="lazy"
               class="h-12 w-12 shrink-0 rounded-xl bg-(--btn-regular-bg) object-cover transition group-hover:scale-105"
@@ -575,6 +575,16 @@ import CopyButton from "../components/CopyButton.astro";
       </div>
       <form id="link-apply-form" class="link-apply-form" novalidate>
         <div class="link-apply-body">
+          <!-- honeypot 防脚本提交：视觉隐藏，正常用户不会填写；脚本填充时 link-apply.js 拦截 -->
+          <input
+            type="text"
+            name="website"
+            value=""
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden"
+          />
           <!-- 第一行：网站地址 | 网站名称 -->
           <label class="link-apply-field">
             <span class="link-apply-label">网站地址<em>*</em></span>

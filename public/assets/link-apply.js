@@ -27,6 +27,8 @@
     submitting: false,
     // 点击冷却：防止连点刷出并发请求触发插件限流
     captchaCooldownUntil: 0,
+    // 提交冷却：仅申请成功时设置 8s，防脚本循环提交刷审核队列
+    submitCooldownUntil: 0,
     // 验证码是否已加载过：仅首次打开自动加载，之后打开面板不刷新，手动点击图片才刷新
     captchaLoaded: false,
   };
@@ -149,6 +151,19 @@
     if (!form || state.submitting) return;
     clearMessage();
 
+    // V9：提交成功冷却 8s（正常用户连提两个申请的场景几乎不存在，防脚本刷队列）
+    var now = Date.now();
+    if (now < state.submitCooldownUntil) {
+      showMessage("提交过于频繁，请稍后再试");
+      return;
+    }
+    // V9：honeypot 字段——视觉隐藏，人类不会填写，脚本填充即拦截
+    var honeypot = form.elements.website;
+    if (honeypot && honeypot.value) {
+      showMessage("提交过于频繁，请稍后再试");
+      return;
+    }
+
     var url = form.elements.url.value.trim();
     var displayName = form.elements.displayName.value.trim();
     var captchaCode = form.elements.captchaCode.value.trim();
@@ -196,6 +211,7 @@
     })
       .then(function (res) {
         if (res.status === 201) {
+          state.submitCooldownUntil = Date.now() + 8000;
           showMessage("申请已提交，请等待审核", "success");
           form.reset();
           return;

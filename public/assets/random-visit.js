@@ -56,6 +56,9 @@
       if (groups && groups.indexOf(a.getAttribute("data-link-group")) === -1) {
         continue;
       }
+      // 只收集 http/https 链接（a.href property 已解析为绝对 URL），
+      // javascript: 等危险 scheme 不进随机访问池
+      if (!/^https?:\/\//i.test(a.href)) continue;
       urls.push(a.href);
     }
     return urls;

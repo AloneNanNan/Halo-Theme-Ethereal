@@ -34,7 +34,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </a>
 
           <a
-            th:href="${photo.spec.url}"
+            th:href="${photo.spec.url.startsWith('http') or photo.spec.url.startsWith('//') or photo.spec.url.startsWith('/') ? photo.spec.url : null}"
             target="_blank"
             rel="noopener"
             class="btn-card h-10 w-fit rounded-lg px-3 text-sm font-bold text-75 sm:shrink-0"
