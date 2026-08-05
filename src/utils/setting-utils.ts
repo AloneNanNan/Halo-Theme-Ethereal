@@ -62,27 +62,33 @@ export function setHue(hue: number): void {
   r.style.setProperty("--hue", String(nextHue));
 }
 
+/** 解析模式的最终明暗：AUTO 跟随系统偏好 */
+export function resolveSchemeDark(theme: LIGHT_DARK_MODE): boolean {
+  if (theme === DARK_MODE) {
+    return true;
+  }
+  if (
+    theme === AUTO_MODE &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function applyThemeToDocument(theme: LIGHT_DARK_MODE) {
+  const root = document.documentElement;
+  const wantDark = resolveSchemeDark(theme);
+  // 始终同步 colorScheme（幂等赋值，开销可忽略），提示浏览器原生控件配色
+  root.style.colorScheme = wantDark ? "dark" : "light";
+  // 实际渲染主题未变化时直接返回：跳过强制 reflow 与过渡禁用，
+  // 避免固定模式与系统主题间切换时（如系统为暗色时在"暗色"与"系统"间切换）
+  // 的无效重载卡顿
+  if (root.classList.contains("dark") === wantDark) {
+    return;
+  }
   withoutThemeTransition(() => {
-    switch (theme) {
-      case LIGHT_MODE:
-        document.documentElement.classList.remove("dark");
-        document.documentElement.style.colorScheme = "light";
-        break;
-      case DARK_MODE:
-        document.documentElement.classList.add("dark");
-        document.documentElement.style.colorScheme = "dark";
-        break;
-      case AUTO_MODE:
-        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          document.documentElement.classList.add("dark");
-          document.documentElement.style.colorScheme = "dark";
-        } else {
-          document.documentElement.classList.remove("dark");
-          document.documentElement.style.colorScheme = "light";
-        }
-        break;
-    }
+    root.classList.toggle("dark", wantDark);
   });
 }
 

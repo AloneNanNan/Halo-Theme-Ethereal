@@ -72,6 +72,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
   th:data-hue-fixed="${theme.config?.style?.themeColor?.fixed}"
+  th:data-theme-anim-style="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
+  th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
+  th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
   data-overlayscrollbars-initialize
 >
