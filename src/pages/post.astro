@@ -502,35 +502,11 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           contentEl.querySelectorAll("img").forEach(function (img) {
             var src = img.getAttribute("src");
             if (src && src.indexOf("?") === -1 && src.indexOf("!/") === -1) {
+              // 仅主图加 CDN 压缩后缀（默认 1920），不加 srcset：
+              // srcset 会让浏览器按 sizes+DPR 选小档位图，img.naturalWidth 变小，
+              // 而灯箱（content-photoswipe）按 naturalWidth 取宽高，导致灯箱
+              // 打开很小。省流量诉求由下方 I2 的 loading="lazy" 覆盖。
               img.setAttribute("src", src + suffix);
-              // I29：srcset 多档（CDN_SUFFIX_PATTERNS 多宽度），移动端下载小档位
-              var widths = [400, 800, 1200];
-              var srcset = widths
-                .filter(function (w) {
-                  return w <= (imgWidth > 0 ? imgWidth : 1200);
-                })
-                .map(function (w) {
-                  return src + makeSuffix(w) + " " + w + "w";
-                })
-                .join(", ");
-              if (srcset) {
-                img.setAttribute("srcset", srcset);
-                img.setAttribute("sizes", "(min-width: 1024px) 720px, 100vw");
-              }
-              // I29：srcset 多档（CDN_SUFFIX_PATTERNS 多宽度），移动端下载小档位
-              var widths = [400, 800, 1200];
-              var srcset = widths
-                .filter(function (w) {
-                  return w <= (imgWidth > 0 ? imgWidth : 1200);
-                })
-                .map(function (w) {
-                  return src + makeSuffix(w) + " " + w + "w";
-                })
-                .join(", ");
-              if (srcset) {
-                img.setAttribute("srcset", srcset);
-                img.setAttribute("sizes", "(min-width: 1024px) 720px, 100vw");
-              }
             }
           });
         }
