@@ -9,5 +9,16 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="${theme.config?.sidebar?.profile?.bio}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
+  <!-- 首页 h1 兜底：banner 标题缺失时（bannerText 关闭或 title 为空）用隐藏的站点名，
+       保证首页始终有且只有一个 h1（Swup 无障碍插件要求；sr-only 视觉隐藏、保留可访问性树）。
+       与 MainGridLayout 的 banner-title 条件精确互斥：banner h1 渲染条件 =
+       (bannerText 开启) and (title != null)，此处为其取反 -->
+  <h1
+    th:if="${not ((theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.enable == null or theme.config?.base?.bannerText?.enable) and theme.config?.base?.bannerText?.title != null)}"
+    class="sr-only"
+    th:text="${site.title}"
+  >
+    Site title
+  </h1>
   <PostList />
 </MainGridLayout>
