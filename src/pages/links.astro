@@ -126,7 +126,7 @@ import CopyButton from "../components/CopyButton.astro";
         >
           <a
             th:each="link, linkStat : ${group.links}"
-            th:href="${#strings.startsWith(link.spec.url, 'http') or #strings.startsWith(link.spec.url, '//') or #strings.startsWith(link.spec.url, '/') ? link.spec.url : null}"
+            th:href="${link.spec.url != null and (link.spec.url.startsWith('http') or link.spec.url.startsWith('//') or link.spec.url.startsWith('/')) ? link.spec.url : null}"
             th:title="${link.spec.displayName}"
             th:attr="data-link-group=${group.spec.displayName}"
             th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + linkStat.index) * 50}ms)|"
@@ -137,7 +137,7 @@ import CopyButton from "../components/CopyButton.astro";
             <img
               alt=""
               th:if="${not #strings.isEmpty(link.spec.logo)}"
-              th:src="${#strings.startsWith(link.spec.logo, 'http') or #strings.startsWith(link.spec.logo, '//') or #strings.startsWith(link.spec.logo, '/') ? link.spec.logo : null}"
+              th:src="${link.spec.logo != null and (link.spec.logo.startsWith('http') or link.spec.logo.startsWith('//') or link.spec.logo.startsWith('/')) ? link.spec.logo : null}"
               th:alt="${link.spec.displayName}"
               loading="lazy"
               class="h-12 w-12 shrink-0 rounded-xl bg-(--btn-regular-bg) object-cover transition group-hover:scale-105"
@@ -541,6 +541,11 @@ import CopyButton from "../components/CopyButton.astro";
   <script
     th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/link-apply.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <!-- 友链随机访问（I22）：仅本页需要，从 MainGridLayout 移入；按钮门控条件同此 -->
+  <script
+    th:if="${theme.config?.links?.features?.enable_random_visit != false}"
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js?v=${ASSET_VERSION}`}
     defer></script>
 
   <!-- 申请友链模态框 -->

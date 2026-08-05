@@ -8,6 +8,24 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 >
   <Fragment slot="head">
     <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
+    <!-- 朋友圈脚本（I22）：仅本页需要，从 MainGridLayout 移入；head 中在 swup-container 外，
+         IIFE 只执行一次，后续靠 swup:contentReplaced 重新 init；defer 保证 DOM 就绪 -->
+    <script
+      defer
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js?v=${ASSET_VERSION}`}
+    ></script>
+    <script
+      defer
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js?v=${ASSET_VERSION}`}
+    ></script>
+    <script
+      defer
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js?v=${ASSET_VERSION}`}
+    ></script>
+    <script
+      defer
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js?v=${ASSET_VERSION}`}
+    ></script>
     <style is:global>
       /* 随机钓鱼按钮：点击后鱼钩图标左右摇摆（像鱼咬钩晃动） */
       .random-fish-btn.spinning .random-fish-icon {
@@ -111,7 +129,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                     <div class="relative shrink-0">
                       <img
                         th:if="${not #strings.isEmpty(item.authorLogo)}"
-                        th:src="${#strings.startsWith(item.authorLogo, 'http') or #strings.startsWith(item.authorLogo, '//') or #strings.startsWith(item.authorLogo, '/') ? item.authorLogo : null}"
+                        th:src="${item.authorLogo != null and (item.authorLogo.startsWith('http') or item.authorLogo.startsWith('//') or item.authorLogo.startsWith('/')) ? item.authorLogo : null}"
                         th:alt="${item.author}"
                         class="friends-avatar h-12 w-12 rounded-xl bg-(--btn-regular-bg) object-cover"
                       />
@@ -149,7 +167,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
                       <!-- 文章标题 -->
                       <a
-                        th:href="${#strings.startsWith(item.url, 'http') or #strings.startsWith(item.url, '//') or #strings.startsWith(item.url, '/') ? item.url : null}"
+                        th:href="${item.url != null and (item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/')) ? item.url : null}"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="mt-2 block line-clamp-2 text-[15px] font-semibold text-90 leading-snug transition hover:text-(--primary) friends-item-title"
@@ -171,7 +189,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
                       <!-- 来源链接 -->
                       <a
-                        th:href="${#strings.startsWith(item.url, 'http') or #strings.startsWith(item.url, '//') or #strings.startsWith(item.url, '/') ? item.url : null}"
+                        th:href="${item.url != null and (item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/')) ? item.url : null}"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="friends-source-link mt-2.5 inline-flex items-center gap-1 text-xs text-30 transition hover:text-(--primary)"
