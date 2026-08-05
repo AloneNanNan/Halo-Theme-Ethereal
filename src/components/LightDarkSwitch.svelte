@@ -61,7 +61,8 @@
 
   <!-- 面板原为 hover-only（opacity-0 + group-hover 显示），键盘用户无法展开；
        增加 group-focus-within：Tab 聚焦到面板内按钮时同样显示并可用 -->
-  <div id="light-dark-panel" class="float-panel absolute z-50 !top-16 -right-2 p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0">
+  <!-- 面板容器仅作布局包裹，role="none" 让 menu 的直接语义子项收敛为 menuitem（严格 ARIA） -->
+  <div id="light-dark-panel" role="none" class="float-panel absolute z-50 !top-16 -right-2 p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0">
     <!-- 面板内主题选择按钮：补 role="menuitem"（外层容器为 role="menu"，
          菜单的直接子项需为 menuitem，否则触发 aria-required-children 违规） -->
     <button role="menuitem" class="flex transition whitespace-nowrap items-center !justify-start w-full btn-plain scale-animation rounded-lg h-9 px-3 font-medium active:scale-95 mb-0.5"
