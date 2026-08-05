@@ -32,9 +32,8 @@ const MAX_POSTS = 5;
   </WidgetLayout>
 </div>
 
-<script is:inline>
+<script is:inline define:vars={{ MAX_POSTS }}>
   (function () {
-    var MAX_POSTS = 5;
     var container = document.getElementById("popular-posts-list");
     if (!container) return;
 
@@ -80,10 +79,16 @@ const MAX_POSTS = 5;
         var href =
           permalink ||
           basePath + "/archives/" + (post.spec.slug || post.metadata.name);
+        // href 与标题同样转义（slug/permalink 含引号可属性逃逸）；
+        // 非 http(s) 且非站内路径的链接置空兜底（与服务端协议白名单同面）
+        var safeHref =
+          /^https?:\/\//i.test(href) || href.charAt(0) === "/"
+            ? escapeHtml(href)
+            : "";
 
         html +=
           '<a href="' +
-          href +
+          safeHref +
           '" class="group block" aria-label="' +
           safeTitle +
           '">' +

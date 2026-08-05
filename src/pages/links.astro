@@ -530,17 +530,17 @@ import CopyButton from "../components/CopyButton.astro";
   </div>
 
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/requirements.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/requirements.js?v=${ASSET_VERSION}`}
     defer></script>
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/collapse.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/collapse.js?v=${ASSET_VERSION}`}
     defer></script>
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/copy.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/copy.js?v=${ASSET_VERSION}`}
     defer></script>
   <script
     th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/link-apply.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/link-apply.js?v=${ASSET_VERSION}`}
     defer></script>
 
   <!-- 申请友链模态框 -->

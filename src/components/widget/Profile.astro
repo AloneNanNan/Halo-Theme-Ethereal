@@ -46,6 +46,7 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
         th:href="${social.url}"
         th:title="${social.name ?: social.text}"
         target="_blank"
+        rel="noopener noreferrer"
         class="btn-regular size-10 rounded-lg active:scale-90"
         th:utext="${social.social_icon.value}"
       >

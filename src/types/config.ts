@@ -275,11 +275,6 @@ export interface ExternalLink {
   whitelist?: string;
 }
 
-// ========== 开发设置 ==========
-export interface Development {
-  enabled: boolean;
-}
-
 export type LIGHT_DARK_MODE =
   | typeof LIGHT_MODE
   | typeof DARK_MODE

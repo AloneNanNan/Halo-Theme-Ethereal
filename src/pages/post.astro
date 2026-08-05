@@ -282,6 +282,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
             <a
               th:href="${theme.config?.post?.license?.url}"
               target="_blank"
+              rel="noopener noreferrer"
               class="link line-clamp-2 text-(--primary)"
               th:text="${theme.config?.post?.license?.name}">CC BY-NC-SA 4.0</a
             >

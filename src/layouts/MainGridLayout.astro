@@ -232,15 +232,15 @@ const {
   </div>
 
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
   ></script>
   <script
     th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
   ></script>
   <script
     th:if="${theme.config?.base?.bannerText != null and theme.config?.base?.bannerText?.subtitleEffect == 'drop'}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
   ></script>
 
   <script
@@ -334,20 +334,20 @@ const {
 
   <!-- 朋友圈脚本：移到 swup-container 外加载，IIFE 只执行一次，后续靠 swup:contentReplaced 重新 init -->
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js?v=${ASSET_VERSION}`}
   ></script>
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js?v=${ASSET_VERSION}`}
   ></script>
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js?v=${ASSET_VERSION}`}
   ></script>
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js?v=${ASSET_VERSION}`}
   ></script>
 
   <!-- 友链随机访问：移到 swup-container 外加载 -->
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js?v=${ASSET_VERSION}`}
   ></script>
 </Layout>

@@ -360,11 +360,11 @@
     }
   }
 
-  /* 点赞失败提示：upvote.js 失败回滚时临时添加该 class，1.2s 后由 JS 移除。
+  /* 点赞失败提示：upvote.js / post.bundle.js 失败回滚时临时添加该 class，1.2s 后由 JS 移除。
      抖动 + 红色，用于无文案提示（避免新增 i18n 键）；
      !important 用于压过按钮的 hover:text-(--primary)，且不依赖 Tailwind 类名扫描；
      颜色引用 variables.css 的 --upvote-error */
-  .moment-upvote-btn.upvote-failed {
+  .upvote-failed {
     color: var(--upvote-error) !important;
     animation: upvote-failed-shake 0.4s;
   }
