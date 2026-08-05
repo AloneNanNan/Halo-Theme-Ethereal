@@ -8,7 +8,6 @@ import { Icon } from "astro-icon/components";
     th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_top}"
     id="back-to-top-btn"
     class="floating-btn to-top-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
-    onclick="backToTop()"
   >
     <button
       th:aria-label="#{fragment.layout.toTop}"
@@ -24,7 +23,6 @@ import { Icon } from "astro-icon/components";
     th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_home}"
     id="back-to-home-btn"
     class="floating-btn home-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
-    onclick="backToHome()"
   >
     <button
       aria-label="Back to Home"
@@ -39,7 +37,6 @@ import { Icon } from "astro-icon/components";
     th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_comment}"
     id="back-to-comment-btn"
     class="floating-btn comment-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
-    onclick="backToComment()"
   >
     <button
       aria-label="Jump to Comments"
@@ -224,23 +221,38 @@ import { Icon } from "astro-icon/components";
   __moveFloatingControls();
   document.addEventListener("swup:contentReplaced", __moveFloatingControls);
 
-  function backToTop() {
-    window.scroll({ top: 0, behavior: "smooth" });
-  }
-
-  function backToHome() {
-    if (window.swup) {
-      window.swup.navigate("/");
-    } else {
-      window.location.href = "/";
-    }
-  }
-
-  function backToComment() {
-    var el = document.getElementById("comment");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+  // 悬浮按钮点击：document 级事件委托，替代三个内联 onclick（CSP 友好）。
+  // 外层是 <div id=...>、内层是 <button>，点击目标可能是内部图标，用 closest 归一到外层 id；
+  // __moveFloatingControls 会把 .floating-controls 移入 body，委托挂在 document 上不受影响。
+  // 本脚本位于 Swup 容器之外只执行一次，window 标志仅作防重复绑定的兜底。
+  if (!window.__floatingControlsClickBound) {
+    window.__floatingControlsClickBound = true;
+    document.addEventListener("click", function (e) {
+      var btn =
+        e.target && e.target.closest
+          ? e.target.closest(
+              "#back-to-top-btn, #back-to-home-btn, #back-to-comment-btn",
+            )
+          : null;
+      if (!btn) return;
+      if (btn.id === "back-to-top-btn") {
+        // 平滑滚动回顶部
+        window.scroll({ top: 0, behavior: "smooth" });
+      } else if (btn.id === "back-to-home-btn") {
+        // 有 Swup 时走 PJAX 跳转，否则整页跳转
+        if (window.swup) {
+          window.swup.navigate("/");
+        } else {
+          window.location.href = "/";
+        }
+      } else if (btn.id === "back-to-comment-btn") {
+        // 滚动到评论区（仅文章页存在 #comment）
+        var el = document.getElementById("comment");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    });
   }
 
   // 非首页时显示首页按钮

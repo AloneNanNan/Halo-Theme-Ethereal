@@ -64,7 +64,9 @@ export interface ExternalFont {
 }
 
 export interface StyleSwitches {
-  banner_wave?: boolean;
+  // banner_wave 三选：disabled 关闭 / enabled 开启 / desktop_only 移动端关闭；
+  // 保留 boolean 兼容旧版布尔配置（后台存量 true/false）
+  banner_wave?: boolean | "enabled" | "disabled" | "desktop_only";
   navbar_blur?: boolean;
   card_hover_lift?: boolean;
 }

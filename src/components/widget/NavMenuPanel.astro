@@ -20,11 +20,12 @@
             class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
           ></span>
         </a>
-        <!-- 子菜单展开按钮 -->
+        <!-- 子菜单展开按钮：原 th:onclick 已移除（CSP 友好），由本文件脚本的面板级事件委托处理，
+             data-submenu-id 供委托定位目标面板 -->
         <button
           th:if="${menuItem.children != null && !menuItem.children.isEmpty()}"
           type="button"
-          th:onclick="|event.stopPropagation(); toggleSubmenu(this, 'submenu-' + ${itemStat.index});|"
+          th:data-submenu-id="|submenu-${itemStat.index}|"
           th:aria-label="${menuItem.status.displayName}"
           aria-expanded="false"
           class="px-2 py-2 submenu-toggle flex-shrink-0"
@@ -62,8 +63,9 @@
 
 <script is:inline>
   (function () {
-    // 切换子菜单显示/隐藏（手风琴：同时只展开一个）
-    window.toggleSubmenu = function (buttonEl, submenuId) {
+    // 切换子菜单显示/隐藏（手风琴：同时只展开一个）；
+    // 不再挂 window，仅由下方面板级事件委托调用（原内联 th:onclick 已移除）
+    function toggleSubmenu(buttonEl, submenuId) {
       var submenu = document.getElementById(submenuId);
       if (!submenu) return;
       var arrow = buttonEl.querySelector("span");
@@ -97,7 +99,28 @@
         arrow.classList.toggle("rotate-90");
       }
       buttonEl.setAttribute("aria-expanded", String(!isExpanded));
-    };
+    }
+
+    // 子菜单展开按钮：面板级事件委托替代内联 th:onclick（CSP 友好）。
+    // 目标面板 id 从按钮 data-submenu-id 读取；面板位于 Swup 容器之外跨页面持久，
+    // 委托只绑定一次（window 标志兜底：本委托与下方 initNavMenuPanel 的链接绑定是两条独立逻辑，
+    // 防止脚本因任何原因重复执行时二次绑定导致双次切换；Navbar 无条件渲染本面板，加载时必存在）。
+    // 保留原 th:onclick 的 stopPropagation 语义：阻止冒泡到 document，
+    // 避免其它面板的“点击外部关闭”逻辑响应本次点击。
+    var panel = document.getElementById("nav-menu-panel");
+    if (panel && !window.__navMenuSubmenuBound) {
+      window.__navMenuSubmenuBound = true;
+      panel.addEventListener("click", function (e) {
+        var toggleBtn =
+          e.target && e.target.closest
+            ? e.target.closest(".submenu-toggle")
+            : null;
+        if (!toggleBtn) return;
+        e.stopPropagation();
+        var submenuId = toggleBtn.getAttribute("data-submenu-id");
+        if (submenuId) toggleSubmenu(toggleBtn, submenuId);
+      });
+    }
 
     // 初始化菜单面板
     function initNavMenuPanel() {

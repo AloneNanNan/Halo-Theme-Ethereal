@@ -135,13 +135,15 @@ const {
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
         th:style="${theme.config?.base?.banner?.enable ? 'min-height: calc(100vh - var(--banner-height) + 3.5rem)' : 'min-height: calc(100vh - 5.5rem)'}"
       >
+        <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
+             （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
+             url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
         <a
           id="banner-credit"
-          th:if="${theme.config?.base?.banner?.enable != false and theme.config?.base?.banner?.credit?.enable != false}"
+          th:if="${theme.config?.base?.banner?.enable != false and theme.config?.base?.banner?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.banner?.credit?.url)}"
           th:href="${theme.config?.base?.banner?.credit?.url}"
           target="_blank"
           rel="noopener"
-          aria-label="Visit image source"
           class="group onload-animation absolute -top-13 right-4 flex h-9 items-center justify-center rounded-full bg-black/60 px-3 transition-all hover:bg-black/70 hover:pr-9 active:bg-black/80"
         >
           <span

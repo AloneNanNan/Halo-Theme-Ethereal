@@ -31,11 +31,11 @@ const className = Astro.props.class;
     ]}
     th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? '!bg-transparent' : 'bg-(--card-bg)'"
   >
+    <!-- 首页链接：可见文本即站点标题，作为天然可访问名；
+         不设 aria-label，避免与可见文本不一致触发 WCAG 2.5.3 Label in Name 违规 -->
     <a
       th:href="@{/}"
       class="btn-plain scale-animation h-[3.25rem] rounded-lg px-5 font-bold active:scale-95"
-      th:aria-label="#{nav.home}"
-      aria-label="Home"
     >
       <div
         class="site-title flex flex-row items-center text-md text-(--primary)"
@@ -119,6 +119,7 @@ const className = Astro.props.class;
 
     <div class="flex items-center">
       <Search client:only="svelte" />
+      <!-- 面板切换不再使用内联 onclick（CSP 友好），由 public/assets/navbar.js 的 document 级事件委托统一处理 -->
       <button
         th:unless="${theme.config?.style?.themeColor?.fixed}"
         th:aria-label="#{nav.displaySettings}"
@@ -126,7 +127,6 @@ const className = Astro.props.class;
         class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90"
         id="display-settings-switch"
         type="button"
-        onclick="toggleNavbarPanel('display-setting')"
       >
         <span class="icon-[material-symbols--palette-outline] text-[1.25rem]"
         ></span>
@@ -145,7 +145,6 @@ const className = Astro.props.class;
         class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90 md:!hidden"
         id="nav-menu-switch"
         type="button"
-        onclick="toggleNavbarPanel('nav-menu-panel')"
       >
         <span class="icon-[material-symbols--menu-rounded] text-[1.25rem]"
         ></span>

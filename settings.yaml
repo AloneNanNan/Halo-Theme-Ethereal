@@ -169,15 +169,24 @@ spec:
           name: styleSwitches
           label: 样式开关
           value:
-            banner_wave: true
+            # banner_wave 三选：disabled 关闭 / enabled 开启 / desktop_only 移动端关闭（触屏设备不加载动画）
+            banner_wave: enabled
             navbar_blur: true
             card_hover_lift: true
           children:
-            - $formkit: switch
+            # 三选开关（写法与 color_scheme 一致）：关闭 / 开启 / 移动端关闭
+            - $formkit: select
               name: banner_wave
               label: 底部波浪效果
-              value: true
-              help: "在 Banner 底部显示波浪过渡效果"
+              value: enabled
+              help: "在 Banner 底部显示波浪过渡效果；移动端关闭指触屏设备不显示动画，可降低性能开销和加载时间"
+              options:
+                - label: 关闭
+                  value: disabled
+                - label: 开启
+                  value: enabled
+                - label: 移动端关闭
+                  value: desktop_only
             - $formkit: switch
               name: navbar_blur
               label: 高级材质

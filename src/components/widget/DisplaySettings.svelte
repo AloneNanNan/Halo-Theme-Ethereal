@@ -36,7 +36,9 @@
     </div>
   </div>
   <div class="w-full h-6 rounded select-none overflow-hidden">
-    <input aria-label="11" type="range" min="0" max="360" bind:value={hue}
+    <!-- aria-label 原为写死的 "11"（当前值），屏幕阅读器会误读；改为固定语义标签
+         "主题色"，当前值由 range 的 aria-valuenow 自动暴露 -->
+    <input aria-label={t("theme.color", "主题色")} type="range" min="0" max="360" bind:value={hue}
            class="display-setting-slider" id="colorSlider" step="5" style="width: 100%">
   </div>
 </div>

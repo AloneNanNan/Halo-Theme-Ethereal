@@ -32,8 +32,9 @@ import { imageSuffixThWith } from "../utils/image-suffix";
       Excerpt
     </div>
 
+    <!-- 元信息文字：text-black/30 对比度约 2:1 不满足 WCAG AA，升为 /50（与阶段 3.6 对 .text-30 的处理一致） -->
     <div
-      class="flex items-center gap-4 text-sm text-black/30 transition dark:text-white/30"
+      class="flex items-center gap-4 text-sm text-black/50 transition dark:text-white/50"
     >
       <div th:if="${post.stats != null}" class="inline-flex items-center">
         <span

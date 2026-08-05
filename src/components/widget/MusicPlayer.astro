@@ -136,6 +136,8 @@ const layoutId = `${widgetId}-layout`;
               <div
                 class="flex w-16 items-center transition-all duration-300 ease-out"
               >
+                <!-- 音量滑块：原为不可聚焦的 div（仅鼠标可拖/点），
+                     加 tabindex 与 keydown 支持键盘操作（方向键/Home/End） -->
                 <div
                   class="vol-container relative ml-1 h-1 w-16 cursor-pointer rounded-full bg-neutral-200 dark:bg-neutral-600"
                   role="slider"
@@ -143,6 +145,7 @@ const layoutId = `${widgetId}-layout`;
                   aria-valuemin="0"
                   aria-valuemax="100"
                   aria-valuenow="70"
+                  tabindex="0"
                 >
                   <div
                     class="vol-bar absolute left-0 top-0 h-full w-[70%] rounded-full bg-(--primary)"
@@ -156,6 +159,8 @@ const layoutId = `${widgetId}-layout`;
       </div>
 
       <div class="px-1">
+        <!-- 进度滑块：原为不可聚焦的 div（仅鼠标可拖/点），
+             加 tabindex 与 keydown 支持键盘操作（方向键/Home/End） -->
         <div
           class="progress-container group relative mb-2 mt-2 h-1 w-full cursor-pointer touch-none rounded-full bg-neutral-100 dark:bg-neutral-700/50"
           role="slider"
@@ -163,6 +168,7 @@ const layoutId = `${widgetId}-layout`;
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuenow="0"
+          tabindex="0"
         >
           <div
             class="progress-bar absolute left-0 top-0 h-full w-full origin-left rounded-full bg-(--primary) transition-transform duration-100"
@@ -761,25 +767,53 @@ const layoutId = `${widgetId}-layout`;
       audio.muted = state.isMuted;
       updateVolumeUI();
     });
-    ui.volContainer.addEventListener("click", (event) => {
-      const rect = ui.volContainer.getBoundingClientRect();
-      state.volume = Math.max(
-        0,
-        Math.min(1, (event.clientX - rect.left) / rect.width),
-      );
+    // 音量与进度的共用更新函数：鼠标点击与键盘 keydown 都走这里，保证行为一致
+    function setVolume(v) {
+      state.volume = Math.max(0, Math.min(1, v));
       state.isMuted = false;
       audio.volume = state.volume;
       audio.muted = false;
       updateVolumeUI();
+    }
+
+    function seekByRatio(r) {
+      if (!audio.duration) return;
+      audio.currentTime = Math.max(0, Math.min(1, r)) * audio.duration;
+    }
+
+    ui.volContainer.addEventListener("click", (event) => {
+      const rect = ui.volContainer.getBoundingClientRect();
+      setVolume((event.clientX - rect.left) / rect.width);
     });
     ui.progressContainer.addEventListener("click", (event) => {
-      if (!audio.duration) return;
       const rect = ui.progressContainer.getBoundingClientRect();
-      const percent = Math.max(
-        0,
-        Math.min(1, (event.clientX - rect.left) / rect.width),
-      );
-      audio.currentTime = percent * audio.duration;
+      seekByRatio((event.clientX - rect.left) / rect.width);
+    });
+
+    // 键盘可访问：方向键 ±5%（音量）或 ±5%（进度，约 ±12 秒/4 分钟歌曲），Home/End 到边界
+    ui.volContainer.addEventListener("keydown", (event) => {
+      let v = state.volume;
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") v += 0.05;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowDown")
+        v -= 0.05;
+      else if (event.key === "Home") v = 0;
+      else if (event.key === "End") v = 1;
+      else return;
+      event.preventDefault();
+      setVolume(v);
+    });
+    ui.progressContainer.addEventListener("keydown", (event) => {
+      if (!audio.duration) return;
+      const step = 5 / 100; // 每次移动 5%
+      let r = audio.currentTime / audio.duration;
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") r += step;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowDown")
+        r -= step;
+      else if (event.key === "Home") r = 0;
+      else if (event.key === "End") r = 1;
+      else return;
+      event.preventDefault();
+      seekByRatio(r);
     });
     ui.btnLrc.addEventListener("click", () => {
       const isOpen = ui.lrcDrawer.style.gridTemplateRows === "1fr";
@@ -878,7 +912,9 @@ const layoutId = `${widgetId}-layout`;
           false,
         );
       })
-      .catch(() => {
+      .catch((e) => {
+        // 对齐 Hitokoto 小组件先例：失败时输出告警便于排查，UI 保持 i18n 错误文案
+        console.warn("[MusicPlayer] 歌单加载失败", e && e.message);
         ui.title.textContent = cfg.i18n.error;
       })
       .finally(() => setLoading(false));
