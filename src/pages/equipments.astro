@@ -82,7 +82,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     >
       <a
         th:each="equipment, equipStat : ${equipments.items}"
-        th:href="${equipment.spec.url.startsWith('http') or equipment.spec.url.startsWith('//') or equipment.spec.url.startsWith('/') ? equipment.spec.url : null}"
+        th:href="${#strings.startsWith(equipment.spec.url, 'http') or #strings.startsWith(equipment.spec.url, '//') or #strings.startsWith(equipment.spec.url, '/') ? equipment.spec.url : null}"
         th:title="${equipment.spec.displayName}"
         target="_blank"
         rel="noopener noreferrer"

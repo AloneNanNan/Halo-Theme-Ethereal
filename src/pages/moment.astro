@@ -98,7 +98,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               class="w-full max-w-lg"></audio>
             <a
               th:if="${momentItem.type.name == 'POST'}"
-              th:href="${momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/') ? momentItem.url : null}"
+              th:href="${#strings.startsWith(momentItem.url, 'http') or #strings.startsWith(momentItem.url, '//') or #strings.startsWith(momentItem.url, '/') ? momentItem.url : null}"
               class="btn-regular min-h-20 max-w-full rounded-xl px-4 font-bold md:max-w-lg"
             >
               <span

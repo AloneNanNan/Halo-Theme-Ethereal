@@ -10,7 +10,6 @@ export interface ThemeConfig {
   footer: Footer;
   links: Links;
   external_link: ExternalLink;
-  development: Development;
 }
 
 // ========== 基础设置 ==========

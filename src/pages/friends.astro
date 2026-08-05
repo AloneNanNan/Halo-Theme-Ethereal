@@ -111,7 +111,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                     <div class="relative shrink-0">
                       <img
                         th:if="${not #strings.isEmpty(item.authorLogo)}"
-                        th:src="${item.authorLogo.startsWith('http') or item.authorLogo.startsWith('//') or item.authorLogo.startsWith('/') ? item.authorLogo : null}"
+                        th:src="${#strings.startsWith(item.authorLogo, 'http') or #strings.startsWith(item.authorLogo, '//') or #strings.startsWith(item.authorLogo, '/') ? item.authorLogo : null}"
                         th:alt="${item.author}"
                         class="friends-avatar h-12 w-12 rounded-xl bg-(--btn-regular-bg) object-cover"
                       />
@@ -149,7 +149,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
                       <!-- 文章标题 -->
                       <a
-                        th:href="${item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/') ? item.url : null}"
+                        th:href="${#strings.startsWith(item.url, 'http') or #strings.startsWith(item.url, '//') or #strings.startsWith(item.url, '/') ? item.url : null}"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="mt-2 block line-clamp-2 text-[15px] font-semibold text-90 leading-snug transition hover:text-(--primary) friends-item-title"
@@ -171,7 +171,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
                       <!-- 来源链接 -->
                       <a
-                        th:href="${item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/') ? item.url : null}"
+                        th:href="${#strings.startsWith(item.url, 'http') or #strings.startsWith(item.url, '//') or #strings.startsWith(item.url, '/') ? item.url : null}"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="friends-source-link mt-2.5 inline-flex items-center gap-1 text-xs text-30 transition hover:text-(--primary)"
