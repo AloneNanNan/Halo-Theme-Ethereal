@@ -439,31 +439,42 @@ export function initExternalLinkRedirect() {
       const config = getConfig();
       if (!config?.enable_redirect) return;
 
+      // 覆盖 <a>（含 SVG 命名空间，tagName 同为 "A"）与 <area>；
+      // SVG <a> 可能只写 xlink:href，取 href 时兜底
       const path = e.composedPath();
       const anchor = path.find(
-        (el) => el instanceof HTMLElement && el.tagName === "A",
-      ) as HTMLAnchorElement | undefined;
+        (el) =>
+          el instanceof Element &&
+          (el.tagName === "A" || el.tagName === "AREA"),
+      ) as Element | undefined;
       if (!anchor) return;
 
-      const href = anchor.getAttribute("href");
+      const href =
+        anchor.getAttribute("href") || anchor.getAttribute("xlink:href");
       if (!href) return;
-      const s = href.substring(0, 11).toLowerCase();
-      if (
-        s === "javascript:" ||
-        s === "mailto:" ||
-        href.charAt(0) === "#" ||
-        s === "tel:"
-      )
-        return;
 
-      let hostname: string | undefined;
+      // WHATWG URL 解析（自动剥离前导空白/tab、scheme 小写化），
+      // 弃用 substring(0,11) 前缀检查（与解析器行为不一致，变体可绕过）
+      let url: URL;
       try {
-        const a = document.createElement("a");
-        a.href = href;
-        hostname = a.hostname;
+        url = new URL(href, window.location.origin);
       } catch {
+        // 畸形 URL：阻止默认行为，防止绕过协议白名单
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
+
+      // 协议白名单：仅 http/https 走跳转流程；mailto/tel 放行默认行为（维持原体验）；
+      // 其余 scheme（javascript:/data:/vbscript:/file:...）一律阻止
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        if (url.protocol === "mailto:" || url.protocol === "tel:") return;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      const hostname = url.hostname;
       if (!hostname || hostname === window.location.hostname) return;
       if (isWhitelisted(hostname, config.whitelist)) return;
 

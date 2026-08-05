@@ -146,8 +146,11 @@
 >
   <!-- 搜索图标：text-black/30 对比度不足，升为 /50 提升可见性（与 PostCard 元信息处理一致） -->
   <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/50 transition dark:text-white/50"></span>
-  <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
+  <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label；
+       id/name：表单字段可访问性（浏览器自动填充） -->
   <input
+    id="search-input-desktop"
+    name="search"
     placeholder={t("search.placeholder", "搜索")}
     aria-label={t("search.placeholder", "搜索")}
     bind:value={keywordDesktop}
@@ -179,8 +182,11 @@
   >
     <!-- 搜索图标：同桌面端，升为 /50 提升可见性 -->
     <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/50 transition dark:text-white/50"></span>
-    <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label -->
+    <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label；
+         id/name：表单字段可访问性（浏览器自动填充） -->
     <input
+      id="search-input-mobile"
+      name="search"
       placeholder={t("search.placeholder", "搜索")}
       aria-label={t("search.placeholder", "搜索")}
       bind:value={keywordMobile}

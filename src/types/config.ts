@@ -10,7 +10,6 @@ export interface ThemeConfig {
   footer: Footer;
   links: Links;
   external_link: ExternalLink;
-  development: Development;
 }
 
 // ========== 基础设置 ==========
@@ -273,11 +272,6 @@ export interface ExternalLink {
   avatar?: string;
   open_new_window?: boolean;
   whitelist?: string;
-}
-
-// ========== 开发设置 ==========
-export interface Development {
-  enabled: boolean;
 }
 
 export type LIGHT_DARK_MODE =

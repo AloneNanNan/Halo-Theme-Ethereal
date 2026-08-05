@@ -12,13 +12,15 @@ const hasPrevious = `\${${context}.hasPrevious()}`;
 const hasNext = `\${${context}.hasNext()}`;
 const prevUrl = `@{\${${context}.prevUrl}}`;
 const nextUrl = `@{\${${context}.nextUrl}}`;
+// Layout 模板上下文不暴露请求对象（#httpServletRequest 恒为 null，见 Layout.astro 注释），
+// 不再依赖它推导路径。nav 仅在 totalPages > 1 时渲染，此时 hasNext/hasPrevious 至少其一为真，
+// rawRefUrl 恒取 nextUrl/prevUrl，空串分支为语义兜底（实际不可达）。
 const pageWindow = `
   currentPage=\${${context}.page},
   totalPages=\${${context}.totalPages},
-  requestPath=\${#httpServletRequest.requestURI},
   rawRefUrl=\${${context}.hasNext()
     ? ${context}.nextUrl
-    : (${context}.hasPrevious() ? ${context}.prevUrl : requestPath)},
+    : (${context}.hasPrevious() ? ${context}.prevUrl : '')},
   hasQuery=\${#strings.contains(rawRefUrl, '?')},
   queryString=\${hasQuery ? '?' + #strings.substringAfter(rawRefUrl, '?') : ''},
   rawRefPath=\${hasQuery ? #strings.substringBefore(rawRefUrl, '?') : rawRefUrl},

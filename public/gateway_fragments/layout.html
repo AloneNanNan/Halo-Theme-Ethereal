@@ -673,7 +673,11 @@
         (function () {
           try {
             var h = document.documentElement.getAttribute("data-hue") || "250";
-            var s = localStorage.getItem("color-scheme");
+            // 与主站统一 localStorage key（theme / __user_chose_theme，见 setting-utils.ts）：
+            // 仅当用户手动选择过才读取 theme，否则用后台默认，避免认证页与主站配色不同步
+            var s = localStorage.getItem("__user_chose_theme")
+              ? localStorage.getItem("theme")
+              : null;
             var tc = document.getElementById("theme-config");
             var ds = "auto",
               ac = true;

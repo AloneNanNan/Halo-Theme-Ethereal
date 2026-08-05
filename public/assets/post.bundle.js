@@ -3385,8 +3385,13 @@
     if (count > 0) countEl.style.display = "flex";
   }
 
+  // 点赞成功冷却 5s（失败可立即重试）：防脚本循环点击刷请求
+  var cooldownUntil = 0;
+
   btn.addEventListener("click", function () {
     if (btn.classList.contains("liked")) return;
+    if (Date.now() < cooldownUntil) return;
+    // 乐观更新：先本地标记已赞、计数 +1（失败时回滚，与 upvote.js 瞬间版行为对齐）
     btn.classList.add("liked");
     localStorage.setItem(key, "1");
     count++;
@@ -3403,7 +3408,28 @@
         plural: "posts",
         name: postName,
       }),
-    }).catch(function () {});
+    })
+      .then(function (res) {
+        // fetch 只在网络层失败时 reject，非 2xx 需显式检查（否则会静默失败）
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        cooldownUntil = Date.now() + 5000;
+      })
+      .catch(function (e) {
+        // 点赞失败：回滚乐观更新（计数 -1、撤销已赞、清除本地标记、抖动提示）
+        console.warn("[Like] 点赞失败", e && e.message);
+        localStorage.removeItem(key);
+        localStorage.removeItem(key + "-count");
+        btn.classList.remove("liked");
+        count = Math.max(svCount, count - 1);
+        if (countEl) {
+          countEl.textContent = count > 0 ? count : "";
+          if (count <= 0) countEl.style.display = "none";
+        }
+        btn.classList.add("upvote-failed");
+        setTimeout(function () {
+          btn.classList.remove("upvote-failed");
+        }, 1200);
+      });
   });
 })();
 // 文章分享图生成器 v4 - 修复对齐 + 无封面原版头部

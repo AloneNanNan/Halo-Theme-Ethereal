@@ -59,6 +59,9 @@ const i18nInlineScript = `<script th:inline="javascript">
   };
 </script>`;
 
+// （暂缓）：曾尝试在输出前用 #strings.replace 将 "</" 替换为 "<\/" 堵 script 闭合，
+// 但表达式字面量中的 "</" 会使 attoparser 在模板解析阶段抛错（全站 500），
+// 且 #strings.replace 参数为 Map 也会类型不匹配。维持审计建议原状。
 const themeSettingScript = `<script type="application/json" id="theme-config" th:inline="javascript">
        /*[[\${theme.config}]]*/
     </script>`;

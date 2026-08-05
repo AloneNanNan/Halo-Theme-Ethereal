@@ -32,9 +32,8 @@ const MAX_POSTS = 5;
   </WidgetLayout>
 </div>
 
-<script is:inline>
+<script is:inline define:vars={{ MAX_POSTS }}>
   (function () {
-    var MAX_POSTS = 5;
     var container = document.getElementById("popular-posts-list");
     if (!container) return;
 
@@ -80,10 +79,16 @@ const MAX_POSTS = 5;
         var href =
           permalink ||
           basePath + "/archives/" + (post.spec.slug || post.metadata.name);
+        // V7：href 与标题同样转义（slug/permalink 含引号可属性逃逸）；
+        // 非 http(s) 且非站内路径的链接置空兜底（与服务端协议白名单同面）
+        var safeHref =
+          /^https?:\/\//i.test(href) || href.charAt(0) === "/"
+            ? escapeHtml(href)
+            : "";
 
         html +=
           '<a href="' +
-          href +
+          safeHref +
           '" class="group block" aria-label="' +
           safeTitle +
           '">' +
@@ -110,9 +115,9 @@ const MAX_POSTS = 5;
       container.innerHTML = html;
     }
 
-    // 热门榜逻辑：先请求 1 篇获取文章总数，再按总数拉取全量，
-    // 保证全站访问量最高的文章都能进入榜单（不受固定 50 篇上限限制）。
-    // sessionStorage 缓存最终 Top 5：同会话内切换页面不再重复请求列表接口。
+    // 热门榜逻辑：改用 Halo content API 服务端排序（sort=stats.visit,desc），
+    // 单请求取 Top N，消除原实现的「探 total → size=total 全量拉取」两步）。
+    // sessionStorage 缓存最终 Top N：同会话内切换页面不再重复请求列表接口。
     var CACHE_KEY = "popular_posts_v1";
 
     function getCached() {
@@ -157,34 +162,19 @@ const MAX_POSTS = 5;
       window.__popularPostsAbort = controller;
       var signal = controller.signal;
 
-      // 第一步：请求 1 篇拿到全站公开文章总数（响应包含 total 字段）
+      // 服务端排序取 Top N（sort=stats.visit,desc；客户端不再排序——
+      // 只取回 N 条样本，客户端兜底排序对缺失的样本无效）
       fetchPosts(
-        "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=1",
+        "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=" +
+          MAX_POSTS +
+          "&sort=stats.visit,desc",
         signal,
       )
-        .then(function (meta) {
-          if (!meta) return null;
-          var total = meta.total || 0;
-          if (total <= 0) {
-            renderList([]);
-            return null;
-          }
-          // 第二步：按文章总数拉取全量，再在内存按访问量排序
-          return fetchPosts(
-            "/apis/api.content.halo.run/v1alpha1/posts?page=0&size=" + total,
-            signal,
-          );
-        })
         .then(function (data) {
           if (!data) return;
           var items = data.items || [];
           var published = items.filter(function (p) {
             return p.spec && p.spec.publish && p.spec.visible === "PUBLIC";
-          });
-          published.sort(function (a, b) {
-            var va = (a.stats && a.stats.visit) || 0;
-            var vb = (b.stats && b.stats.visit) || 0;
-            return vb - va;
           });
           var top = published.slice(0, MAX_POSTS);
           setCached(top);

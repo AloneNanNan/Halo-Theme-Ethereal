@@ -52,11 +52,7 @@ const className = Astro.props.class;
     var IP_CACHE_KEY = "weather_ip_cache";
     var IP_CACHE_TTL = 4 * 60 * 60 * 1000; // IP 定位缓存 4 小时
     var REQUEST_GAP = 300; // 请求间隔 300ms（QPS=5 足够）
-    var RETRY_DELAY = 1500; // 限流重试间隔 1.5s
     var API_BASE = "https://apis.map.qq.com/ws";
-
-    // 全局单例：防止并发请求 & Swup 切页重复触发
-    var _pending = null;
 
     var weatherIconMap = {
       晴天: "mdi--weather-sunny",
@@ -363,19 +359,18 @@ const className = Astro.props.class;
       return status === 101 || status === 102;
     }
 
-    // JSONP 请求封装：自动检测限流并重试
-    function jsonpWithRetry(url, maxRetries) {
-      var retries = maxRetries || 0;
-      function attempt() {
-        return jsonp(url).then(function (data) {
-          if (isRateLimited(data.status) && retries > 0) {
-            retries--;
-            return delay(RETRY_DELAY).then(attempt);
-          }
-          return data;
-        });
-      }
-      return attempt();
+    // JSONP 请求封装（V8）：限流码 101/102 不重试、直接抛错。
+    // 原实现以 1.5s 间隔重试 2 次，限流期间每访客请求 ×3 放大；
+    // 天气为低优先级数据，限流时直接走错误提示（配合缓存展示）即可。
+    // 注：不改为 fetch——腾讯位置服务 API 无 CORS 头，
+    // 浏览器 fetch 会被跨域拦截，JSONP 是纯前端方案下唯一可用通道。
+    function jsonpOnce(url) {
+      return jsonp(url).then(function (data) {
+        if (isRateLimited(data.status)) {
+          throw new Error("weather rate-limited");
+        }
+        return data;
+      });
     }
 
     function loadWeather() {
@@ -408,16 +403,15 @@ const className = Astro.props.class;
         return;
       }
 
-      // 请求天气：给定 adcode，限流自动重试
+      // 请求天气：给定 adcode（限流不重试，见 jsonpOnce）
       function fetchWeather(adcode) {
-        return jsonpWithRetry(
+        return jsonpOnce(
           API_BASE +
             "/weather/v1/?key=" +
             key +
             "&adcode=" +
             adcode +
             "&type=now&output=jsonp",
-          2,
         ).then(function (wxData) {
           if (wxData.status === 0 && wxData.result) {
             return wxData.result;
@@ -432,9 +426,8 @@ const className = Astro.props.class;
       if (cachedAdcode) {
         adcodePromise = Promise.resolve(cachedAdcode);
       } else {
-        adcodePromise = jsonpWithRetry(
+        adcodePromise = jsonpOnce(
           API_BASE + "/location/v1/ip?key=" + key + "&output=jsonp",
-          2,
         )
           .then(function (ipData) {
             if (

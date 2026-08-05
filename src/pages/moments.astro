@@ -36,6 +36,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:href="@{/moments/rss.xml}"
         data-no-swup
         target="_blank"
+        rel="noopener noreferrer"
         class="btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
       >
         <span
@@ -169,7 +170,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   class="moment-media-audio w-full max-w-lg"></audio>
                 <a
                   th:if="${momentItem.type.name == 'POST'}"
-                  th:href="${momentItem.url}"
+                  th:href="${momentItem.url != null and (momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/')) ? momentItem.url : null}"
                   th:classappend="${mediaCount == 5 and mediumStat.index < 2 ? ' moment-media-item-wide' : ''}"
                   class="moment-media-item btn-regular min-h-20 max-w-full rounded-xl px-4 font-bold"
                 >
