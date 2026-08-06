@@ -1,0 +1,72 @@
+@reference "./global.css";
+
+/* 主题切换动画（View Transitions API）：
+   JS（theme-transition.ts）负责：加 html.theme-anim-{style} 类、设
+   --theme-anim-duration/easing 变量、startViewTransition，以及把
+   buildKeyframes 生成的【数值化 @keyframes】（具体 px，无 var/calc——
+   根治 keyframes 中 var/calc 解析不可靠导致的圆心偏移/终点未达问题）
+   运行时注入 <style id="theme-anim-keyframes">。本文件只保留选择器、
+   时长/缓动与 UA 动画覆盖。
+   降级（老浏览器 / reduced-motion / none / duration=0）由 JS 主闸直调，不经此层。
+   基础规则必须展开书写（不能用 html:is(...) 门控）：实测 Chrome 对
+   html:is(.theme-anim-*) ::view-transition-* 的后代匹配不生效，动画时长
+   会回落 UA 默认 250ms（表现为"改 EASING_DURATION 无变化"）。
+   展开后每类选择器同时是门控：仅主题切换的 VT 生效，不劫持其他 VT。 */
+html.theme-anim-fade::view-transition-old(root),
+html.theme-anim-fade::view-transition-new(root),
+html.theme-anim-circle::view-transition-old(root),
+html.theme-anim-circle::view-transition-new(root),
+html.theme-anim-wipe::view-transition-old(root),
+html.theme-anim-wipe::view-transition-new(root) {
+  animation-duration: var(--theme-anim-duration, 500ms);
+  animation-timing-function: var(
+    --theme-anim-easing,
+    cubic-bezier(0.4, 0, 0.2, 1)
+  );
+  animation-fill-mode: both;
+  /* 快照互不重叠时 UA 默认的 plus-lighter 混色会在边界产生 1px 叠色 */
+  mix-blend-mode: normal;
+}
+
+html.theme-anim-fade::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+html.theme-anim-fade::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+/* circle 采用单向扩散：旧快照保持全屏静止（不做收缩动画），圆外始终是
+   完整旧主题，新主题圆从按钮圆心扩张到盖满视口，无「圆外向边界收缩」观感 */
+html.theme-anim-circle::view-transition-old(root) {
+  animation: none;
+}
+html.theme-anim-circle::view-transition-new(root) {
+  animation-name: theme-circle-in;
+}
+/* wipe 的旧快照保持全屏静止（不裁切，与 circle 同策略）：new 条带
+   （clip-path 裁切）覆盖其上，动画结束 new 盖满遮住 old——避免旧快照
+   的 clip-path fill 在动画结束后失效回退显示旧主题（"闪回亮色一帧"） */
+html.theme-anim-wipe::view-transition-old(root) {
+  animation: none;
+}
+html.theme-anim-wipe::view-transition-new(root) {
+  animation-name: theme-wipe-in;
+}
+
+/* circle/wipe 用 clip-path 揭示快照：覆盖 UA 默认的
+   ::view-transition-image-pair(root) 250ms 交叉淡化（不受 --theme-anim-duration
+   控制），避免淡入与扩散叠加产生闪烁（同样展开书写，见上注释） */
+html.theme-anim-circle::view-transition-image-pair(root),
+html.theme-anim-wipe::view-transition-image-pair(root) {
+  animation: none;
+}
+
+/* @keyframes theme-fade-* / theme-circle-in / theme-wipe-* 由 JS 在
+   buildKeyframes 中数值化生成并注入（具体 px，无 var/calc） */
+
+/* 兜底：JS 主闸已在 reduce 下跳过动画，此处仅防未来任何不经 JS 闸门的 VT 触发 */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

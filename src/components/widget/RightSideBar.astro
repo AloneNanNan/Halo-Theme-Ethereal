@@ -20,7 +20,7 @@ const thClassappend = Astro.props["th:classappend"] || "";
 
 <aside
   id="right-sidebar"
-  class:list={[className, "w-full"]}
+  class:list={[className, "w-full", "onload-animation"]}
   th:classappend={thClassappend}
 >
   {/* Profile：不吸顶，随页面滚动（两种布局模式一致） */}

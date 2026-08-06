@@ -49,11 +49,36 @@ export interface Credit {
 // ========== 样式 ==========
 export interface Style {
   themeColor: ThemeColor;
+  colorScheme?: ColorScheme;
   color_scheme: string;
   enable_change_color_scheme: boolean;
   styleSwitches?: StyleSwitches;
   floatingButtons?: FloatingButtons;
   externalFont?: ExternalFont;
+}
+
+export interface ColorScheme {
+  color_scheme: string;
+  enable_change_color_scheme: boolean;
+  colorSchemeAnimation?: ColorSchemeAnimation;
+}
+
+export interface ColorSchemeAnimation {
+  // 切换动画样式：fade 淡入淡出（默认）/ circle 圆形扩散 / wipe 角度擦除 / none 无动画
+  style?: "fade" | "circle" | "wipe" | "none";
+  // 速度曲线：default 默认 / linear 线性 / ease-in 缓入 / ease-out 缓出 /
+  // ease-in-out 缓入缓出 / expo-out 指数缓出 / back-out 回弹
+  // 动画时长写死并随曲线自动匹配（EASING_DURATION），不可单独配置
+  easing?:
+    | "default"
+    | "linear"
+    | "ease-in"
+    | "ease-out"
+    | "ease-in-out"
+    | "expo-out"
+    | "back-out";
+  // 仅擦除样式生效：扫动方向（度），0° 从左到右，90° 从上到下
+  angle?: number;
 }
 
 export interface ExternalFont {

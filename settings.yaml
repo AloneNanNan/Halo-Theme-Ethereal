@@ -165,6 +165,59 @@ spec:
               name: enable_change_color_scheme
               label: 允许访客切换配色
               value: true
+            - $formkit: group
+              name: colorSchemeAnimation
+              label: 配色切换动画
+              value:
+                style: fade
+                angle: 90
+                easing: default
+              children:
+                - $formkit: select
+                  name: style
+                  id: style
+                  label: 切换动画样式
+                  value: fade
+                  help: "访客点击明暗切换按钮时的整页过渡动画；无动画为瞬时切换。圆形扩散与擦除基于 View Transitions 快照裁剪，兼容性随平台而异：macOS Chrome 下圆形扩散降级为淡入淡出、擦除可能出现边缘残留（浏览器坐标兼容限制）；其余平台正常"
+                  options:
+                    - label: 淡入淡出
+                      value: fade
+                    - label: 圆形扩散
+                      value: circle
+                    - label: 擦除
+                      value: wipe
+                    - label: 无动画
+                      value: none
+                - $formkit: select
+                  name: easing
+                  label: 速度曲线
+                  value: default
+                  help: "过渡动画的缓动曲线：指数缓出扩散感强，回弹更活泼，线性最机械；动画时长随曲线自动匹配（不可单独设置）"
+                  options:
+                    - label: 默认
+                      value: default
+                    - label: 线性
+                      value: linear
+                    - label: 缓入
+                      value: ease-in
+                    - label: 缓出
+                      value: ease-out
+                    - label: 缓入缓出
+                      value: ease-in-out
+                    - label: 指数缓出
+                      value: expo-out
+                    - label: 回弹
+                      value: back-out
+                - $formkit: number
+                  name: angle
+                  id: angle
+                  if: "$get(style).value === 'wipe'"
+                  label: 擦除角度（度）
+                  min: 0
+                  max: 360
+                  step: 15
+                  value: 90
+                  help: "仅擦除样式生效：0° 从左到右，90° 从上到下，180° 从右到左；未选擦除样式时隐藏该设置"
         - $formkit: group
           name: styleSwitches
           label: 样式开关

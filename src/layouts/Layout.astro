@@ -72,6 +72,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
   th:data-hue-fixed="${theme.config?.style?.themeColor?.fixed}"
+  th:data-theme-anim-style="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
+  th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
+  th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
   data-overlayscrollbars-initialize
 >
@@ -306,12 +309,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       }
     </style>
     <script>
-      // 右侧边栏入场动画，仅首次加载执行一次
-      if (!window.__rsAnimated) {
-        window.__rsAnimated = true;
-        var rs = document.getElementById("right-sidebar");
-        if (rs) rs.classList.add("onload-animation");
-      }
+      // 右侧边栏入场动画类已静态写在 RightSideBar 组件上（首帧即带动画，
+      // 避免此前 JS 后加类导致"先显示在最终位置再播放动画"的闪烁）。
       // Swup 切换后清除动画类
       document.addEventListener("swup:contentReplaced", function () {
         var rs = document.getElementById("right-sidebar");

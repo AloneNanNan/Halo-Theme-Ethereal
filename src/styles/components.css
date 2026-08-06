@@ -179,6 +179,13 @@
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
+  /* 加载早期（页面未就绪）wave 不过渡：syncHomeClass 首次设置 transform 时
+     （首页 banner 延伸 30vh）若带 700ms 过渡会形成"横向条带"位移观感；
+     app.ts 首次同步完成后（双 rAF）给 <html> 加 page-ready 恢复平滑过渡 */
+  html:not(.page-ready) #wave-container {
+    transition: none;
+  }
+
   .enable-banner #banner-wrapper {
     @apply h-(--banner-height-home);
   }
