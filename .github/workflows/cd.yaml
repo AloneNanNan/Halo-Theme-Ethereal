@@ -10,14 +10,37 @@ on:
         required: true
         type: string
 
+# 同一 Release 只同步一次，重复触发排队执行
+concurrency:
+  group: cd-${{ github.event.release.id || github.event.inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
   appstore-release:
     name: Sync to Halo App Store
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') || github.event_name == 'workflow_dispatch' }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    if: ${{ (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch' }}
     steps:
       # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
       - uses: actions/checkout@v6
+
+      # 手动触发时前置校验：tag 必须以 v 开头且 Release 存在（404 时给出友好报错）
+      - name: 校验 Release（手动触发）
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [[ "$TAG" != v* ]]; then
+            echo "::error::Release tag 必须以 v 开头（如 v1.0.4），当前输入：$TAG"
+            exit 1
+          fi
+          gh api "/repos/{owner}/{repo}/releases/tags/$TAG" --jq .id > /dev/null \
+            || { echo "::error::Release $TAG 不存在，请先在 GitHub 发布该 tag"; exit 1; }
+          echo "Release $TAG 存在"
 
       # 解析 Release ID 和 tag（release 事件直接用，手动触发时按 tag 查询）
       - name: Resolve Release
@@ -35,11 +58,25 @@ jobs:
             echo "release-id=$ID" >> "$GITHUB_OUTPUT"
           fi
 
-      # 下载你手动上传到 GitHub Release 的制品附件（如 Ethereal-1.0.4.zip）
+      # 下载 Release 附件中的主题包（如 Ethereal-1.0.4.zip）
       - name: Download Release Assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release download "${{ steps.release.outputs.tag }}" --dir dist
+        run: gh release download "${{ steps.release.outputs.tag }}" --dir dist --pattern "*.zip"
+
+      # 下载后校验：必须存在 zip 附件，缺失时列出该 Release 实际资产便于排查
+      - name: 校验下载的附件
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ZIP_COUNT=$(ls dist/*.zip 2>/dev/null | wc -l)
+          if [[ "$ZIP_COUNT" -eq 0 ]]; then
+            echo "::error::Release 附件中没有 zip 文件，请先用 CI 构建并上传主题包"
+            echo "当前 Release 的附件："
+            gh release view "${{ steps.release.outputs.tag }}" --json assets --jq '.assets[].name' 2>/dev/null || true
+            exit 1
+          fi
+          ls -la dist/
 
       # 同步到 Halo 应用市场
       - name: Release to App Store

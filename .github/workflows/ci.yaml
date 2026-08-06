@@ -1,0 +1,150 @@
+name: CI (Build & Release)
+
+on:
+  # 自动触发：push 到 main 且 theme.yaml 版本较上一提交增大合规时，构建并自动发布
+  push:
+    branches: [main]
+  # 手动触发：输入 tag 发布到指定 Release；留空则仅构建并保存 artifact
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "构建完成后将 zip 上传到该 Release tag（留空则仅保存为 artifact）"
+        required: false
+        type: string
+
+# 同一分支上重复触发时排队执行，避免并发构建竞争 Release 资产（上传以最后一次为准）
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # 仅 push 事件需要检测版本是否增大；手动触发直接构建
+  version-check:
+    name: 检测 theme.yaml 版本号
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      trigger: ${{ steps.check.outputs.trigger }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # 需要 git 历史读取上一提交的版本号
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: 版本增大且合规检查
+        id: check
+        run: |
+          if node scripts/check-version-bump.mjs; then
+            echo "trigger=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build & Release Theme
+    needs: version-check
+    # push 触发：版本增大合规时才构建；手动触发：直接构建
+    if: (github.event_name == 'push' && needs.version-check.outputs.trigger == 'true') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # 创建 tag 与 Release 需要
+    steps:
+      - uses: actions/checkout@v6
+
+      # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm check
+
+      - name: Build & Package
+        run: pnpm build
+
+      # 质量门：独立可复用的 composite action（.github/actions/quality-gate）
+      - name: 质量门校验
+        uses: ./.github/actions/quality-gate
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethereal-theme
+          path: dist/*.zip
+          if-no-files-found: error
+
+      # 自动触发（push）：按 theme.yaml 的 version 自动创建 tag（远程已存在则跳过，幂等）
+      - name: 自动创建 tag（push 触发）
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(grep -m1 '^[[:space:]]*version:' theme.yaml | sed -E 's/^[[:space:]]*version:[[:space:]]*["'\'']?([^"'\''[:space:]]+).*/\1/')
+          [ -n "$VERSION" ] || { echo "::error::无法从 theme.yaml 解析 version 字段"; exit 1; }
+          TAG="v$VERSION"
+          echo "tag=$TAG" >> "$GITHUB_ENV"
+          if git ls-remote --tags origin "$TAG" | grep -q .; then
+            echo "远程已存在 tag $TAG，跳过创建"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+            echo "已创建并推送 tag $TAG"
+          fi
+
+      # 手动触发：校验 tag 必须以 v 开头，且与 theme.yaml 的 version 一致
+      - name: 校验 Release tag（手动触发）
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [[ "$TAG" != v* ]]; then
+            echo "::error::Release tag 必须以 v 开头（如 v1.0.7），当前输入：$TAG"
+            exit 1
+          fi
+          # version 位于 spec 嵌套层（如 spec.version），需容忍行首缩进
+          VERSION=$(grep -m1 '^[[:space:]]*version:' theme.yaml | sed -E 's/^[[:space:]]*version:[[:space:]]*["'\'']?([^"'\''[:space:]]+).*/\1/')
+          [ -n "$VERSION" ] || { echo "::error::无法从 theme.yaml 解析 version 字段"; exit 1; }
+          if [[ "$TAG" != "v$VERSION" ]]; then
+            echo "::error::Release tag（$TAG）与 theme.yaml 版本（v$VERSION）不一致"
+            exit 1
+          fi
+          echo "校验通过：tag $TAG 与 theme.yaml 版本一致"
+
+      # 上传 zip 到 Release；不存在时自动创建（说明取 release.md），已存在时更新资产
+      - name: 上传到 GitHub Release
+        if: github.event_name == 'push' || github.event.inputs.tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            TAG="${{ env.tag }}"
+          else
+            TAG="${{ github.event.inputs.tag }}"
+          fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.zip --clobber
+            if [ -f release.md ]; then
+              gh release edit "$TAG" --notes-file release.md
+            fi
+            echo "已更新 Release $TAG 的资产"
+          else
+            if [ -f release.md ]; then
+              gh release create "$TAG" dist/*.zip --notes-file release.md
+            else
+              gh release create "$TAG" dist/*.zip
+            fi
+            echo "已创建 Release $TAG 并上传资产"
+          fi

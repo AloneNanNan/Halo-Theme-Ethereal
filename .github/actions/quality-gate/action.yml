@@ -1,0 +1,28 @@
+name: Quality Gate
+description: 校验主题包构建产物——zip 存在、HTML 注释已剥离、Thymeleaf 内联表达式完好
+
+inputs:
+  zip-path:
+    description: 待校验的 zip 路径（默认为 dist/ 下第一个 zip）
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: 验证产物
+      shell: bash
+      run: |
+        ZIP="${{ inputs.zip-path }}"
+        if [ -z "$ZIP" ]; then
+          ZIP=$(ls dist/*.zip 2>/dev/null | head -1)
+        fi
+        [ -n "$ZIP" ] || { echo "::error::dist 下未找到 zip 产物"; exit 1; }
+        echo "产物: $ZIP"
+        if unzip -p "$ZIP" templates/index.html | grep -q '<!--'; then
+          echo "::error::产物仍含 HTML 注释"
+          exit 1
+        fi
+        COUNT=$(unzip -p "$ZIP" templates/index.html | grep -o '/\*\[\[' | wc -l)
+        [ "$COUNT" -ge 1 ] || { echo "::error::产物中未找到 Thymeleaf 内联表达式（可能被误剥离）"; exit 1; }
+        echo "质量门通过：注释已剥离、Thymeleaf 内联表达式 $COUNT 处完好"

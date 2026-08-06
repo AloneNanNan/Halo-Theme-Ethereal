@@ -9,8 +9,10 @@
     "build": "astro build && pnpm package",
     "build:pkg": "pnpm build",
     "build:only": "astro build",
-    "package": "theme-package",
+    "strip:comments": "node scripts/strip-html-comments.mjs",
+    "package": "node scripts/package-theme.mjs",
     "astro": "astro",
+    "check": "astro check",
     "format": "prettier --write .",
     "prepare": "husky"
   },
@@ -43,6 +45,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@halo-dev/theme-package-cli": "^1.0.4",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
