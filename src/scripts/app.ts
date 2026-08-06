@@ -6,6 +6,7 @@ import "../styles/utilities.css";
 import "../styles/variables.css";
 import "../styles/comment-widget.css";
 import "../styles/base.css";
+import "../styles/theme-transition.css";
 import "../styles/components.css";
 import "../styles/markdown.css";
 import "../styles/transition.css";
@@ -33,7 +34,7 @@ import {
   destroyAll,
 } from "../utils/content-media";
 
-// ── 自定义滚动条（懒加载） ──
+// ── 自定义滚动条（懒加载，等入场动画结束后初始化） ──
 let scrollbarInitialized = false;
 function initCustomScrollbar() {
   if (scrollbarInitialized) return;
@@ -41,19 +42,58 @@ function initCustomScrollbar() {
   const bodyElement = document.querySelector("body");
   if (!bodyElement) return;
   import("overlayscrollbars").then(({ OverlayScrollbars }) => {
-    OverlayScrollbars(
-      { target: bodyElement, cancel: { nativeScrollbarsOverlaid: true } },
-      {
-        scrollbars: {
-          theme: "scrollbar-base scrollbar-auto py-1",
-          autoHide: "move",
-          autoHideDelay: 500,
-          autoHideSuspend: false,
+    const mount = () => {
+      OverlayScrollbars(
+        { target: bodyElement, cancel: { nativeScrollbarsOverlaid: true } },
+        {
+          scrollbars: {
+            theme: "scrollbar-base scrollbar-auto py-1",
+            autoHide: "move",
+            autoHideDelay: 500,
+            autoHideSuspend: false,
+          },
         },
-      },
+      );
+    };
+    // OverlayScrollbars 初始化会把 body 内容包裹进滚动容器（appendChild 移动全部
+    // 元素），Chrome 对被移动且动画未结束的元素会重建 CSS 动画对象，导致入场动画
+    // "播放完成后再重放一次"（复现时间点即 overlayscrollbars 下载完成瞬间）。
+    // 等 fade-in-up 全部结束再初始化——此时动画已被下方的一次性保护清理，
+    // 移动不再触发重放；2s 兜底防动画异常卡住。等待期间原生滚动条正常工作。
+    const running = document.getAnimations().filter(
+      (a) => a instanceof CSSAnimation && a.animationName === "fade-in-up",
     );
+    if (running.length > 0) {
+      void Promise.all(
+        running.map((a) => a.finished.catch(() => undefined)),
+      ).then(mount);
+      setTimeout(mount, 2000);
+    } else {
+      mount();
+    }
   });
 }
+
+// ── 入场动画一次性保护 ──
+// 浏览器会因元素移动（滚动容器包裹等）/样式重算重建 CSS 动画对象，使入场动画
+// 从头重放。用 document 级事件委托在动画结束/取消后清理：
+//  - .onload-animation 类元素：移除类（回到静态可见状态，重放无动画可播）
+//  - banner 标题/副标题（动画由 CSS 选择器定义，无类可移除）：内联固化终态
+//    （opacity: 1 + animation: none）
+function removeOnloadAnimation(e: AnimationEvent) {
+  const el = e.target as Element | null;
+  if (!el) return;
+  if (el.classList.contains("onload-animation")) {
+    el.classList.remove("onload-animation");
+  }
+  if (el.id === "banner-title" || el.id === "banner-subtitle-wrapper") {
+    const style = (el as HTMLElement).style;
+    style.opacity = "1";
+    style.animation = "none";
+  }
+}
+document.addEventListener("animationend", removeOnloadAnimation);
+document.addEventListener("animationcancel", removeOnloadAnimation);
 
 // ── Banner 显示 ──
 function showBanner() {
@@ -121,9 +161,10 @@ function setupSwup() {
   if ((window as any).__etherealSwupHandlersBound) return;
   (window as any).__etherealSwupHandlersBound = true;
 
-  window.swup.hooks.on("link:click", () => {
-    document.documentElement.style.setProperty("--content-delay", "0ms");
-  });
+  // 注：曾在此把 --content-delay 改为 0ms（让换页后内容立即浮现），但该变量被全部
+  // 入场动画的 animation-delay: calc(var(--content-delay) + Xms) 消费，点击时修改
+  // 会重算已完成动画的 delay（方向依赖的重启风险，且单向永不恢复）——已移除，
+  // 保持 150ms 默认错落延迟。
   window.swup.hooks.on("content:replace", initCustomScrollbar);
   window.swup.hooks.on("content:replace", destroyAll, { before: true });
   window.swup.hooks.on("content:replace", () => {
@@ -160,6 +201,14 @@ function setupSwup() {
 // ── 初始化 ──
 function init() {
   syncHomeClass();
+  // 首次同步完成：恢复 wave 平滑过渡（加载早期被 html:not(.page-ready) 抑制，
+  // 避免 syncHomeClass 首次设置 transform 时产生 700ms 条带位移）。必须双 rAF
+  // 延迟：同帧加 page-ready 会让渲染时过渡仍生效（transform 与 class 同帧提交）。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.documentElement.classList.add("page-ready");
+    });
+  });
   setTheme(getStoredTheme());
   setHue(getHue());
   initCustomScrollbar();
