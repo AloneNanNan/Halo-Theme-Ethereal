@@ -1,3 +1,7 @@
+# 自动按 package.json 的 packageManager 字段切换 pnpm 版本：
+# 仓库 lockfile 为 pnpm 10 生成（lockfileVersion 9.0），若协作者用其他
+# 大版本（如 pnpm 11）运行，会把 lockfile 迁移成自己的格式反复弄脏工作区。
+managePackageManagerVersions: true
 allowBuilds:
   esbuild: true
   sharp: true
