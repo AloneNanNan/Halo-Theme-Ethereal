@@ -8,9 +8,13 @@ html.is-animating .transition-swup-fade {
   @apply translate-y-4 opacity-0;
 }
 
-/* 右侧边栏：作为 swup 容器以更新 TOC，但完全禁用过渡动画 */
+/* 右侧边栏：作为 swup 容器以更新 TOC，但完全禁用过渡动画。
+   swup-visited：首次换页（visit:start）起永久挂在 <html> 上——换页换入的新
+   aside 虽带静态 onload-animation 类（首刷消闪烁所需），此规则令其动画永不
+   重播且保持可见（覆盖 .onload-animation 的 opacity:0），恢复"仅首刷播一次"。 */
 html.is-changing #right-sidebar,
-html.is-animating #right-sidebar {
+html.is-animating #right-sidebar,
+html.swup-visited #right-sidebar {
   transition: none !important;
   animation: none !important;
   opacity: 1 !important;

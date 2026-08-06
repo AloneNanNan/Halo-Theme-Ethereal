@@ -192,6 +192,10 @@ function setupSwup() {
   });
   window.swup.hooks.on("visit:start", () => {
     restoreOriginalHistoryStateHandlers();
+    // 标记会话内已发生换页（<html> 不被 Swup 替换，标记永久有效）：
+    // #right-sidebar 是 swup 容器，换页会换入带静态 onload-animation 类的新
+    // aside，transition.css 据此标记永久抑制其入场动画（首刷动画不受影响）。
+    document.documentElement.classList.add("swup-visited");
     document.getElementById("page-height-extend")?.classList.remove("hidden");
     document.getElementById("toc-wrapper")?.classList.add("toc-not-ready");
   });
