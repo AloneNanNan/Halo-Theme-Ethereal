@@ -919,13 +919,7 @@ const layoutId = `${widgetId}-layout`;
       })
       .finally(() => setLoading(false));
 
-    // Swup 页面切换时清理音频资源（每次 contentReplaced 都执行，不用 once）
-    document.addEventListener("swup:contentReplaced", function cleanup() {
-      try {
-        audio.pause();
-        audio.src = "";
-        audio.load();
-      } catch (e) {}
-    });
+    // 换页清理音频：Swup 容器替换时旧 audio 元素随之销毁；
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
   })();
 </script>

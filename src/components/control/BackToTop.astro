@@ -219,7 +219,8 @@ import { Icon } from "astro-icon/components";
     }
   }
   __moveFloatingControls();
-  document.addEventListener("swup:contentReplaced", __moveFloatingControls);
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
+  // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
 
   // 悬浮按钮点击：document 级事件委托，替代三个内联 onclick（CSP 友好）。
   // 外层是 <div id=...>、内层是 <button>，点击目标可能是内部图标，用 closest 归一到外层 id；
@@ -269,7 +270,8 @@ import { Icon } from "astro-icon/components";
       btn.classList.toggle("hide", normalized === "/");
     }
     updateHomeBtn();
-    document.addEventListener("swup:contentReplaced", updateHomeBtn);
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
+    // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 
   // 有评论区时显示评论按钮
@@ -280,7 +282,8 @@ import { Icon } from "astro-icon/components";
       btn.classList.toggle("hide", !document.getElementById("comment"));
     }
     updateCommentBtn();
-    document.addEventListener("swup:contentReplaced", updateCommentBtn);
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
+    // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 
   // 自定义按钮位置：根据下方可见按钮数量自动计算
@@ -326,9 +329,7 @@ import { Icon } from "astro-icon/components";
       { passive: true },
     );
 
-    // 页面切换后 DOM 更新
-    document.addEventListener("swup:contentReplaced", function () {
-      setTimeout(updateCustomBtnsPosition, 50);
-    });
+    // 页面切换后 DOM 更新：由 SwupScriptsPlugin 换页重执行本脚本覆盖。
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
   })();
 </script>

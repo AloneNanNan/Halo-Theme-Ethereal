@@ -464,9 +464,7 @@ const className = Astro.props.class;
     }
 
     loadWeather();
-    document.addEventListener("swup:contentReplaced", function () {
-      // Swup 切页时已有缓存则直接渲染，不发请求
-      loadWeather();
-    });
+    // 换页后数据刷新：由 SwupScriptsPlugin 重执行本脚本时自动覆盖；
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
   })();
 </script>

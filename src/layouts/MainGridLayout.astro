@@ -327,8 +327,8 @@ const {
         ensureBound();
       }
 
-      // Swup 页面切换后重新确认（事件委托已在 document 上，只需确保已绑定）
-      document.addEventListener("swup:contentReplaced", ensureBound);
+      // Swup 页面切换后重新确认（事件委托已在 document 上；
+      // SwupScriptsPlugin 换页重执行时 ensureBound 跳过——冗余注册已删除）。
     })();
   </script>
 </Layout>

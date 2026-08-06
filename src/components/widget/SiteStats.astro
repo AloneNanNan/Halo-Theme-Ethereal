@@ -444,16 +444,9 @@ const style = Astro.props.style;
       refreshSiteStats();
     }
 
-    // swup 页面切换后刷新（使用 DOM 事件，兼容 swup 4.x）
-    // SwupScriptsPlugin 会重新执行内联脚本，用全局标记防止重复注册
-    if (!window.__siteStatsSwupBound) {
-      window.__siteStatsSwupBound = true;
-      document.addEventListener("swup:contentReplaced", function () {
-        setTimeout(refreshSiteStats, 150);
-      });
-    } else {
-      // 脚本被 SwupScriptsPlugin 重新执行，直接刷新
-      refreshSiteStats();
-    }
+    // swup 页面切换后：SwupScriptsPlugin 在每次换页时重执行本脚本，
+    // 直接调用 refreshSiteStats 完成数据刷新（原 swup:contentReplaced
+    // 监听删除——v3 事件名，v4 分发 swup:{hook}，从未触发）。
+    refreshSiteStats();
   })();
 </script>

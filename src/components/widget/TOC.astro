@@ -41,7 +41,9 @@ const className = Astro.props.class;
       } else {
         this.refresh();
       }
-      document.addEventListener("swup:contentReplaced", this.refresh);
+
+      // 换页后刷新由 app.ts 中 swup.hooks.on("content:replace") 的真实钩子
+      // 承担；原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
     }
 
     disconnectedCallback() {
@@ -50,7 +52,6 @@ const className = Astro.props.class;
       this.removeWindowListeners();
       this.tocEl?.removeEventListener("click", this.handleAnchorClick);
       document.removeEventListener("DOMContentLoaded", this.refresh);
-      document.removeEventListener("swup:contentReplaced", this.refresh);
     }
 
     refresh = () => {

@@ -91,10 +91,6 @@
   }
 
   // Swup 页面切换后重新初始化
-  document.addEventListener("swup:contentReplaced", function () {
-    document.querySelectorAll("[data-collapse-bound]").forEach(function (el) {
-      el.dataset.collapseBound = "";
-    });
-    init();
-  });
+  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
 })();

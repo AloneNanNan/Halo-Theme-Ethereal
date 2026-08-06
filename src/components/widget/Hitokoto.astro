@@ -236,9 +236,7 @@ const className = Astro.props.class;
       initHitokoto();
     }
 
-    // Swup 页面切换后仅重新绑定 DOM，不重新请求
-    document.addEventListener("swup:contentReplaced", function () {
-      setTimeout(initHitokoto, 100);
-    });
+    // 换页后重新初始化：由 SwupScriptsPlugin 重执行本脚本时自动覆盖；
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
   })();
 </script>

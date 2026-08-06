@@ -3335,10 +3335,8 @@
       window.__etherealSyncCurrentPostUrl &&
         window.__etherealSyncCurrentPostUrl();
     });
-    document.addEventListener("swup:contentReplaced", function () {
-      window.__etherealSyncCurrentPostUrl &&
-        window.__etherealSyncCurrentPostUrl();
-    });
+    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
+    // 每次进文章页时 SwupScriptsPlugin 重执行本脚本即同步当前文章 URL。
   }
 })();
 // 文章点赞按钮（Halo API 服务端存储）
@@ -4325,7 +4323,8 @@
     safeInit();
   }
 
-  document.addEventListener("swup:contentReplaced", safeInit);
+  // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
 })();
 // 复制功能
 (function () {
@@ -4394,13 +4393,8 @@
     init();
   }
 
-  // Swup 页面切换后重新初始化
-  document.addEventListener("swup:contentReplaced", function () {
-    document.querySelectorAll("[data-copy-bound]").forEach(function (el) {
-      el.dataset.copyBound = "";
-    });
-    init();
-  });
+  // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
 })();
 // 文章打赏模态框（微信/支付宝收款二维码）
 (function () {
@@ -4612,6 +4606,6 @@
     safeInit();
   }
 
-  // Swup 页面切换后重新绑定（新按钮 DOM）
-  document.addEventListener("swup:contentReplaced", safeInit);
+  // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
 })();
