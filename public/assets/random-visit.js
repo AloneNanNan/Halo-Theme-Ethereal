@@ -2,6 +2,12 @@
 // 事件委托，不受 Swup 无刷新切换影响
 // 点击后图标匀速旋转 1.5 秒再执行随机跳转，增加趣味性
 (function () {
+  // 只绑定一次：本脚本在 links 页面内（Swup 容器），每次进出该页都会被
+  // SwupScriptsPlugin 克隆重执行——不守卫则多个闭包各持独立 spinning 标志，
+  // 换页 N 次后一次点击会触发 N 个委托、打开 N 个随机链接。
+  if (window.__randomVisitBound) return;
+  window.__randomVisitBound = true;
+
   var SPIN_DELAY = 1500; // 旋转等待时长（ms）
   var spinning = false; // 防止重复点击
 

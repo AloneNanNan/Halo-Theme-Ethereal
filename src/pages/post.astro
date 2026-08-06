@@ -385,6 +385,9 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       var speed = 40;
       var timer = null;
       function type() {
+        // 页面已被换出（本脚本在 swup 容器内，容器替换后 el 脱离文档）：
+        // 终止打字链，避免在游离 DOM 上空跑
+        if (!el.isConnected) return;
         if (i < text.length) {
           el.textContent += text.charAt(i);
           i++;
@@ -395,7 +398,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       }
       timer = setTimeout(type, 600);
       // I24：后台标签页暂停打字（进度保留，回前台继续）
-      document.addEventListener("visibilitychange", function () {
+      function onVisibilityChange() {
         if (document.hidden) {
           if (timer) {
             clearTimeout(timer);
@@ -404,7 +407,27 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         } else if (!timer && i < text.length) {
           timer = setTimeout(type, speed);
         }
-      });
+      }
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      // 换页自清理：本脚本随 SwupScriptsPlugin 在每次进文章页时重执行，
+      // 若不在离开时销毁，visibilitychange 监听器会逐次累积泄漏。
+      // astro:before-swap 由 @swup/astro 在换出本页前分发（换入时不存在本监听器，
+      // 不会误伤新页面）；astro:after-swap 兜底（el 已脱离文档才执行，同理不误伤）。
+      // 注：不能用 swup:contentReplaced——Swup v3 事件名，v4 分发 swup:{hook}，从未触发。
+      function destroy() {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        document.removeEventListener("astro:before-swap", destroy);
+        document.removeEventListener("astro:after-swap", onAfterSwap);
+      }
+      function onAfterSwap() {
+        if (!el.isConnected) destroy();
+      }
+      document.addEventListener("astro:before-swap", destroy);
+      document.addEventListener("astro:after-swap", onAfterSwap);
     })();
   </script>
   <script
@@ -536,10 +559,10 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         processAndInsert();
       }
 
-      // Swup 页面切换后重新处理
-      document.addEventListener("swup:contentReplaced", function () {
-        setTimeout(processAndInsert, 0);
-      });
+      // 注：Swup 换页后的重新处理由 SwupScriptsPlugin 重执行本脚本覆盖（每次进
+      // 文章页脚本都重新跑一遍并立即 processAndInsert）。原 swup:contentReplaced
+      // 监听已删除——那是 Swup v3 事件名，v4 分发 swup:{hook}（如
+      // swup:content:replace），该监听从未触发，且每进一次文章页就累积一个。
     })();
   </script>
 </MainGridLayout>

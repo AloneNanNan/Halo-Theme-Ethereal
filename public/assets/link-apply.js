@@ -22,14 +22,19 @@
 
   var DEFAULT_ERROR = "暂时无法提交，请稍后再试";
 
-  var state = {
-    challengeId: null,
-    submitting: false,
-    // 点击冷却：防止连点刷出并发请求触发插件限流
-    captchaCooldownUntil: 0,
-    // 验证码是否已加载过：仅首次打开自动加载，之后打开面板不刷新，手动点击图片才刷新
-    captchaLoaded: false,
-  };
+  // 状态挂 window 共享：本脚本会被 SwupScriptsPlugin 在换页时克隆重执行，
+  // 新闭包必须操作同一份状态（监听器只在首次执行绑定一次，见文末守卫），
+  // 否则多个各持独立 state 的闭包会同时响应同一事件（重复提交/重复刷新验证码）。
+  var state =
+    window.__linkApplyState ||
+    (window.__linkApplyState = {
+      challengeId: null,
+      submitting: false,
+      // 点击冷却：防止连点刷出并发请求触发插件限流
+      captchaCooldownUntil: 0,
+      // 验证码是否已加载过：仅首次打开自动加载，之后打开面板不刷新，手动点击图片才刷新
+      captchaLoaded: false,
+    });
 
   function getModal() {
     return document.getElementById("link-apply-modal");
@@ -224,61 +229,68 @@
       });
   }
 
-  // 点击事件委托（兼容 Swup 重建 DOM）
-  document.addEventListener("click", function (e) {
-    var target = e.target;
-    if (!(target instanceof Element)) return;
+  // document 级监听器只绑一次（防重执行后多闭包重复响应，见文件头 state 注释）
+  if (!window.__linkApplyBound) {
+    window.__linkApplyBound = true;
 
-    if (target.closest("#link-apply-btn")) {
-      e.preventDefault();
-      openModal();
-      return;
-    }
-    if (target.closest("#link-apply-close")) {
-      closeModal();
-      return;
-    }
-    if (target.closest("#link-apply-backdrop")) {
-      closeModal();
-      return;
-    }
-    if (target.closest("#link-apply-captcha-img")) {
-      e.preventDefault();
-      refreshCaptcha();
-      return;
-    }
-  });
+    // 点击事件委托（兼容 Swup 重建 DOM）
+    document.addEventListener("click", function (e) {
+      var target = e.target;
+      if (!(target instanceof Element)) return;
 
-  // 表单提交委托
-  document.addEventListener("submit", function (e) {
-    var form = e.target;
-    if (form && form.id === "link-apply-form") {
-      e.preventDefault();
-      submitApplication();
-    }
-  });
+      if (target.closest("#link-apply-btn")) {
+        e.preventDefault();
+        openModal();
+        return;
+      }
+      if (target.closest("#link-apply-close")) {
+        closeModal();
+        return;
+      }
+      if (target.closest("#link-apply-backdrop")) {
+        closeModal();
+        return;
+      }
+      if (target.closest("#link-apply-captcha-img")) {
+        e.preventDefault();
+        refreshCaptcha();
+        return;
+      }
+    });
 
-  // Esc 关闭
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeModal();
-  });
+    // 表单提交委托
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (form && form.id === "link-apply-form") {
+        e.preventDefault();
+        submitApplication();
+      }
+    });
 
-  // Swup 页面切换后重置状态（模态框 DOM 会被整体替换）
-  document.addEventListener("swup:contentReplaced", function () {
-    document.body.style.overflow = "";
-    state.submitting = false;
-    state.challengeId = null;
-    // 页面切换后模态框 DOM 被重建（图片无 src），需重新加载验证码
-    state.captchaLoaded = false;
-    // 新页面若仍渲染了申请模态框（links 页面），重新挂载到 body
-    mountModalToBody();
-    // 离开 links 页面时，清理残留的模态框 DOM
-    if (!document.getElementById("link-apply-btn")) {
-      var modal = document.getElementById("link-apply-modal");
-      if (modal) modal.remove();
-    }
-  });
+    // Esc 关闭
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeModal();
+    });
 
-  // 首次加载时将模态框挂载到 body
+    // 换页后重置状态：模态框挂载在 body 下、不随 Swup 容器替换。
+    // 用 @swup/astro 文档化的 astro:after-swap（每次换页后分发）替代原
+    // swup:contentReplaced 监听——那是 Swup v3 事件名，v4 分发 swup:{hook}，从未触发。
+    document.addEventListener("astro:after-swap", function () {
+      document.body.style.overflow = "";
+      state.submitting = false;
+      state.challengeId = null;
+      // 页面切换后模态框 DOM 被重建（图片无 src），需重新加载验证码
+      state.captchaLoaded = false;
+      // 新页面若仍渲染了申请模态框（links 页面），重新挂载到 body
+      mountModalToBody();
+      // 离开 links 页面时，清理残留的模态框 DOM
+      if (!document.getElementById("link-apply-btn")) {
+        var modal = document.getElementById("link-apply-modal");
+        if (modal) modal.remove();
+      }
+    });
+  }
+
+  // 首次加载时将模态框挂载到 body（换页场景由上方 astro:after-swap 覆盖）
   mountModalToBody();
 })();

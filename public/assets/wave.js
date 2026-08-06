@@ -29,6 +29,12 @@
 
   if (!document.getElementById("wave-svg-1")) return;
 
+  // 只初始化一次：本脚本会被 SwupScriptsPlugin 在每次换页时克隆重执行，
+  // 而 #wave-container 位于 Layout（Swup 容器外）跨页面持久——不守卫则每次换页
+  // 叠加一条 rAF 动画链 + visibilitychange 监听 + IO 观察器（N 次换页 = N 倍每帧开销）。
+  if (window.__waveInited) return;
+  window.__waveInited = true;
+
   var speeds = [18, 12, 8];
   var running = true;
 
@@ -83,5 +89,7 @@
   }
 
   requestAnimationFrame(step);
-  document.addEventListener("swup:contentReplaced", setWaveViewBox);
+  // 原 swup:contentReplaced 同步监听已删除：Swup v3 事件名，v4 分发
+  // swup:{hook}（如 swup:content:replace），该监听从未触发；
+  // 且 rAF 链每帧持续同步 viewBox，无需换页时额外校准。
 })();

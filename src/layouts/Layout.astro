@@ -308,17 +308,11 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
     </style>
-    <script>
-      // 右侧边栏入场动画类已静态写在 RightSideBar 组件上（首帧即带动画，
-      // 避免此前 JS 后加类导致"先显示在最终位置再播放动画"的闪烁）。
-      // Swup 切换后清除动画类
-      document.addEventListener("swup:contentReplaced", function () {
-        var rs = document.getElementById("right-sidebar");
-        if (rs && rs.classList.contains("onload-animation")) {
-          rs.classList.remove("onload-animation");
-        }
-      });
-    </script>
+    <!-- 右侧边栏入场动画类静态写在 RightSideBar 组件上（首帧即带动画）；
+         换页防重播由 transition.css 的 html.swup-visited 门控承担（app.ts
+         在 visit:start 加标记），首播后的清理由 app.ts 的 animationend 委托承担。
+         原 swup:contentReplaced 清理脚本已删除：那是 Swup v3 事件名，
+         v4 分发动态拼名事件 swup:{hook}（如 swup:content:replace），该监听从未触发。 -->
     <!-- 客户端入口脚本：必须位于 </body> 内。若写在 </html> 之外，Astro 会把打包后的
          module 脚本排到文档末尾之后，产出非法 HTML（线上曾复现） -->
     <script>

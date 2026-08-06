@@ -117,39 +117,48 @@
     setTimeout(initTypewriter, 220);
   }
 
-  // I24：后台标签页暂停（打字链 + 光标闪烁；状态保留在实例字段，回前台继续。
-  // 对照 wave.js visibilitychange 守卫，动画本体不变）
-  document.addEventListener("visibilitychange", function () {
-    var subtitle = document.getElementById("banner-subtitle");
-    var cursor = document.getElementById("banner-cursor");
-    if (document.hidden) {
-      if (
-        subtitle &&
-        subtitle.__twInstance &&
-        subtitle.__twInstance.timeoutId
-      ) {
-        clearTimeout(subtitle.__twInstance.timeoutId);
-        subtitle.__twInstance.timeoutId = null;
+  // document 级监听器只绑一次：本脚本会被 SwupScriptsPlugin 在每次换页时克隆
+  // 重执行（banner 元素在 Swup 容器外跨页持久，打字机/光标状态存于元素
+  // __twInstance/__blinkInterval 字段，监听器操作的是同一持久元素）。
+  // 不守卫则监听器逐次累积；换页后的重初始化由下方 runInitTW() 承担。
+  // 原 swup:contentReplaced 监听删除：Swup v3 事件名，v4 分发 swup:{hook}，从未触发。
+  if (!window.__bannerTwBound) {
+    window.__bannerTwBound = true;
+
+    // I24：后台标签页暂停（打字链 + 光标闪烁；状态保留在实例字段，回前台继续。
+    // 对照 wave.js visibilitychange 守卫，动画本体不变）
+    document.addEventListener("visibilitychange", function () {
+      var subtitle = document.getElementById("banner-subtitle");
+      var cursor = document.getElementById("banner-cursor");
+      if (document.hidden) {
+        if (
+          subtitle &&
+          subtitle.__twInstance &&
+          subtitle.__twInstance.timeoutId
+        ) {
+          clearTimeout(subtitle.__twInstance.timeoutId);
+          subtitle.__twInstance.timeoutId = null;
+        }
+        if (cursor && cursor.__blinkInterval) {
+          clearInterval(cursor.__blinkInterval);
+          cursor.__blinkInterval = null;
+        }
+      } else {
+        if (
+          subtitle &&
+          subtitle.__twInstance &&
+          !subtitle.__twInstance.timeoutId
+        ) {
+          subtitle.__twInstance.type();
+        }
+        if (cursor && !cursor.__blinkInterval) {
+          createCursorBlink(cursor);
+        }
       }
-      if (cursor && cursor.__blinkInterval) {
-        clearInterval(cursor.__blinkInterval);
-        cursor.__blinkInterval = null;
-      }
-    } else {
-      if (
-        subtitle &&
-        subtitle.__twInstance &&
-        !subtitle.__twInstance.timeoutId
-      ) {
-        subtitle.__twInstance.type();
-      }
-      if (cursor && !cursor.__blinkInterval) {
-        createCursorBlink(cursor);
-      }
-    }
-  });
+    });
+
+    document.addEventListener("banner:visible", runInitTW);
+  }
 
   runInitTW();
-  document.addEventListener("swup:contentReplaced", runInitTW);
-  document.addEventListener("banner:visible", runInitTW);
 })();
