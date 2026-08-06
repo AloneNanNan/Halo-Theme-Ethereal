@@ -42,7 +42,10 @@ function initCustomScrollbar() {
   const bodyElement = document.querySelector("body");
   if (!bodyElement) return;
   import("overlayscrollbars").then(({ OverlayScrollbars }) => {
+    let mounted = false;
     const mount = () => {
+      if (mounted) return; // 防重入：Promise.all 与 setTimeout 兜底可能双调
+      mounted = true;
       OverlayScrollbars(
         { target: bodyElement, cancel: { nativeScrollbarsOverlaid: true } },
         {
@@ -60,9 +63,11 @@ function initCustomScrollbar() {
     // "播放完成后再重放一次"（复现时间点即 overlayscrollbars 下载完成瞬间）。
     // 等 fade-in-up 全部结束再初始化——此时动画已被下方的一次性保护清理，
     // 移动不再触发重放；2s 兜底防动画异常卡住。等待期间原生滚动条正常工作。
-    const running = document.getAnimations().filter(
-      (a) => a instanceof CSSAnimation && a.animationName === "fade-in-up",
-    );
+    const running = document
+      .getAnimations()
+      .filter(
+        (a) => a instanceof CSSAnimation && a.animationName === "fade-in-up",
+      );
     if (running.length > 0) {
       void Promise.all(
         running.map((a) => a.finished.catch(() => undefined)),

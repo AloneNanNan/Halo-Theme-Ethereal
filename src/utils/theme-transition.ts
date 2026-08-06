@@ -180,7 +180,6 @@ export function runThemeTransition(
   origin?: { x: number; y: number },
 ): void {
   const cfg = getThemeAnimConfig();
-  degradeThemeAnimStyle(cfg); // macOS Chrome 降级（见文件末尾独立区块，修复后可删）
   const style = cfg.style === "none" ? null : registry.get(cfg.style);
   if (!style || !isThemeAnimEligible() || isEntranceAnimationRunning()) {
     apply();
@@ -255,6 +254,10 @@ function cleanup(token: object): void {
     if (name.startsWith("--theme-anim-")) {
       root.style.removeProperty(name);
     }
+  }
+  // 清空已注入的 keyframes（下次点击会重新生成覆盖，清理保持 DOM 干净）
+  if (keyframesStyle) {
+    keyframesStyle.textContent = "";
   }
 }
 
@@ -371,25 +374,3 @@ registerThemeTransitionStyle({
 `;
   },
 });
-
-// ════════════════════════════════════════════════════════════════
-// ⚠️ 临时降级：macOS Chrome 物理坐标系（修复浏览器问题后可整体删除）
-// ────────────────────────────────────────────────────────────────
-// macOS Chrome 的 VT 伪元素把 clip-path 的 px 按物理像素解释
-// （at 1062px 视觉落在 ~50% 处），circle 圆心定位无法用跨平台方案
-// 统一（×DPR 会破坏按 CSS 坐标系的其他平台）。该环境把 circle 降级
-// 为 fade 交叉淡化。日后若浏览器修复坐标系行为，删除本区块及
-// runThemeTransition 中的 degradeThemeAnimStyle(cfg) 一行调用即可。
-const IS_MACOS_CHROME =
-  typeof navigator !== "undefined" &&
-  /Mac/i.test(navigator.platform) &&
-  /Chrome\//i.test(navigator.userAgent) &&
-  !/Edg\//i.test(navigator.userAgent);
-
-/** 应用环境降级：把受影响的样式替换为 fade */
-function degradeThemeAnimStyle(cfg: ThemeAnimConfig): void {
-  if (IS_MACOS_CHROME && cfg.style === "circle") {
-    cfg.style = "fade";
-  }
-}
-// ════════════════════════════════════════════════════════════════
