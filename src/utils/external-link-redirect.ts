@@ -459,18 +459,24 @@ export function initExternalLinkRedirect() {
       try {
         url = new URL(href, window.location.origin);
       } catch {
-        // 畸形 URL：阻止默认行为，防止绕过协议白名单
-        e.preventDefault();
-        e.stopPropagation();
+        // 畸形 URL：放行默认行为（浏览器自身容错处理；
+        // 无法通过 new URL 解析的输入也构造不出可执行 scheme，无绕过面）
         return;
       }
 
-      // 协议白名单：仅 http/https 走跳转流程；mailto/tel 放行默认行为（维持原体验）；
-      // 其余 scheme（javascript:/data:/vbscript:/file:...）一律阻止
+      // 危险 scheme 黑名单：javascript:/data:/vbscript: 可在页面上下文执行脚本，
+      // file: 指向本地资源，一律阻止；mailto/tel/ftp/blob/magnet 等无害协议
+      // 放行默认行为（交由浏览器/外部协议处理器），避免过度阻断误伤正常链接
       if (url.protocol !== "http:" && url.protocol !== "https:") {
-        if (url.protocol === "mailto:" || url.protocol === "tel:") return;
-        e.preventDefault();
-        e.stopPropagation();
+        if (
+          url.protocol === "javascript:" ||
+          url.protocol === "data:" ||
+          url.protocol === "vbscript:" ||
+          url.protocol === "file:"
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         return;
       }
 
