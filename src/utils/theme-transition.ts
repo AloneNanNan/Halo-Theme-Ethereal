@@ -1,8 +1,15 @@
 // src/utils/theme-transition.ts — 主题切换动画（View Transitions API + 注册表驱动）
 //
-// 职责划分：JS 只负责「读配置 → 加 html.theme-anim-{style} 类 → 设 --theme-anim-* 变量 →
-// startViewTransition」，动画完全由 src/styles/theme-transition.css 的 keyframes 驱动。
-// 新增动画样式 = 注册表加一项（registerThemeTransitionStyle）+ 一段 keyframes CSS，零散改动。
+// 架构：JS 负责「读配置 → 加 html.theme-anim-{style} 类 → 设 --theme-anim-duration/
+// easing 变量 → buildKeyframes 生成数值化 @keyframes（具体 px，无 var/calc）并注入
+// <style id="theme-anim-keyframes"> → startViewTransition」。CSS 只保留选择器、
+// 时长/缓动与 UA 动画覆盖（见 theme-transition.css）。
+//
+// 数值化 keyframes 的动机：keyframes 中的 var()/calc() 在 VT 伪元素上下文解析
+// 不可靠（曾导致 circle 圆心偏移、wipe 终点未达），由 JS 算好数值直接写入可根治；
+// 每次点击都按当前视口/按钮位置重新生成（动态），非构建期写死。
+//
+// 新增动画样式 = 注册表加一项（registerThemeTransitionStyle）+ buildKeyframes。
 //
 // 降级链：无 startViewTransition（老浏览器）/ prefers-reduced-motion / none 样式 →
 // 直调 apply()，行为与现状完全一致，无需 polyfill。
@@ -63,8 +70,12 @@ export interface ThemeTransitionStyle {
   id: Exclude<ThemeAnimStyleId, "none">;
   /** 加入 <html> 的类，如 "theme-anim-circle"，CSS 据此选择 keyframes */
   cssClass: string;
-  /** 设 --theme-anim-* 变量；fade 为空实现 */
-  prepare(ctx: ThemeTransitionContext): void;
+  /**
+   * 生成数值化 keyframes CSS 文本（具体 px，不依赖 var()/calc()）。
+   * 根治 keyframes 中 var/calc 解析不可靠导致的圆心偏移、终点未达等问题——
+   * 几何由 JS 算好后直接写进 @keyframes，运行时注入 <style>。
+   */
+  buildKeyframes(ctx: ThemeTransitionContext): string;
 }
 
 const registry = new Map<string, ThemeTransitionStyle>();
@@ -73,6 +84,17 @@ export function registerThemeTransitionStyle(
   style: ThemeTransitionStyle,
 ): void {
   registry.set(style.id, style);
+}
+
+// keyframes 运行时注入：buildKeyframes 生成的数值化 @keyframes 写入该 <style>
+let keyframesStyle: HTMLStyleElement | null = null;
+function injectKeyframes(css: string): void {
+  if (!keyframesStyle) {
+    keyframesStyle = document.createElement("style");
+    keyframesStyle.id = "theme-anim-keyframes";
+    document.head.appendChild(keyframesStyle);
+  }
+  keyframesStyle.textContent = css;
 }
 
 const DEFAULT_CONFIG: ThemeAnimConfig = {
@@ -158,6 +180,7 @@ export function runThemeTransition(
   origin?: { x: number; y: number },
 ): void {
   const cfg = getThemeAnimConfig();
+  degradeThemeAnimStyle(cfg); // macOS Chrome 降级（见文件末尾独立区块，修复后可删）
   const style = cfg.style === "none" ? null : registry.get(cfg.style);
   if (!style || !isThemeAnimEligible() || isEntranceAnimationRunning()) {
     apply();
@@ -199,7 +222,7 @@ export function runThemeTransition(
     `${EASING_DURATION[cfg.easing]}ms`,
   );
   root.style.setProperty("--theme-anim-easing", EASING_MAP[cfg.easing]);
-  style.prepare(ctx);
+  injectKeyframes(style.buildKeyframes(ctx));
 
   const token = {};
   // WebIDL 方法必须以 document 作为 this 调用（不能先取出再裸调用，否则抛 Illegal invocation）；
@@ -240,30 +263,37 @@ function cleanup(token: object): void {
 registerThemeTransitionStyle({
   id: "fade",
   cssClass: "theme-anim-fade",
-  prepare: () => {},
+  buildKeyframes: () => `
+@keyframes theme-fade-out {
+  to { opacity: 0; }
+}
+@keyframes theme-fade-in {
+  from { opacity: 0; }
+}
+`,
 });
 
 registerThemeTransitionStyle({
   id: "circle",
   cssClass: "theme-anim-circle",
-  prepare(ctx) {
-    const { root, buttonCenter, viewport } = ctx;
+  buildKeyframes(ctx) {
+    const { buttonCenter, viewport } = ctx;
     // 兜底圆心取右上角（导航栏切换按钮的典型位置），而非视口中心
-    const x = buttonCenter ? buttonCenter.x : viewport.width - 32;
-    const y = buttonCenter ? buttonCenter.y : 32;
-    root.style.setProperty("--theme-anim-x", `${Math.round(x)}px`);
-    root.style.setProperty("--theme-anim-y", `${Math.round(y)}px`);
-    // 半径取"到最远角的距离 × 1.25"（px）：动画结束时圆边缘明显超出画面，
-    // 避免边缘恰好落在画面边界造成"动画结束仍未离屏"的观感。
-    // 不依赖 circle() 的百分比半径语义（不同实现对参考基准理解不一致）
-    const maxDist = Math.hypot(
-      Math.max(x, viewport.width - x),
-      Math.max(y, viewport.height - y),
+    const x = Math.round(buttonCenter ? buttonCenter.x : viewport.width - 32);
+    const y = Math.round(buttonCenter ? buttonCenter.y : 32);
+    // 半径 = 到最远角的距离 × 1.25：终点圆边缘明确超出画面
+    const r = Math.ceil(
+      Math.hypot(
+        Math.max(x, viewport.width - x),
+        Math.max(y, viewport.height - y),
+      ) * 1.25,
     );
-    root.style.setProperty(
-      "--theme-anim-r",
-      `${Math.ceil(maxDist * 1.25)}px`,
-    );
+    return `
+@keyframes theme-circle-in {
+  from { clip-path: circle(0 at ${x}px ${y}px); }
+  to   { clip-path: circle(${r}px at ${x}px ${y}px); }
+}
+`;
   },
 });
 
@@ -272,12 +302,14 @@ registerThemeTransitionStyle({
   cssClass: "theme-anim-wipe",
   // 扫动方向 u（0° 左→右，90° 上→下），边界方向 v 垂直于 u。
   // 让覆盖视口的平行四边形条带沿 u 平移：起点/终点同为 4 顶点 polygon()，
-  // 插值即纯平移（顶点数一致、类型一致，可平滑插值）。
-  //   E1/E2 起始边缘（s=0 贴在起始角 A，s=1 到对角 B）
+  // 插值即纯平移。所有坐标由 JS 数值化后直接写进 keyframes（无 var/calc）。
+  // 旧快照保持全屏静止（CSS animation: none），仅生成 theme-wipe-in
+  // 揭示新主题条带——动画结束 new 盖满遮住 old，避免旧快照 clip-path
+  // fill 失效回退显示旧主题（"闪回亮色一帧"）。
+  //   E1/E2 起始边缘（s=0 贴在起始角 A，s=1 平移 d 到角 B）
   //   F1/F2 新主题条带后沿（始终在视口后方）
-  //   G1/G2 旧主题条带前沿（始终在视口前方）
-  prepare(ctx) {
-    const { root, viewport, config } = ctx;
+  buildKeyframes(ctx) {
+    const { viewport, config } = ctx;
     const W = viewport.width;
     const H = viewport.height;
     const rad = (config.angle * Math.PI) / 180;
@@ -303,37 +335,61 @@ registerThemeTransitionStyle({
 
     const D = dotU(B) - dotU(A); // 视口在扫动方向的投影跨度（W·|cosθ| + H·|sinθ|）
     const m = W + H; // 安全裕量：任意视口点到 A 的 v 向投影 ≤ W+H，且 ≥ D
-    // 平移距离在 D 基础上加 50% 余量：动画结束时揭示边缘明显超出画面，
-    // 避免边缘恰好落在画面边界（"动画结束底部仍未离屏"的观感）
-    const dx = ux * D * 1.5;
-    const dy = uy * D * 1.5;
+    // 分段关键帧（冗余不减，解决"页面内时间极短"）：
+    //   0%→90%：条带扫过画面 + 小冗余（D×1.2，边缘已完全离屏），
+    //            画面内扫过占满前 90% 进度——缓出曲线下页面内时间 ~75%
+    //            （此前单一 to 帧 ×2 冗余时边缘 50% 进度即离屏，仅 ~20%）
+    //  90%→100%：继续平移到大冗余（D×2），确保终点完全离屏（防不完全擦除）
+    const d1x = ux * D * 1.2;
+    const d1y = uy * D * 1.2;
+    const d2x = ux * D * 2;
+    const d2y = uy * D * 2;
+    const R = (n: number) => Math.round(n);
+    const P = (p: { x: number; y: number }) => `${R(p.x)}px ${R(p.y)}px`;
 
-    const setPx = (name: string, value: number) => {
-      root.style.setProperty(name, `${Math.round(value)}px`);
-    };
-    // 起始边缘（s=0 贴在角 A，s=1 平移 d 到角 B）
+    // 起始边缘（s=0 贴在角 A）
     const e1 = { x: A.x + vx * m, y: A.y + vy * m };
     const e2 = { x: A.x - vx * m, y: A.y - vy * m };
     // 新主题条带后沿（始终在视口后方）
     const f1 = { x: A.x - ux * m - vx * m, y: A.y - uy * m - vy * m };
     const f2 = { x: A.x - ux * m + vx * m, y: A.y - uy * m + vy * m };
-    // 旧主题条带前沿（始终在视口前方）
-    const g1 = { x: B.x + ux * m - vx * m, y: B.y + uy * m - vy * m };
-    const g2 = { x: B.x + ux * m + vx * m, y: B.y + uy * m + vy * m };
+    const E1 = P(e1);
+    const E2 = P(e2);
+    const E1d1 = P({ x: e1.x + d1x, y: e1.y + d1y });
+    const E2d1 = P({ x: e2.x + d1x, y: e2.y + d1y });
+    const E1d2 = P({ x: e1.x + d2x, y: e1.y + d2y });
+    const E2d2 = P({ x: e2.x + d2x, y: e2.y + d2y });
+    const F1 = P(f1);
+    const F2 = P(f2);
 
-    setPx("--theme-anim-e1x", e1.x);
-    setPx("--theme-anim-e1y", e1.y);
-    setPx("--theme-anim-e2x", e2.x);
-    setPx("--theme-anim-e2y", e2.y);
-    setPx("--theme-anim-f1x", f1.x);
-    setPx("--theme-anim-f1y", f1.y);
-    setPx("--theme-anim-f2x", f2.x);
-    setPx("--theme-anim-f2y", f2.y);
-    setPx("--theme-anim-g1x", g1.x);
-    setPx("--theme-anim-g1y", g1.y);
-    setPx("--theme-anim-g2x", g2.x);
-    setPx("--theme-anim-g2y", g2.y);
-    setPx("--theme-anim-dx", dx);
-    setPx("--theme-anim-dy", dy);
+    return `
+@keyframes theme-wipe-in {
+  0%   { clip-path: polygon(${E1}, ${E2}, ${F1}, ${F2}); }
+  90%  { clip-path: polygon(${E1d1}, ${E2d1}, ${F1}, ${F2}); }
+  100% { clip-path: polygon(${E1d2}, ${E2d2}, ${F1}, ${F2}); }
+}
+`;
   },
 });
+
+// ════════════════════════════════════════════════════════════════
+// ⚠️ 临时降级：macOS Chrome 物理坐标系（修复浏览器问题后可整体删除）
+// ────────────────────────────────────────────────────────────────
+// macOS Chrome 的 VT 伪元素把 clip-path 的 px 按物理像素解释
+// （at 1062px 视觉落在 ~50% 处），circle 圆心定位无法用跨平台方案
+// 统一（×DPR 会破坏按 CSS 坐标系的其他平台）。该环境把 circle 降级
+// 为 fade 交叉淡化。日后若浏览器修复坐标系行为，删除本区块及
+// runThemeTransition 中的 degradeThemeAnimStyle(cfg) 一行调用即可。
+const IS_MACOS_CHROME =
+  typeof navigator !== "undefined" &&
+  /Mac/i.test(navigator.platform) &&
+  /Chrome\//i.test(navigator.userAgent) &&
+  !/Edg\//i.test(navigator.userAgent);
+
+/** 应用环境降级：把受影响的样式替换为 fade */
+function degradeThemeAnimStyle(cfg: ThemeAnimConfig): void {
+  if (IS_MACOS_CHROME && cfg.style === "circle") {
+    cfg.style = "fade";
+  }
+}
+// ════════════════════════════════════════════════════════════════

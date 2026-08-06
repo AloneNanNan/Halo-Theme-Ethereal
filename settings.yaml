@@ -178,7 +178,7 @@ spec:
                   id: style
                   label: 切换动画样式
                   value: fade
-                  help: "访客点击明暗切换按钮时的整页过渡动画；无动画为瞬时切换"
+                  help: "访客点击明暗切换按钮时的整页过渡动画；无动画为瞬时切换。圆形扩散与擦除基于 View Transitions 快照裁剪，兼容性随平台而异：macOS Chrome 下圆形扩散降级为淡入淡出、擦除可能出现边缘残留（浏览器坐标兼容限制）；其余平台正常"
                   options:
                     - label: 淡入淡出
                       value: fade

@@ -1,8 +1,12 @@
 @reference "./global.css";
 
 /* 主题切换动画（View Transitions API）：
-   JS（theme-transition.ts）只负责加 html.theme-anim-{style} 类、设 --theme-anim-* 变量
-   并 startViewTransition；动画完全由下方 keyframes 驱动。
+   JS（theme-transition.ts）负责：加 html.theme-anim-{style} 类、设
+   --theme-anim-duration/easing 变量、startViewTransition，以及把
+   buildKeyframes 生成的【数值化 @keyframes】（具体 px，无 var/calc——
+   根治 keyframes 中 var/calc 解析不可靠导致的圆心偏移/终点未达问题）
+   运行时注入 <style id="theme-anim-keyframes">。本文件只保留选择器、
+   时长/缓动与 UA 动画覆盖。
    降级（老浏览器 / reduced-motion / none / duration=0）由 JS 主闸直调，不经此层。
    基础规则必须展开书写（不能用 html:is(...) 门控）：实测 Chrome 对
    html:is(.theme-anim-*) ::view-transition-* 的后代匹配不生效，动画时长
@@ -38,8 +42,11 @@ html.theme-anim-circle::view-transition-old(root) {
 html.theme-anim-circle::view-transition-new(root) {
   animation-name: theme-circle-in;
 }
+/* wipe 的旧快照保持全屏静止（不裁切，与 circle 同策略）：new 条带
+   （clip-path 裁切）覆盖其上，动画结束 new 盖满遮住 old——避免旧快照
+   的 clip-path fill 在动画结束后失效回退显示旧主题（"闪回亮色一帧"） */
 html.theme-anim-wipe::view-transition-old(root) {
-  animation-name: theme-wipe-out;
+  animation: none;
 }
 html.theme-anim-wipe::view-transition-new(root) {
   animation-name: theme-wipe-in;
@@ -53,71 +60,8 @@ html.theme-anim-wipe::view-transition-image-pair(root) {
   animation: none;
 }
 
-/* 整页同步：旧页淡出、新页淡入 */
-@keyframes theme-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes theme-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-/* 圆形拓张：新主题从按钮圆心向外扩散，半径由 JS 设为视口对角线（px），
-   任意圆心（含角落附近）都能覆盖全视口，不依赖 circle() 百分比语义 */
-@keyframes theme-circle-in {
-  from {
-    clip-path: circle(0 at var(--theme-anim-x) var(--theme-anim-y));
-  }
-  to {
-    clip-path: circle(var(--theme-anim-r) at var(--theme-anim-x) var(--theme-anim-y));
-  }
-}
-
-/* 角度擦除：覆盖视口的平行四边形条带沿扫动方向平移 d，起点/终点同为 4 顶点 polygon()，
-   插值即纯平移。E1/E2 起始边缘；F1/F2 新条带后沿钉在视口后方；G1/G2 旧条带前沿钉在视口前方 */
-@keyframes theme-wipe-out {
-  from {
-    clip-path: polygon(
-      var(--theme-anim-e1x) var(--theme-anim-e1y),
-      var(--theme-anim-e2x) var(--theme-anim-e2y),
-      var(--theme-anim-g1x) var(--theme-anim-g1y),
-      var(--theme-anim-g2x) var(--theme-anim-g2y)
-    );
-  }
-  to {
-    clip-path: polygon(
-      calc(var(--theme-anim-e1x) + var(--theme-anim-dx))
-        calc(var(--theme-anim-e1y) + var(--theme-anim-dy)),
-      calc(var(--theme-anim-e2x) + var(--theme-anim-dx))
-        calc(var(--theme-anim-e2y) + var(--theme-anim-dy)),
-      var(--theme-anim-g1x) var(--theme-anim-g1y),
-      var(--theme-anim-g2x) var(--theme-anim-g2y)
-    );
-  }
-}
-@keyframes theme-wipe-in {
-  from {
-    clip-path: polygon(
-      var(--theme-anim-e1x) var(--theme-anim-e1y),
-      var(--theme-anim-e2x) var(--theme-anim-e2y),
-      var(--theme-anim-f1x) var(--theme-anim-f1y),
-      var(--theme-anim-f2x) var(--theme-anim-f2y)
-    );
-  }
-  to {
-    clip-path: polygon(
-      calc(var(--theme-anim-e1x) + var(--theme-anim-dx))
-        calc(var(--theme-anim-e1y) + var(--theme-anim-dy)),
-      calc(var(--theme-anim-e2x) + var(--theme-anim-dx))
-        calc(var(--theme-anim-e2y) + var(--theme-anim-dy)),
-      var(--theme-anim-f1x) var(--theme-anim-f1y),
-      var(--theme-anim-f2x) var(--theme-anim-f2y)
-    );
-  }
-}
+/* @keyframes theme-fade-* / theme-circle-in / theme-wipe-* 由 JS 在
+   buildKeyframes 中数值化生成并注入（具体 px，无 var/calc） */
 
 /* 兜底：JS 主闸已在 reduce 下跳过动画，此处仅防未来任何不经 JS 闸门的 VT 触发 */
 @media (prefers-reduced-motion: reduce) {
