@@ -15,6 +15,9 @@
   let mode: LIGHT_DARK_MODE = $state(AUTO_MODE);
   // 悬浮选框开合：点击主按钮展开，选择主题 / 再次点击 / 点击外部收起
   let panelOpen = $state(false);
+  // 主按钮 DOM 引用（bind:this）：提供圆形扩散圆心，不依赖 getElementById
+  //（macOS Chrome 下偶发查询不到导致圆心回退视口中心）
+  let schemeSwitchBtn = $state<HTMLButtonElement>();
 
   function onDocumentClick(e: MouseEvent) {
     const target = e.target as Element | null;
@@ -63,14 +66,20 @@
       setTheme(newMode, true);
       return;
     }
+    // 按钮圆心（视口 px）：从组件引用取，macOS Chrome 下 getElementById
+    // 偶发查不到主按钮导致圆心回退视口中心
+    const rect = schemeSwitchBtn?.getBoundingClientRect();
+    const origin = rect
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      : undefined;
     runThemeTransition(() => {
       setTheme(newMode, true);
-    });
+    }, origin);
   }
 </script>
 
 <div class="relative group" role="menu" tabindex="-1">
-  <button aria-label={t("nav.lightDark", "Light/Dark Mode")} aria-haspopup="menu" aria-expanded={panelOpen} role="menuitem" class="relative btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="scheme-switch" onclick={togglePanel}>
+  <button bind:this={schemeSwitchBtn} aria-label={t("nav.lightDark", "Light/Dark Mode")} aria-haspopup="menu" aria-expanded={panelOpen} role="menuitem" class="relative btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="scheme-switch" onclick={togglePanel}>
     <div class="absolute inset-0 flex items-center justify-center" class:opacity-0={mode !== LIGHT_MODE}>
       <div class="icon-[material-symbols--wb-sunny-outline-rounded] text-[1.25rem] leading-none"></div>
     </div>

@@ -148,9 +148,15 @@ let inFlight: InFlightTransition | null = null;
 
 /**
  * 播放主题切换动画。apply() 内同步翻转主题（如 setTheme）。
+ * origin 为切换按钮圆心（视口 px，circle 样式用），由调用方（LightDarkSwitch）
+ * 从组件内 bind:this 引用提供——不依赖 getElementById（macOS Chrome 下偶发
+ * 查询不到按钮导致圆心回退视口中心的"中央最上方"问题）。
  * 仅显式用户操作（切换按钮点击）走此入口；页面加载同步、系统配色跟随保持瞬时。
  */
-export function runThemeTransition(apply: () => void): void {
+export function runThemeTransition(
+  apply: () => void,
+  origin?: { x: number; y: number },
+): void {
   const cfg = getThemeAnimConfig();
   const style = cfg.style === "none" ? null : registry.get(cfg.style);
   if (!style || !isThemeAnimEligible() || isEntranceAnimationRunning()) {
@@ -167,15 +173,18 @@ export function runThemeTransition(apply: () => void): void {
   const root = document.documentElement;
   const viewport = { width: window.innerWidth, height: window.innerHeight };
 
-  // 切换按钮圆心（视口坐标，与 root 快照 1:1 对齐）；找不到时 circle 退化为视口中心
-  let buttonCenter: { x: number; y: number } | null = null;
-  const button = document.getElementById("scheme-switch");
-  if (button) {
-    const rect = button.getBoundingClientRect();
-    buttonCenter = {
-      x: clamp(rect.left + rect.width / 2, 0, viewport.width),
-      y: clamp(rect.top + rect.height / 2, 0, viewport.height),
-    };
+  // 切换按钮圆心（视口坐标，与 root 快照 1:1 对齐）；
+  // 优先用调用方提供的按钮中心，兜底再查 DOM；都找不到时 circle 退化为视口中心
+  let buttonCenter: { x: number; y: number } | null = origin ?? null;
+  if (!buttonCenter) {
+    const button = document.getElementById("scheme-switch");
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      buttonCenter = {
+        x: clamp(rect.left + rect.width / 2, 0, viewport.width),
+        y: clamp(rect.top + rect.height / 2, 0, viewport.height),
+      };
+    }
   }
 
   const ctx: ThemeTransitionContext = {
@@ -239,15 +248,21 @@ registerThemeTransitionStyle({
   cssClass: "theme-anim-circle",
   prepare(ctx) {
     const { root, buttonCenter, viewport } = ctx;
-    const x = buttonCenter ? buttonCenter.x : viewport.width / 2;
-    const y = buttonCenter ? buttonCenter.y : viewport.height / 2;
+    // 兜底圆心取右上角（导航栏切换按钮的典型位置），而非视口中心
+    const x = buttonCenter ? buttonCenter.x : viewport.width - 32;
+    const y = buttonCenter ? buttonCenter.y : 32;
     root.style.setProperty("--theme-anim-x", `${Math.round(x)}px`);
     root.style.setProperty("--theme-anim-y", `${Math.round(y)}px`);
-    // 半径取视口对角线（px）：任意圆心（含角落附近）都能覆盖全视口。
+    // 半径取"到最远角的距离 × 1.25"（px）：动画结束时圆边缘明显超出画面，
+    // 避免边缘恰好落在画面边界造成"动画结束仍未离屏"的观感。
     // 不依赖 circle() 的百分比半径语义（不同实现对参考基准理解不一致）
+    const maxDist = Math.hypot(
+      Math.max(x, viewport.width - x),
+      Math.max(y, viewport.height - y),
+    );
     root.style.setProperty(
       "--theme-anim-r",
-      `${Math.ceil(Math.hypot(viewport.width, viewport.height))}px`,
+      `${Math.ceil(maxDist * 1.25)}px`,
     );
   },
 });
@@ -288,8 +303,10 @@ registerThemeTransitionStyle({
 
     const D = dotU(B) - dotU(A); // 视口在扫动方向的投影跨度（W·|cosθ| + H·|sinθ|）
     const m = W + H; // 安全裕量：任意视口点到 A 的 v 向投影 ≤ W+H，且 ≥ D
-    const dx = ux * D;
-    const dy = uy * D;
+    // 平移距离在 D 基础上加 50% 余量：动画结束时揭示边缘明显超出画面，
+    // 避免边缘恰好落在画面边界（"动画结束底部仍未离屏"的观感）
+    const dx = ux * D * 1.5;
+    const dy = uy * D * 1.5;
 
     const setPx = (name: string, value: number) => {
       root.style.setProperty(name, `${Math.round(value)}px`);
