@@ -309,12 +309,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       }
     </style>
     <script>
-      // 右侧边栏入场动画，仅首次加载执行一次
-      if (!window.__rsAnimated) {
-        window.__rsAnimated = true;
-        var rs = document.getElementById("right-sidebar");
-        if (rs) rs.classList.add("onload-animation");
-      }
+      // 右侧边栏入场动画类已静态写在 RightSideBar 组件上（首帧即带动画，
+      // 避免此前 JS 后加类导致"先显示在最终位置再播放动画"的闪烁）。
       // Swup 切换后清除动画类
       document.addEventListener("swup:contentReplaced", function () {
         var rs = document.getElementById("right-sidebar");
