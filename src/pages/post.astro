@@ -374,6 +374,8 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     th:if="${theme.config?.post?.summary == null or theme.config?.post?.summary?.summaryEffect == null or theme.config?.post?.summary?.summaryEffect == 'typewriter'}"
   >
     // 文章摘要打字机效果
+    // （修复 I24 遗留：曾有一段完全重复的代码——var timer ×2、启动 setTimeout ×2、
+    //   visibilitychange 监听 ×2，双监听器会导致打字机双循环/异常）
     (function () {
       var el = document.getElementById("summary-text");
       var caret = document.getElementById("summary-caret");
@@ -382,29 +384,15 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       var i = 0;
       var speed = 40;
       var timer = null;
-      var timer = null;
       function type() {
         if (i < text.length) {
           el.textContent += text.charAt(i);
           i++;
           timer = setTimeout(type, speed);
-          timer = setTimeout(type, speed);
         } else {
           if (caret) caret.style.display = "none";
         }
       }
-      timer = setTimeout(type, 600);
-      // I24：后台标签页暂停打字（进度保留，回前台继续）
-      document.addEventListener("visibilitychange", function () {
-        if (document.hidden) {
-          if (timer) {
-            clearTimeout(timer);
-            timer = null;
-          }
-        } else if (!timer && i < text.length) {
-          timer = setTimeout(type, speed);
-        }
-      });
       timer = setTimeout(type, 600);
       // I24：后台标签页暂停打字（进度保留，回前台继续）
       document.addEventListener("visibilitychange", function () {
