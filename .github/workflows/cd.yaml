@@ -58,14 +58,34 @@ jobs:
             echo "release-id=$ID" >> "$GITHUB_OUTPUT"
           fi
 
+      # 读取 Release 说明中的跳过标记：ci.yaml 手动发布时 sync-halo=false 会注入
+      # <!-- skip-halo-sync -->，检测到则跳过应用市场同步（含手动重新同步路径）
+      - name: 检查跳过同步标记
+        id: sync-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          BODY=$(gh release view "$TAG" --json body --jq .body)
+          if echo "$BODY" | grep -q 'skip-halo-sync'; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Release $TAG 标记了跳过 Halo 应用市场同步，本次跳过"
+            echo "::warning::如需同步，请重新手动触发 ci.yaml 发布并将「同步到 Halo」设为开启"
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+            echo "未发现跳过标记，继续同步"
+          fi
+
       # 下载 Release 附件中的主题包（如 Ethereal-1.0.4.zip）
       - name: Download Release Assets
+        if: steps.sync-check.outputs.skipped == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release download "${{ steps.release.outputs.tag }}" --dir dist --pattern "*.zip"
 
       # 下载后校验：必须存在 zip 附件，缺失时列出该 Release 实际资产便于排查
       - name: 校验下载的附件
+        if: steps.sync-check.outputs.skipped == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -80,6 +100,7 @@ jobs:
 
       # 同步到 Halo 应用市场
       - name: Release to App Store
+        if: steps.sync-check.outputs.skipped == 'false'
         uses: halo-sigs/app-store-release-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

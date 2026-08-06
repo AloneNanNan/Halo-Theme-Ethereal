@@ -23,7 +23,21 @@
 
 | 参数 | 必填 | 说明 |
 | ----- | ---- | -------------------------------------------------------------- |
-| `tag` | 否   | 构建完成后将 zip 发布到该 Release tag；留空则仅保存为 artifact |
+| `publish-github` | 否   | 是否发布到 GitHub Release（默认 `true`；`false` 时仅构建，不发布） |
+| `tag` | 否*  | 发布到该 GitHub Release tag（`publish-github=true` 时必填） |
+| `sync-halo` | 否   | 发布后是否同步到 Halo 应用市场（默认 `true`；设为 `false` 时注入跳过标记，跳过同步） |
+
+\* `tag` 仅当 `publish-github=true` 时必填；不发布（`publish-github=false`）时无需填写，填了也被忽略。
+
+**发布行为全部由显式开关控制**（不靠版本号、tag 是否填写隐式推断）：
+
+| `publish-github` | `sync-halo` | 行为 |
+|---|---|---|
+| `true` | `true`（默认） | 完整发布：GH Release + Halo 同步 |
+| `true` | `false` | 仅 GH Release（注入跳过标记，Halo 不同步） |
+| `false` | 任意 | **仅构建 + artifact，不发布**（Halo 同步依赖 GH Release，一并忽略并 warning） |
+
+`publish-github=true` 但 `tag` 未填 → 报错终止（提示：如需仅构建请显式关闭 `publish-github`）。
 
 **自动发布流程（push 触发）**：
 1. 构建 + 类型检查 + 质量门校验
@@ -31,9 +45,11 @@
 3. 按 `theme.yaml` 的 version **自动创建 tag**（如 `v1.0.8`；远程已存在则跳过，幂等）
 4. 上传 zip 到 GitHub Release（不存在则自动创建，`release.md` 存在时作为说明；已存在则更新资产）
 
-**手动发布流程（workflow_dispatch）**：tag 输入前置校验（`v*` 前缀、与 `theme.yaml` 的 `version` 一致）→ 构建 + 质量门 → 上传/更新 Release。
+**手动发布流程（workflow_dispatch）**：发布行为由 `publish-github` / `sync-halo` 显式开关决定 → 构建 + 质量门 → 上传/更新 Release（`publish-github=true` 时 tag 前置校验：必填、`v*` 前缀、与 `theme.yaml` 的 `version` 一致）。
 
 **release.md 约定**：仓库根目录的 `release.md` 自动作为 Release 说明（body）。Release 已存在时更新说明，不存在时自动创建。
+
+**跳过 Halo 同步（sync-halo）**：手动触发且 `publish-github=true` 时，将「同步到 Halo」设为 `false`，发布时会向 Release 说明注入隐藏标记 `<!-- skip-halo-sync -->`（页面不可见），`cd.yaml` 检测到该标记即跳过应用市场同步。标记随 Release 说明持久存在，之后手动触发 `cd.yaml` 重新同步同样会被跳过（如需同步，请重新手动触发 `ci.yaml` 发布并将「同步到 Halo」设为开启）。`publish-github=false` 时 Halo 同步无发布源，一并忽略。
 
 **其他**：该工作流默认被 `concurrency` 串行化，同一分支的连续触发排队执行，不会并发。
 
@@ -41,6 +57,7 @@
 
 - **Release 发布触发**：tag 以 `v` 开头（如 `v1.0.4`）时自动同步
 - **手动触发**：输入 `tag` 参数，前置校验（v 前缀、Release 存在性）、下载附件后校验 zip 存在（缺失时列出实际附件）
+- **跳过标记**：同步前检查 Release 说明是否含 `<!-- skip-halo-sync -->`（由 `ci.yaml` 手动发布时 `sync-halo=false` 注入），含则跳过同步并提示
 
 **所需 Secrets**：`APP_ID`（应用市场应用 ID）、`HALO_PAT`（Halo 应用市场个人访问令牌）。
 
@@ -52,24 +69,26 @@
 |---|---|---|---|---|---|---|---|---|
 | 1a | push 到 main | 版本较上一提交**增大**且 semver 合规 | 运行 → `true` | ✅ | ✅ | ✅ 创建 `vX.Y.Z`（远程已有则跳过） | ✅ 创建或更新 | **自动发布** |
 | 1b | push 到 main | 版本**未增大**或不合规 | 运行 → `false` | ❌ 跳过 | ❌ | ❌ | ❌ | 仅检测，不构建 |
-| 2 | 手动 + 填 tag | tag 以 `v` 开头，且 = `v{theme.yaml 版本}` | 跳过 | ✅ | ✅ | ❌ 仅 push 运行 | ✅ 校验通过后创建/更新 | 发布到指定 tag |
-| 3 | 手动 + tag 留空 | — | 跳过 | ✅ | ✅ | ❌ | ❌ | 仅构建 + artifact |
+| 2a | 手动 + publish-github=true + 填 tag + sync-halo=true | tag 以 `v` 开头，且 = `v{theme.yaml 版本}` | 跳过 | ✅ | ✅ | ❌ 仅 push 运行 | ✅ 校验通过后创建/更新 | 发布到指定 tag，随后 cd 自动同步 |
+| 2b | 手动 + publish-github=true + 填 tag + sync-halo=false | 同上 | 跳过 | ✅ | ✅ | ❌ | ✅ 注入跳过标记后创建/更新 | 发布到指定 tag，**cd 跳过应用市场同步** |
+| 2c | 手动 + publish-github=true + tag 未填 | — | 跳过 | — | — | ❌ | ❌ | ❌ **报错终止**（提示显式关闭或填 tag） |
+| 3 | 手动 + publish-github=false（sync-halo 任意） | — | 跳过 | ✅ | ✅ | ❌ | ❌ | 仅构建 + artifact，**不发布**（Halo 一并忽略） |
 
 **各触发路径的关键差异**：
 
 - **version-check job**：只在 push 事件运行（`if: github.event_name == 'push'`）；手动触发直接进入构建
 - **自动创建 tag 步骤**：只在 push 路径运行，按 `theme.yaml` 的 version 生成 tag；已存在则幂等跳过
-- **校验 tag 步骤**：只在手动 + 填 tag 时运行（`v` 前缀 + 与 `theme.yaml` version 一致性双重校验）
-- **上传 Release 步骤**：push 路径用自动生成的 tag；手动路径用输入的 tag
+- **校验发布配置步骤**：只在手动触发运行——`publish-github=false` 时输出 `publish=false` 直接放行（仅构建）；`true` 时校验 tag 必填、`v` 前缀、与 `theme.yaml` version 一致性，输出 `publish=true`
+- **上传 Release 步骤**：push 路径用自动生成的 tag；手动路径仅在 `env.publish == 'true'` 时运行；`sync-halo=false` 时向说明注入 `<!-- skip-halo-sync -->` 标记
 - 构建链统一为：install → `pnpm check` → `pnpm build` → quality-gate → artifact
 
 ### cd.yaml — CD（同步应用市场）
 
 | # | 触发路径 | 前置条件 | 校验 | 行为 | 结果 |
 |---|---|---|---|---|---|
-| 1 | Release published | tag 以 `v` 开头 | 附件 zip 存在 | 下载 → 校验 → 同步应用市场 | ✅ 自动同步 |
+| 1 | Release published | tag 以 `v` 开头 | 跳过标记 + 附件 zip 存在 | 下载 → 校验 → 同步应用市场 | ✅ 自动同步（含标记则跳过） |
 | 2 | Release published | tag 不以 `v` 开头 | — | job 被 `if` 跳过 | ❌ 静默跳过 |
-| 3 | 手动 + tag（必填） | tag 以 `v` 开头 + Release 已存在 | 附件 zip 存在 | 校验 → 解析 ID → 下载 → 同步 | ✅ 手动重新同步 |
+| 3 | 手动 + tag（必填） | tag 以 `v` 开头 + Release 已存在 | 跳过标记 + 附件 zip 存在 | 校验 → 解析 ID → 下载 → 同步 | ✅ 手动重新同步（含标记同样跳过） |
 
 **要点**：job 顶层的 `if` 同时作用于两个事件——release 事件要求 tag 以 `v` 开头，`workflow_dispatch` 事件直接放行；手动路径额外做 v 前缀校验和 Release 存在性校验。
 

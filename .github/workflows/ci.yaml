@@ -7,10 +7,20 @@ on:
   # 手动触发：输入 tag 发布到指定 Release；留空则仅构建并保存 artifact
   workflow_dispatch:
     inputs:
+      publish-github:
+        description: "是否发布到 GitHub Release（默认 true；false 时仅构建，不发布）"
+        required: false
+        type: boolean
+        default: true
       tag:
-        description: "构建完成后将 zip 上传到该 Release tag（留空则仅保存为 artifact）"
+        description: "发布到该 GitHub Release tag（publish-github=true 时必填）"
         required: false
         type: string
+      sync-halo:
+        description: "是否同步到 Halo 应用市场（默认 true；false 时注入跳过标记，cd.yaml 检测后跳过同步）"
+        required: false
+        type: boolean
+        default: true
 
 # 同一分支上重复触发时排队执行，避免并发构建竞争 Release 资产（上传以最后一次为准）
 concurrency:
@@ -105,11 +115,26 @@ jobs:
             echo "已创建并推送 tag $TAG"
           fi
 
-      # 手动触发：校验 tag 必须以 v 开头，且与 theme.yaml 的 version 一致
-      - name: 校验 Release tag（手动触发）
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
+      # 手动触发：发布行为由显式开关决定（不靠 tag 填不填推断）
+      # publish-github=false → 仅构建不发布；true → tag 必填并校验
+      - name: 校验发布配置（手动触发）
+        if: github.event_name == 'workflow_dispatch'
         run: |
+          PUBLISH_GITHUB="${{ github.event.inputs.publish-github }}"
+          if [[ "$PUBLISH_GITHUB" == "false" ]]; then
+            echo "已显式关闭 GitHub 发布（publish-github=false），仅构建不发布"
+            if [[ "${{ github.event.inputs.sync-halo }}" != "false" ]]; then
+              echo "::warning::Halo 同步依赖 GitHub Release，publish-github=false 时一并忽略（如需同步请开启 GitHub 发布）"
+            fi
+            echo "publish=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          # 发布开启：tag 必须显式填写
           TAG="${{ github.event.inputs.tag }}"
+          if [[ -z "$TAG" ]]; then
+            echo "::error::GitHub 发布已开启（publish-github=true）但未填写 tag；如需仅构建请将 publish-github 设为 false"
+            exit 1
+          fi
           if [[ "$TAG" != v* ]]; then
             echo "::error::Release tag 必须以 v 开头（如 v1.0.7），当前输入：$TAG"
             exit 1
@@ -121,11 +146,14 @@ jobs:
             echo "::error::Release tag（$TAG）与 theme.yaml 版本（v$VERSION）不一致"
             exit 1
           fi
+          echo "publish=true" >> "$GITHUB_ENV"
           echo "校验通过：tag $TAG 与 theme.yaml 版本一致"
 
-      # 上传 zip 到 Release；不存在时自动创建（说明取 release.md），已存在时更新资产
+      # 上传 zip 到 Release；不存在时自动创建（说明取 release.md），已存在时更新资产。
+      # sync-halo=false 时在说明中注入隐藏标记 <!-- skip-halo-sync -->（页面不可见），
+      # cd.yaml 检测到该标记即跳过 Halo 应用市场同步
       - name: 上传到 GitHub Release
-        if: github.event_name == 'push' || github.event.inputs.tag != ''
+        if: github.event_name == 'push' || env.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -134,15 +162,24 @@ jobs:
           else
             TAG="${{ github.event.inputs.tag }}"
           fi
+          # 组装 Release 说明：release.md 内容；sync-halo=false 时追加跳过标记
+          WRITE_NOTES=0
+          if [[ "${{ github.event.inputs.sync-halo }}" == "false" ]]; then
+            WRITE_NOTES=1
+            printf '%s\n\n<!-- skip-halo-sync -->' "$(cat release.md 2>/dev/null)" > /tmp/release-notes.md
+          elif [ -f release.md ]; then
+            WRITE_NOTES=1
+            cp release.md /tmp/release-notes.md
+          fi
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release upload "$TAG" dist/*.zip --clobber
-            if [ -f release.md ]; then
-              gh release edit "$TAG" --notes-file release.md
+            if [ "$WRITE_NOTES" = "1" ]; then
+              gh release edit "$TAG" --notes-file /tmp/release-notes.md
             fi
             echo "已更新 Release $TAG 的资产"
           else
-            if [ -f release.md ]; then
-              gh release create "$TAG" dist/*.zip --notes-file release.md
+            if [ "$WRITE_NOTES" = "1" ]; then
+              gh release create "$TAG" dist/*.zip --notes-file /tmp/release-notes.md
             else
               gh release create "$TAG" dist/*.zip
             fi
