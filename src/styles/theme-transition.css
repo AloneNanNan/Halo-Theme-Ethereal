@@ -4,12 +4,16 @@
    JS（theme-transition.ts）只负责加 html.theme-anim-{style} 类、设 --theme-anim-* 变量
    并 startViewTransition；动画完全由下方 keyframes 驱动。
    降级（老浏览器 / reduced-motion / none / duration=0）由 JS 主闸直调，不经此层。
-   基础规则带 html:is(.theme-anim-*) 门控：仅主题切换的 VT 生效，
-   不劫持未来任何其他 VT（如 Swup native 开启）。 */
-html:is(.theme-anim-fade, .theme-anim-circle, .theme-anim-wipe)
-  ::view-transition-old(root),
-html:is(.theme-anim-fade, .theme-anim-circle, .theme-anim-wipe)
-  ::view-transition-new(root) {
+   基础规则必须展开书写（不能用 html:is(...) 门控）：实测 Chrome 对
+   html:is(.theme-anim-*) ::view-transition-* 的后代匹配不生效，动画时长
+   会回落 UA 默认 250ms（表现为"改 EASING_DURATION 无变化"）。
+   展开后每类选择器同时是门控：仅主题切换的 VT 生效，不劫持其他 VT。 */
+html.theme-anim-fade::view-transition-old(root),
+html.theme-anim-fade::view-transition-new(root),
+html.theme-anim-circle::view-transition-old(root),
+html.theme-anim-circle::view-transition-new(root),
+html.theme-anim-wipe::view-transition-old(root),
+html.theme-anim-wipe::view-transition-new(root) {
   animation-duration: var(--theme-anim-duration, 500ms);
   animation-timing-function: var(
     --theme-anim-easing,
@@ -39,6 +43,14 @@ html.theme-anim-wipe::view-transition-old(root) {
 }
 html.theme-anim-wipe::view-transition-new(root) {
   animation-name: theme-wipe-in;
+}
+
+/* circle/wipe 用 clip-path 揭示快照：覆盖 UA 默认的
+   ::view-transition-image-pair(root) 250ms 交叉淡化（不受 --theme-anim-duration
+   控制），避免淡入与扩散叠加产生闪烁（同样展开书写，见上注释） */
+html.theme-anim-circle::view-transition-image-pair(root),
+html.theme-anim-wipe::view-transition-image-pair(root) {
+  animation: none;
 }
 
 /* 整页同步：旧页淡出、新页淡入 */
