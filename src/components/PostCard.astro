@@ -57,7 +57,7 @@ import { imageSuffixThWith } from "../utils/image-suffix";
     th:href="@{${post.status.permalink}}"
     th:aria-label="${post.spec.title}"
     th:with={imageSuffixThWith("p?.card_cover_width ?: 400")}
-    class="group relative mx-4 -mb-2 mt-4 max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[16/9] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
+    class="group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[16/9] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
   >
     <div
       class="pointer-events-none absolute z-10 h-full w-full transition group-hover:bg-black/30 group-active:bg-black/50"
