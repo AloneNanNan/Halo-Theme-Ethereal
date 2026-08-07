@@ -97,7 +97,7 @@ jobs:
           fi
 
       # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v4
         with:
