@@ -43,7 +43,7 @@ jobs:
         with:
           fetch-depth: 0 # 需要 git 历史读取上一提交的版本号
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
@@ -99,7 +99,7 @@ jobs:
       # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
       - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
