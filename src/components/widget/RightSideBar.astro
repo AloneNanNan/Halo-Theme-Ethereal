@@ -11,6 +11,7 @@ import TOC from "./TOC.astro";
 interface Props {
   class?: string;
   showToc?: boolean;
+  "th:classappend"?: string;
 }
 
 const className = Astro.props.class;
