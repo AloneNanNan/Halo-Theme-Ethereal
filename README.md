@@ -2,7 +2,7 @@
 
 <p align="center">
   一款基于 <a href="https://github.com/jiewenhuang/halo-theme-fuwari">halo-theme-fuwari</a> 二次开发<br>
-  为 <a href="https://github.com/halo-dev/halo">Halo 2.x</a> 打造的现代博客主题
+  为 <a href="https://github.com/halo-dev/halo">Halo 2.x</a> 打造的 Fuwari 风格增强性主题
 </p>
 
 <p align="center">
@@ -47,6 +47,10 @@
 | :----------------------------------- | :--------- |
 | [楠枝小笺](https://www.nannax.top/)  | 主题开发者 |
 | [BoxCat](https://blog.lipei.online/) | 主题用户   |
+
+## 加入交流群
+
+[点击加入交流群](https://qm.qq.com/q/onMpJjYvgQ)
 
 ## 介绍
 
