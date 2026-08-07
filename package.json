@@ -33,7 +33,7 @@
     "@astrojs/svelte": "^8.1.0",
     "@halo-dev/api-client": "^2.24.0",
     "@swup/astro": "^1.8.0",
-    "@tailwindcss/vite": "^4.2.4",
+    "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.1.6",
     "astro-icon": "^1.1.5",
     "overlayscrollbars": "^2.16.0",
