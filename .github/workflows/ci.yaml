@@ -117,7 +117,7 @@ jobs:
       - name: 质量门校验
         uses: ./.github/actions/quality-gate
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ethereal-theme
           path: dist/*.zip
