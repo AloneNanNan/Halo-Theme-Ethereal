@@ -39,7 +39,7 @@ jobs:
     outputs:
       trigger: ${{ steps.check.outputs.trigger }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # 需要 git 历史读取上一提交的版本号
 
@@ -74,7 +74,7 @@ jobs:
     permissions:
       contents: write # 创建 tag 与 Release 需要
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # 排障日志：触发事件、手动触发参数、本次各发布步骤的执行决策
       - name: 运行参数与决策日志
