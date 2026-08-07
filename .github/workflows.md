@@ -17,7 +17,9 @@
 
 **触发方式**：
 - **push 到 `main`**：`scripts/check-version-bump.mjs` 读取当前 `theme.yaml` 的 `version`，与上一提交（HEAD~1）对比，版本增大且 semver 格式合法时自动执行完整发布流程
-- **手动（workflow_dispatch）**：直接构建；输入 `tag` 参数时发布到指定 Release（兜底场景）
+- **手动（workflow_dispatch）**：直接构建；发布行为由 `publish-github` / `sync-halo` 显式开关决定（兜底场景）
+
+**排障日志**：`version-check` 总是运行（不按事件静默跳过），逐步输出触发事件与决策（`::notice::`）；`build` job 开头打印运行参数（事件、`publish-github`/`tag`/`sync-halo`）与本次各发布步骤的执行计划，任何跳过的决策都有明确原因可见。
 
 **输入参数（手动触发）**
 
@@ -76,7 +78,7 @@
 
 **各触发路径的关键差异**：
 
-- **version-check job**：只在 push 事件运行（`if: github.event_name == 'push'`）；手动触发直接进入构建
+- **version-check job**：总是运行——push 事件执行版本增大检测（通过 → `trigger=true`，未增大 → `trigger=false`）；手动触发直接输出 `trigger=true` 并提示"无需版本检测"（避免 job 静默跳过无法排障）
 - **自动创建 tag 步骤**：只在 push 路径运行，按 `theme.yaml` 的 version 生成 tag；已存在则幂等跳过
 - **校验发布配置步骤**：只在手动触发运行——`publish-github=false` 时输出 `publish=false` 直接放行（仅构建）；`true` 时校验 tag 必填、`v` 前缀、与 `theme.yaml` version 一致性，输出 `publish=true`
 - **上传 Release 步骤**：push 路径用自动生成的 tag；手动路径仅在 `env.publish == 'true'` 时运行；`sync-halo=false` 时向说明注入 `<!-- skip-halo-sync -->` 标记

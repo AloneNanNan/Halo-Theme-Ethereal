@@ -28,10 +28,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 仅 push 事件需要检测版本是否增大；手动触发直接构建
+  # 总是运行（不再按事件跳过，避免静默跳过无法排障）：
+  # push 事件检测版本是否增大；手动触发直接放行并输出说明
   version-check:
     name: 检测 theme.yaml 版本号
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -47,26 +47,54 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: 版本增大且合规检查
+      - name: 版本检测 / 触发说明
         id: check
         run: |
+          echo "触发事件: ${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" != "push" ]]; then
+            echo "::notice::手动触发（workflow_dispatch）：无需版本增大检测，直接构建"
+            echo "trigger=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if node scripts/check-version-bump.mjs; then
+            echo "::notice::push 触发：版本较上一提交增大且合规，构建并自动发布"
             echo "trigger=true" >> "$GITHUB_OUTPUT"
           else
+            echo "::notice::push 触发：版本未增大或 semver 不合规，跳过构建（详见脚本输出）"
             echo "trigger=false" >> "$GITHUB_OUTPUT"
           fi
 
   build:
     name: Build & Release Theme
     needs: version-check
-    # push 触发：版本增大合规时才构建；手动触发：直接构建
-    if: (github.event_name == 'push' && needs.version-check.outputs.trigger == 'true') || github.event_name == 'workflow_dispatch'
+    # 手动触发时 trigger 恒为 true；push 时取决于版本检测结果
+    if: needs.version-check.outputs.trigger == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: write # 创建 tag 与 Release 需要
     steps:
       - uses: actions/checkout@v6
+
+      # 排障日志：触发事件、手动触发参数、本次各发布步骤的执行决策
+      - name: 运行参数与决策日志
+        run: |
+          echo "触发事件: ${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "发布决策: 自动发布（tag 自动创建，版本检测已通过）"
+            echo "步骤计划: 构建 → 质量门 → 自动创建 tag → 上传 Release（Halo 默认同步）"
+          else
+            echo "publish-github: ${{ github.event.inputs.publish-github }}"
+            echo "tag: ${{ github.event.inputs.tag }}"
+            echo "sync-halo: ${{ github.event.inputs.sync-halo }}"
+            if [[ "${{ github.event.inputs.publish-github }}" == "false" ]]; then
+              echo "发布决策: 已显式关闭 GitHub 发布 → 仅构建，不发布"
+              echo "步骤计划: 构建 → 质量门 → artifact（无发布步骤）"
+            else
+              echo "发布决策: 发布到 GitHub Release"
+              echo "步骤计划: 构建 → 质量门 → 校验 tag → 上传 Release（sync-halo=false 时注入跳过标记，Halo 不同步）"
+            fi
+          fi
 
       # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
       - uses: pnpm/action-setup@v4
