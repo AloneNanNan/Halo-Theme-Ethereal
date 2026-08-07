@@ -45,7 +45,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     </style>
   </Fragment>
 
-  <th:block
+  <div
+    th:remove="tag"
     th:with="allItems = ${linkFeedFinder.list({limit: theme.config?.friends.fetchLimit})}"
   >
     <!-- 单个白板卡片包裹全部内容 -->
@@ -93,8 +94,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         class="friends-timeline"
         th:attr="data-batch-size=${theme.config?.friends.pageSize ?: 30}, data-blacklist=${theme.config?.friends.blacklist ?: ''}"
       >
-        <th:block th:each="item, iterStat : ${allItems.items}">
-          <th:block
+        <div th:remove="tag" th:each="item, iterStat : ${allItems.items}">
+          <div
+            th:remove="tag"
             th:with="curDate = ${item.publishedAt != null ? #dates.format(item.publishedAt, 'yyyy-MM-dd') : ''}, prevItem = ${iterStat.index > 0 ? allItems.items[iterStat.index - 1] : null}, prevDate = ${prevItem != null && prevItem.publishedAt != null ? #dates.format(prevItem.publishedAt, 'yyyy-MM-dd') : ''}"
           >
             <div
@@ -204,8 +206,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                 </article>
               </div>
             </div>
-          </th:block>
-        </th:block>
+          </div>
+        </div>
       </div>
 
       <!-- 加载更多 -->
@@ -229,5 +231,5 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </p>
       </div>
     </section>
-  </th:block>
+  </div>
 </MainGridLayout>

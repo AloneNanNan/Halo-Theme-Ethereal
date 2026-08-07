@@ -233,7 +233,7 @@ const {
 
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
-  ></script>
+    defer></script>
   <script
     th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}

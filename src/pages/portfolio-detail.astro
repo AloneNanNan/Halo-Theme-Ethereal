@@ -7,7 +7,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.portfolioDetail.description(${site.title}, ${project.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <th:block
+  <div
+    th:remove="tag"
     th:with="platformLabels=${projectFinder.platformLabels()},
              typeLabels=${projectFinder.typeLabels()},
              content=${projectFinder.renderContent(project)}"
@@ -165,7 +166,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </div>
       </div>
     </article>
-  </th:block>
+  </div>
 </MainGridLayout>
 
 <style is:global>

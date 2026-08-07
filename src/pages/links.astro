@@ -76,7 +76,7 @@ import CopyButton from "../components/CopyButton.astro";
         title="随机访问一个友链"
       >
         <span
-          class="random-visit-icon icon-[material-symbols--shuffle-outline-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+          class="random-visit-icon icon-[material-symbols--shuffle-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
         ></span>
         <span class="random-visit-label">随机访问</span>
       </button>
@@ -295,7 +295,8 @@ import CopyButton from "../components/CopyButton.astro";
       </div>
 
       <!-- 右卡片：申请友链流程 -->
-      <th:block
+      <div
+        th:remove="tag"
         th:with="applySteps=${theme.config?.links?.['applyFlow']?.applySteps}"
       >
         <div
@@ -418,11 +419,12 @@ import CopyButton from "../components/CopyButton.astro";
             </button>
           </div>
         </div>
-      </th:block>
+      </div>
     </div>
 
     <!-- 折叠面板 -->
-    <th:block
+    <div
+      th:remove="tag"
       th:with="accs=${theme.config?.links?.['accordionPanel']?.accordions}"
     >
       <div
@@ -526,7 +528,7 @@ import CopyButton from "../components/CopyButton.astro";
           </div>
         </div>
       </div>
-    </th:block>
+    </div>
   </div>
 
   <script

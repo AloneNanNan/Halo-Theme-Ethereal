@@ -87,7 +87,7 @@
       <div class="icon-[material-symbols--dark-mode-outline-rounded] text-[1.25rem] leading-none"></div>
     </div>
     <div class="absolute inset-0 flex items-center justify-center" class:opacity-0={mode !== AUTO_MODE}>
-      <div class="icon-[material-symbols--radio-button-partial-outline] text-[1.25rem] leading-none"></div>
+      <div class="icon-[material-symbols--radio-button-partial] text-[1.25rem] leading-none"></div>
     </div>
   </button>
 
@@ -115,7 +115,7 @@
             class:current-theme-btn={mode === AUTO_MODE}
             onclick={() => switchScheme(AUTO_MODE)}
     >
-      <div class="icon-[material-symbols--radio-button-partial-outline] text-[1.25rem] mr-3"></div>
+      <div class="icon-[material-symbols--radio-button-partial] text-[1.25rem] mr-3"></div>
       {t("theme.system", "系统")}
     </button>
   </div>
