@@ -31,18 +31,18 @@
   },
   "dependencies": {
     "@astrojs/svelte": "^9.0.1",
-    "@halo-dev/api-client": "^2.24.0",
+    "@halo-dev/api-client": "^2.25.2",
     "@swup/astro": "^1.8.0",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.1.6",
+    "astro": "^7.2.0",
     "astro-icon": "^1.1.5",
     "overlayscrollbars": "^2.16.0",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.3",
     "stylus": "^0.64.0",
-    "svelte": "^5.55.7",
+    "svelte": "^5.56.8",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
@@ -58,7 +58,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "nodemon": "^3.1.14",
-    "prettier": "3.8.1",
+    "prettier": "3.9.6",
     "prettier-plugin-astro": "0.14.1",
     "unplugin-icons": "^23.0.1"
   },
