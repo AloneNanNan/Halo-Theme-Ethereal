@@ -185,6 +185,10 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 
 ```
 halo-theme-ethereal/
+├── .github/                     # GitHub 工作流
+│   └── workflows/
+│       └── cd.yaml              # 发布时同步到 Halo 应用市场
+├── .husky/                      # git 钩子（pre-commit 代码格式化）
 ├── i18n/                        # 国际化翻译文件
 │   ├── default.properties       # 默认语言（英文）
 │   ├── zh_CN.properties         # 简体中文
@@ -202,7 +206,6 @@ halo-theme-ethereal/
 │   │   ├── misc/                # 杂项组件
 │   │   ├── photos/              # 照片相关组件
 │   │   └── widget/              # 侧边栏小部件（公告、个人简介、天气、音乐、一言、统计、目录等）
-│   ├── config.ts                # 主题配置（运行时）
 │   ├── constants/               # 常量定义
 │   ├── env.d.ts                 # 环境类型声明
 │   ├── global.d.ts              # 全局类型声明
@@ -224,22 +227,26 @@ halo-theme-ethereal/
 │   │   ├── links.astro          # 友情链接
 │   │   ├── friends.astro        # 朋友圈
 │   │   ├── equipments.astro     # 装备展示
-│   │   ├── portfolio.astro       # 项目集列表
+│   │   ├── portfolio.astro      # 项目集列表
 │   │   ├── portfolio-detail.astro # 项目集详情
-│   │   ├── error/                # 错误页面
-│   │   │   └── 404.astro         # 404 页面
+│   │   ├── error/               # 错误页面
+│   │   │   └── 404.astro        # 404 页面
 │   │   └── page.astro           # 自定义页面
 │   ├── scripts/                 # 应用入口脚本
 │   │   └── app.ts               # 初始化逻辑（主题、滚动条、灯箱等）
 │   ├── styles/                  # 全局样式
 │   ├── types/                   # TypeScript 类型定义
+│   │   ├── config.ts            # 主题配置类型
+│   │   └── searchResult.ts      # 搜索结果类型
 │   └── utils/                   # 工具函数
+│       └── photos/              # 相册相关工具
 ├── astro.config.mjs             # Astro 构建配置
 ├── nodemon.json                 # 开发热更新配置
 ├── settings.yaml                # Halo 主题设置定义
 ├── svelte.config.js             # Svelte 配置
 ├── theme.yaml                   # Halo 主题元信息
 ├── tsconfig.json                # TypeScript 配置
+├── pnpm-lock.yaml               # pnpm 依赖锁定文件
 ├── pnpm-workspace.yaml          # pnpm 工作区配置
 └── package.json                 # 项目依赖与脚本
 ```
