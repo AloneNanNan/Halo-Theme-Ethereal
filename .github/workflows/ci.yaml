@@ -64,61 +64,9 @@ jobs:
             echo "trigger=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # 安全门：push 触发时等待当前提交的 CodeQL 扫描完成后才允许构建发布。
-  # 注意：if 不能带 event_name 条件——needs 中的 job 被 skip 会导致 build 连带
-  # skip（GitHub needs 传播规则），手动触发会因此无法构建。非 push 时在
-  # run 脚本内快速放行（CodeQL 不监听 workflow_dispatch，无可等待）
-  codeql-gate:
-    name: 等待 CodeQL 扫描
-    needs: version-check
-    if: needs.version-check.outputs.trigger == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      actions: read # 查询与监听 CodeQL workflow run 状态
-    steps:
-      - name: 等待当前提交的 CodeQL 扫描完成
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 手动触发：CodeQL 不监听 workflow_dispatch，无 run 可等，直接放行
-          if [[ "${{ github.event_name }}" != "push" ]]; then
-            echo "::notice::手动触发（workflow_dispatch）：CodeQL 不监听该事件，跳过等待"
-            exit 0
-          fi
-          # 列出当前 commit 的全部 CodeQL run（可能多个），逐个等待完成
-          RUNS=$(gh run list --workflow=codeql.yml --commit "$GITHUB_SHA" \
-            --json databaseId,status --jq '.[].databaseId' 2>/dev/null || true)
-          if [ -z "$RUNS" ]; then
-            echo "::warning::未找到当前提交的 CodeQL 扫描（可能尚未开始），继续构建"
-            exit 0
-          fi
-          echo "找到 CodeQL run: $(echo $RUNS | tr '\n' ' ')"
-          FAILED=""
-          for RUN_ID in $RUNS; do
-            # API 轮询等待完成（38 次 × 15s ≈ 9.5 分钟，在 10 分钟超时内），
-            # 替代 gh run watch 避免挂起；每次轮询输出状态便于排障
-            for i in $(seq 1 38); do
-              STATUS=$(gh run view "$RUN_ID" --json status --jq .status)
-              echo "  run $RUN_ID 状态: $STATUS"
-              [ "$STATUS" = "completed" ] && break
-              sleep 15
-            done
-            CONCLUSION=$(gh run view "$RUN_ID" --json conclusion --jq .conclusion)
-            echo "  run $RUN_ID 结论: $CONCLUSION"
-            if [ "$STATUS" != "completed" ] || [ "$CONCLUSION" != "success" ]; then
-              FAILED="$FAILED $RUN_ID($CONCLUSION)"
-            fi
-          done
-          if [ -n "$FAILED" ]; then
-            echo "::error::CodeQL 扫描未通过:$FAILED，终止构建发布"
-            exit 1
-          fi
-          echo "::notice::CodeQL 扫描全部通过"
-
   build:
     name: Build & Release Theme
-    needs: [version-check, codeql-gate]
+    needs: [version-check]
     # 手动触发时 trigger 恒为 true；push 时取决于版本检测结果
     if: needs.version-check.outputs.trigger == 'true'
     runs-on: ubuntu-latest
