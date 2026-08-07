@@ -1,8 +1,11 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
+
+import { stripHtmlCommentsInDir } from "./scripts/strip-html-comments.mjs";
 
 import Icons from "unplugin-icons/vite";
 import svelte from "@astrojs/svelte";
@@ -19,6 +22,17 @@ const themeVersion =
   (themeYaml.match(/^[ \t]*version:\s*["']?([^"'\r\n]+)["']?/m) ||
     [])[1]?.trim() || "0.0.0";
 
+// 构建完成后剥离产物 HTML 中的 <!-- --> 开发注释
+/** @type {import("astro").AstroIntegration} */
+const stripHtmlComments = {
+  name: "strip-html-comments",
+  hooks: {
+    "astro:build:done": async ({ dir }) => {
+      await stripHtmlCommentsInDir(fileURLToPath(dir));
+    },
+  },
+};
+
 export default defineConfig({
   base: "/themes/Ethereal",
   build: {
@@ -27,6 +41,7 @@ export default defineConfig({
   },
   outDir: "./templates",
   integrations: [
+    stripHtmlComments,
     swup({
       theme: false,
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
@@ -126,13 +141,13 @@ export default defineConfig({
           "palette-outline",
           "person-outline-rounded",
           "photo-library-outline-rounded",
-          "photo-library-rounded",
+          "photo-library-sharp",
           "play-circle-rounded",
-          "radio-button-partial-outline",
+          "radio-button-partial",
           "refresh-rounded",
           "search",
           "settings-suggest-rounded",
-          "shuffle-outline-rounded",
+          "shuffle-rounded",
           "star-rounded",
           "tag-rounded",
           "text-ad-outline-rounded",
@@ -169,9 +184,9 @@ export default defineConfig({
       ASSET_VERSION: JSON.stringify(themeVersion),
     },
     plugins: [
-      tailwindcss({
-        safelist: ["navbar-blur"],
-      }),
+      // Tailwind v4 已移除 safelist 选项（v3 遗留，会被静默忽略）：
+      // navbar-blur 类在 Navbar.astro 源码中以字面量存在，内容检测会自动生成
+      tailwindcss(),
       Icons(),
     ],
   },

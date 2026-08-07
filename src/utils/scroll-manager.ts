@@ -33,8 +33,8 @@ function syncHomeClass(pathname = window.location.pathname) {
       .trim();
     const offset = isHome ? ext : "0px";
     const value = "translateY(calc(-100% + 1px + " + offset + "))";
+    // 标准 transform 已覆盖所有现代浏览器（含 Safari 9+），无需 -webkit- 前缀
     wave.style.transform = value;
-    wave.style.webkitTransform = value;
   }
 }
 

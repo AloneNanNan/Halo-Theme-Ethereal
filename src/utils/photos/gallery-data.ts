@@ -1,3 +1,5 @@
+import type { I18nWindow } from "../i18n";
+
 export interface PhotoGalleryMetaItem {
   label: string;
   value: string;
@@ -22,7 +24,7 @@ export function textFrom(element: Element | null) {
 }
 
 export function t(key: string, fallback: string) {
-  const value = window.i18nResources?.[key];
+  const value = (window as I18nWindow).i18nResources?.[key];
   return value && !value.includes("#{") ? value : fallback;
 }
 

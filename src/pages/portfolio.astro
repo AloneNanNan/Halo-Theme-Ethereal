@@ -7,7 +7,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.portfolio.description(${site.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <th:block
+  <div
+    th:remove="tag"
     th:with="platformLabels=${projectFinder.platformLabels()},
              typeLabels=${projectFinder.typeLabels()},
              platform=${#strings.isEmpty(param.platform) ? '' : param.platform},
@@ -94,10 +95,11 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       </div>
 
       <!-- 推荐项目（仅首页无筛选时展示） -->
-      <th:block
+      <div
+        th:remove="tag"
         th:if="${#strings.isEmpty(platform) and #strings.isEmpty(type)}"
       >
-        <th:block th:with="featured=${projectFinder.featured(1, 6)}">
+        <div th:remove="tag" th:with="featured=${projectFinder.featured(1, 6)}">
           <div
             th:if="${featured != null and not featured.items.isEmpty()}"
             class="mb-8"
@@ -185,8 +187,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               </div>
             </div>
           </div>
-        </th:block>
-      </th:block>
+        </div>
+      </div>
 
       <!-- 项目卡片网格 -->
       <div
@@ -307,5 +309,5 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </p>
       </div>
     </section>
-  </th:block>
+  </div>
 </MainGridLayout>

@@ -7,12 +7,13 @@ let cachedThemeConfig: Record<string, unknown> | null | undefined;
 
 export function getThemeConfig(): Record<string, unknown> | null {
   if (cachedThemeConfig !== undefined) return cachedThemeConfig;
+  let config: Record<string, unknown> | null = null;
   try {
     const el = document.getElementById("theme-config");
-    if (!el?.textContent) return (cachedThemeConfig = null);
-    cachedThemeConfig = JSON.parse(el.textContent);
-    return cachedThemeConfig;
+    if (el?.textContent) config = JSON.parse(el.textContent);
   } catch {
-    return (cachedThemeConfig = null);
+    config = null;
   }
+  cachedThemeConfig = config;
+  return config;
 }

@@ -7,7 +7,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.portfolioDetail.description(${site.title}, ${project.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <th:block
+  <div
+    th:remove="tag"
     th:with="platformLabels=${projectFinder.platformLabels()},
              typeLabels=${projectFinder.typeLabels()},
              content=${projectFinder.renderContent(project)}"
@@ -165,7 +166,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </div>
       </div>
     </article>
-  </th:block>
+  </div>
 </MainGridLayout>
 
 <style is:global>
@@ -193,7 +194,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     padding-bottom: 0.3em;
   }
 
-  :global(html.dark) .portfolio-content h2 {
+  html.dark .portfolio-content h2 {
     border-bottom-color: rgb(255 255 255 / 0.08);
   }
 
@@ -256,8 +257,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     padding: 0.5em 0.75em;
   }
 
-  :global(html.dark) .portfolio-content th,
-  :global(html.dark) .portfolio-content td {
+  html.dark .portfolio-content th,
+  html.dark .portfolio-content td {
     border-color: rgb(255 255 255 / 0.1);
   }
 

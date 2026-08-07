@@ -11,6 +11,7 @@ import TOC from "./TOC.astro";
 interface Props {
   class?: string;
   showToc?: boolean;
+  "th:classappend"?: string;
 }
 
 const className = Astro.props.class;
@@ -85,7 +86,8 @@ const thClassappend = Astro.props["th:classappend"] || "";
       </div>
     </div>
     {/* 目录：仅文章页（showToc）且主题开启目录时显示，自适应剩余空间 */}
-    <th:block
+    <div
+      th:remove="tag"
       th:if={showToc
         ? "${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
         : "false"}
@@ -108,6 +110,6 @@ const thClassappend = Astro.props["th:classappend"] || "";
           </div>
         </div>
       </div>
-    </th:block>
+    </div>
   </div>
 </aside>

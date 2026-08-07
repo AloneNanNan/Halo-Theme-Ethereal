@@ -11,6 +11,7 @@ import Weather from "./Weather.astro";
 
 interface Props {
   class?: string;
+  "th:classappend"?: string;
 }
 
 const className = Astro.props.class;
