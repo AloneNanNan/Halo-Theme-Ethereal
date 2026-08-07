@@ -9,10 +9,11 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // 保护块：script/style 内部（Thymeleaf 内联语法、字符串字面量中的 `<!--` 均在其中）
+// 结束标签用 [^>]*> 宽松匹配：兼容 `</script >`、`</script data-x>` 等带空白/属性的写法
 const PROTECTED =
-  /(<script\b[\s\S]*?<\/script\s*>|<style\b[\s\S]*?<\/style\s*>)/gi;
-// 跨行非贪婪匹配 HTML 注释（compressHTML 已压缩空白，注释内部换行随注释一并删除）
-const COMMENT = /<!--[\s\S]*?-->/g;
+  /(<script\b[\s\S]*?<\/script[^>]*>|<style\b[\s\S]*?<\/style[^>]*>)/gi;
+// 跨行非贪婪匹配 HTML 注释；未闭合（无 --> 配对）时匹配到段尾一并清除，避免残留破坏结构
+const COMMENT = /<!--[\s\S]*?(?:-->|$)/g;
 
 /** @param {string} dirPath */
 export async function stripHtmlCommentsInDir(dirPath) {

@@ -191,7 +191,12 @@ function createOrUpdateModal(targetUrl: string) {
   const config = getConfig();
   const delay = config?.redirect_delay ?? 5;
   const openNew = config?.open_new_window ?? false;
-  const avatarUrl = config?.avatar || "";
+  // 头像 URL 协议白名单：仅允许 http/https（防 javascript: 等危险协议注入 img.src）
+  const rawAvatar = config?.avatar;
+  const avatarUrl =
+    typeof rawAvatar === "string" && /^https?:\/\//i.test(rawAvatar)
+      ? rawAvatar
+      : "";
   const displayUrl =
     targetUrl.length > 70 ? targetUrl.slice(0, 70) + "..." : targetUrl;
 
