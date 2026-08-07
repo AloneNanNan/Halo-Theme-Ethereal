@@ -14,6 +14,10 @@ jobs:
   appstore-release:
     name: Sync to Halo App Store
     runs-on: ubuntu-latest
+    # 最小权限：仅仓库内容读权限（checkout + 下载 release 附件）；
+    # 不写代码、不改 issue/PR，避免 token 泄漏时的影响面。
+    permissions:
+      contents: read
     if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') || github.event_name == 'workflow_dispatch' }}
     steps:
       # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
