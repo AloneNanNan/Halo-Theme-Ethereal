@@ -64,9 +64,45 @@ jobs:
             echo "trigger=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # 安全门：push 触发时等待当前提交的 CodeQL 扫描完成后才允许构建发布
+  # （手动触发无对应提交的 CodeQL run，直接放行）
+  codeql-gate:
+    name: 等待 CodeQL 扫描
+    needs: version-check
+    if: needs.version-check.outputs.trigger == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read # 查询与监听 CodeQL workflow run 状态
+    steps:
+      - name: 等待当前提交的 CodeQL 扫描完成
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=""
+          # 轮询等待 CodeQL run 出现在当前 commit 上（最长 5 分钟，扫描排队/启动需要时间）
+          for i in $(seq 1 30); do
+            RUN_ID=$(gh run list --workflow=codeql.yml --commit "$GITHUB_SHA" \
+              --json databaseId,status --jq '.[0].databaseId // empty' 2>/dev/null || true)
+            [ -n "$RUN_ID" ] && break
+            sleep 10
+          done
+          if [ -z "$RUN_ID" ]; then
+            echo "::warning::未找到当前提交的 CodeQL 扫描（可能尚未开始），继续构建"
+            exit 0
+          fi
+          echo "找到 CodeQL run: $RUN_ID，等待完成..."
+          if gh run watch "$RUN_ID" --exit-status --interval 15; then
+            echo "::notice::CodeQL 扫描通过"
+          else
+            CONCLUSION=$(gh run view "$RUN_ID" --json conclusion --jq .conclusion)
+            echo "::error::CodeQL 扫描未通过（结论: $CONCLUSION），终止构建发布"
+            exit 1
+          fi
+
   build:
     name: Build & Release Theme
-    needs: version-check
+    needs: [version-check, codeql-gate]
     # 手动触发时 trigger 恒为 true；push 时取决于版本检测结果
     if: needs.version-check.outputs.trigger == 'true'
     runs-on: ubuntu-latest
@@ -213,3 +249,23 @@ jobs:
             fi
             echo "已创建 Release $TAG 并上传资产"
           fi
+
+      # 通知 CD 同步 Halo 应用市场：GITHUB_TOKEN 创建的 Release 不会触发
+      # release:published 事件（GitHub 防递归机制），需显式发送 repository_dispatch
+      - name: 通知 CD 同步 Halo（repository_dispatch）
+        if: github.event_name == 'push' || env.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            TAG="${{ env.tag }}"
+          else
+            TAG="${{ github.event.inputs.tag }}"
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/dispatches" \
+            -d "{\"event_type\":\"theme-release\",\"client_payload\":{\"tag\":\"$TAG\"}}"
+          echo "已发送 repository_dispatch（tag=$TAG）通知 cd.yaml 同步 Halo"

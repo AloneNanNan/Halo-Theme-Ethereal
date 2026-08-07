@@ -9,10 +9,13 @@ on:
         description: "要同步到应用市场的 Release tag（如 v1.0.4）"
         required: true
         type: string
+  # ci.yaml 构建发布后显式通知（GITHUB_TOKEN 创建的 Release 不触发 release 事件）
+  repository_dispatch:
+    types: [theme-release]
 
 # 同一 Release 只同步一次，重复触发排队执行
 concurrency:
-  group: cd-${{ github.event.release.id || github.event.inputs.tag }}
+  group: cd-${{ github.event.release.id || github.event.inputs.tag || github.event.client_payload.tag }}
   cancel-in-progress: false
 
 jobs:
@@ -22,7 +25,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    if: ${{ (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' }}
     steps:
       # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
       - uses: actions/checkout@v7
@@ -42,7 +45,7 @@ jobs:
             || { echo "::error::Release $TAG 不存在，请先在 GitHub 发布该 tag"; exit 1; }
           echo "Release $TAG 存在"
 
-      # 解析 Release ID 和 tag（release 事件直接用，手动触发时按 tag 查询）
+      # 解析 Release ID 和 tag（release 事件直接用；手动触发 / dispatch 按 tag 查询）
       - name: Resolve Release
         id: release
         env:
@@ -51,6 +54,11 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" ]]; then
             echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
             echo "release-id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            TAG="${{ github.event.client_payload.tag }}"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            ID=$(gh api "/repos/{owner}/{repo}/releases/tags/$TAG" --jq .id)
+            echo "release-id=$ID" >> "$GITHUB_OUTPUT"
           else
             TAG="${{ github.event.inputs.tag }}"
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
