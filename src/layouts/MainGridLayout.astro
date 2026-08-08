@@ -131,7 +131,7 @@ const {
     >
       <div
         id="main-grid"
-        class="left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-700 md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
+        class="left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
         th:style="${theme.config?.base?.banner?.enable ? 'min-height: calc(100vh - var(--banner-height) + 3.5rem)' : 'min-height: calc(100vh - 5.5rem)'}"
       >
