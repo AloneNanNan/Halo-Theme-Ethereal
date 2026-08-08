@@ -173,9 +173,12 @@
     top: var(--banner-height);
     -webkit-transform: translateY(calc(-100% + 1px));
     transform: translateY(calc(-100% + 1px));
-    -webkit-transition: -webkit-transform 700ms
+    /* 时长与 banner 装配件统一用 --dur-banner（随速度档位）：
+       硬编码 700ms 会在舒缓档（800ms）/疾速档（500ms）与 banner/主网格
+       移速不一致，wave 领先产生间隙 */
+    -webkit-transition: -webkit-transform var(--dur-banner, 700ms)
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
-    transition: transform 700ms
+    transition: transform var(--dur-banner, 700ms)
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
@@ -184,6 +187,16 @@
      app.ts 首次同步完成后（双 rAF）给 <html> 加 page-ready 恢复平滑过渡 */
   html:not(.page-ready) #wave-container {
     transition: none;
+  }
+
+  /* 显式 0 长度基值：is-home 切换时 translate 在 length↔length 间过渡。
+     translate: none 与长度不可插值（CSS Transforms 2），会导致网格瞬移而
+     wave 慢滑，两者移速不一致、露出 banner 图片。
+     修复后 wave（transform 700ms）与网格（translate 700ms）同速同步滑动，
+     无需任何 is-changing 覆盖（wave 保持自然过渡，不闪现） */
+  .enable-banner #main-grid,
+  .enable-banner #banner-wrapper {
+    translate: 0 0;
   }
 
   .enable-banner #banner-wrapper {
@@ -198,9 +211,9 @@
     @apply h-[calc(var(--banner-height-home)-4.5rem)] transition-all duration-300;
   }
 
-  /* 标题/副标题淡入淡出 */
+  /* 标题/副标题淡入淡出：时长与 banner 装配件位移统一（--dur-banner 随档位） */
   #banner-overlay {
-    transition: opacity 0.5s ease;
+    transition: opacity var(--dur-banner, 700ms) ease;
   }
 
   #banner-overlay.banner-text-hidden {

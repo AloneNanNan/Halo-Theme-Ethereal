@@ -32,7 +32,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <a
         th:each="category, stat : ${categories}"
         th:href="@{${category.status.permalink}}"
-        th:style="|animation-delay: calc(var(--content-delay) + ${stat.index * 50}ms)|"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${stat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         class="btn-card btn-card-outline group min-h-24 justify-between! rounded-2xl px-5 py-4 text-left active:scale-95 onload-animation card-hover-lift"
       >
         <div>

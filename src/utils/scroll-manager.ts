@@ -25,9 +25,14 @@ function syncHomeClass(pathname = window.location.pathname) {
     normalizedPath = normalizedPath.slice(0, -"/index.html".length) || "/";
   }
   const isHome = normalizedPath === "/" || normalizedPath === "/index";
-  document.body.classList.toggle("is-home", isHome);
   const wave = document.getElementById("wave-container");
   if (wave) {
+    // 注意顺序：getComputedStyle 会强制同步样式刷新。若先切 is-home 再读
+    // getComputedStyle，grid 的 translate 过渡会在该 flush 时刻启动，而 wave
+    // 的 transform 要到下一帧才提交——两条过渡起点错开一帧，缓动前段移动快，
+    // 视觉上表现为 wave 先动、先到终点，与下部页面产生间隙。
+    // 先读变量（此时样式干净，flush 无副作用）→ wave 与 is-home 同一脏批次
+    // 提交，两条过渡同帧开始。
     const ext = getComputedStyle(document.documentElement)
       .getPropertyValue("--banner-height-extend")
       .trim();
@@ -36,6 +41,7 @@ function syncHomeClass(pathname = window.location.pathname) {
     // 标准 transform 已覆盖所有现代浏览器（含 Safari 9+），无需 -webkit- 前缀
     wave.style.transform = value;
   }
+  document.body.classList.toggle("is-home", isHome);
 }
 
 // 缓存 DOM 引用，避免每次 scroll 帧重复 getElementById

@@ -10,6 +10,7 @@ import "../styles/theme-transition.css";
 import "../styles/components.css";
 import "../styles/markdown.css";
 import "../styles/transition.css";
+import "../styles/speed.css";
 import "../styles/scrollbar.css";
 import "../styles/external-link-modal.css";
 import "../styles/link-apply-modal.css";
@@ -68,7 +69,10 @@ function initCustomScrollbar() {
     const running = document
       .getAnimations()
       .filter(
-        (a) => a instanceof CSSAnimation && a.animationName === "fade-in-up",
+        (a) =>
+          a instanceof CSSAnimation &&
+          (a.animationName === "fade-in-up" ||
+            a.animationName === "slide-in-up"),
       );
     if (running.length > 0) {
       void Promise.all(

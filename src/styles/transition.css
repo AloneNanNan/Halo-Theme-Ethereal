@@ -1,7 +1,12 @@
 @reference "./global.css";
 
 html.is-changing .transition-swup-fade {
-  @apply transition-all duration-200;
+  transition-property: all;
+  transition-duration: var(--dur-swup, 200ms);
+  transition-timing-function: var(
+    --default-transition-timing-function,
+    cubic-bezier(0.4, 0, 0.2, 1)
+  );
 }
 
 html.is-animating .transition-swup-fade {
@@ -36,7 +41,7 @@ html.swup-visited #right-sidebar {
 
 .onload-animation {
   opacity: 0;
-  animation: 300ms fade-in-up;
+  animation: var(--dur-entry, 300ms) fade-in-up;
   animation-fill-mode: forwards;
 }
 
@@ -44,25 +49,26 @@ html.swup-visited #right-sidebar {
   animation-delay: 0ms;
 }
 
-/* 首页 banner 标题：紧随导航栏 */
+/* 首页 banner 标题：紧随导航栏。
+   各区块错峰用 min() 收敛到 --dur-entry-max：疾速档（0ms）全部归零 */
 #banner-title {
   opacity: 0;
-  animation: 300ms fade-in-up;
+  animation: var(--dur-entry, 300ms) fade-in-up;
   animation-fill-mode: forwards;
-  animation-delay: 50ms;
+  animation-delay: min(50ms, var(--dur-entry-max, 400ms));
 }
 
 /* 首页 banner 副标题：标题之后，侧边栏之前 */
 #banner-subtitle-wrapper {
   opacity: 0;
-  animation: 300ms fade-in-up;
+  animation: var(--dur-entry, 300ms) fade-in-up;
   animation-fill-mode: forwards;
-  animation-delay: 130ms;
+  animation-delay: min(130ms, var(--dur-entry-max, 400ms));
 }
 
 #sidebar,
 #right-sidebar {
-  animation-delay: 100ms;
+  animation-delay: min(100ms, var(--dur-entry-max, 400ms));
 }
 
 #swup-container {
@@ -70,33 +76,71 @@ html.swup-visited #right-sidebar {
 }
 
 #content-wrapper {
-  animation-delay: var(--content-delay);
+  animation-delay: min(var(--content-delay), var(--dur-entry-max, 400ms));
 }
 
 .footer {
-  animation-delay: 250ms;
+  animation-delay: min(250ms, var(--dur-entry-max, 400ms));
 }
 
 #banner-credit {
-  animation-delay: 400ms;
+  animation-delay: min(400ms, var(--dur-entry-max, 400ms));
 }
 
 #post-container :nth-child(1) {
-  animation-delay: calc(var(--content-delay) + 0ms);
+  animation-delay: min(
+    calc(var(--content-delay) + 0ms),
+    var(--dur-entry-max, 400ms)
+  );
 }
 
 #post-container :nth-child(2) {
-  animation-delay: calc(var(--content-delay) + 50ms);
+  animation-delay: min(
+    calc(var(--content-delay) + 50ms),
+    var(--dur-entry-max, 400ms)
+  );
 }
 
 #post-container :nth-child(3) {
-  animation-delay: calc(var(--content-delay) + 100ms);
+  animation-delay: min(
+    calc(var(--content-delay) + 100ms),
+    var(--dur-entry-max, 400ms)
+  );
 }
 
 #post-container :nth-child(4) {
-  animation-delay: calc(var(--content-delay) + 175ms);
+  animation-delay: min(
+    calc(var(--content-delay) + 175ms),
+    var(--dur-entry-max, 400ms)
+  );
 }
 
 #post-container :nth-child(5) {
-  animation-delay: calc(var(--content-delay) + 250ms);
+  animation-delay: min(
+    calc(var(--content-delay) + 250ms),
+    var(--dur-entry-max, 400ms)
+  );
+}
+
+/* —— 疾速档（data-speed="snappy"）——
+   入场只做纯位移（slide-in-up）、不透明门控：内容立即可读，
+   只保留一瞬"进场"运动感。错峰延迟已由上方 min(--dur-entry-max) 归零。 */
+@keyframes slide-in-up {
+  from {
+    translate: 0 8px;
+  }
+
+  to {
+    translate: 0 0;
+  }
+}
+
+html[data-speed="snappy"] .onload-animation,
+html[data-speed="snappy"] #banner-title,
+html[data-speed="snappy"] #banner-subtitle-wrapper {
+  opacity: 1;
+  animation-name: slide-in-up;
+  animation-duration: var(--dur-entry, 120ms);
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
 }

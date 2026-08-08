@@ -69,7 +69,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:each="moment, momentStat : ${moments.items}"
         th:with="content=${moment.spec.content}"
         class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation card-hover-lift relative"
-        th:style="|animation-delay: calc(var(--content-delay) + ${momentStat.index * 50}ms)|"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${momentStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
       >
         <span
           aria-hidden="true"

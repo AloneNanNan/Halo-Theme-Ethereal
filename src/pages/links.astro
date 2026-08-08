@@ -109,7 +109,7 @@ import CopyButton from "../components/CopyButton.astro";
       <section
         th:each="group, groupStat : ${groups}"
         th:if="${(#lists.isEmpty(param.group) or #lists.contains(param.group, group.spec.displayName)) and not #lists.isEmpty(group.links)}"
-        th:style="|animation-delay: calc(var(--content-delay) + ${groupStat.index * 50}ms)|"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${groupStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         class="onload-animation"
       >
         <div class="mb-4 flex items-center justify-between gap-4">
@@ -129,7 +129,7 @@ import CopyButton from "../components/CopyButton.astro";
             th:href="${link.spec.url != null and (link.spec.url.startsWith('http') or link.spec.url.startsWith('//') or link.spec.url.startsWith('/')) ? link.spec.url : null}"
             th:title="${link.spec.displayName}"
             th:attr="data-link-group=${group.spec.displayName}"
-            th:style="|animation-delay: calc(var(--content-delay) + ${(groupStat.index * 4 + linkStat.index) * 50}ms)|"
+            th:style="|animation-delay: min(calc(var(--content-delay) + ${groupStat.index * 4 + linkStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
             target="_blank"
             rel="noopener noreferrer"
             class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation card-hover-lift"

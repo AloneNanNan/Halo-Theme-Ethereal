@@ -15,7 +15,7 @@ const { pagination = "posts" } = Astro.props;
   <div class="contents" th:each="post, postStat : ${posts.items}">
     <div
       class="onload-animation"
-      th:style="|animation-delay: calc(var(--content-delay) + ${postStat.index * 50}ms)|"
+      th:style="|animation-delay: min(calc(var(--content-delay) + ${postStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
     >
       <PostCard />
     </div>

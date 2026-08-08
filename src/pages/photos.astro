@@ -99,7 +99,7 @@ import "../styles/photos-gallery-lightbox.css";
         <article
           th:each="photo, photoStat : ${photos.items}"
           class="photo-gallery-item group/photo-item relative mb-4 block w-full break-inside-avoid onload-animation"
-          th:style="|animation-delay: calc(var(--content-delay) + ${photoStat.index * 50}ms)|"
+          th:style="|animation-delay: min(calc(var(--content-delay) + ${photoStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         >
           <a
             class="photo-gallery-link group block w-full cursor-zoom-in overflow-hidden rounded-xl bg-black/5 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--primary) active:scale-95 dark:bg-white/5 card-hover-lift"

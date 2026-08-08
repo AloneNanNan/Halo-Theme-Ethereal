@@ -86,7 +86,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:title="${equipment.spec.displayName}"
         target="_blank"
         rel="noopener noreferrer"
-        th:style="|animation-delay: calc(var(--content-delay) + ${equipStat.index * 50}ms)|"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${equipStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation card-hover-lift"
       >
         <!-- 封面 -->
