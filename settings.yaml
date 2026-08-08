@@ -122,6 +122,7 @@ spec:
           children:
             - $formkit: select
               name: speedTier
+              id: speedTier
               label: 速度档位
               value: balanced
               help: "舒缓：保留完整错峰入场演出；均衡：当前主题原值；疾速：入场只做轻微位移、内容立即可见（换页时长随之缩短）；自定义：手动逐项设置各动画时长（不涉及主题切换动画，其仍随缓动曲线匹配）"

@@ -186,6 +186,23 @@
     transition: none;
   }
 
+  /* 换页期间 banner 装配件位移过渡统一收敛到 swup 换页时长（--dur-swup）：
+     page:view 时 syncHomeClass 按新页 is-home 状态同步改写 wave transform 与
+     banner 装配件位移，各元素默认 700ms 过渡远超 swup 的 200ms，且 wave 走
+     transform、其余走 translate，导致移速不一致——wave 与下部页面之间露出
+     banner 图片。统一为 --dur-swup 后整组与内容同速滑动，无分离也无闪现；
+     换页结束恢复原时长（此时已无位移变化，不影响后续动画） */
+  html.is-changing #wave-container,
+  html.is-changing #banner-wrapper,
+  html.is-changing #banner,
+  html.is-changing #main-grid,
+  html.is-animating #wave-container,
+  html.is-animating #banner-wrapper,
+  html.is-animating #banner,
+  html.is-animating #main-grid {
+    transition-duration: var(--dur-swup, 200ms);
+  }
+
   .enable-banner #banner-wrapper {
     @apply h-(--banner-height-home);
   }
