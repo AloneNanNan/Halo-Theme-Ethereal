@@ -752,6 +752,9 @@ spec:
                       value: away
                 - $formkit: text
                   name: online
+                  # 关键：互斥 if 条件的同类型字段必须加唯一 key，
+                  # 否则 Vue 切换时复用组件实例导致文案值丢失（Halo FormKit 已知坑）
+                  key: status_text_online
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'online'"
                   label: 状态文案
                   value: ""
@@ -759,6 +762,7 @@ spec:
                   help: "「在线中」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: energetic
+                  key: status_text_energetic
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'energetic'"
                   label: 状态文案
                   value: ""
@@ -766,6 +770,7 @@ spec:
                   help: "「元气满满」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: emo
+                  key: status_text_emo
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'emo'"
                   label: 状态文案
                   value: ""
@@ -773,6 +778,7 @@ spec:
                   help: "「emo中」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: study
+                  key: status_text_study
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'study'"
                   label: 状态文案
                   value: ""
@@ -780,6 +786,7 @@ spec:
                   help: "「学习中」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: busy
+                  key: status_text_busy
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'busy'"
                   label: 状态文案
                   value: ""
@@ -787,6 +794,7 @@ spec:
                   help: "「忙碌中」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: dnd
+                  key: status_text_dnd
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'dnd'"
                   label: 状态文案
                   value: ""
@@ -794,6 +802,7 @@ spec:
                   help: "「请勿打扰」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: sleep
+                  key: status_text_sleep
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'sleep'"
                   label: 状态文案
                   value: ""
@@ -801,6 +810,7 @@ spec:
                   help: "「睡觉中」状态的文案，留空使用默认，最多 10 字"
                 - $formkit: text
                   name: away
+                  key: status_text_away
                   if: "$get(status_settings_enable).value && $get(profile_status).value === 'away'"
                   label: 状态文案
                   value: ""

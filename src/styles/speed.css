@@ -5,6 +5,9 @@
    均衡 balanced —— 当前主题原值（零回归，默认档）
    疾速 snappy   —— 保留微动效但内容立即可见：入场只位移不透明门控、错峰清零 */
 
+/* 均衡档（默认）时长 = 主题原值。
+   修改默认值需同步：src/utils/speed-style.ts 的 SPEED_CUSTOM_DEFAULTS
+   与 settings.yaml 动画速度组 value（自定义档默认） */
 :root,
 html[data-speed="balanced"] {
   --dur-swup: 200ms; /* 换页退场（原 duration-200） */

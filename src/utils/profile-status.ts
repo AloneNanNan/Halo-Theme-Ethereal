@@ -156,16 +156,6 @@ function getStatusText(key: string): string {
   return custom.trim() ? custom.trim() : opt.defaultText;
 }
 
-/** HTML 转义（用于输入框 value 属性，防引号/尖括号破坏结构） */
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 /** 读取某状态在配置中已保存的自定义文案（可能为空字符串）。
  *  后台设置与前台切换均保存为平级字段（statusSettings.online 等）；
  *  为兼容历史数据，回退读取嵌套的 statusText.online。 */
@@ -197,14 +187,18 @@ function syncTooltip() {
   badge.removeAttribute("title");
 }
 
-/** 更新状态图标 DOM（无需刷新页面），并同步气泡文案 */
+/** 更新状态图标 DOM（无需刷新页面），并同步气泡文案。
+ *  用 DOM API 构建（不用 innerHTML，避免 CodeQL 静态告警） */
 function setBadgeStatus(status: string) {
   const badge = document.querySelector(BADGE_SELECTOR);
   if (!badge) return;
   const opt = getOption(status) || STATUS_OPTIONS[0];
   badge.setAttribute("data-status", opt.key);
+  const icon = document.createElement("span");
   // 与服务端渲染结构保持一致：无背景、彩色图标 + 微动效类直接内联
-  badge.innerHTML = `<span class="${opt.iconClass} ${opt.colorClass} ${opt.animClass}"></span>`;
+  icon.className = `${opt.iconClass} ${opt.colorClass} ${opt.animClass}`;
+  badge.textContent = "";
+  badge.appendChild(icon);
   syncTooltip();
 }
 
@@ -288,17 +282,83 @@ function buildModal(): HTMLElement {
   return modal;
 }
 
-function showModal(contentHtml: string, footerHtml: string) {
+/** 展示模态框：bodyNode 为内容节点，footerNode 为底部按钮节点（null 隐藏） */
+function showModal(bodyNode: HTMLElement, footerNode: HTMLElement | null) {
   const modal = getModal();
   const body = modal.querySelector<HTMLElement>(".status-body");
   const footer = modal.querySelector<HTMLElement>(".status-footer");
-  if (body) body.innerHTML = contentHtml;
+  if (body) {
+    body.textContent = "";
+    body.appendChild(bodyNode);
+  }
   if (footer) {
-    footer.innerHTML = footerHtml;
-    footer.style.display = footerHtml ? "" : "none";
+    footer.textContent = "";
+    footer.style.display = footerNode ? "" : "none";
+    if (footerNode) footer.appendChild(footerNode);
   }
   modal.classList.add("is-open");
   document.body.style.overflow = "hidden";
+}
+
+/** 构建状态选项卡片网格（4 列，选中态 is-active） */
+function buildOptionsNode(currentKey: string): HTMLElement {
+  const container = document.createElement("div");
+  container.className = "status-options";
+  for (const o of STATUS_OPTIONS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className =
+      "status-option card-hover-lift" +
+      (o.key === currentKey ? " is-active" : "");
+    btn.setAttribute("data-status", o.key);
+
+    const icon = document.createElement("span");
+    icon.className = `status-option-icon ${o.iconClass} ${o.colorClass} ${o.animClass}`;
+    btn.appendChild(icon);
+
+    const label = document.createElement("span");
+    label.className = "status-option-label";
+    label.textContent = getStatusText(o.key);
+    btn.appendChild(label);
+
+    const check = document.createElement("span");
+    check.className =
+      "status-option-check icon-[material-symbols--check-rounded]";
+    btn.appendChild(check);
+
+    container.appendChild(btn);
+  }
+  return container;
+}
+
+/** 构建自定义文案输入框（跟随选中状态，限 10 字） */
+function buildTextFieldNode(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "status-custom-text";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = "status-text-input";
+  input.className = "status-text-input";
+  input.maxLength = 10;
+  input.placeholder = "自定义文案（留空用默认，限 10 字）";
+  input.value = getCustomText(selectedKey);
+  wrap.appendChild(input);
+  return wrap;
+}
+
+/** 构建底部按钮 */
+function buildButton(
+  label: string,
+  id: string,
+  variant: "primary" | "ghost" = "primary",
+): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className =
+    variant === "primary" ? "status-btn-primary" : "status-btn-ghost";
+  btn.id = id;
+  btn.textContent = label;
+  return btn;
 }
 
 let closing = false;
@@ -371,20 +431,29 @@ function bindModalEvents(modal: HTMLElement) {
  */
 function showTipModal(reason: "unauthorized" | "network", extraMsg?: string) {
   const isPermission = reason === "unauthorized" || !extraMsg;
-  const iconClass = isPermission
-    ? "icon-[material-symbols--lock-rounded] text-(--primary)"
-    : "icon-[mdi--cloud-off-outline] text-neutral-400";
-  const text = isPermission
+
+  // 提示内容（icon + 文本）
+  const tip = document.createElement("div");
+  tip.className = "status-tip";
+  const icon = document.createElement("span");
+  icon.className =
+    "status-tip-icon " +
+    (isPermission
+      ? "icon-[material-symbols--lock-rounded] text-(--primary)"
+      : "icon-[mdi--cloud-off-outline] text-neutral-400");
+  tip.appendChild(icon);
+  const p = document.createElement("p");
+  p.className = "status-tip-text";
+  p.textContent = isPermission
     ? "暂无权限切换，请先登录管理员账号后再操作。"
-    : extraMsg;
+    : extraMsg || "网络异常，请稍后再试。";
+  tip.appendChild(p);
+
   // 权限提示不显示任何底部按钮（右上角关闭即可）；错误提示保留「知道了」
-  const footerHtml = isPermission
-    ? ""
-    : '<button type="button" class="status-btn-primary" id="status-btn-close">知道了</button>';
-  showModal(
-    `<div class="status-tip"><span class="status-tip-icon ${iconClass}"></span><p class="status-tip-text">${text}</p></div>`,
-    footerHtml,
-  );
+  const footerNode = isPermission
+    ? null
+    : buildButton("知道了", "status-btn-close");
+  showModal(tip, footerNode);
 }
 
 /** 选择状态卡片：更新选中高亮，并将自定义文案输入框同步为对应状态的已有文案 */
@@ -456,31 +525,12 @@ async function openStatusModal() {
   // 自动清理非当前状态的文案残留（后台切换状态后留下的旧文案）
   await cleanupStaleStatusText(result.config, selectedKey);
 
-  // 卡片网格：选中态由 is-active 控制，勾选标记常驻（CSS 显隐）；
-  // card-hover-lift 接入后台「卡片悬浮效果」开关（hover 上移 + 主题色阴影）
-  const itemsHtml = STATUS_OPTIONS.map((o) => {
-    const active = o.key === selectedKey;
-    return (
-      `<button type="button" class="status-option card-hover-lift${active ? " is-active" : ""}" data-status="${o.key}">` +
-      `<span class="status-option-icon ${o.iconClass} ${o.colorClass} ${o.animClass}"></span>` +
-      `<span class="status-option-label">${getStatusText(o.key)}</span>` +
-      `<span class="status-option-check icon-[material-symbols--check-rounded]"></span>` +
-      `</button>`
-    );
-  }).join("");
+  // 卡片网格（4 列，选中态 is-active，card-hover-lift 接悬浮开关）+ 自定义文案输入框
+  const body = document.createElement("div");
+  body.appendChild(buildOptionsNode(selectedKey));
+  body.appendChild(buildTextFieldNode());
 
-  // 自定义文案输入框：跟随选中状态，留空用默认，限 10 字
-  const customText = getCustomText(selectedKey);
-  const textFieldHtml =
-    `<div class="status-custom-text">` +
-    `<input type="text" id="status-text-input" class="status-text-input" maxlength="10" ` +
-    `placeholder="自定义文案（留空用默认，限 10 字）" value="${escapeHtml(customText)}">` +
-    `</div>`;
-
-  showModal(
-    `<div class="status-options">${itemsHtml}</div>${textFieldHtml}`,
-    '<button type="button" class="status-btn-primary" id="status-btn-confirm">确认切换</button>',
-  );
+  showModal(body, buildButton("确认切换", "status-btn-confirm"));
 }
 
 /** 确认切换：将当前选中状态修改到缓存配置并 PUT 写回 */
