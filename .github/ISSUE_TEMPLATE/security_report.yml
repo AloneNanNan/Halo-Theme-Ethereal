@@ -1,0 +1,61 @@
+name: 安全漏洞报告
+description: 发现主题存在安全漏洞（如 XSS、信息泄露等）。使用后将创建私有漏洞报告，仅维护者可见
+type: security_report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 🔒 关于安全漏洞报告
+        - 本表单将创建 **GitHub 私有漏洞报告（Private Vulnerability Reporting）**，只有仓库维护者可见，请放心填写细节
+        - **请勿**在公开渠道（Issues、交流群、博客评论区）描述漏洞细节，以免影响尚未升级的用户
+        - 维护者会尽快评估处理；在此之前请不要公开利用该漏洞
+
+  - type: dropdown
+    id: vuln-type
+    attributes:
+      label: 🕳️ 漏洞类型
+      options:
+        - XSS（跨站脚本注入）
+        - CSRF（跨站请求伪造）
+        - 信息泄露（敏感数据暴露）
+        - 恶意代码 / 供应链风险
+        - 依赖组件漏洞
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 📦 受影响版本
+      description: 出现漏洞的主题版本及 Halo 版本
+      placeholder: 例如：主题 1.0.8 / Halo 2.25.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 漏洞描述
+      description: 描述漏洞的具体表现与触发条件
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔁 复现步骤
+      description: 从攻击者视角描述最小复现步骤（含请求参数 / 载荷示例）
+      render: markdown
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 💥 影响范围
+      description: 该漏洞可能造成的影响（例如：可导致什么后果）
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: 🛠️ 建议的修复方案（可选）
+      description: 若你已有修复思路或补丁，请在此说明

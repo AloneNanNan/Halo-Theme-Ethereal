@@ -1,0 +1,41 @@
+name: 新功能建议
+description: 希望主题新增一个目前不存在的功能时使用（已有功能的改进请使用「体验优化反馈」模板）
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ 提交前请确认
+        - 请先在 [Issues](../../issues?q=is%3Aissue) 中搜索，避免重复建议
+        - 请务必说明**使用场景**，有助于判断该功能是否值得实现
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 💡 功能描述
+      description: 用简洁的语言描述你希望新增的功能
+      placeholder: 例如：希望文章页支持显示「最近更新」时间……
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 🎯 使用场景
+      description: 该功能解决什么场景下的什么需求？为什么需要它？
+      placeholder: 例如：我的博客会持续修订旧文章，读者需要知道文章是否更新过……
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: 🔗 参考实现（可选）
+      description: 其他主题或站点中的类似功能，附上链接或截图有助于理解
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 📎 补充说明（可选）
+      description: 例如：期望的交互细节、是否可与现有功能（动画、插件等）配合

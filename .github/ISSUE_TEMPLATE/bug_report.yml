@@ -1,0 +1,153 @@
+name: 漏洞报告
+description: 主题出现报错、显示异常或功能失效时使用此模板
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ 提交前请确认
+        - 主题要求 **Halo ≥ 2.25.0**，请先确认 Halo 版本满足要求
+        - 请先在 [Issues](../../issues?q=is%3Aissue) 中搜索，避免重复提交
+
+  - type: checkboxes
+    attributes:
+      label: 自查清单
+      options:
+        - label: 我已搜索 Issues，未找到相同或类似问题
+        - label: 我已使用最新版本主题测试（或已注明使用旧版本的原因）
+
+  - type: input
+    id: theme-version
+    attributes:
+      label: 🎨 主题版本
+      description: 可在「外观 → 主题 → 设置」页面查看；若为源码构建版，请注明 commit 或构建日期
+      placeholder: 例如：1.0.8
+    validations:
+      required: true
+
+  - type: textarea
+    id: halo-overview
+    attributes:
+      label: Halo 后台的「系统概览」截图
+      description: 直接将图片拖入此处粘贴
+
+  - type: input
+    id: halo-version
+    attributes:
+      label: 🧩 Halo 版本
+      description: 可在控制台「关于」页面查看
+      placeholder: 例如：2.25.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: 📱 访问途径
+      description: 在哪种设备上出现该问题
+      options:
+        - 桌面浏览器
+        - 移动端浏览器
+        - 桌面与移动端均有
+        - 其他（如小程序 / App 内置浏览器）
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 🌐 浏览器类型
+      options:
+        - Chrome / Chromium 系（Edge、360 等）
+        - Firefox
+        - Safari
+        - 微信 / QQ 内置浏览器
+        - 其他
+
+  - type: dropdown
+    id: location
+    attributes:
+      label: 📍 问题位置
+      description: 问题出现在哪个页面或模块（可多选）
+      multiple: true
+      options:
+        - 首页（Banner / 波浪动画 / 打字机效果）
+        - 文章列表 / 文章页
+        - 分类 / 标签 / 归档
+        - 友链 / 朋友圈 / 自助提交友链
+        - 瞬间 / 图库 / 装备 / 项目集
+        - 搜索
+        - 评论区
+        - 侧边栏组件（目录 / 公告 / 天气 / 一言 / 音乐播放器 等）
+        - 主题设置面板（设置项不生效 / 保存报错）
+        - 深色模式
+        - 国际化（中英文切换）
+        - 移动端样式 / 响应式
+        - 其他
+
+  - type: dropdown
+    id: plugins
+    attributes:
+      label: 🧩 已启用的相关插件
+      description: 与问题可能相关的 Halo 插件（可多选）
+      multiple: true
+      options:
+        - 未启用任何插件
+        - 搜索插件
+        - 评论插件
+        - 瞬间插件
+        - 图库插件
+        - 链接管理插件（友链 / 朋友圈）
+        - 装备展示插件
+        - 项目作品集插件
+        - 不确定 / 其他
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 问题描述
+      description: 用简洁的语言描述遇到的问题
+      placeholder: 例如：开启波浪动画后，换页时 Banner 与波浪之间出现缝隙……
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔁 复现步骤
+      description: 请按顺序列出复现该问题的最小步骤
+      placeholder: |
+        1. 启用Ethereal 主题
+        2. 访问首页
+        3. 执行 XXX 操作
+        4. 观察到错误现象
+      render: markdown
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ 预期行为 / ❌ 实际行为
+      description: 描述你期望看到的结果，以及实际看到的结果
+      placeholder: |
+        预期：……
+        实际：……
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 截图或录屏
+      description: 直接将图片拖入此处粘贴
+
+  - type: textarea
+    id: console
+    attributes:
+      label: 🖥️ 浏览器控制台报错
+      description: 若存在，请按 F12 打开开发者工具 → Console，粘贴复现时的报错信息
+      placeholder: |
+        Uncaught TypeError: xxx is not a function
+      render: shell
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 📎 补充信息（可选）
+      description: 有助于定位问题的任何信息，例如：切换到其他主题后问题是否依旧存在（用于区分主题问题与插件 / Halo 核心问题）

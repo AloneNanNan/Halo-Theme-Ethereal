@@ -1,0 +1,38 @@
+name: 使用咨询
+description: 主题安装、配置、使用过程中的疑问（也可加入交流群提问）
+title: "[Help] "
+labels: ["help"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ 提问前请确认
+        - 建议先查阅[主题文档](https://www.nannax.top/docs/ethereal)
+        - 请先在 [Issues](../../issues?q=is%3Aissue) 中搜索，常见问题可能已有答案
+        - 出现使用问题也建议加入[主题交流群](https://qm.qq.com/q/onMpJjYvgQ)讨论
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 💬 问题描述
+      description: 请描述你遇到的问题或想要实现的效果
+      placeholder: 例如：如何关闭首页的波浪动画？在哪里配置？
+    validations:
+      required: true
+
+  - type: input
+    id: theme-version
+    attributes:
+      label: 🎨 主题版本（可选）
+      placeholder: 例如：1.0.8
+
+  - type: input
+    id: halo-version
+    attributes:
+      label: 🧩 Halo 版本（可选）
+      placeholder: 例如：2.25.0
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 相关截图（可选）

@@ -1,0 +1,70 @@
+name: 体验优化反馈
+description: 对现有功能、界面、性能、交互的改进建议（非新增功能）
+title: "[Enhance] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ 提交前请确认
+        - 请先在 [Issues](../../issues?q=is%3Aissue) 中搜索，避免重复建议
+        - 请说明**当前痛点**与**期望效果**，方便评估改动价值
+
+  - type: dropdown
+    id: location
+    attributes:
+      label: 📍 涉及的功能或页面
+      description: 改进建议涉及哪个页面或模块（可多选）
+      multiple: true
+      options:
+        - 首页（Banner / 波浪动画 / 打字机效果）
+        - 文章列表 / 文章页
+        - 分类 / 标签 / 归档
+        - 友链 / 朋友圈 / 瞬间 / 图库 / 装备 / 项目集
+        - 搜索 / 评论区
+        - 侧边栏组件 / 主题设置面板
+        - 深色模式 / 国际化
+        - 移动端样式 / 响应式
+        - 全局（整体体验）
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: 🎯 改进方向
+      description: 主要改进方向（可多选）
+      multiple: true
+      options:
+        - 视觉样式（外观细节、配色、排版）
+        - 交互体验（操作流程、反馈）
+        - 动画效果（动效流畅度、可配置性）
+        - 性能优化（加载速度、资源体积）
+        - 可访问性（无障碍：对比度、键盘操作、屏幕阅读器）
+        - 兼容性（浏览器 / 设备 / Halo 版本 / 插件）
+        - 代码质量与可维护性（对使用者无感知）
+
+  - type: textarea
+    id: pain
+    attributes:
+      label: 😣 当前痛点
+      description: 现在哪里不够好？请尽量具体
+    validations:
+      required: true
+
+  - type: textarea
+    id: expect
+    attributes:
+      label: 🌟 期望的改进
+      description: 你希望达到的效果
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: 🔗 参考样例（可选）
+      description: 其他站点或主题中的做法，附链接或截图
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 📎 补充说明（可选）
