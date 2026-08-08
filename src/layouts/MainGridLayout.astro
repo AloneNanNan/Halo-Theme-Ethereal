@@ -45,12 +45,12 @@ const {
 
   <div
     id="top-row"
-    class="pointer-events-none relative z-50 mx-auto w-full xl:w-[92vw] max-w-(--page-width) px-0 transition-all duration-700 md:px-4"
+    class="pointer-events-none relative z-50 mx-auto w-full xl:w-[92vw] max-w-(--page-width) px-0 transition-all duration-[var(--dur-scroll,700ms)] md:px-4"
     th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
   >
     <div
       id="navbar-wrapper"
-      class="pointer-events-auto sticky top-0 transition-transform duration-700"
+      class="pointer-events-auto sticky top-0 transition-transform duration-[var(--dur-scroll,700ms)]"
     >
       <Navbar />
     </div>
@@ -60,7 +60,7 @@ const {
     id="banner-wrapper"
     th:if="${theme.config?.base?.banner?.enable}"
     th:with={imageSuffixThWith("p?.banner_width ?: 1920")}
-    class="absolute z-10 w-full overflow-hidden transition duration-700"
+    class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
   >
     <link
@@ -76,7 +76,7 @@ const {
       position="${theme.config?.base?.banner?.position ?: 'center'}"
       loading="eager"
       fetchpriority="high"
-      class="h-full object-cover opacity-0 scale-105 transition duration-700"
+      class="h-full object-cover opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     />
     <div
       id="banner-overlay"
@@ -131,7 +131,7 @@ const {
     >
       <div
         id="main-grid"
-        class="left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-700 md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
+        class="left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
         th:style="${theme.config?.base?.banner?.enable ? 'min-height: calc(100vh - var(--banner-height) + 3.5rem)' : 'min-height: calc(100vh - 5.5rem)'}"
       >

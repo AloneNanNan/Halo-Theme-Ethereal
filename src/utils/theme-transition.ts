@@ -58,6 +58,33 @@ const EASING_DURATION: Record<ThemeAnimEasingId, number> = {
   "back-out": 1100,
 };
 
+/**
+ * 动画速度三档：按 <html data-speed> 逐缓动曲线覆盖时长（ms）。
+ * 由 settings.yaml styleSwitches.speedTier 注入。
+ * relaxed / balanced 不写 → 走 EASING_DURATION 原值（均衡=当前原值，零回归）；
+ * snappy 最短但回弹（back-out）保留呼吸空间。
+ */
+const SPEED_TIER_DURATION: Record<
+  string,
+  Partial<Record<ThemeAnimEasingId, number>>
+> = {
+  snappy: {
+    default: 250,
+    linear: 250,
+    "ease-in": 200,
+    "ease-out": 200,
+    "ease-in-out": 230,
+    "expo-out": 280,
+    "back-out": 350,
+  },
+};
+
+/** 读取当前速度档位对应的缓动时长（缺省回退原值） */
+function resolveEasingDuration(easing: ThemeAnimEasingId): number {
+  const tier = document.documentElement.dataset.speed || "balanced";
+  return SPEED_TIER_DURATION[tier]?.[easing] ?? EASING_DURATION[easing];
+}
+
 export interface ThemeTransitionContext {
   root: HTMLElement;
   viewport: { width: number; height: number };
@@ -156,7 +183,8 @@ function isEntranceAnimationRunning(): boolean {
     .some(
       (a) =>
         a instanceof CSSAnimation &&
-        a.animationName === "fade-in-up" &&
+        (a.animationName === "fade-in-up" ||
+          a.animationName === "slide-in-up") &&
         a.playState === "running",
     );
 }
@@ -218,7 +246,7 @@ export function runThemeTransition(
   root.classList.add(style.cssClass);
   root.style.setProperty(
     "--theme-anim-duration",
-    `${EASING_DURATION[cfg.easing]}ms`,
+    `${resolveEasingDuration(cfg.easing)}ms`,
   );
   root.style.setProperty("--theme-anim-easing", EASING_MAP[cfg.easing]);
   injectKeyframes(style.buildKeyframes(ctx));

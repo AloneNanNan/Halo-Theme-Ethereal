@@ -124,7 +124,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                 </div>
                 <article
                   class="card-base btn-card-outline rounded-xl p-5 onload-animation friends-card card-hover-lift"
-                  th:style="'animation-delay: calc(var(--content-delay) + ' + ${iterStat.index * 50} + 'ms)'"
+                  th:style="'animation-delay: min(calc(var(--content-delay) + ' + ${iterStat.index} + ' * var(--dur-entry-step)), var(--dur-entry-max, 400ms))'"
                 >
                   <div class="flex gap-4">
                     <!-- 头像 -->
