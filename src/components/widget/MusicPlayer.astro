@@ -530,6 +530,12 @@ const layoutId = `${widgetId}-layout`;
       );
     };
 
+    // Meting API 对空 id 的 pic/url/lrc 请求会返回 401，需跳过避免控制台报错
+    const isValidMetingUrl = (url) =>
+      typeof url === "string" &&
+      url.length > 0 &&
+      !/(^|[\?&])id=(&|$)/.test(url);
+
     const updateTrackUI = (track) => {
       if (!track) return;
       ui.title.textContent = track.name;
@@ -537,8 +543,8 @@ const layoutId = `${widgetId}-layout`;
       ui.artist.textContent = track.artist;
       ui.artist.title = track.artist;
       ui.cover.classList.add("opacity-0");
-      ui.cover.src = track.pic || "";
-      ui.cover.alt = track.pic
+      ui.cover.src = isValidMetingUrl(track.pic) ? track.pic : "";
+      ui.cover.alt = isValidMetingUrl(track.pic)
         ? `${track.name} - ${track.artist}`
         : cfg.i18n.noCover;
       ui.cover.classList.remove("animate-spin-slow");
@@ -582,7 +588,7 @@ const layoutId = `${widgetId}-layout`;
         const img = clone.querySelector(".item-cover");
         const title = clone.querySelector(".item-title");
         const artist = clone.querySelector(".item-artist");
-        img.src = track.pic || "";
+        img.src = isValidMetingUrl(track.pic) ? track.pic : "";
         img.alt = `${track.name} - ${track.artist}`;
         title.textContent = track.name;
         artist.textContent = track.artist;
@@ -646,7 +652,7 @@ const layoutId = `${widgetId}-layout`;
 
     const loadLyrics = (track) => {
       state.lyrics = [];
-      if (!track.lrc) {
+      if (!isValidMetingUrl(track.lrc)) {
         renderLyricsUI([], "none");
         return;
       }
@@ -669,11 +675,16 @@ const layoutId = `${widgetId}-layout`;
         .catch(() => renderLyricsUI([], "failed"));
     };
 
-    const loadTrack = (index, autoPlay) => {
+    const loadTrack = (index, autoPlay, skipGuard = 0) => {
       if (index < 0 || index >= state.playlist.length) return;
       state.currentIndex = index;
       const track = state.playlist[index];
-      audio.src = track.url;
+      // 空 id 播放地址（Meting 返回 401）自动跳下一首；skipGuard 防整单异常时死循环
+      if (!isValidMetingUrl(track.url) && skipGuard < 5) {
+        const next = index + 1 >= state.playlist.length ? 0 : index + 1;
+        return loadTrack(next, autoPlay, skipGuard + 1);
+      }
+      audio.src = isValidMetingUrl(track.url) ? track.url : "";
       loadLyrics(track);
       updateTrackUI(track);
       updatePlaylistActiveUI();
@@ -743,7 +754,9 @@ const layoutId = `${widgetId}-layout`;
         .replace(":type", encodeURIComponent(cfg.type))
         .replace(":id", encodeURIComponent(cfg.id))
         .replace(":r", String(Math.random()));
-      const response = await fetch(api);
+      const response = await fetch(
+        api + (api.includes("?") ? "&" : "?") + "_t=" + Date.now(),
+      );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!Array.isArray(data) || !data.length) return [];
