@@ -1,0 +1,391 @@
+/* ─────────────────────────────────────────────
+   个人简介「在线状态」：悬浮气泡 + 状态切换模态框
+   模态框设计语言与 external-link / link-apply / 打赏模态框保持一致
+   ───────────────────────────────────────────── */
+
+/* ── 悬浮气泡（hover 状态表情显示状态文案）── */
+#profile-status-badge {
+  position: relative;
+}
+
+#profile-status-badge::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--card-bg, #fff);
+  color: var(--deep-text, #333);
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  z-index: 10;
+}
+
+/* 气泡小箭头（与气泡同色，压住气泡底边） */
+#profile-status-badge::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 0.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--card-bg, #fff);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+  z-index: 10;
+}
+
+#profile-status-badge:hover::after,
+#profile-status-badge:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+#profile-status-badge:hover::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 无文案（data-tooltip 为空/缺失）时不渲染气泡 */
+#profile-status-badge[data-tooltip=""]::after,
+#profile-status-badge[data-tooltip=""]::before,
+#profile-status-badge:not([data-tooltip])::after,
+#profile-status-badge:not([data-tooltip])::before {
+  content: none;
+}
+
+/* ── 状态切换模态框 ── */
+#status-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+#status-modal.is-open {
+  display: flex;
+}
+
+.status-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: status-fade-in 0.25s ease;
+}
+
+.status-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 26rem;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-large);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  color: var(--deep-text, #333);
+  animation: status-slide-up 0.3s ease;
+}
+
+/* 标题区：居中标题 + 主题色小横线（参考打赏/友链申请模态框），关闭按钮 absolute 右上角 */
+.status-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.25rem 1.5rem 0.875rem;
+}
+
+.status-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.status-title-divider {
+  width: 1.25rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+}
+
+.status-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text-50, #999);
+  background: transparent;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease;
+  z-index: 2;
+}
+
+.status-close:hover {
+  transform: rotate(90deg);
+  color: var(--primary);
+  background: var(--btn-regular-bg);
+}
+
+.status-close:active {
+  transform: rotate(90deg) scale(0.92);
+}
+
+.status-body {
+  overflow-y: auto;
+  /* 顶部留足空间：.status-card 有 overflow:hidden（圆角裁切），
+     第一排卡片 hover 上移 4px + 阴影若不预留会被上方标题栏截断 */
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+/* 状态选项：标准网格卡片（一排 4 个，第二排自然左对齐），
+   UI 参考友链(links)页面的链接卡片：
+   - 形状用圆方形（rounded-xl），不用圆形
+   - 白底 + 主题色细描边（btn-card-outline 同款）
+   - 悬浮上移 + 主题色阴影（card-hover-lift，接入后台「卡片悬浮效果」开关）
+   - 点击内凹（active:scale-95），hover 内容变主题色
+   卡片撑满整列（不固定小尺寸、不居中），列间只剩均匀 gap，两侧无大片空白 */
+.status-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.625rem;
+}
+
+.status-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  aspect-ratio: 1 / 1;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  border-radius: 0.875rem;
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--deep-text, #333);
+  text-align: center;
+  /* 必须包含 transform / box-shadow，否则 card-hover-lift 的上移与阴影会突变（生硬）；
+     缓动曲线与主题卡片悬浮保持一致 */
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    scale 0.15s ease;
+  font-family: inherit;
+}
+
+.status-option:hover {
+  background: var(--btn-card-bg-hover);
+  border-color: color-mix(in oklab, var(--primary) 30%, transparent);
+  color: var(--primary);
+}
+
+.status-option:active {
+  /* 用独立 scale 属性（而非 transform），避免与 card-hover-lift 的
+     transform: translateY(-4px) 互相覆盖，实现"悬浮上移 + 点击内凹"并存 */
+  scale: 0.95;
+}
+
+.status-option.is-active {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 10%, var(--card-bg));
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.status-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.5rem;
+}
+
+.status-option-label {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.status-option-check {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  font-size: 0.875rem;
+  display: none;
+}
+
+.status-option.is-active .status-option-check {
+  display: inline-flex;
+}
+
+/* 自定义文案输入框（跟随选中状态，留空用默认，限 10 字） */
+.status-custom-text {
+  padding: 0.875rem 0 0.25rem;
+}
+
+.status-text-input {
+  width: 100%;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+  color: var(--deep-text, #333);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+
+.status-text-input::placeholder {
+  opacity: 0.4;
+}
+
+.status-text-input:hover {
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.status-text-input:focus {
+  border-color: var(--primary);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+/* 提示型内容（访客无权限 / 网络异常） */
+.status-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem 1.25rem;
+  text-align: center;
+}
+
+.status-tip-icon {
+  font-size: 2.5rem;
+  opacity: 0.85;
+}
+
+.status-tip-text {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  opacity: 0.8;
+  word-break: break-word;
+}
+
+/* 底部按钮行 */
+.status-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem 1.5rem;
+}
+
+.status-btn-primary,
+.status-btn-ghost {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    background 0.2s,
+    filter 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
+  font-family: inherit;
+}
+
+.status-btn-primary {
+  color: #fff;
+  background: var(--primary, #8b5cf6);
+  box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 28%, transparent);
+}
+
+.status-btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 38%, transparent);
+}
+
+.status-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.status-btn-ghost {
+  color: var(--btn-content, #6d5ae6);
+  background: var(--btn-regular-bg, #eceafb);
+}
+
+.status-btn-ghost:hover {
+  background: var(--btn-regular-bg-hover, #ddd8fa);
+}
+
+.status-btn-ghost:active {
+  transform: scale(0.97);
+}
+
+@keyframes status-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes status-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

@@ -13,6 +13,7 @@ import "../styles/transition.css";
 import "../styles/scrollbar.css";
 import "../styles/external-link-modal.css";
 import "../styles/link-apply-modal.css";
+import "../styles/profile-status.css";
 
 // ── 第三方 ──
 import "overlayscrollbars/styles/overlayscrollbars.css";
@@ -28,6 +29,7 @@ import {
 import { syncHomeClass, scrollFunction } from "../utils/scroll-manager";
 import { initLegacyAdmonitions } from "../utils/legacy-admonitions";
 import { initExternalLinkRedirect } from "../utils/external-link-redirect";
+import { initProfileStatus } from "../utils/profile-status";
 import {
   initContentLightbox,
   initPhotosGallery,
@@ -251,3 +253,4 @@ if (window?.swup?.hooks) {
 
 scrollFunction();
 initExternalLinkRedirect();
+initProfileStatus();

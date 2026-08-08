@@ -388,6 +388,86 @@
       transform: translateX(4px);
     }
   }
+
+  /* ── 在线状态图标微动效（Profile 昵称右侧）──
+     仅使用 transform / opacity，保证 GPU 加速与低开销；
+     各状态语义：太阳慢转(在线)、火苗摇曳(忙碌)、禁行浮动(勿扰)、月亮呼吸(睡觉)、云朵漂浮(离开) */
+  .status-spin {
+    animation: status-spin 8s linear infinite;
+  }
+
+  .status-wiggle {
+    animation: status-wiggle 2.4s ease-in-out infinite;
+  }
+
+  .status-float {
+    animation: status-float 3s ease-in-out infinite;
+  }
+
+  .status-pulse {
+    animation: status-pulse 3.5s ease-in-out infinite;
+  }
+
+  .status-drift {
+    animation: status-drift 6s ease-in-out infinite;
+  }
+
+  @keyframes status-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes status-wiggle {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-1.5px) rotate(4deg);
+    }
+  }
+
+  @keyframes status-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+
+  @keyframes status-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes status-drift {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(3px);
+    }
+  }
+
+  /* 用户系统开启"减少动态效果"时禁用状态图标动画 */
+  @media (prefers-reduced-motion: reduce) {
+    .status-spin,
+    .status-wiggle,
+    .status-float,
+    .status-pulse,
+    .status-drift {
+      animation: none;
+    }
+  }
 }
 
 /* TOC 目录项样式 - 仅三栏布局生效 */

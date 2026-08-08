@@ -25,11 +25,60 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
   </a>
 
   <div class="px-2">
-    <div
-      class="mb-1 text-center text-xl font-bold text-black/90 transition dark:text-neutral-50"
-      th:text="${theme.config?.sidebar?.profile?.name ?: 'NanNan'}"
-    >
-      NanNan
+    <div class="mb-1 text-center">
+      <span style="position: relative; display: inline-block;">
+        <span
+          class="text-xl font-bold text-black/90 transition dark:text-neutral-50"
+          th:text="${theme.config?.sidebar?.profile?.name ?: 'NanNan'}"
+        >
+          NanNan
+        </span>
+        <!-- 在线状态图标（昵称右侧，不参与居中布局）：点击切换由 profile-status.ts 处理。
+             注意：th:text 会替换元素内部全部子元素，因此本徽标必须与昵称 span 平级，
+             不能作为带 th:text 元素的子节点，否则会被运行时覆盖掉 -->
+        <span
+          th:if="${theme.config?.sidebar?.profile?.statusSettings?.enable != false}"
+          id="profile-status-badge"
+          class="flex size-5 cursor-pointer items-center justify-center text-lg transition hover:scale-110 active:scale-95"
+          style="position: absolute; right: -28px; top: 50%; transform: translateY(-50%);"
+          aria-label="切换当前状态"
+          th:attr="data-status=${theme.config?.sidebar?.profile?.statusSettings?.status ?: 'online'}"
+          th:switch="${theme.config?.sidebar?.profile?.statusSettings?.status ?: 'online'}"
+        >
+          <span
+            th:case="energetic"
+            class="icon-[mingcute--sun-fill] text-amber-500 status-spin"></span>
+          <span
+            th:case="emo"
+            class="icon-[mingcute--sad-fill] text-violet-400 status-float"
+          ></span>
+          <span
+            th:case="study"
+            class="icon-[mingcute--book-2-fill] text-sky-500 status-drift"
+          ></span>
+          <span
+            th:case="busy"
+            class="icon-[mingcute--fire-fill] text-orange-500 status-wiggle"
+          ></span>
+          <span
+            th:case="dnd"
+            class="icon-[mingcute--moon-fill] text-indigo-400 status-float"
+          ></span>
+          <span
+            th:case="sleep"
+            class="icon-[mingcute--moon-stars-fill] text-blue-500 status-pulse"
+          ></span>
+          <span
+            th:case="away"
+            class="icon-[mingcute--cloud-fill] text-neutral-400 status-drift"
+          ></span>
+          <!-- 在线：叶子图标（默认） -->
+          <span
+            th:case="*"
+            class="icon-[mingcute--leaf-fill] text-green-500 status-pulse"
+          ></span>
+        </span>
+      </span>
     </div>
     <div class="mx-auto mb-2 h-1 w-5 rounded-full bg-(--primary) transition">
     </div>

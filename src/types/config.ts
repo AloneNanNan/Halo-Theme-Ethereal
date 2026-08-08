@@ -154,7 +154,29 @@ export interface SidebarProfile {
   bio: string;
   avatar: string;
   url: string;
+  /** 在线状态设置（后台「在线状态」子配置组） */
+  statusSettings?: SidebarProfileStatusSettings;
   social_media: SocialMedum[];
+}
+
+export interface SidebarProfileStatusSettings {
+  /** 功能总开关：关闭后隐藏状态表情与相关设置 */
+  enable?: boolean;
+  /** 当前状态：online 在线 / busy 忙碌 / dnd 勿扰 / sleep 睡觉 / away 离开 */
+  status?: string;
+  /** 各状态自定义文案，留空使用默认 */
+  statusText?: SidebarProfileStatusText;
+}
+
+export interface SidebarProfileStatusText {
+  online?: string;
+  energetic?: string;
+  emo?: string;
+  study?: string;
+  busy?: string;
+  dnd?: string;
+  sleep?: string;
+  away?: string;
 }
 
 export interface Widget {
@@ -300,6 +322,4 @@ export interface ExternalLink {
 }
 
 export type LIGHT_DARK_MODE =
-  | typeof LIGHT_MODE
-  | typeof DARK_MODE
-  | typeof AUTO_MODE;
+  typeof LIGHT_MODE | typeof DARK_MODE | typeof AUTO_MODE;

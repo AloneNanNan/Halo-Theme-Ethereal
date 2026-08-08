@@ -603,6 +603,109 @@ spec:
                   name: url
                   label: 链接
                   validation: "required"
+            - $formkit: group
+              name: statusSettings
+              if: "$get(enable_profile_switch).value"
+              label: 在线状态
+              help: "昵称右侧的状态表情与展示文案"
+              value:
+                enable: true
+                status: online
+                online: ""
+                energetic: ""
+                emo: ""
+                study: ""
+                busy: ""
+                dnd: ""
+                sleep: ""
+                away: ""
+              children:
+                - $formkit: switch
+                  name: enable
+                  id: status_settings_enable
+                  value: true
+                  label: 启用在线状态
+                  help: "关闭后隐藏昵称右侧的状态表情，并隐藏下方设置项"
+                - $formkit: select
+                  name: status
+                  id: profile_status
+                  if: "$get(status_settings_enable).value"
+                  label: 当前状态
+                  value: online
+                  help: "显示在昵称右侧的状态表情，登录管理员账号后也可在前端点击切换"
+                  options:
+                    - label: 在线中
+                      value: online
+                    - label: 元气满满
+                      value: energetic
+                    - label: emo中
+                      value: emo
+                    - label: 学习中
+                      value: study
+                    - label: 忙碌中
+                      value: busy
+                    - label: 请勿打扰
+                      value: dnd
+                    - label: 睡觉中
+                      value: sleep
+                    - label: 暂时离开
+                      value: away
+                - $formkit: text
+                  name: online
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'online'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「在线中」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: energetic
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'energetic'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「元气满满」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: emo
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'emo'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「emo中」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: study
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'study'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「学习中」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: busy
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'busy'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「忙碌中」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: dnd
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'dnd'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「请勿打扰」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: sleep
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'sleep'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「睡觉中」状态的文案，留空使用默认，最多 10 字"
+                - $formkit: text
+                  name: away
+                  if: "$get(status_settings_enable).value && $get(profile_status).value === 'away'"
+                  label: 状态文案
+                  value: ""
+                  maxlength: 10
+                  help: "「暂时离开」状态的文案，留空使用默认，最多 10 字"
         - $formkit: group
           name: announcement
           label: 公告小组件
