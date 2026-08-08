@@ -58,7 +58,7 @@ const thClassappend = Astro.props["th:classappend"] || "";
         <div class="contents" th:case="'music'">
           <MusicPlayer
             class="onload-animation"
-            th:style="|animation-delay: calc(var(--content-delay) + ${widgetStat.index * 50}ms)|"
+            th:style="|animation-delay: min(calc(var(--content-delay) + ${widgetStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
           />
         </div>
         <div class="contents" th:case="'hitokoto'">
@@ -70,7 +70,7 @@ const thClassappend = Astro.props["th:classappend"] || "";
         <div class="contents" th:case="'weather'">
           <Weather
             class="onload-animation"
-            th:style="|animation-delay: calc(var(--content-delay) + ${widgetStat.index * 50}ms)|"
+            th:style="|animation-delay: min(calc(var(--content-delay) + ${widgetStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
           />
         </div>
         <div class="contents" th:case="'popular-posts'">

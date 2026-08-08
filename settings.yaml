@@ -114,6 +114,105 @@ spec:
                   label: 打字机效果
                 - value: drop
                   label: 文字下坠
+        - $formkit: group
+          name: animationSpeed
+          label: 动画速度
+          value:
+            speedTier: balanced
+          children:
+            - $formkit: select
+              name: speedTier
+              label: 速度档位
+              value: balanced
+              help: "舒缓：保留完整错峰入场演出；均衡：当前主题原值；疾速：入场只做轻微位移、内容立即可见（换页时长随之缩短）；自定义：手动逐项设置各动画时长（不涉及主题切换动画，其仍随缓动曲线匹配）"
+              options:
+                - label: 舒缓
+                  value: relaxed
+                - label: 均衡
+                  value: balanced
+                - label: 疾速
+                  value: snappy
+                - label: 自定义
+                  value: custom
+            - $formkit: group
+              name: speedCustom
+              if: "$get(speedTier).value === 'custom'"
+              label: 自定义动画时长
+              help: "仅在速度档位选择「自定义」时展示；单位毫秒"
+              value:
+                swup: 200
+                entry: 300
+                entryStep: 50
+                entryMax: 400
+                contentDelay: 150
+                scroll: 700
+                float: 350
+                banner: 700
+              children:
+                - $formkit: number
+                  name: swup
+                  label: 换页退场（ms）
+                  min: 0
+                  max: 1000
+                  step: 10
+                  value: 200
+                  help: "页面切换时旧内容淡出下移的时长（原 200ms）"
+                - $formkit: number
+                  name: entry
+                  label: 入场动画（ms）
+                  min: 0
+                  max: 1000
+                  step: 10
+                  value: 300
+                  help: "换页后新内容 fade-in-up 时长（原 300ms）"
+                - $formkit: number
+                  name: entryStep
+                  label: 错峰步长（ms）
+                  min: 0
+                  max: 200
+                  step: 10
+                  value: 50
+                  help: "列表/组件逐项入场的递增值（原 50ms），0 表示无错峰"
+                - $formkit: number
+                  name: entryMax
+                  label: 错峰上限（ms）
+                  min: 0
+                  max: 1000
+                  step: 10
+                  value: 400
+                  help: "入场延迟最大值（原 banner-credit 400ms），错峰超过此值被截断"
+                - $formkit: number
+                  name: contentDelay
+                  label: 内容基础延迟（ms）
+                  min: 0
+                  max: 1000
+                  step: 10
+                  value: 150
+                  help: "内容主区块的入场延迟（原 --content-delay 150ms）"
+                - $formkit: number
+                  name: scroll
+                  label: 导航栏隐藏（ms）
+                  min: 0
+                  max: 2000
+                  step: 50
+                  value: 700
+                  help: "下滑隐藏导航栏的时长（原 700ms）"
+                - $formkit: number
+                  name: float
+                  label: 浮动按钮位移（ms）
+                  min: 0
+                  max: 1000
+                  step: 10
+                  value: 350
+                  help: "回顶/首页/评论浮动按钮位移动画时长（原 350ms）"
+                - $formkit: number
+                  name: banner
+                  label: Banner 载入（ms）
+                  min: 0
+                  max: 2000
+                  step: 50
+                  value: 700
+                  help: "首屏 banner 图载入渐显时长（原 700ms）"
         - $formkit: menuRadio
           id: menu
           name: menu

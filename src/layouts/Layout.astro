@@ -75,6 +75,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-theme-anim-style="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
+  th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
+  th:style="${theme.config?.base?.animationSpeed?.speedTier == 'custom' ? '--dur-swup:' + (theme.config?.base?.animationSpeed?.speedCustom?.swup ?: 200) + 'ms;--dur-entry:' + (theme.config?.base?.animationSpeed?.speedCustom?.entry ?: 300) + 'ms;--dur-entry-step:' + (theme.config?.base?.animationSpeed?.speedCustom?.entryStep ?: 50) + 'ms;--dur-entry-max:' + (theme.config?.base?.animationSpeed?.speedCustom?.entryMax ?: 400) + 'ms;--content-delay:' + (theme.config?.base?.animationSpeed?.speedCustom?.contentDelay ?: 150) + 'ms;--dur-scroll:' + (theme.config?.base?.animationSpeed?.speedCustom?.scroll ?: 700) + 'ms;--dur-float:' + (theme.config?.base?.animationSpeed?.speedCustom?.float ?: 350) + 'ms;--dur-banner:' + (theme.config?.base?.animationSpeed?.speedCustom?.banner ?: 700) + 'ms' : ''}"
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
   data-overlayscrollbars-initialize
 >
