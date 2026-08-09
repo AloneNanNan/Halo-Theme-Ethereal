@@ -296,12 +296,12 @@ const {
     th:style="${theme.config?.base?.banner?.enable ? 'top: calc(var(--banner-height) - 3.5rem)' : 'top: 5.5rem'}"
   >
     <div
-      class="pointer-events-auto relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
+      class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
       th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
     >
       <div
         id="main-grid"
-        class="left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
+        class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
         th:style="${theme.config?.base?.banner?.enable ? 'min-height: calc(100vh - var(--banner-height) + 3.5rem)' : 'min-height: calc(100vh - 5.5rem)'}"
       >
