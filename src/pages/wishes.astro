@@ -1,0 +1,288 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<!--
+  心愿便签页（Wishboard 插件适配）—— 便签墙视框风格
+  参照插件内置 wishes.html 的交互与视觉：
+  - 视框（board）内便签卡片带 macOS 窗口圆点、可拖动
+  - 筛选标签 / 纪念日徽章 / 发布输入栏悬浮在视框内
+  支持两种渲染模式：
+    1. 插件内置页面（enableBuiltinPage=true）：插件拦截 /wishes，注入 pageTitle 等变量
+    2. Halo 自定义页面（后台选「心愿便签」模板）：注入 singlePage 变量
+-->
+<MainGridLayout
+  title="${(singlePage != null ? singlePage.spec.title : (pageTitle ?: #messages.msg('page.wishes.title'))) + ' - ' + site.title}"
+  description="#{page.wishes.description(${site.title})}"
+>
+  <Fragment slot="head">
+    <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
+    <link
+      rel="stylesheet"
+      href={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wishes.css?v=${ASSET_VERSION}`}
+    />
+    <!-- 页面级 i18n 注入（参照 PhotoI18n 模式，合并到全局 i18nResources，供 wishes.js 读取） -->
+    <script is:inline th:inline="javascript">
+      window.i18nResources = {
+        ...(window.i18nResources || {}),
+        "page.wishes.notInstalled": `[(#{page.wishes.notInstalled})]`,
+        "page.wishes.boardTitle": `[(#{page.wishes.boardTitle})]`,
+        "page.wishes.statusDoing": `[(#{page.wishes.statusDoing})]`,
+        "page.wishes.statusDone": `[(#{page.wishes.statusDone})]`,
+        "page.wishes.emptyFiltered": `[(#{page.wishes.emptyFiltered})]`,
+        "page.wishes.daysTogether": `[(#{page.wishes.daysTogether})]`,
+        "page.wishes.daysTogetherWith": `[(#{page.wishes.daysTogetherWith})]`,
+        "page.wishes.toastEmpty": `[(#{page.wishes.toastEmpty})]`,
+        "page.wishes.toastTooLong": `[(#{page.wishes.toastTooLong})]`,
+        "page.wishes.toastSubmitting": `[(#{page.wishes.toastSubmitting})]`,
+        "page.wishes.toastSubmitted": `[(#{page.wishes.toastSubmitted})]`,
+        "page.wishes.toastSubmitFail": `[(#{page.wishes.toastSubmitFail})]`,
+        "page.wishes.toastNetworkError": `[(#{page.wishes.toastNetworkError})]`,
+        "page.wishes.toastPolishFirst": `[(#{page.wishes.toastPolishFirst})]`,
+        "page.wishes.toastPolishing": `[(#{page.wishes.toastPolishing})]`,
+        "page.wishes.toastPolishDone": `[(#{page.wishes.toastPolishDone})]`,
+        "page.wishes.toastPolishFail": `[(#{page.wishes.toastPolishFail})]`,
+      };
+    </script>
+  </Fragment>
+
+  <!-- 插件未安装提示 -->
+  <section
+    th:if="${wishFinder == null}"
+    class="card-base onload-animation mb-4 px-6 py-16 text-center text-50"
+  >
+    <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
+    ></span>
+    <p class="mt-4 text-sm" th:text="#{page.wishes.notInstalled}">
+      请先安装并启用「心愿便签」插件（Wishboard）后再访问本页面
+    </p>
+  </section>
+
+  <div
+    th:remove="tag"
+    th:unless="${wishFinder == null}"
+    th:with="isSinglePage=${singlePage != null},
+             wishesTitle=${isSinglePage ? singlePage.spec.title : (pageTitle ?: #messages.msg('page.wishes.title'))},
+             wishesSubtitle=${isSinglePage ? '' : (pageSubtitle ?: '')},
+             wishesMaxLen=${isSinglePage ? 200 : (maxContentLength ?: 200)},
+             wishesSubmit=${isSinglePage ? true : (enableSubmit ?: true)},
+             wishesAi=${isSinglePage ? false : (aiEnabled ?: false)},
+             wishesDays=${isSinglePage ? false : (showDaysCounter ?: false)},
+             wishesDate=${isSinglePage ? '' : (anniversaryDate ?: '')},
+             wishesNameA=${isSinglePage ? '' : (partnerNameA ?: '')},
+             wishesNameB=${isSinglePage ? '' : (partnerNameB ?: '')},
+             types=${wishFinder.listTypes()},
+             wishes=${wishFinder.listApproved()},
+             typeMap=${wishFinder.getTypeMap()}"
+  >
+    <!-- ===== 便签墙视框（含主题标题区，整体一个卡片） ===== -->
+    <div id="wishBoard" class="wish-board card-base onload-animation">
+      <!-- 主题风格标题区 -->
+      <div class="wish-board-header px-6 py-6 md:px-9">
+        <div
+          class="flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+        >
+          <div class="min-w-0">
+            <h1
+              class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+            >
+              <span th:text="${wishesTitle}">心愿便签</span>
+            </h1>
+            <div class="flex flex-wrap items-center gap-1.5 text-sm">
+              <span
+                class="icon-[material-symbols--star-rounded] text-base text-(--primary)"
+              ></span>
+              <span
+                class="font-bold text-(--primary)"
+                th:text="#{page.wishes.boardTitle}">心愿墙</span
+              >
+              <span
+                th:if="${not #strings.isEmpty(wishesSubtitle)}"
+                class="text-30">·</span
+              >
+              <span
+                th:if="${not #strings.isEmpty(wishesSubtitle)}"
+                class="text-50"
+                th:text="${wishesSubtitle}">写下你的心愿，留下你的故事</span
+              >
+            </div>
+          </div>
+          <!-- 纪念日徽章 -->
+          <div
+            th:if="${wishesDays}"
+            class="wish-days-badge-static"
+            id="wishDaysBadge"
+            th:attr="data-date=${wishesDate},data-name-a=${wishesNameA},data-name-b=${wishesNameB}"
+          >
+            <span
+              class="icon-[material-symbols--favorite-rounded] text-sm text-(--primary)"
+            ></span>
+            <span id="wishDaysContent"
+              >在一起 <span class="wish-days-num">0</span> 天</span
+            >
+          </div>
+        </div>
+      </div>
+      <!-- 画布区（便签散布与拖动区域） -->
+      <div class="wish-board-body">
+        <!-- 筛选标签（顶部居中悬浮） -->
+        <div class="wish-tabs" id="wishTabs">
+          <button
+            type="button"
+            class="wish-tab active"
+            data-wish-filter="all"
+            th:text="#{common.all}">全部</button
+          >
+          <button
+            type="button"
+            th:each="type : ${types}"
+            class="wish-tab"
+            th:data-wish-filter="${type.spec.slug}"
+            th:data-wish-name="${type.spec.displayName}"
+            th:text="${type.spec.displayName}">类型</button
+          >
+        </div>
+
+        <!-- 便签卡片（JS 随机散布 + 可拖动） -->
+        <article
+          th:each="wish, iter : ${wishes}"
+          class="wish-card"
+          th:attr="data-color=${wish.spec.color ?: 'green'},data-wish-type=${wish.spec.type}"
+          th:style="|animation: wishCardIn .4s ease ${iter.index * 50 < 1000 ? iter.index * 50 : 1000}ms forwards|"
+        >
+          <div class="wish-card-header">
+            <div class="wish-dots">
+              <span class="wish-dot red"></span>
+              <span class="wish-dot yellow"></span>
+              <span class="wish-dot green"></span>
+            </div>
+            <span
+              class="wish-card-label"
+              th:text="${typeMap[wish.spec.type] ?: wish.spec.type}">类型</span
+            >
+          </div>
+          <div class="wish-card-body">
+            <span th:text="${wish.spec.content}">内容</span>
+            <em
+              th:if="${wish.spec.status == 'doing'}"
+              class="wish-status-text doing"
+              th:text="#{page.wishes.statusDoing}">进行中</em
+            >
+            <em
+              th:if="${wish.spec.status == 'done'}"
+              class="wish-status-text"
+              th:text="#{page.wishes.statusDone}">已达成</em
+            >
+          </div>
+          <p
+            th:if="${not #strings.isEmpty(wish.spec.doneNote)}"
+            class="wish-done-note"
+            th:text="${wish.spec.doneNote}"
+          >
+            感言
+          </p>
+          <img
+            th:if="${wish.spec.status == 'done' and wish.spec.doneImage != null and not #strings.isEmpty(wish.spec.doneImage)}"
+            class="wish-done-img"
+            th:src="${wish.spec.doneImage}"
+            alt=""
+            loading="lazy"
+          />
+          <div
+            th:if="${not #strings.isEmpty(wish.spec.aiReply)}"
+            class="wish-card-ai"
+            th:text="${wish.spec.aiReply}"
+          >
+            AI 回复
+          </div>
+          <div class="wish-card-footer">
+            <span
+              class="wish-card-nick"
+              th:text="${wish.spec.anonymous ? #messages.msg('page.wishes.anonymous') : (wish.spec.nickname ?: #messages.msg('page.wishes.anonymous'))}"
+              >匿名</span
+            >
+            <time
+              th:if="${wish.spec.createdAt != null}"
+              th:datetime="${wish.spec.createdAt}"
+              th:text="${#temporals.format(wish.spec.createdAt, 'yyyy/M/d')}"
+              >2026/1/1</time
+            >
+          </div>
+        </article>
+
+        <!-- 空状态（完全无便签） -->
+        <div
+          th:if="${#lists.isEmpty(wishes)}"
+          class="wish-empty"
+          id="wishEmpty"
+        >
+          <span th:text="#{page.wishes.empty}">还没有便签，来贴第一张吧</span>
+        </div>
+        <!-- 空状态（筛选后无结果，JS 控制） -->
+        <div class="wish-empty" id="wishFilterEmpty" style="display: none">
+          <span th:text="#{page.wishes.emptyFiltered}">该类型下暂无便签</span>
+        </div>
+
+        <!-- 发布输入栏（底部悬浮） -->
+        <div th:if="${wishesSubmit}" class="wish-input-bar" id="wishInputBar">
+          <input
+            type="text"
+            class="wish-input-nick"
+            id="wishNickInput"
+            th:placeholder="#{page.wishes.nicknamePlaceholder}"
+            maxlength="20"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            id="wishContentInput"
+            th:placeholder="#{page.wishes.placeholder}"
+            th:maxlength="${wishesMaxLen}"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span class="wish-char-counter" id="wishCharCounter">0/200</span>
+          <div class="wish-bar-colors" id="wishColorPicker">
+            <span
+              class="wish-bar-color active"
+              data-wish-color="green"
+              title="绿色"></span>
+            <span class="wish-bar-color" data-wish-color="yellow" title="黄色"
+            ></span>
+            <span class="wish-bar-color" data-wish-color="purple" title="紫色"
+            ></span>
+            <span class="wish-bar-color" data-wish-color="pink" title="粉色"
+            ></span>
+            <span class="wish-bar-color" data-wish-color="blue" title="蓝色"
+            ></span>
+            <span class="wish-bar-color" data-wish-color="orange" title="橙色"
+            ></span>
+          </div>
+          <button type="button" class="wish-bar-type" id="wishTypeBtn">
+            <span id="wishTypeLabel">心愿</span>
+          </button>
+          <button
+            th:if="${wishesAi}"
+            type="button"
+            class="wish-bar-btn polish"
+            id="wishPolishBtn"
+            th:text="#{page.wishes.polish}">润色</button
+          >
+          <button
+            type="button"
+            class="wish-bar-btn"
+            id="wishSubmitBtn"
+            th:text="#{page.wishes.submit}">发布</button
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wishToast" class="wish-toast" role="status" aria-live="polite"></div>
+
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wishes.js?v=${ASSET_VERSION}`}
+    defer></script>
+</MainGridLayout>
