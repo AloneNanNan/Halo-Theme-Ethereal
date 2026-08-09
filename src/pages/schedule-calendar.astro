@@ -1,0 +1,313 @@
+---
+// 日程日历插件（halo-plugin-schedule-calendar）公开页主题适配模板。
+// 插件通过 TemplateNameResolver 将 /schedule-calendar 路由渲染到
+// templates/schedule-calendar.html（即本文件编译产物），并注入：
+//   - title  String  公开页面标题（来自插件设置）
+//   - view   WeekViewResponse  周视图数据（weekStart/currentWeekStart/previousWeekStart/nextWeekStart/days/summary/serverTime/zoneId）
+// 未安装插件或主题未提供模板时，插件自动回退内置模板，不会影响本站。
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout
+  title="${title + ' - ' + site.title}"
+  description="${title + ' - ' + site.title}"
+>
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+    <!-- 页头 -->
+    <div
+      class="mb-6 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+    >
+      <div class="min-w-0">
+        <h1
+          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+          th:text="${title}"
+        >
+          日程日历
+        </h1>
+        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+          <span
+            class="icon-[material-symbols--event-note-outline-rounded] text-base text-(--primary)"
+          ></span>
+          <span
+            class="font-bold text-(--primary)"
+            th:text="#{page.schedule.subtitle}"
+          >
+            我的日程
+          </span>
+          <span class="text-30">·</span>
+          <span class="text-50" th:text="#{page.schedule.description}">
+            看看最近的日程安排
+          </span>
+        </div>
+      </div>
+      <a
+        th:href="@{/schedule-calendar.ics}"
+        data-no-swup
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
+      >
+        <span
+          class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+        ></span>
+        <span th:text="#{page.schedule.ical}">iCal 订阅</span>
+      </a>
+    </div>
+
+    <!-- 状态摘要：scheduleSummary 来自 scheduleCalendarFinder.summary()（未来 90 天范围）。
+         说明：路由注入的 view.summary.next 仅在当前浏览的周内查找下一事项，跨周的未来
+         事项（如节假日）会显示"暂无"，故改用 Finder 的 summary() 获取更准确的下一事项 -->
+    <div
+      th:with="scheduleSummary=${scheduleCalendarFinder.summary()}"
+      class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2"
+    >
+      <!-- 当前状态 -->
+      <div class="rounded-xl bg-(--btn-regular-bg) p-4">
+        <div class="mb-2 flex items-center gap-2 text-xs text-50">
+          <span class="icon-[material-symbols--check-circle-rounded] text-sm"
+          ></span>
+          <span th:text="#{page.schedule.currentStatus}">当前状态</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <span
+            th:if="${scheduleSummary.current.busy}"
+            class="icon-[mingcute--fire-fill] shrink-0 text-xl text-orange-500 status-wiggle"
+          ></span>
+          <span
+            th:unless="${scheduleSummary.current.busy}"
+            class="icon-[mingcute--leaf-fill] shrink-0 text-xl text-green-500 status-pulse"
+          ></span>
+          <span
+            class="font-bold text-90"
+            th:text="${scheduleSummary.current.busy ? #messages.msg('page.schedule.statusBusy') : #messages.msg('page.schedule.statusIdle')}"
+          >
+            空闲中
+          </span>
+        </div>
+        <p
+          class="mt-2 text-sm text-50"
+          th:text="${scheduleSummary.current.text}"
+        >
+          当前空闲
+        </p>
+      </div>
+
+      <!-- 下一事项 -->
+      <div class="rounded-xl bg-(--btn-regular-bg) p-4">
+        <div class="mb-2 flex items-center gap-2 text-xs text-50">
+          <span class="icon-[material-symbols--hourglass-top] text-sm"></span>
+          <span th:text="#{page.schedule.nextItem}">下一事项</span>
+        </div>
+        <div th:remove="tag" th:if="${scheduleSummary.next != null}">
+          <div
+            class="font-bold text-90"
+            th:text="${scheduleSummary.next.title}"
+          >
+            事项标题
+          </div>
+          <p
+            class="mt-1 text-sm text-(--primary)"
+            th:text="${scheduleSummary.next.text}"
+          >
+            30 分钟后开始
+          </p>
+          <time
+            class="mt-1 block text-xs text-30"
+            th:datetime="${scheduleSummary.next.startTime}"
+            th:text="${scheduleSummary.next.startTime}"
+          >
+            2026-07-27 10:00
+          </time>
+        </div>
+        <p
+          th:if="${scheduleSummary.next == null}"
+          class="mt-1 text-sm text-30"
+          th:text="#{page.schedule.noNextItem}"
+        >
+          暂无待办事项
+        </p>
+      </div>
+    </div>
+
+    <!-- 周导航：左侧本周时间范围，右侧上一周/回到本周/下一周按钮组 -->
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div
+        class="text-sm font-bold text-75"
+        th:text="${view.weekStart + ' ~ ' + view.weekEnd}"
+      >
+        2026-07-21 ~ 2026-07-27
+      </div>
+      <div class="flex items-center gap-2">
+        <a
+          th:href="@{/schedule-calendar(start=${view.previousWeekStart})}"
+          class="btn-regular h-10 w-10 rounded-lg active:scale-95"
+          th:aria-label="#{page.schedule.prevWeek}"
+        >
+          <span class="icon-[material-symbols--chevron-left-rounded] text-xl"
+          ></span>
+        </a>
+        <a
+          th:href="@{/schedule-calendar}"
+          th:classappend="${view.weekStart == view.currentWeekStart} ? 'pointer-events-none opacity-40' : ''"
+          th:aria-disabled="${view.weekStart == view.currentWeekStart}"
+          class="btn-regular h-10 rounded-lg px-3 text-sm font-bold active:scale-95"
+        >
+          <span class="icon-[material-symbols--refresh-rounded] mr-1 text-base"
+          ></span>
+          <span th:text="#{page.schedule.backToThisWeek}">回到本周</span>
+        </a>
+        <a
+          th:href="@{/schedule-calendar(start=${view.nextWeekStart})}"
+          class="btn-regular h-10 w-10 rounded-lg active:scale-95"
+          th:aria-label="#{page.schedule.nextWeek}"
+        >
+          <span class="icon-[material-symbols--chevron-right] text-xl"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 周历网格 -->
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-7">
+      <div
+        th:each="day, dayStat : ${view.days}"
+        th:with="isToday=${day.date == #strings.substring(view.serverTime, 0, 10)}"
+        class="min-h-24 rounded-xl border p-3 transition"
+        th:style="${isToday} ? 'border-color: color-mix(in oklab, var(--primary) 40%, transparent); background: color-mix(in oklab, var(--primary) 6%, transparent)' : 'border-color: transparent; background: var(--btn-regular-bg)'"
+      >
+        <div class="mb-2 flex items-baseline justify-between">
+          <span
+            class="text-xs font-bold"
+            th:classappend="${isToday} ? 'text-(--primary)' : 'text-75'"
+            th:text="${day.dayLabel}"
+          >
+            星期一
+          </span>
+          <span
+            class="text-xs"
+            th:classappend="${isToday} ? 'text-(--primary)' : 'text-30'"
+            th:text="${#strings.substring(day.date, 5)}"
+          >
+            07-27
+          </span>
+        </div>
+        <div class="space-y-2">
+          <div
+            th:each="block : ${day.occupied}"
+            th:with="blockColor=${#strings.isEmpty(block.color) ? 'var(--primary)' : block.color}"
+            class="rounded-lg p-2 text-xs transition hover:brightness-95"
+            th:style="|border-left: 3px solid ${blockColor}; background: color-mix(in oklab, ${blockColor} 12%, transparent)|"
+            th:title="${block.tooltipMeta}"
+          >
+            <div class="truncate font-bold text-90" th:text="${block.title}">
+              事项标题
+            </div>
+            <div
+              class="mt-0.5 text-50"
+              th:text="${block.start + ' - ' + block.end}"
+            >
+              10:00 - 11:00
+            </div>
+          </div>
+          <div
+            th:if="${#lists.isEmpty(day.occupied)}"
+            class="flex min-h-16 items-center justify-center py-2 text-xs text-20"
+          >
+            <span class="icon-[material-symbols--checklist-rounded] text-base"
+            ></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 即将开始 -->
+    <div
+      th:remove="tag"
+      th:with="upcomingItems=${scheduleCalendarFinder.upcoming(6)}"
+    >
+      <div class="mt-8 mb-4 flex items-center gap-2 text-lg font-bold text-90">
+        <span th:text="#{page.schedule.upcoming}">即将开始</span>
+      </div>
+
+      <div
+        class="grid grid-cols-[repeat(auto-fill,minmax(min(260px,100%),1fr))] gap-4"
+      >
+        <div
+          th:each="item, itemStat : ${upcomingItems}"
+          th:style="|animation-delay: min(calc(var(--content-delay) + ${itemStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+          class="card-base btn-card-outline group onload-animation card-hover-lift rounded-xl p-4"
+        >
+          <div class="mb-2.5 flex items-stretch gap-2.5">
+            <span
+              class="w-1 shrink-0 self-stretch rounded-full"
+              th:style="|background: ${item.color ?: 'var(--primary)'}|"></span>
+            <div class="min-w-0 flex-1">
+              <div
+                class="truncate font-bold text-90 transition group-hover:text-(--primary)"
+                th:text="${item.title}"
+              >
+                事项标题
+              </div>
+              <div
+                th:if="${item.sourceLabel != null}"
+                class="mt-0.5 text-xs text-30"
+                th:text="${item.sourceLabel}"
+              >
+                来源
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1 text-xs text-50">
+            <div class="flex items-center gap-1.5">
+              <span
+                class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-sm text-30"
+              ></span>
+              <span th:text="${item.dayLabel + ' ' + item.startTime}">
+                星期一 2026-07-27 10:00
+              </span>
+            </div>
+            <div
+              th:if="${item.durationLabel != null}"
+              class="flex items-center gap-1.5"
+            >
+              <span
+                class="icon-[material-symbols--hourglass-top] shrink-0 text-sm text-30"
+              ></span>
+              <span th:text="${item.durationLabel}">1小时</span>
+            </div>
+            <div
+              th:if="${item.location != null}"
+              class="flex items-center gap-1.5"
+            >
+              <span class="icon-[mdi--map-marker] shrink-0 text-sm text-30"
+              ></span>
+              <span th:text="${item.location}">会议室A</span>
+            </div>
+            <div
+              th:if="${item.recurrenceDescription != null}"
+              class="flex items-center gap-1.5"
+            >
+              <span
+                class="icon-[material-symbols--repeat-rounded] shrink-0 text-sm text-30"
+              ></span>
+              <span th:text="${item.recurrenceDescription}">每周一</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div
+        th:if="${#lists.isEmpty(upcomingItems)}"
+        class="py-12 text-center text-50"
+      >
+        <span
+          class="icon-[material-symbols--event-busy-rounded] text-5xl text-30"
+        ></span>
+        <p class="mt-4 text-sm" th:text="#{page.schedule.emptyUpcoming}">
+          暂无即将开始的事项
+        </p>
+      </div>
+    </div>
+  </section>
+</MainGridLayout>

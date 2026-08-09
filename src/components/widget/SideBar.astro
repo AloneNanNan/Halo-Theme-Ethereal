@@ -5,6 +5,7 @@ import Hitokoto from "./Hitokoto.astro";
 import MusicPlayer from "./MusicPlayer.astro";
 import PopularPosts from "./PopularPosts.astro";
 import Profile from "./Profile.astro";
+import Schedule from "./Schedule.astro";
 import SiteStats from "./SiteStats.astro";
 import Tags from "./Tags.astro";
 import Weather from "./Weather.astro";
@@ -84,6 +85,9 @@ const thClassappend = Astro.props["th:classappend"] || "";
         </div>
         <div class="contents" th:case="'popular-posts'">
           <PopularPosts class="onload-animation" />
+        </div>
+        <div class="contents" th:case="'schedule'">
+          <Schedule class="onload-animation" />
         </div>
         <div
           th:case="'html'"

@@ -607,6 +607,8 @@ spec:
                       value: site-stats
                     - label: 天气
                       value: weather
+                    - label: 最近日程
+                      value: schedule
                     - label: 自定义HTML
                       value: html
                 - $formkit: text
@@ -713,6 +715,14 @@ spec:
                   name: api
                   label: 自定义 Meting API
                   help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
+                - $formkit: number
+                  if: "$value.value === 'schedule'"
+                  name: limit
+                  label: 显示条数
+                  min: 1
+                  max: 10
+                  value: 3
+                  help: "显示最近日程的条数，最多10条，显示过多会导致小组件过高，建议保持默认"
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
@@ -741,6 +751,8 @@ spec:
                       value: site-stats
                     - label: 天气
                       value: weather
+                    - label: 最近日程
+                      value: schedule
                     - label: 自定义HTML
                       value: html
                 - $formkit: text
@@ -779,6 +791,14 @@ spec:
                   label: 获取失败来源
                   value: "楠南NanNan"
                   help: "一言获取失败时显示的作者或来源"
+                - $formkit: number
+                  if: "$value.value === 'schedule'"
+                  name: limit
+                  label: 显示条数
+                  min: 1
+                  max: 10
+                  value: 3
+                  help: "显示最近日程的条数，最多10条，显示过多会导致小组件过高，建议保持默认"
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
