@@ -599,10 +599,13 @@
   letter-spacing: 0.02em;
 }
 
-/* 卡片悬浮上移 + 主题色阴影（受样式开关控制） */
-body.card-hover-lift-enabled .card-hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
+/* 卡片悬浮上移 + 主题色阴影（受样式开关控制）。
+   移动端（<768px）卡片连排不分块，屏蔽悬浮上移；md+ 保留 */
+@media (min-width: 768px) {
+  body.card-hover-lift-enabled .card-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
+  }
 }
 
 /* 头像 hover 微交互 */

@@ -43,6 +43,15 @@ const thClassappend = Astro.props["th:classappend"] || "";
   >
     <Announcement class="onload-animation" />
   </div>
+  <!-- 公告（position=right，三栏布局）：移动端在左侧栏兜底显示（桌面隐藏，由右侧栏渲染），
+       保证移动端公告始终显示在 Profile 之后、小组件之前 -->
+  <div
+    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right' and theme.config?.sidebar?.layout?.layoutMode != 'two-column'}"
+    class="mb-4 flex w-full flex-col gap-4"
+    th:classappend="${'xl:!hidden'}"
+  >
+    <Announcement class="onload-animation" />
+  </div>
   <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
     <div
       class="contents"

@@ -114,13 +114,12 @@ const currentYear = new Date().getFullYear();
     th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
     class="mt-2"
   >
-    <span th:text="#{footer.poweredBy}">Powered by</span>
+    <span th:text="#{footer.poweredBy}">Powered by</span>{" "}
     <a
       class="link font-medium text-(--primary)"
       target="_blank"
       href="https://www.halo.run">Halo</a
-    >
-    &
+    >{" "}&{" "}
     <a
       class="link font-medium text-(--primary)"
       target="_blank"

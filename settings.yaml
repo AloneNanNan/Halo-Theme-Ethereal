@@ -263,10 +263,12 @@ spec:
                   value: light
             - $formkit: switch
               name: enable_change_color_scheme
+              id: enable_change_color_scheme
               label: 允许访客切换配色
               value: true
             - $formkit: group
               name: colorSchemeAnimation
+              if: "$get(enable_change_color_scheme).value"
               label: 配色切换动画
               value:
                 style: fade
@@ -655,6 +657,7 @@ spec:
               id: enable_profile_switch
               value: true
               label: 启用个人简介小组件
+              help: "开启后显示个人简介小组件（位于侧边栏首位，不参与吸顶，随页面滚动）"
             - $formkit: select
               name: display_position
               if: "$get(enable_profile_switch).value && $get(layoutMode).value === 'three-column'"
@@ -835,17 +838,17 @@ spec:
               id: announcement_enable
               label: 启用公告
               value: false
-              help: "开启后在侧边栏首位显示公告小组件，不参与吸顶，随页面滚动"
+              help: "开启后显示公告小组件（侧边栏首位为个人简介小组件时显示在第二位），不参与吸顶，随页面滚动"
             - $formkit: select
               name: position
               if: "$get(announcement_enable).value && $get(layoutMode).value === 'three-column'"
               label: 显示位置
               value: left
-              help: "公告仅可显示在左侧边栏首位或右侧边栏首位，两栏布局时仅显示在左侧"
+              help: "公告仅可显示在左侧边栏或右侧边栏，两栏布局时仅显示在左侧"
               options:
-                - label: 左侧边栏首位
+                - label: 左侧边栏
                   value: left
-                - label: 右侧边栏首位
+                - label: 右侧边栏
                   value: right
             - $formkit: textarea
               name: content
