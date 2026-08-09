@@ -1,0 +1,149 @@
+---
+// 日程日历插件（halo-plugin-schedule-calendar）事项卡片嵌入页主题适配模板。
+// 插件将 /schedule-calendar/cards/{name} 路由渲染到 templates/schedule-calendar-card.html
+// （即本文件编译产物），并注入：title / color / summary / summaryClass /
+// nextOccurrenceLabel / sourceLabel / location / description。
+// 该页面为独立卡片（分享/嵌入用），不套用主题整体布局，样式内联自包含。
+// 主题未提供本模板时插件自动回退内置模板。
+---
+
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${title}">日程卡片</title>
+    <style is:global>
+      :root {
+        --sc-card-bg: #fff;
+        --sc-card-border: rgba(15, 23, 42, 0.12);
+        --sc-title: #1f2937;
+        --sc-muted: #6b7280;
+        --sc-chip-bg: #f8fafc;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --sc-card-bg: #1b1e26;
+          --sc-card-border: rgba(255, 255, 255, 0.12);
+          --sc-title: #e5e7eb;
+          --sc-muted: #9ca3af;
+          --sc-chip-bg: rgba(255, 255, 255, 0.06);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font-family:
+          "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          sans-serif;
+      }
+      .schedule-card {
+        border: 1px solid var(--sc-card-border);
+        border-radius: 12px;
+        background: var(--sc-card-bg);
+        overflow: hidden;
+      }
+      .schedule-card__inner {
+        display: grid;
+        gap: 10px;
+        padding: 14px 16px;
+      }
+      .entry-start {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+      }
+      .entry-dot {
+        width: 10px;
+        height: 10px;
+        margin-top: 6px;
+        border-radius: 999px;
+        flex: none;
+      }
+      .entry-main {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .entry-title {
+        min-width: 0;
+        color: var(--sc-title);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .entry-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 0;
+      }
+      .entry-meta__item {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 1 auto;
+        max-width: 100%;
+        min-width: 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--sc-chip-bg);
+        color: var(--sc-muted);
+        font-size: 12px;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .entry-meta__item--wide {
+        flex: 1 1 320px;
+        max-width: 100%;
+        border-radius: 12px;
+        white-space: normal;
+      }
+      .entry-meta__item--block {
+        flex-basis: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- #swup-container：主题全局 swup 脚本会注入到每个编译页面，需保证主容器存在 -->
+    <div id="swup-container">
+      <div class="schedule-card">
+        <div class="schedule-card__inner">
+          <div class="entry-start">
+            <span class="entry-dot" th:style="'background:' + ${color}"></span>
+            <div class="entry-main">
+              <div class="entry-title" th:text="${title}">日程标题</div>
+              <div class="entry-meta">
+                <span th:class="${summaryClass}" th:text="${summary}"></span>
+                <span
+                  th:if="${nextOccurrenceLabel}"
+                  class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
+                  th:text="'下一次出现：' + ${nextOccurrenceLabel}"></span>
+                <span
+                  th:if="${sourceLabel}"
+                  class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
+                  th:text="'来源：' + ${sourceLabel}"></span>
+                <span
+                  th:if="${location}"
+                  class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
+                  th:text="'地点：' + ${location}"></span>
+                <span
+                  th:if="${description}"
+                  class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
+                  th:text="'备注：' + ${description}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

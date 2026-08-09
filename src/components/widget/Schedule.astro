@@ -1,0 +1,96 @@
+---
+// 最近日程小组件（自由配置型，配套 halo-plugin-schedule-calendar 插件）。
+// - 数据来源：scheduleCalendarFinder.upcoming(limit)（未来 365 天内按开始时间排序）
+// - 插件未安装/未启用时通过 pluginFinder.available 优雅降级，避免全站 500
+// - 后台可配置：显示条数（widget.limit，默认 3，上限 10）
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+}
+
+const className = Astro.props.class;
+---
+
+<WidgetLayout
+  name="最近日程"
+  nameKey="widget.schedule.title"
+  id="schedule"
+  class={className}
+>
+  <div
+    th:remove="tag"
+    th:with="schedulePluginAvailable=${pluginFinder.available('schedule-calendar')}"
+  >
+    <!-- 插件可用：渲染最近日程列表 -->
+    <div
+      th:if="${schedulePluginAvailable}"
+      th:remove="tag"
+      th:with="scheduleItems=${scheduleCalendarFinder.upcoming(widget.limit ?: 3)}"
+    >
+      <!-- 空状态 -->
+      <div
+        th:if="${#lists.isEmpty(scheduleItems)}"
+        class="px-3 py-8 text-center text-50"
+      >
+        <span
+          class="icon-[material-symbols--event-busy-rounded] text-3xl text-30"
+        ></span>
+        <p class="mt-2 text-xs" th:text="#{widget.schedule.empty}">暂无日程</p>
+      </div>
+      <!-- 日程列表 -->
+      <ul th:unless="${#lists.isEmpty(scheduleItems)}" class="space-y-1 px-2.5">
+        <li
+          th:each="item, itemStat : ${scheduleItems}"
+          class="rounded-lg pl-3 transition-all hover:bg-(--btn-regular-bg) hover:pl-4 active:bg-(--btn-regular-bg-active)"
+        >
+          <div class="flex items-start gap-2 py-2 pr-2">
+            <span
+              class="w-1 shrink-0 self-stretch rounded-full"
+              th:style="|background: ${item.color ?: 'var(--primary)'}|"></span>
+            <div class="min-w-0 flex-1">
+              <div
+                class="truncate text-sm font-bold text-90"
+                th:text="${item.title}"
+              >
+                事项标题
+              </div>
+              <div class="mt-0.5 flex items-center gap-1 text-xs text-50">
+                <span
+                  class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-[13px] text-30"
+                ></span>
+                <span
+                  class="truncate"
+                  th:text="${item.dayLabel + ' ' + item.startTime}"
+                >
+                  星期一 2026-09-25 10:00
+                </span>
+              </div>
+              <div
+                th:if="${item.location != null}"
+                class="mt-0.5 flex items-center gap-1 text-xs text-50"
+              >
+                <span
+                  class="icon-[mdi--map-marker] shrink-0 text-[13px] text-30"
+                ></span>
+                <span class="truncate" th:text="${item.location}">
+                  会议室A
+                </span>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <!-- 插件未安装：优雅降级提示 -->
+    <div
+      th:unless="${schedulePluginAvailable}"
+      class="px-3 py-6 text-center text-xs text-30"
+    >
+      <span class="icon-[material-symbols--event-busy-rounded] text-2xl"></span>
+      <p class="mt-2" th:text="#{widget.schedule.notInstalled}">
+        未安装日程日历插件
+      </p>
+    </div>
+  </div>
+</WidgetLayout>
