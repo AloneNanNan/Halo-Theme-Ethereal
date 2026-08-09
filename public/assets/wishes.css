@@ -1,0 +1,560 @@
+/* ===== 视框 ===== */
+.wish-board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  min-height: 660px;
+  overflow: hidden;
+  border-radius: var(--radius-large);
+  background: var(--card-bg);
+}
+
+/* 标题区（固定，不参与画布；padding 由 Tailwind 类 px-6 py-6 md:px-9 控制，与其他页面标题一致） */
+.wish-board-header {
+  flex-shrink: 0;
+}
+
+/* 画布区（便签散布与拖动区域） */
+.wish-board-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ===== 便签卡片（macOS 窗口风格） ===== */
+.wish-card {
+  position: absolute;
+  width: 230px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transform-origin: center;
+  transition:
+    transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.35s ease,
+    opacity 0.4s ease;
+  cursor: default;
+}
+.wish-card:hover {
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 9000 !important;
+}
+.wish-card.dragging {
+  transition: none;
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.25),
+    0 6px 16px rgba(0, 0, 0, 0.12);
+  z-index: 10000 !important;
+  cursor: grabbing;
+}
+:root.dark .wish-card {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 卡片头部 - macOS 风格 */
+.wish-card-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(6px);
+  cursor: grab;
+  user-select: none;
+}
+.wish-card.dragging .wish-card-header {
+  cursor: grabbing;
+}
+.wish-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.wish-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.wish-dot.red {
+  background: #ff5f57;
+  border-color: #e0443e;
+}
+.wish-dot.yellow {
+  background: #febb2e;
+  border-color: #dea123;
+}
+.wish-dot.green {
+  background: #28c840;
+  border-color: #1aab2c;
+}
+.wish-card-label {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 卡片内容 */
+.wish-card-body {
+  padding: 14px 16px 10px;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.72);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.wish-status-text {
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: 6px;
+  color: #2e7d32;
+  opacity: 0.78;
+  white-space: nowrap;
+}
+.wish-status-text.doing {
+  color: #1565c0;
+}
+
+/* 达成照片 / 感言 */
+.wish-done-img {
+  width: calc(100% - 32px);
+  margin: 6px 16px 0;
+  border-radius: 8px;
+  max-height: 140px;
+  object-fit: cover;
+}
+.wish-done-note {
+  margin: 4px 16px 8px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  font-style: italic;
+}
+
+/* AI 暖心回复 */
+.wish-card-ai {
+  margin: 6px 16px 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  font-style: italic;
+  line-height: 1.55;
+}
+.wish-card-ai::before {
+  content: "AI ";
+  font-style: normal;
+  font-weight: 700;
+  color: #c4856a;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+/* 卡片底部 */
+.wish-card-footer {
+  padding: 0 16px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+}
+.wish-card-nick {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 主题页头纪念日徽章 ===== */
+.wish-days-badge-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: var(--btn-regular-bg);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--btn-content);
+}
+.wish-days-badge-static .wish-days-num {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0.15rem;
+}
+
+/* ===== 筛选标签（顶部居中悬浮） ===== */
+.wish-tabs {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  z-index: 40;
+  max-width: calc(100% - 140px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wish-tabs::-webkit-scrollbar {
+  display: none;
+}
+.wish-tab {
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.6);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  transition: all 0.25s;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.wish-tab:hover {
+  color: rgba(0, 0, 0, 0.9);
+  background: var(--btn-card-bg-hover);
+}
+.wish-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+:root.dark .wish-tabs {
+  background: rgba(30, 30, 30, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+:root.dark .wish-tab {
+  color: rgba(255, 255, 255, 0.6);
+}
+:root.dark .wish-tab:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+:root.dark .wish-tab.active {
+  background: var(--primary);
+  color: rgb(0 0 0 / 0.7);
+}
+
+/* ===== 空状态 ===== */
+.wish-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 15px;
+  pointer-events: none;
+  z-index: 10;
+}
+:root.dark .wish-empty {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===== 发布输入栏（底部居中悬浮） ===== */
+.wish-input-bar {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  max-width: 98%;
+  width: 98%;
+  transition: all 0.3s ease;
+}
+.wish-input-bar:focus-within {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.14);
+}
+/* 输入框：与申请友链表单一致的样式（主题色边框 + 半透明底色，focus 主题色光环） */
+.wish-input-bar input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+  color: var(--deep-text, #2c2c2c);
+  outline: none;
+  font-family: inherit;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+.wish-input-bar input[type="text"]::placeholder {
+  opacity: 0.4;
+}
+.wish-input-bar input[type="text"]:hover {
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+.wish-input-bar input[type="text"]:focus {
+  border-color: var(--primary);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+.wish-input-nick {
+  width: 80px;
+  flex-shrink: 0;
+}
+:root.dark .wish-input-bar {
+  background: rgba(30, 30, 30, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.wish-char-counter {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+.wish-char-counter.over {
+  color: #e53e3e;
+  font-weight: 600;
+}
+:root.dark .wish-char-counter {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.wish-bar-colors {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.wish-bar-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+/* 圆点颜色由 CSS 定义（便签卡片背景色仍由 JS CARD_COLORS 控制） */
+.wish-bar-color[data-wish-color="green"] {
+  background: #c8e6c9;
+}
+.wish-bar-color[data-wish-color="yellow"] {
+  background: #fff9c4;
+}
+.wish-bar-color[data-wish-color="purple"] {
+  background: #e1bee7;
+}
+.wish-bar-color[data-wish-color="pink"] {
+  background: #ffcdd2;
+}
+.wish-bar-color[data-wish-color="blue"] {
+  background: #bbdefb;
+}
+.wish-bar-color[data-wish-color="orange"] {
+  background: #ffe0b2;
+}
+.wish-bar-color:hover,
+.wish-bar-color.active {
+  opacity: 1;
+  border-color: rgba(0, 0, 0, 0.25);
+  transform: scale(1.15);
+}
+:root.dark .wish-bar-color.active {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.wish-bar-type {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.wish-bar-type:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+:root.dark .wish-bar-type {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+:root.dark .wish-bar-type:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.wish-bar-btn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #fff;
+  background: var(--primary);
+  backdrop-filter: blur(6px);
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--primary) 40%, transparent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.wish-bar-btn:hover {
+  background: color-mix(in oklab, var(--primary) 85%, #000);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 50%, transparent);
+}
+:root.dark .wish-bar-btn {
+  color: rgb(0 0 0 / 0.7);
+}
+:root.dark .wish-bar-btn:hover {
+  background: color-mix(in oklab, var(--primary) 85%, #fff);
+}
+.wish-bar-btn:active {
+  transform: translateY(0);
+}
+.wish-bar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.wish-bar-btn.polish {
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.wish-bar-btn.polish:hover {
+  background: var(--btn-regular-bg-hover);
+}
+
+/* ===== Toast ===== */
+.wish-toast {
+  position: fixed;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(44, 44, 44, 0.88);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  z-index: 20000;
+  opacity: 0;
+  transition: all 0.35s;
+  pointer-events: none;
+  font-family: inherit;
+}
+.wish-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== 卡片入场动画（仅淡入，transform 由 JS 控制旋转） ===== */
+@keyframes wishCardIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== 响应式（移动端：与插件页面逻辑一致） ===== */
+@media (max-width: 768px) {
+  .wish-board {
+    height: auto;
+    min-height: 100vh;
+  }
+  .wish-board-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 12px;
+    padding: 96px 16px 220px;
+  }
+  .wish-card {
+    position: static;
+    width: calc(50% - 6px);
+    flex-shrink: 0;
+  }
+  .wish-card-body {
+    font-size: 13px;
+    padding: 12px 14px 8px;
+  }
+  /* 发布栏悬浮在画布底部（与桌面一致） */
+  .wish-input-bar {
+    bottom: 16px;
+    padding: 8px 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wish-input-bar input[type="text"] {
+    flex-basis: 100%;
+  }
+  .wish-input-nick {
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .wish-bar-colors {
+    order: 10;
+    width: 100%;
+    justify-content: center;
+    padding-top: 4px;
+  }
+  .wish-tabs {
+    top: 12px;
+    max-width: calc(100% - 24px);
+  }
+}
+/* 超窄屏：卡片退化为单列 */
+@media (max-width: 480px) {
+  .wish-card {
+    width: 100%;
+  }
+}
