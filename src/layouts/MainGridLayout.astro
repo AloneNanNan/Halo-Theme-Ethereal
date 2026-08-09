@@ -161,6 +161,7 @@ const {
         tabindex="-1"></video>
       <button
         id="banner-play-btn"
+        th:if="${theme.config?.base?.banner?.showPauseBtn == null or theme.config?.base?.banner?.showPauseBtn}"
         type="button"
         aria-label="暂停播放"
         class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
@@ -221,6 +222,7 @@ const {
           tabindex="-1"></video>
         <button
           id="banner-play-btn-mobile"
+          th:if="${theme.config?.base?.banner?.showPauseBtn == null or theme.config?.base?.banner?.showPauseBtn}"
           type="button"
           aria-label="暂停播放"
           class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
