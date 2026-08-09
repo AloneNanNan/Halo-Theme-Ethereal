@@ -26,9 +26,41 @@ export interface ThemeColor {
 
 export interface Banner {
   enable: boolean;
+  /** 展示形态：single 单图/视频（默认）| carousel 多图轮播 */
+  mode?: string;
   src: string;
+  /** 轮播配置（mode == 'carousel' 时生效） */
+  carousel?: BannerCarousel;
+  /** 是否启用移动端（<768px）独立来源 */
+  useMobileSrc?: boolean;
+  /** 移动端独立来源（useMobileSrc 开启时生效）；行为设置沿用电脑端 */
+  mobile?: BannerMobile;
   position: string;
   credit: Credit;
+}
+
+/** 移动端独立来源配置（仅文件与形态，行为设置沿用电脑端） */
+export interface BannerMobile {
+  /** 移动端展示形态：single 单图/视频（默认）| carousel 多图轮播，可与电脑端不同 */
+  mode?: string;
+  /** 移动端单图/视频 URL（single 模式） */
+  src?: string;
+  /** 移动端轮播图片 URL 数组（carousel 模式） */
+  images?: string[];
+}
+
+/** 多图轮播配置 */
+export interface BannerCarousel {
+  /** 轮播图片 URL 数组（attachment multiple） */
+  images?: string[];
+  /** 切换效果：fade 淡入淡出（默认）| slide 左右滑动 */
+  effect?: string;
+  /** 是否显示右下角指示点 */
+  dots?: boolean;
+  /** 预加载当前图之后的 N 张 */
+  preloadCount?: number;
+  /** 每张图片停留时长（ms），独立于动画速度档位 */
+  dwellMs?: number;
 }
 
 export interface BannerText {

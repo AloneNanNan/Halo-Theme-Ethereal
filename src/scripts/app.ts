@@ -107,19 +107,24 @@ document.addEventListener("animationend", removeOnloadAnimation);
 document.addEventListener("animationcancel", removeOnloadAnimation);
 
 // ── Banner 显示 ──
+// 双容器（桌面 #banner / 移动 #banner-mobile-reveal）各自等待首图加载后
+// 移除 opacity-0/scale-105 渐显；隐藏端（display:none）不触发加载回调，
+// 由 banner-src-switch.js 在激活时升级 eager 后自然走完同一流程
 function showBanner() {
-  const banner = document.getElementById("banner");
-  if (!banner) return;
-  const img = banner.querySelector("img");
-  if (img) {
-    if (img.complete && img.naturalWidth > 0) {
-      banner.classList.remove("opacity-0", "scale-105");
+  for (const id of ["banner", "banner-mobile-reveal"]) {
+    const banner = document.getElementById(id);
+    if (!banner) continue;
+    const img = banner.querySelector("img");
+    if (img) {
+      if (img.complete && img.naturalWidth > 0) {
+        banner.classList.remove("opacity-0", "scale-105");
+      } else {
+        img.onload = () => banner.classList.remove("opacity-0", "scale-105");
+        img.onerror = () => banner.classList.remove("opacity-0", "scale-105");
+      }
     } else {
-      img.onload = () => banner.classList.remove("opacity-0", "scale-105");
-      img.onerror = () => banner.classList.remove("opacity-0", "scale-105");
+      banner.classList.remove("opacity-0", "scale-105");
     }
-  } else {
-    banner.classList.remove("opacity-0", "scale-105");
   }
 }
 

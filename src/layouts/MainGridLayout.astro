@@ -7,7 +7,11 @@ import RightSideBar from "../components/widget/RightSideBar.astro";
 import SideBar from "../components/widget/SideBar.astro";
 import TOC from "../components/widget/TOC.astro";
 import { BANNER_HEIGHT, BANNER_HEIGHT_EXTEND } from "../constants/constants";
-import { imageSuffixThWith } from "../utils/image-suffix";
+import {
+  bannerMobileThWith,
+  bannerThWith,
+  carouselImgSrcExpr,
+} from "../utils/image-suffix";
 import Layout from "./Layout.astro";
 
 interface Props {
@@ -32,6 +36,51 @@ const {
     --banner-vh: 35vh;
     --panel-overlap: 3.5rem;
     --panel-top: calc(var(--banner-vh) - var(--panel-overlap));
+  }
+
+  /* Banner 轮播：首张 SSR 即显（.active 带 display:block），其余 display:none
+     延迟加载，切换时 JS 两步加类（visible → active）驱动透明度/位移过渡；
+     时长变量随动画档位（--dur-banner-transition）注入。
+     移动端独立来源开启时存在双容器（#banner / #banner-mobile），选择器并列 */
+  #banner .banner-slide,
+  #banner-mobile .banner-slide {
+    display: none;
+    opacity: 0;
+    transition:
+      opacity var(--dur-banner-transition, 700ms) ease,
+      transform var(--dur-banner-transition, 700ms) ease;
+  }
+
+  /* display:none 元素无法过渡：visible 先占位（opacity 仍为 0），
+     active 再触发过渡；will-change 仅对正在参与过渡/当前显示的幻灯片生效 */
+  #banner .banner-slide.visible,
+  #banner .banner-slide.active,
+  #banner-mobile .banner-slide.visible,
+  #banner-mobile .banner-slide.active {
+    display: block;
+    will-change: opacity, transform;
+  }
+
+  #banner .banner-slide.active,
+  #banner-mobile .banner-slide.active {
+    opacity: 1;
+  }
+
+  /* 移动端独立来源：双容器显隐由 CSS 媒体查询驱动（首帧无 FOUC，解析期即
+     决定下载），JS 只负责重初始化。规则限定在 .banner-mobile-enabled 作用域，
+     关闭功能时不得隐藏桌面容器 */
+  .banner-mobile-enabled #banner-mobile {
+    display: none;
+  }
+
+  @media (max-width: 767.98px) {
+    .banner-mobile-enabled #banner {
+      display: none;
+    }
+
+    .banner-mobile-enabled #banner-mobile {
+      display: block;
+    }
   }
 </style>
 
@@ -59,7 +108,8 @@ const {
   <div
     id="banner-wrapper"
     th:if="${theme.config?.base?.banner?.enable}"
-    th:with={imageSuffixThWith("p?.banner_width ?: 1920")}
+    th:with={bannerThWith()}
+    th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
   >
@@ -67,17 +117,135 @@ const {
       rel="preload"
       as="image"
       fetchpriority="high"
-      th:href="${(theme.config?.base?.banner?.src ?: '') + suffix}"
+      th:if="${mode == 'single' and !isVideo and !mobileActive}"
+      th:href="${srcX}"
     />
-    <ImageWrapper
+    <div
       id="banner"
-      src="${(theme.config?.base?.banner?.src ?: '') + suffix}"
-      alt="${site.title}"
-      position="${theme.config?.base?.banner?.position ?: 'center'}"
-      loading="eager"
-      fetchpriority="high"
-      class="h-full object-cover opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
-    />
+      th:if="${mode == 'single' and !isVideo}"
+      class="relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"
+      >
+      </div>
+      <!-- 移动端独立来源开启时两端都可能被隐藏：首图按 mobileActive 降级 lazy，
+           由 banner-src-switch.js 在激活时升级 eager，避免隐藏端下载 -->
+      <img
+        th:src="${srcX}"
+        th:alt="${site.title}"
+        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:attr="loading=${mobileActive ? 'lazy' : 'eager'},fetchpriority=${mobileActive ? 'low' : 'high'}"
+        decoding="async"
+        class="h-full w-full object-cover"
+        alt=""
+      />
+    </div>
+    <div
+      id="banner"
+      th:if="${mode == 'single' and isVideo}"
+      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+    >
+      <!-- 独立来源开启时桌面视频可能被隐藏：autoplay 会覆盖 preload=none 强制
+           拉流，必须一并去掉（th:attr 值为 null 时不输出该属性），播放由
+           banner-src-switch.js 在激活时接管 -->
+      <video
+        id="banner-video"
+        th:src="${theme.config?.base?.banner?.src}"
+        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:attr="autoplay=${!mobileActive ? 'autoplay' : null},preload=${mobileActive ? 'none' : 'auto'}"
+        class="h-full w-full object-cover"
+        muted
+        loop
+        playsinline
+        tabindex="-1"></video>
+      <button
+        id="banner-play-btn"
+        type="button"
+        aria-label="暂停播放"
+        class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
+      >
+        <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
+        ></span>
+      </button>
+    </div>
+    <div
+      id="banner"
+      th:if="${mode == 'carousel'}"
+      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+    >
+      <img
+        th:each="img, imgStat : ${theme.config?.base?.banner?.carousel?.images ?: {}}"
+        th:src={carouselImgSrcExpr()}
+        th:alt="${site.title}"
+        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:classappend="${imgStat.index == 0 ? 'active' : ''}"
+        th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
+        decoding="async"
+        class="banner-slide absolute inset-0 h-full w-full object-cover"
+      />
+    </div>
+    <div
+      id="banner-mobile"
+      th:if="${mobileActive}"
+      th:with={bannerMobileThWith()}
+      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+    >
+      <div
+        id="banner-mobile-reveal"
+        th:if="${mode == 'single' and !isVideo}"
+        class="relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+      >
+        <ImageWrapper
+          src="${srcX}"
+          alt="${site.title}"
+          position="${theme.config?.base?.banner?.position ?: 'center'}"
+          loading="lazy"
+          fetchpriority="low"
+          class="h-full object-cover"
+        />
+      </div>
+      <div
+        th:if="${mode == 'single' and isVideo}"
+        class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+      >
+        <video
+          id="banner-video-mobile"
+          th:src="${mobileSrc}"
+          th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+          class="h-full w-full object-cover"
+          muted
+          loop
+          playsinline
+          preload="none"
+          tabindex="-1"></video>
+        <button
+          id="banner-play-btn-mobile"
+          type="button"
+          aria-label="暂停播放"
+          class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
+        >
+          <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
+          ></span>
+        </button>
+      </div>
+      <div
+        th:if="${mode == 'carousel'}"
+        class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+      >
+        <img
+          th:each="img, imgStat : ${mobileImages}"
+          th:src={carouselImgSrcExpr()}
+          th:alt="${site.title}"
+          th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+          th:classappend="${imgStat.index == 0 ? 'active' : ''}"
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+          class="banner-slide absolute inset-0 h-full w-full object-cover"
+        />
+      </div>
+    </div>
     <div
       id="banner-overlay"
       th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.enable == null or theme.config?.base?.bannerText?.enable}"
@@ -233,6 +401,15 @@ const {
 
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
     defer></script>
   <script
     th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"

@@ -18,6 +18,7 @@ html[data-speed="balanced"] {
   --dur-scroll: 700ms; /* 导航栏隐藏（原 duration-700） */
   --dur-float: 350ms; /* 浮动按钮位移动画（原 bottom 0.35s） */
   --dur-banner: 700ms; /* banner 载入（原 duration-700） */
+  --dur-banner-transition: 700ms; /* 轮播切换动画（原 700ms，随档位） */
 }
 
 html[data-speed="relaxed"] {
@@ -29,6 +30,7 @@ html[data-speed="relaxed"] {
   --dur-scroll: 800ms;
   --dur-float: 450ms;
   --dur-banner: 800ms;
+  --dur-banner-transition: 1000ms;
 }
 
 html[data-speed="snappy"] {
@@ -40,4 +42,5 @@ html[data-speed="snappy"] {
   --dur-scroll: 400ms;
   --dur-float: 200ms;
   --dur-banner: 500ms;
+  --dur-banner-transition: 400ms;
 }
