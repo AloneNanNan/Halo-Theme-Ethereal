@@ -203,7 +203,8 @@
     @apply h-(--banner-height-home);
   }
 
-  .enable-banner #banner {
+  .enable-banner #banner,
+  .enable-banner #banner-mobile {
     @apply h-(--banner-height-home) translate-y-(--bannerOffset);
   }
 

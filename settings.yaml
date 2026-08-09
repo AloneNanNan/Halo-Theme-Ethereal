@@ -12,7 +12,14 @@ spec:
           label: Banner
           value:
             enable: true
+            mode: single
             src: "/themes/Ethereal/assets/images/demo-banner.png"
+            carousel:
+              images: []
+              effect: fade
+              dots: true
+              preloadCount: 1
+              dwellMs: 5000
             position: "center"
             credit:
               enable: false
@@ -25,12 +32,135 @@ spec:
               label: 启用
               value: true
               help: "启用横幅"
+            - $formkit: select
+              name: mode
+              id: banner_mode
+              if: "$get(banner_enable).value"
+              label: 类型
+              value: single
+              help: "单图/视频：显示一张图片或视频，按文件类型自动识别；多图轮播：多张静态图片循环切换"
+              options:
+                - label: 单图/视频
+                  value: single
+                - label: 多图轮播
+                  value: carousel
             - $formkit: attachment
               name: src
-              if: "$get(banner_enable).value"
-              label: 图片
+              id: banner_src
+              key: banner_src
+              if: "$get(banner_enable).value && $get(banner_mode).value === 'single'"
+              label: 图片/视频
               value: "/themes/Ethereal/assets/images/demo-banner.png"
-              help: "显示的图像"
+              accepts:
+                - "image/*"
+                - "video/mp4"
+                - "video/webm"
+              help: "支持图片（含 GIF/WebP/APNG 动图）与视频（MP4/WebM，静音循环播放）"
+            - $formkit: group
+              name: carousel
+              id: banner_carousel
+              key: banner_carousel
+              if: "$get(banner_enable).value && $get(banner_mode).value === 'carousel'"
+              label: 轮播设置
+              value:
+                images: []
+                effect: fade
+                dots: true
+                preloadCount: 1
+                dwellMs: 5000
+              children:
+                - $formkit: attachment
+                  name: images
+                  id: carousel_images
+                  key: carousel_images
+                  label: 轮播图片
+                  multiple: true
+                  accepts:
+                    - "image/*"
+                  value: []
+                  help: "选择多张静态图片，按顺序循环切换；少于 2 张时按单图显示。支持外部链接，重复链接会自动附加查询参数强制单独请求；随机图接口建议使用无状态服务（uapis.cn 等接口存在同一浏览器会话内反复请求返回同一张图的问题"
+                - $formkit: select
+                  name: effect
+                  label: 切换效果
+                  value: fade
+                  options:
+                    - label: 淡入淡出
+                      value: fade
+                    - label: 左右滑动
+                      value: slide
+                - $formkit: switch
+                  name: dots
+                  label: 显示指示点
+                  value: true
+                  help: "在右下角显示可点击的指示点，点击可跳转到对应图片"
+                - $formkit: number
+                  name: preloadCount
+                  label: 预加载数量
+                  min: 0
+                  max: 10
+                  step: 1
+                  value: 1
+                  help: "预加载当前图片之后的 N 张，0 表示不预加载"
+                - $formkit: number
+                  name: dwellMs
+                  label: 停留时长（毫秒）
+                  min: 1000
+                  max: 60000
+                  step: 500
+                  value: 5000
+                  help: "每张图片停留时长（毫秒），独立配置，不随动画速度档位变化；切换动画时长仍跟随动画速度档位"
+            - $formkit: switch
+              name: useMobileSrc
+              id: banner_useMobileSrc
+              if: "$get(banner_enable).value"
+              label: 移动端独立来源
+              value: false
+              help: "开启后为移动端（小于 768px）单独设置 banner 视频/图片来源；关闭时两端共用同一来源"
+            - $formkit: group
+              name: mobile
+              id: banner_mobile
+              key: banner_mobile
+              if: "$get(banner_enable).value && $get(banner_useMobileSrc).value"
+              label: 移动端设置
+              value:
+                mode: single
+                src: ""
+                images: []
+              children:
+                - $formkit: select
+                  name: mode
+                  id: banner_mobile_mode
+                  label: 类型（移动端）
+                  value: single
+                  help: "移动端展示形态，可与电脑端不同（如电脑端视频、移动端图片）；行为设置（切换效果/指示点/停留时长/位置等）沿用电脑端"
+                  options:
+                    - label: 单图/视频
+                      value: single
+                    - label: 多图轮播
+                      value: carousel
+                - $formkit: attachment
+                  name: src
+                  id: banner_mobile_src
+                  key: banner_mobile_src
+                  if: "$get(banner_enable).value && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'single'"
+                  label: 图片/视频（移动端）
+                  value: ""
+                  accepts:
+                    - "image/*"
+                    - "video/mp4"
+                    - "video/webm"
+                  help: "移动端单图/视频；留空则移动端使用电脑端来源"
+                - $formkit: attachment
+                  name: images
+                  id: banner_mobile_images
+                  key: banner_mobile_images
+                  if: "$get(banner_enable).value && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'carousel'"
+                  label: 轮播图片（移动端）
+                  multiple: true
+                  accepts:
+                    - "image/*"
+                  value: []
+                  help: "移动端轮播图片，按顺序循环切换；留空则移动端使用电脑端来源。外部随机图接口建议使用无状态服务，uapis.cn 等接口存在同会话返回同一张图的问题"
             - $formkit: select
               name: position
               if: "$get(banner_enable).value"
@@ -149,6 +279,7 @@ spec:
                 scroll: 700
                 float: 350
                 banner: 700
+                carouselTransition: 700
               children:
                 - $formkit: number
                   name: swup
@@ -214,6 +345,14 @@ spec:
                   step: 50
                   value: 700
                   help: "首屏 banner 图载入渐显时长（原 700ms）"
+                - $formkit: number
+                  name: carouselTransition
+                  label: 轮播切换（ms）
+                  min: 0
+                  max: 2000
+                  step: 10
+                  value: 700
+                  help: "轮播图切换动画时长（原 700ms），随动画速度档位变化"
         - $formkit: menuRadio
           id: menu
           name: menu

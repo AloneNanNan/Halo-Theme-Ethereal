@@ -2,7 +2,7 @@
  * 动画速度「自定义档」时长变量生成的 Thymeleaf 表达式。
  *
  * 将 Layout.astro 中原本超长的一行 th:style 三元表达式拆分为：
- *  - SPEED_CUSTOM_DEFAULTS：8 项默认时长（ms）的唯一来源；
+ *  - SPEED_CUSTOM_DEFAULTS：9 项默认时长（ms）的唯一来源；
  *  - speedCustomStyleThWith()：生成 th:with 局部变量（sc / isCustom）；
  *  - speedCustomStyleThExpr()：生成 th:style 表达式主体。
  *
@@ -23,6 +23,7 @@ export const SPEED_CUSTOM_DEFAULTS = {
   scroll: 700,
   float: 350,
   banner: 700,
+  carouselTransition: 700,
 } as const;
 
 /**
@@ -37,7 +38,11 @@ export function speedCustomStyleThWith(): string {
   );
 }
 
-/** 生成 th:style 的 Thymeleaf 表达式主体：自定义档拼接 8 个时长变量，否则空串 */
+/**
+ * 生成 Layout.astro th:style 的 Thymeleaf 表达式主体：
+ * 自定义档拼接 9 个时长变量（轮播停留 dwellMs 为独立配置，不走档位），否则空串。
+ * 轮播切换动画时长 --dur-banner-transition 仍随档位。
+ */
 export function speedCustomStyleThExpr(): string {
   const {
     swup,
@@ -48,6 +53,7 @@ export function speedCustomStyleThExpr(): string {
     scroll,
     float,
     banner,
+    carouselTransition,
   } = SPEED_CUSTOM_DEFAULTS;
   return (
     "${isCustom ? " +
@@ -74,6 +80,9 @@ export function speedCustomStyleThExpr(): string {
     ") + 'ms;' + " +
     "'--dur-banner:' + (sc.banner ?: " +
     banner +
+    ") + 'ms;' + " +
+    "'--dur-banner-transition:' + (sc.carouselTransition ?: " +
+    carouselTransition +
     ") + 'ms' " +
     ": ''}"
   );
