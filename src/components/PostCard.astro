@@ -1,53 +1,105 @@
 ---
 import PostMeta from "./PostMeta.astro";
 import { imageSuffixThWith } from "../utils/image-suffix";
+
+/**
+ * 底部统计图标块的圆角灰底样式（四项共用）。
+ * 注意：仅可提取普通类名；含 Tailwind 特殊语法的类（如 w-[calc(...)]、
+ * md:w-(--var)）无法被 Tailwind 扫描器从常量中识别，必须直接写在 class 中。
+ */
+const statIconClass =
+  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black/5 dark:bg-white/10";
 ---
 
 <article
-  class="card-base relative flex w-full flex-col-reverse rounded-(--radius-large) md:flex-col card-hover-lift overflow-hidden"
-  th:classappend="${#strings.isEmpty(post.spec.cover) ? ' no-cover' : ' has-cover'}"
+  class="card-base post-card relative flex w-full flex-col-reverse rounded-(--radius-large) md:flex-col card-hover-lift overflow-hidden"
+  th:with="coverEmpty = ${#strings.isEmpty(post.spec.cover)}"
+  th:classappend="${coverEmpty ? ' no-cover' : ' has-cover'}"
 >
   <div
-    th:class="'relative w-full pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7 ' + (${#strings.isEmpty(post.spec.cover)} ? 'md:w-full md:pr-16' : 'md:pr-2 md:w-[calc(100%_-_var(--post-card-cover-width)_-_12px)]')"
+    class="post-card-content relative flex w-full flex-col pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7"
   >
     <a
       th:href="@{${post.status.permalink}}"
-      class="group mb-3 block w-full text-3xl font-bold text-90 transition before:absolute before:left-[18px] before:top-[35px] before:hidden before:h-5 before:w-1 before:rounded-md before:bg-(--primary) hover:text-(--primary) active:text-(--title-active) dark:hover:text-(--primary) dark:active:text-(--title-active) md:before:block"
+      class="post-card-title group mb-3 block w-full text-3xl font-bold text-90 transition before:absolute before:left-[18px] before:top-[35px] before:hidden before:h-5 before:w-1 before:rounded-md before:bg-(--primary) hover:text-(--primary) active:text-(--title-active) dark:hover:text-(--primary) dark:active:text-(--title-active) md:before:block"
     >
       <span th:text="${post.spec.title}">Post title</span>
-      <span
-        class="icon-[material-symbols--chevron-right-rounded] absolute inline translate-y-0.5 text-[2rem] text-(--primary) md:hidden"
-      ></span>
       <span
         class="icon-[material-symbols--chevron-right-rounded] absolute z-30 hidden -translate-x-1 translate-y-0.5 text-[2rem] text-(--primary) opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 md:inline"
       ></span>
     </a>
 
-    <PostMeta hideTagsForMobile={true} hideUpdateDate={true} class="mb-4" />
+    <PostMeta
+      hideTagsForMobile={true}
+      hideUpdateDate={true}
+      hideDate={true}
+      class="post-meta mb-4"
+    />
 
     <div
-      class="mb-3.5 pr-4 text-75 transition line-clamp-2 md:line-clamp-1"
+      class="post-card-excerpt grow mb-3.5 pr-4 text-75 transition"
+      th:classappend="${theme.config?.post?.postList?.descriptionLines == 0 ? ' no-clamp' : ''}"
       th:text="${post.status.excerpt}"
     >
       Excerpt
     </div>
 
-    <!-- 元信息文字：text-black/30 对比度约 2:1 不满足 WCAG AA，升为 /50（与阶段 3.6 对 .text-30 的处理一致） -->
+    <!-- 底部统计：发布日期 + 浏览量 + 评论数 + 点赞（图标外有圆角灰色背景） -->
     <div
-      class="flex items-center gap-4 text-sm text-black/50 transition dark:text-white/50"
+      class="post-card-stats mt-auto flex items-center gap-3 text-sm text-black/50 transition dark:text-white/50"
     >
-      <div th:if="${post.stats != null}" class="inline-flex items-center">
+      <div class="inline-flex items-center gap-1.5">
+        <span class={statIconClass}>
+          <span
+            class="icon-[material-symbols--calendar-today-outline-rounded] text-base leading-none"
+          ></span>
+        </span>
         <span
-          class="icon-[material-symbols--visibility-outline-rounded] mr-1 text-base leading-none"
-        ></span>
+          class="leading-none"
+          th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
+          >2026-01-01</span
+        >
+      </div>
+      <div class="leading-none" th:if="${post.stats != null}">|</div>
+      <div
+        th:if="${post.stats != null}"
+        class="inline-flex items-center gap-1.5"
+      >
+        <span class={statIconClass}>
+          <span
+            class="icon-[material-symbols--visibility-outline-rounded] text-base leading-none"
+          ></span>
+        </span>
         <span class="leading-none" th:text="${post.stats.visit}">0</span>
       </div>
-      <div th:if="${post.stats != null}" class="leading-none">|</div>
-      <div th:if="${post.stats != null}" class="inline-flex items-center">
-        <span
-          class="icon-[material-symbols--chat-bubble-outline-rounded] mr-1 text-base leading-none"
-        ></span>
+      <div class="leading-none" th:if="${post.stats != null}">|</div>
+      <div
+        th:if="${post.stats != null}"
+        class="inline-flex items-center gap-1.5"
+      >
+        <span class={statIconClass}>
+          <span class="icon-[mdi--comment-text-outline] text-base leading-none"
+          ></span>
+        </span>
         <span class="leading-none" th:text="${post.stats.comment}">0</span>
+      </div>
+      <!-- 点赞：跟随后台文章操作栏"启用点赞"开关 -->
+      <div
+        class="leading-none"
+        th:if="${post.stats != null and theme.config?.post?.actionBar?.like == true}"
+      >
+        |
+      </div>
+      <div
+        th:if="${post.stats != null and theme.config?.post?.actionBar?.like == true}"
+        class="inline-flex items-center gap-1.5"
+      >
+        <span class={statIconClass}>
+          <span
+            class="icon-[material-symbols--favorite-outline-rounded] text-base leading-none"
+          ></span>
+        </span>
+        <span class="leading-none" th:text="${post.stats.upvote}">0</span>
       </div>
     </div>
   </div>
@@ -57,7 +109,7 @@ import { imageSuffixThWith } from "../utils/image-suffix";
     th:href="@{${post.status.permalink}}"
     th:aria-label="${post.spec.title}"
     th:with={imageSuffixThWith("p?.card_cover_width ?: 400")}
-    class="group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[16/9] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
+    class="post-card-cover group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[16/9] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
   >
     <div
       class="pointer-events-none absolute z-10 h-full w-full transition group-hover:bg-black/30 group-active:bg-black/50"
@@ -79,11 +131,30 @@ import { imageSuffixThWith } from "../utils/image-suffix";
     />
   </a>
 
+  <!-- 无封面占位封面：仅桌面端网格（非瀑布流）显示，保证与有封面卡片等高协调。
+       其余场景（移动端 / 列表 / 瀑布流）由 CSS 隐藏，改用主题色按钮 -->
   <a
-    th:if="${#strings.isEmpty(post.spec.cover)}"
+    th:if="${coverEmpty}"
     th:href="@{${post.status.permalink}}"
     th:aria-label="${post.spec.title}"
-    class="btn-regular absolute bottom-3 right-3 top-3 !hidden w-[3.25rem] rounded-xl bg-(--enter-btn-bg) hover:bg-(--enter-btn-bg-hover) active:scale-95 active:bg-(--enter-btn-bg-active) md:!flex"
+    class="post-card-cover post-card-cover-placeholder group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[16/9] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
+  >
+    <div
+      class="pointer-events-none absolute inset-0 z-10 flex h-full w-full items-center justify-center transition group-hover:bg-black/10 group-active:bg-black/20"
+    >
+      <span
+        class="icon-[material-symbols--article-outline-rounded] scale-90 text-4xl text-white/80 transition group-hover:scale-100"
+      ></span>
+    </div>
+  </a>
+
+  <!-- 无封面主题色块按钮：列表模式与瀑布流下显示（Firefly 原版做法）。
+       桌面网格非瀑布流下由 CSS 隐藏（改用占位封面） -->
+  <a
+    th:if="${coverEmpty}"
+    th:href="@{${post.status.permalink}}"
+    th:aria-label="${post.spec.title}"
+    class="post-card-enter-btn btn-regular absolute bottom-3 right-3 top-3 flex w-[3.25rem] rounded-xl bg-(--enter-btn-bg) hover:bg-(--enter-btn-bg-hover) active:scale-95 active:bg-(--enter-btn-bg-active)"
   >
     <span
       class="icon-[material-symbols--chevron-right-rounded] mx-auto text-4xl text-(--primary) transition"
@@ -91,6 +162,6 @@ import { imageSuffixThWith } from "../utils/image-suffix";
   </a>
 </article>
 <div
-  class="mx-6 border-t-[1px] border-dashed border-black/10 transition last:border-t-0 dark:border-white/15 md:hidden"
+  class="post-card-divider mx-6 border-t-[1px] border-dashed border-black/10 transition last:border-t-0 dark:border-white/15 md:hidden"
 >
 </div>

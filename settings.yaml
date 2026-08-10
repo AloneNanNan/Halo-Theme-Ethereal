@@ -1058,6 +1058,69 @@ spec:
       label: 文章
       formSchema:
         - $formkit: group
+          name: postList
+          label: 文章卡片布局
+          value:
+            defaultMode: list
+            coverPosition: right
+            descriptionLines: 2
+            grid:
+              masonry: false
+              coverFullWidth: false
+          children:
+            - $formkit: select
+              name: defaultMode
+              id: postList_defaultMode
+              label: 默认布局
+              value: list
+              help: "列表：单列布局，封面显示在卡片侧边；网格：多列布局，封面显示在卡片顶部"
+              options:
+                - label: 列表
+                  value: list
+                - label: 网格
+                  value: grid
+            - $formkit: select
+              name: coverPosition
+              id: postList_coverPosition
+              key: postList_coverPosition
+              if: "$get(postList_defaultMode).value === 'list'"
+              label: 列表模式封面位置
+              value: right
+              help: "仅列表布局生效：封面显示在卡片右侧或左侧"
+              options:
+                - label: 右侧
+                  value: right
+                - label: 左侧
+                  value: left
+            - $formkit: number
+              name: descriptionLines
+              label: 简介显示行数
+              value: 2
+              min: 0
+              max: 6
+              step: 1
+              help: "文章简介显示行数，设为 0 则不截断"
+            - $formkit: group
+              name: grid
+              id: postList_grid
+              key: postList_grid
+              if: "$get(postList_defaultMode).value === 'grid'"
+              label: 网格设置
+              help: "以下设置仅网格布局生效"
+              children:
+                - $formkit: switch
+                  name: masonry
+                  key: postList_grid_masonry
+                  label: 瀑布流
+                  value: false
+                  help: "开启后网格使用瀑布流（Masonry）布局：卡片高度参差不齐、错落排列，推荐有图无图混合时开启"
+                - $formkit: switch
+                  name: coverFullWidth
+                  key: postList_grid_coverFullWidth
+                  label: 封面贴边
+                  value: false
+                  help: "开启后封面撑满卡片顶部贴边（仅上两角圆角）；关闭则封面按内边距内缩，四角圆角"
+        - $formkit: group
           name: license
           label: 版权声明
           value:

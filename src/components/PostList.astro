@@ -1,6 +1,12 @@
 ---
 import Pagination from "./control/Pagination.astro";
 import PostCard from "./PostCard.astro";
+import {
+  postListContainerClass,
+  postListContainerStyle,
+  postListContainerThWith,
+  postListDataAttrs,
+} from "../utils/post-list-config";
 
 interface Props {
   pagination?: string;
@@ -10,11 +16,16 @@ const { pagination = "posts" } = Astro.props;
 ---
 
 <div
-  class="mb-4 flex flex-col rounded-(--radius-large) bg-(--card-bg) py-1 transition md:gap-4 md:bg-transparent md:py-0"
+  id="post-list-container"
+  th:with={postListContainerThWith()}
+  th:classappend={postListContainerClass()}
+  th:attr={postListDataAttrs()}
+  th:style={postListContainerStyle()}
+  class="mb-4 transition flex flex-col gap-4 rounded-(--radius-large) bg-(--card-bg) py-1 md:gap-4 md:bg-transparent md:py-0"
 >
   <div class="contents" th:each="post, postStat : ${posts.items}">
     <div
-      class="onload-animation"
+      class="post-card-item onload-animation"
       th:style="|animation-delay: min(calc(var(--content-delay) + ${postStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
     >
       <PostCard />
@@ -22,3 +33,218 @@ const { pagination = "posts" } = Astro.props;
   </div>
 </div>
 <Pagination context={pagination} class="mb-4 onload-animation" />
+
+<!-- 瀑布流（Masonry）布局脚本：仅 grid + masonry 时启用，见 post-list-layout.js -->
+<script
+  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/post-list-layout.js?v=${ASSET_VERSION}`}
+  defer></script>
+
+<style is:global>
+  /* ===== 网格（grid）布局容器 ===== */
+  #post-list-container.post-grid-mode {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(var(--post-card-min-width, 320px), 1fr)
+    );
+    gap: 1rem;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  /* ===== 网格模式卡片：封面在顶部、内容在下 ===== */
+  #post-list-container.post-grid-mode .post-card {
+    flex-direction: column-reverse !important;
+    justify-content: flex-end !important;
+    height: 100%;
+  }
+
+  /* 封面：移到卡片顶部。默认内缩（grid-cover-inset）：按卡片内边距内缩、四角圆角。
+     等高网格中卡片被拉伸时，封面 flex-grow: 1 吸收剩余高度（基础保持 2:1，
+     有剩余空间才加高），补齐摘要下方的空白，避免留白 */
+  #post-list-container.post-grid-mode .post-card-cover {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: calc(100% - 2rem) !important;
+    max-height: none !important;
+    aspect-ratio: 2 / 1 !important;
+    margin: 1rem 1rem 0 !important;
+    border-radius: 0.75rem !important;
+    flex-grow: 1 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 封面贴边（grid-cover-full）：撑满卡片顶部，仅上两角圆角 */
+  #post-list-container.post-grid-mode.grid-cover-full .post-card-cover {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: var(--radius-large) var(--radius-large) 0 0 !important;
+  }
+
+  /* 无封面占位封面：主题色渐变背景。
+     默认隐藏，仅桌面端网格（非瀑布流）下显示（移动端/列表/瀑布流用主题色按钮） */
+  #post-list-container .post-card-cover-placeholder {
+    display: none !important;
+    background: linear-gradient(
+      135deg,
+      var(--btn-regular-bg-hover),
+      var(--btn-regular-bg)
+    );
+  }
+  @media (min-width: 768px) {
+    #post-list-container.post-grid-mode:not([data-masonry="true"])
+      .post-card-cover-placeholder {
+      display: block !important;
+    }
+    /* 桌面网格非瀑布流用占位封面，隐藏主题色按钮 */
+    #post-list-container.post-grid-mode:not([data-masonry="true"])
+      .post-card-enter-btn {
+      display: none !important;
+    }
+  }
+
+  /* 网格模式无封面用主题色按钮（瀑布流 / 移动端）：内容区右侧留位给按钮。
+     列表模式由 PostCard 的 md:pr-16 / 移动端规则处理 */
+  #post-list-container.post-grid-mode[data-masonry="true"]
+    .no-cover
+    .post-card-content {
+    padding-right: 4.5rem !important;
+  }
+
+  /* 内容区：占满整卡宽度，去掉列表模式的右侧封面留白。
+     等高网格中不参与拉伸（flex-grow: 0），剩余高度全部由封面吸收，
+     避免摘要下方留白；底部 stats 靠 mt-auto 贴底对齐 */
+  #post-list-container.post-grid-mode .post-card-content {
+    width: 100% !important;
+    padding: 0.75rem 1rem 1rem !important;
+    flex-grow: 0 !important;
+  }
+
+  /* ===== 列表模式桌面端（≥768px）：内容区宽度与右侧留白 =====
+     有封面：内容区占左侧，右侧留出封面位（等价原 md:w-[calc(...)] md:pr-2）
+     无封面：内容区占满，右侧留出主题色按钮位（等价原 md:pr-16） */
+  @media (min-width: 768px) {
+    #post-list-container.post-list-mode .has-cover .post-card-content {
+      width: calc(100% - var(--post-card-cover-width) - 12px) !important;
+      padding-right: 0.5rem !important;
+    }
+    #post-list-container.post-list-mode .no-cover .post-card-content {
+      width: 100% !important;
+      padding-right: 4rem !important;
+    }
+  }
+
+  /* ===== 紧凑卡片样式（标题缩小、元信息缩小、摘要字号）=====
+     适用：网格模式（全断点）+ 列表模式移动端（两者观感统一）。
+     注：网格为全断点、列表仅在移动端生效，断点不同无法共用选择器，
+     故分别声明、保持规则体一致，避免修改时遗漏 */
+  /* 网格：标题缩小、去掉装饰条 */
+  #post-list-container.post-grid-mode .post-card-title {
+    font-size: 1.35rem !important;
+    line-height: 1.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  #post-list-container.post-grid-mode .post-card-title::before {
+    display: none !important;
+  }
+  /* 网格：元信息与统计缩小 */
+  #post-list-container.post-grid-mode .post-meta,
+  #post-list-container.post-grid-mode .post-card-stats {
+    font-size: 0.8rem !important;
+    gap: 0.5rem !important;
+  }
+
+  /* 摘要行数：list/grid 均由配置 --post-desc-lines 控制（0 = 不截断） */
+  #post-list-container .post-card-excerpt {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: var(--post-desc-lines, 2);
+    line-clamp: var(--post-desc-lines, 2);
+  }
+  /* 配置为 0 时不截断（list/grid 均生效） */
+  #post-list-container .post-card-excerpt.no-clamp {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+  }
+  /* 网格：摘要字号紧凑化 + 等高拉伸不参与（防止行数溢出） */
+  #post-list-container.post-grid-mode .post-card-excerpt {
+    flex-grow: 0 !important;
+    font-size: 0.875rem;
+  }
+
+  /* ===== 列表模式封面居左（coverPosition: left）===== */
+  #post-list-container.post-list-mode.cover-left .post-card-cover {
+    right: auto !important;
+    left: 0.75rem !important;
+  }
+  #post-list-container.post-list-mode.cover-left .post-card-content {
+    margin-right: 0 !important;
+    margin-left: auto !important;
+    padding-right: 1.5rem !important;
+    padding-left: 2.25rem !important;
+  }
+
+  /* ===== 移动端（<768px）统一为网格式布局：封面居上、独立卡片 =====
+     列表与网格在移动端呈现一致的卡片样式（封面在上、无封面用主题色按钮居右） */
+  @media (max-width: 767px) {
+    /* 列表模式容器：去掉连体背景与内边距，让每张卡片独立显示（同网格模式） */
+    #post-list-container.post-list-mode {
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    /* 独立卡片模式下隐藏文章间的虚线分隔 */
+    #post-list-container .post-card-divider {
+      display: none !important;
+    }
+    /* 列表模式封面保持居上（PostCard 基础 flex-col-reverse），无需额外覆盖 */
+
+    /* 列表模式标题缩小、隐藏装饰条（与网格一致） */
+    #post-list-container.post-list-mode .post-card-title {
+      font-size: 1.35rem !important;
+      line-height: 1.75rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+    #post-list-container.post-list-mode .post-card-title::before {
+      display: none !important;
+    }
+
+    /* 列表模式元信息/统计缩小（与网格一致） */
+    #post-list-container.post-list-mode .post-meta,
+    #post-list-container.post-list-mode .post-card-stats {
+      font-size: 0.8rem !important;
+      gap: 0.5rem !important;
+    }
+
+    /* 列表模式摘要字号与网格一致 */
+    #post-list-container.post-list-mode .post-card-excerpt {
+      font-size: 0.875rem !important;
+    }
+
+    /* 无封面用主题色按钮居右，内容区右侧留位（列表/网格统一） */
+    #post-list-container .no-cover .post-card-content {
+      padding-right: 4.5rem !important;
+    }
+  }
+
+  /* 瀑布流模式：post-card-item 参与绝对定位，关闭入场过渡 */
+  #post-list-container.post-grid-mode.masonry-active .post-card-item {
+    position: absolute;
+    top: auto;
+    left: auto;
+  }
+  /* 瀑布流下卡片高度由内容决定，覆盖 grid 模式的 height:100% */
+  #post-list-container.post-grid-mode.masonry-active .post-card {
+    height: auto !important;
+  }
+  #post-list-container.post-grid-mode.masonry-active
+    .post-card-item.onload-animation {
+    transition: none;
+  }
+</style>

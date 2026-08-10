@@ -54,10 +54,22 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
           <div
             class="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-black/5 text-black/50 transition dark:bg-white/10 dark:text-white/50"
           >
-            <span class="icon-[material-symbols--chat-bubble-outline-rounded]"
-            ></span>
+            <span class="icon-[mdi--comment-text-outline]"></span>
           </div>
           <span class="text-sm" th:text="${post.stats.comment}">0</span>
+        </div>
+        <!-- 点赞：跟随后台文章操作栏"启用点赞"开关 -->
+        <div
+          class="flex flex-row items-center"
+          th:if="${theme.config?.post?.actionBar?.like == true}"
+        >
+          <div
+            class="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-black/5 text-black/50 transition dark:bg-white/10 dark:text-white/50"
+          >
+            <span class="icon-[material-symbols--favorite-outline-rounded]"
+            ></span>
+          </div>
+          <span class="text-sm" th:text="${post.stats.upvote}">0</span>
         </div>
       </div>
 

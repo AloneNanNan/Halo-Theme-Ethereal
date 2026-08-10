@@ -3,9 +3,14 @@ interface Props {
   class?: string;
   hideTagsForMobile?: boolean;
   hideUpdateDate?: boolean;
+  hideDate?: boolean;
 }
 
-const { hideTagsForMobile = false, hideUpdateDate = false } = Astro.props;
+const {
+  hideTagsForMobile = false,
+  hideUpdateDate = false,
+  hideDate = false,
+} = Astro.props;
 const className = Astro.props.class;
 ---
 
@@ -15,7 +20,7 @@ const className = Astro.props.class;
     className,
   ]}
 >
-  <div class="flex items-center">
+  <div class="flex items-center" hidden={hideDate}>
     <div class="meta-icon">
       <span
         class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"
