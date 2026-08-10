@@ -1,0 +1,408 @@
+---
+// 欢迎弹窗：访客进入网站时显示欢迎卡片，IP 定位复用天气小组件
+// （腾讯位置服务 WebService API + weather_ip_cache），避免重复请求。
+// - 位置：电脑端四角可配（top-left/top-right/bottom-left/bottom-right），
+//   移动端固定底部居中（媒体查询强制）
+// - 关闭记忆：sessionStorage，本次会话不再弹出，重新打开网站再次弹出
+// - 降级：未配置 Key / 定位失败时 {location} 显示 fallbackLocation 文案
+// - 样式：沿用主题 fuwari 卡片语言（card-base / --btn-regular-bg / 主色点缀），
+//   开启「高级材质」时跟随导航栏毛玻璃；{location} 以主题色高亮作为视觉焦点
+interface Props {
+  class?: string;
+}
+---
+
+<div
+  id="welcome-popup-wrapper"
+  th:if="${theme.config?.base?.welcome?.enable}"
+  class="pointer-events-none fixed z-[1000]"
+  role="status"
+  aria-live="polite"
+>
+  <div
+    class="welcome-card card-base pointer-events-auto relative w-full max-w-80 overflow-hidden"
+  >
+    <div class="p-4">
+      <!-- 标题行：主色装饰竖线 + 标题 + 关闭按钮 -->
+      <div class="flex items-center gap-2.5">
+        <h3
+          class="welcome-title relative min-w-0 flex-1 pl-3 text-base font-bold leading-snug text-(--deep-text) before:absolute before:left-0 before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary)"
+          data-field="title"
+        >
+          欢迎来到我的博客！
+        </h3>
+        <button
+          type="button"
+          class="welcome-close-btn btn-regular group rounded-lg h-8 w-8 text-sm transition-all active:scale-95"
+          aria-label="关闭"
+        >
+          <span
+            class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
+          ></span>
+        </button>
+      </div>
+
+      <!-- 正文：欢迎手势图标 + 位置主色高亮 -->
+      <div class="mt-3 flex items-start gap-2">
+        <span
+          class="icon-[material-symbols--waving-hand-rounded] mt-0.5 shrink-0 text-lg leading-none text-(--primary)"
+        ></span>
+        <p
+          class="min-w-0 flex-1 text-sm leading-relaxed whitespace-pre-line text-black/60 dark:text-white/60"
+        >
+          <span data-field="location-prefix"></span>
+          <span class="font-medium text-(--primary)" data-field="location"
+          ></span>
+          <span data-field="location-suffix"></span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  #welcome-popup-wrapper {
+    display: none;
+  }
+
+  #welcome-popup-wrapper.welcome-show {
+    display: flex;
+  }
+
+  /* 电脑端四角定位：
+     左上/右上：顶部固定在导航栏内容层（4.5rem）下方区域；
+     左/右边缘由 JS 跟随导航栏卡片实际边缘（见脚本），此处 1rem 为兜底；
+     左下/右下：屏幕角落 */
+  #welcome-popup-wrapper[data-position="top-left"],
+  #welcome-popup-wrapper[data-position="top-right"] {
+    top: calc(4.5rem + 0.75rem);
+  }
+  #welcome-popup-wrapper[data-position="top-left"] {
+    left: 1rem;
+  }
+  #welcome-popup-wrapper[data-position="top-right"] {
+    right: 1rem;
+  }
+  #welcome-popup-wrapper[data-position="bottom-left"] {
+    bottom: 1rem;
+    left: 1rem;
+  }
+  #welcome-popup-wrapper[data-position="bottom-right"] {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  /* 主题色柔光阴影（与卡片悬浮效果同源） */
+  .welcome-card {
+    box-shadow: 0 10px 30px -12px
+      color-mix(in oklab, var(--primary) 40%, transparent);
+  }
+
+  /* 开启「高级材质」时跟随导航栏毛玻璃（与 float-panel 同款模糊值） */
+  body.navbar-blur-enabled .welcome-card {
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+  :root.dark body.navbar-blur-enabled .welcome-card {
+    background-color: rgb(0 0 0 / 0.65) !important;
+  }
+
+  /* 入场动画：延迟到首屏加载完成后由 JS 加 welcome-show 触发 */
+  #welcome-popup-wrapper.welcome-show .welcome-card {
+    animation: welcome-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .welcome-card.welcome-out {
+    animation: welcome-out 0.25s ease forwards !important;
+  }
+
+  @keyframes welcome-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes welcome-out {
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+
+  /* 移动端：固定底部居中（覆盖四角定位） */
+  @media (max-width: 767.98px) {
+    #welcome-popup-wrapper {
+      left: 0 !important;
+      right: 0 !important;
+      top: auto !important;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+      justify-content: center;
+      padding: 0 1rem;
+    }
+  }
+
+  /* 尊重系统减弱动效偏好 */
+  @media (prefers-reduced-motion: reduce) {
+    #welcome-popup-wrapper.welcome-show .welcome-card {
+      animation: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var CLOSED_KEY = "ethereal-welcome-closed-v1";
+    var IP_CACHE_KEY = "weather_ip_cache";
+    var IP_CACHE_TTL = 4 * 60 * 60 * 1000; // 与天气小组件一致：IP 定位缓存 4 小时
+    var API_BASE = "https://apis.map.qq.com/ws";
+
+    function getThemeConfig() {
+      try {
+        var el = document.getElementById("theme-config");
+        if (!el || !el.textContent) return null;
+        return JSON.parse(el.textContent);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    var wrapper = document.getElementById("welcome-popup-wrapper");
+    if (!wrapper) return;
+
+    var config = getThemeConfig();
+    var welcome = (config && config.base && config.base.welcome) || null;
+    if (!welcome || welcome.enable === false) return;
+
+    // 关闭记忆：本次会话内不再弹出，重新打开网站（新会话）再次弹出
+    try {
+      if (sessionStorage.getItem(CLOSED_KEY) === "1") return;
+    } catch (e) {}
+
+    var title = welcome.title || "";
+    var template =
+      welcome.template || "来自 {location} 的小伙伴，很高兴遇见你！";
+    // 降级文案：替换 {location} 的地点名词（如"未知星球"），套进模板后
+    // 显示"来自未知星球的小伙伴"，与模板中"的小伙伴"不重复
+    var fallback = welcome.fallbackLocation || "未知星球";
+    var position = welcome.position || "bottom-right";
+
+    var titleEl = wrapper.querySelector('[data-field="title"]');
+    if (titleEl && title) titleEl.textContent = title;
+
+    var prefixEl = wrapper.querySelector('[data-field="location-prefix"]');
+    var locationEl = wrapper.querySelector('[data-field="location"]');
+    var suffixEl = wrapper.querySelector('[data-field="location-suffix"]');
+    var closeBtn = wrapper.querySelector(".welcome-close-btn");
+
+    // 关闭按钮无障碍名（i18n）
+    if (closeBtn) {
+      try {
+        var label =
+          (window.i18nResources && window.i18nResources["welcome.close"]) ||
+          "关闭";
+        closeBtn.setAttribute("aria-label", label);
+      } catch (e) {}
+    }
+
+    var card = wrapper.querySelector(".welcome-card");
+
+    // 淡出动画后隐藏
+    function fadeOut() {
+      if (card) {
+        card.classList.add("welcome-out");
+        setTimeout(function () {
+          wrapper.classList.remove("welcome-show");
+        }, 260);
+      } else {
+        wrapper.classList.remove("welcome-show");
+      }
+    }
+
+    // 主动关闭（关闭按钮）：与滚动/外部点击统一走 autoClose
+    // （写记忆 + 解绑监听 + 淡出），避免关闭逻辑分散在两处
+    if (closeBtn) closeBtn.addEventListener("click", autoClose);
+
+    // 自动关闭（滚动页面 / 点击弹窗外部）：同样写入关闭记忆。
+    // 若仅隐藏不记忆，切页/刷新后脚本重跑会再次弹出并立即被滚动检测
+    // 关闭（"闪一下"），且浏览器会恢复滚动位置；写记忆后本次会话不再弹，
+    // 重新打开网站（新标签页，sessionStorage 独立）才会再次弹出
+    var autoClosed = false;
+    var shown = false;
+    function autoClose() {
+      if (autoClosed) return;
+      autoClosed = true;
+      try {
+        sessionStorage.setItem(CLOSED_KEY, "1");
+      } catch (e) {}
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("click", onDocClick);
+      if (!shown) return;
+      fadeOut();
+    }
+    function onScroll() {
+      var y = window.scrollY || document.documentElement.scrollTop || 0;
+      if (y > 8) autoClose();
+    }
+    function onDocClick(e) {
+      if (!wrapper.contains(e.target)) autoClose();
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // 模板按 {location} 拆三段渲染：前缀/后缀用正文色，location 用主题色高亮
+    // （全部走 textContent，杜绝 HTML 注入；换行由 CSS whitespace-pre-line 呈现）
+    function applyLocation(text) {
+      if (!locationEl) return;
+      var parts = template.split("{location}");
+      if (prefixEl) prefixEl.textContent = parts[0] || "";
+      locationEl.textContent = text || fallback;
+      if (suffixEl) suffixEl.textContent = parts[1] || "";
+    }
+
+    // 从天气小组件配置读取腾讯位置服务 Key（复用现有 Key，与 Weather.astro 一致）
+    function getTencentKey() {
+      var widgets =
+        (config &&
+          config.sidebar &&
+          config.sidebar.widgetsConfig &&
+          (config.sidebar.widgetsConfig.rightWidgets ||
+            config.sidebar.widgetsConfig.widgets)) ||
+        [];
+      for (var i = 0; i < widgets.length; i++) {
+        if (widgets[i].value === "weather" && widgets[i].tencent_key) {
+          return widgets[i].tencent_key;
+        }
+      }
+      return "";
+    }
+
+    // 读取天气 IP 缓存（含完整 ad_info 的新格式；旧格式只有 adcode 则视为无文本）
+    function getCachedAdInfo() {
+      try {
+        var raw = sessionStorage.getItem(IP_CACHE_KEY);
+        if (!raw) return null;
+        var d = JSON.parse(raw);
+        if (Date.now() - d.t > IP_CACHE_TTL) {
+          sessionStorage.removeItem(IP_CACHE_KEY);
+          return null;
+        }
+        return d.ad_info || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 四级拼接：国家 + 省 + 市 + 区县，去重（直辖市 province/city 相同）并过滤空值
+    function formatLocation(ad) {
+      if (!ad) return "";
+      var parts = [];
+      ["nation", "province", "city", "district"].forEach(function (k) {
+        var v = ad[k];
+        if (v && parts.indexOf(v) === -1) parts.push(v);
+      });
+      return parts.join("");
+    }
+
+    // JSONP 请求（腾讯位置服务 API 无 CORS 头，浏览器 fetch 会被拦截，JSONP 是唯一可行通道）
+    var _cbIdx = 0;
+    function jsonp(url) {
+      return new Promise(function (resolve, reject) {
+        var cbName = "__welcome_tencent_cb_" + ++_cbIdx;
+        var sep = url.indexOf("?") === -1 ? "?" : "&";
+        var script = document.createElement("script");
+        script.src = url + sep + "callback=" + cbName;
+        script.onerror = function () {
+          reject(new Error("JSONP request failed"));
+          cleanup();
+        };
+        var timer = setTimeout(function () {
+          reject(new Error("JSONP timeout"));
+          cleanup();
+        }, 10000);
+        function cleanup() {
+          clearTimeout(timer);
+          try {
+            delete window[cbName];
+          } catch (e) {
+            window[cbName] = undefined;
+          }
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+        window[cbName] = function (data) {
+          resolve(data);
+          cleanup();
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    // 请求 IP 定位：成功后更新文案并回写天气缓存（adcode + ad_info），
+    // 天气小组件后续直接读缓存，不再重复请求
+    function fetchLocation() {
+      var key = getTencentKey();
+      if (!key) return;
+      jsonp(API_BASE + "/location/v1/ip?key=" + key + "&output=jsonp")
+        .then(function (data) {
+          if (data && data.status === 0 && data.result && data.result.ad_info) {
+            var info = data.result.ad_info;
+            var text = formatLocation(info);
+            if (text) applyLocation(text);
+            try {
+              sessionStorage.setItem(
+                IP_CACHE_KEY,
+                JSON.stringify({
+                  adcode: String(info.adcode || ""),
+                  ad_info: info,
+                  t: Date.now(),
+                }),
+              );
+            } catch (e) {}
+          }
+        })
+        .catch(function () {
+          // 请求失败保持降级文案，不影响弹窗展示
+        });
+    }
+
+    // 定位：有缓存立即使用；否则先降级展示，再异步请求刷新
+    var cached = getCachedAdInfo();
+    if (cached) {
+      applyLocation(formatLocation(cached) || fallback);
+    } else {
+      applyLocation(fallback);
+      fetchLocation();
+    }
+
+    // 显示弹窗：延迟到首屏加载完成后出现，避免打扰首屏阅读；
+    // 此时页面布局已完成，可精确测量导航栏位置（同步测量会拿到
+    // 布局未定时的错误坐标，导致弹窗无法贴合导航栏左右边缘）
+    setTimeout(function () {
+      if (autoClosed) return;
+
+      // 位置：左上/右上由 JS 直接跟随导航栏卡片实际边缘（显示时布局已完成，
+      // 读取 #navbar-card 的 getBoundingClientRect，100% 贴合，不受页面宽度
+      // 配置/视口大小影响）；左下/右下与移动端由 CSS 简单定位
+      wrapper.setAttribute("data-position", position);
+      if (position === "top-left" || position === "top-right") {
+        var navCard = document.getElementById("navbar-card");
+        if (navCard) {
+          var navRect = navCard.getBoundingClientRect();
+          if (position === "top-left") {
+            wrapper.style.left = navRect.left + "px";
+          } else {
+            wrapper.style.right = window.innerWidth - navRect.right + "px";
+          }
+        }
+      }
+
+      shown = true;
+      wrapper.classList.add("welcome-show");
+      document.addEventListener("click", onDocClick);
+    }, 600);
+  })();
+</script>

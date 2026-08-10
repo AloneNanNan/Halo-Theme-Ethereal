@@ -23,8 +23,10 @@ const className = Astro.props.class;
   >
   </div>
 
-  <!-- 内容层：无 backdrop-filter，z-index 高于模糊层 -->
+  <!-- 内容层：无 backdrop-filter，z-index 高于模糊层；
+       id="navbar-card" 供欢迎弹窗等按导航栏卡片实际边缘（max-w 居中后）对齐 -->
   <div
+    id="navbar-card"
     class:list={[
       className,
       "relative z-10 mx-auto flex h-[4.5rem] max-w-(--page-width) items-center justify-between px-4 rounded-(--radius-large) !rounded-t-none",

@@ -1,5 +1,6 @@
 ---
 import ConfigCarrier from "../components/ConfigCarrier.astro";
+import WelcomePopup from "../components/control/WelcomePopup.astro";
 import WaveEffect from "../components/WaveEffect.astro";
 import {
   speedCustomStyleThWith,
@@ -60,6 +61,7 @@ const i18nInlineScript = `<script th:inline="javascript">
     "widget.music.progress": \`[(#{widget.music.progress})]\`,
     "widget.music.noCover": \`[(#{widget.music.noCover})]\`,
     "widget.music.cover": \`[(#{widget.music.cover})]\`,
+    "welcome.close": \`[(#{welcome.close})]\`,
   };
 </script>`;
 
@@ -293,6 +295,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <ConfigCarrier />
     <slot />
     <WaveEffect />
+    <!-- 欢迎弹窗：置于 Swup 容器之外，换页不被替换销毁，弹窗逻辑仅首载执行一次 -->
+    <WelcomePopup />
     <div id="page-height-extend" class="hidden h-[300vh]"></div>
     <style is:global>
       /* 移动/平板端（<1024px / lg）强制导航栏始终可见且固定 */

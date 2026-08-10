@@ -379,6 +379,58 @@ spec:
                   value: accordion
                 - label: 抽屉样式
                   value: drawer
+        - $formkit: group
+          name: welcome
+          label: 欢迎弹窗
+          value:
+            enable: true
+            position: bottom-right
+            title: "欢迎来到我的博客！"
+            template: "来自 {location} 的小伙伴，很高兴遇见你！"
+            fallbackLocation: "未知星球"
+          children:
+            - $formkit: switch
+              name: enable
+              id: welcome_enable
+              key: welcome_enable
+              label: 启用
+              value: true
+              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key"
+            - $formkit: select
+              name: position
+              id: welcome_position
+              key: welcome_position
+              if: "$get(welcome_enable).value"
+              label: 弹窗位置
+              value: bottom-right
+              help: "电脑端弹窗显示在所选角落；移动端固定显示在底部居中"
+              options:
+                - label: 左上角
+                  value: top-left
+                - label: 右上角
+                  value: top-right
+                - label: 左下角
+                  value: bottom-left
+                - label: 右下角
+                  value: bottom-right
+            - $formkit: text
+              name: title
+              if: "$get(welcome_enable).value"
+              label: 欢迎标题
+              value: "欢迎来到我的博客！"
+              help: "弹窗标题文字"
+            - $formkit: textarea
+              name: template
+              if: "$get(welcome_enable).value"
+              label: 欢迎语模板
+              value: "来自 {location} 的小伙伴，很高兴遇见你！"
+              help: "弹窗正文，{location} 会替换为访客 IP 定位（如：北京市）；未配置 Key 或定位失败时替换为下方的降级文案"
+            - $formkit: text
+              name: fallbackLocation
+              if: "$get(welcome_enable).value"
+              label: 定位失败文案
+              value: "未知星球"
+              help: "未配置腾讯位置服务 Key 或定位失败时，替换 {location} 的地点文字（请填写地点名词，如：未知星球）。模板为「来自 {location} 的小伙伴」时，将显示「来自未知星球的小伙伴」"
         - $formkit: menuRadio
           id: menu
           name: menu

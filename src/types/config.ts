@@ -16,7 +16,22 @@ export interface ThemeConfig {
 export interface Base {
   banner: Banner;
   bannerText?: BannerText;
+  welcome?: WelcomePopupConfig;
   menu: string;
+}
+
+/** 欢迎弹窗配置 */
+export interface WelcomePopupConfig {
+  /** 功能总开关 */
+  enable?: boolean;
+  /** 弹窗位置：top-left / top-right / bottom-left / bottom-right（移动端固定底部居中） */
+  position?: string;
+  /** 欢迎标题 */
+  title?: string;
+  /** 欢迎语模板，{location} 为访客 IP 定位占位符 */
+  template?: string;
+  /** 定位失败时的降级文案（替换 {location}） */
+  fallbackLocation?: string;
 }
 
 export interface ThemeColor {

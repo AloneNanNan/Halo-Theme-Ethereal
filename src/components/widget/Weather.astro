@@ -155,11 +155,17 @@ const className = Astro.props.class;
       }
     }
 
-    function setCachedAdcode(adcode) {
+    // 缓存写入：除 adcode 外同时保存完整 ad_info（国家/省/市/区县），
+    // 供欢迎弹窗等复用定位文本，避免同会话重复请求腾讯 IP 接口（兼容旧格式，无 ad_info 亦可）
+    function setCachedAdcode(adcode, ad_info) {
       try {
         sessionStorage.setItem(
           IP_CACHE_KEY,
-          JSON.stringify({ adcode: adcode, t: Date.now() }),
+          JSON.stringify({
+            adcode: adcode,
+            ad_info: ad_info || null,
+            t: Date.now(),
+          }),
         );
       } catch (e) {}
     }
@@ -438,7 +444,7 @@ const className = Astro.props.class;
               ipData.result.ad_info.adcode
             ) {
               var code = String(ipData.result.ad_info.adcode);
-              setCachedAdcode(code);
+              setCachedAdcode(code, ipData.result.ad_info);
               return code;
             }
             return defaultAdcode;
