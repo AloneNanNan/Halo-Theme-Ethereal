@@ -120,10 +120,12 @@ const {
       th:if="${mode == 'single' and !isVideo and !mobileActive}"
       th:href="${srcX}"
     />
+    <!-- 注意：下方三个 #banner 分支（单图 / 视频 / 轮播）由互斥的 th:if 保证
+         同一时刻仅一个渲染，id 才不冲突；新增/调整分支条件时务必保持互斥 -->
     <div
       id="banner"
       th:if="${mode == 'single' and !isVideo}"
-      class="relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
       <div
         class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"
@@ -144,7 +146,7 @@ const {
     <div
       id="banner"
       th:if="${mode == 'single' and isVideo}"
-      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
       <!-- 独立来源开启时桌面视频可能被隐藏：autoplay 会覆盖 preload=none 强制
            拉流，必须一并去掉（th:attr 值为 null 时不输出该属性），播放由
@@ -173,10 +175,10 @@ const {
     <div
       id="banner"
       th:if="${mode == 'carousel'}"
-      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
       <img
-        th:each="img, imgStat : ${theme.config?.base?.banner?.carousel?.images ?: {}}"
+        th:each="img, imgStat : ${theme.config?.base?.banner?.carousel?.images}"
         th:src={carouselImgSrcExpr()}
         th:alt="${site.title}"
         th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
@@ -195,7 +197,7 @@ const {
       <div
         id="banner-mobile-reveal"
         th:if="${mode == 'single' and !isVideo}"
-        class="relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+        class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
         <ImageWrapper
           src="${srcX}"
@@ -208,7 +210,7 @@ const {
       </div>
       <div
         th:if="${mode == 'single' and isVideo}"
-        class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+        class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
         <video
           id="banner-video-mobile"
@@ -233,7 +235,7 @@ const {
       </div>
       <div
         th:if="${mode == 'carousel'}"
-        class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
+        class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
         <img
           th:each="img, imgStat : ${mobileImages}"

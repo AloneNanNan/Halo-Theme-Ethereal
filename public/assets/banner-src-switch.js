@@ -16,14 +16,11 @@
   }
   var bannerCfg = cfg && cfg.base && cfg.base.banner ? cfg.base.banner : null;
   if (!bannerCfg || bannerCfg.useMobileSrc !== true) return;
-  var mobileCfg = bannerCfg.mobile || {};
-  var mobileMode = mobileCfg.mode === "carousel" ? "carousel" : "single";
-  // 与 src/utils/image-suffix.ts bannerMobileVars() 的 mobileActive 判定
-  // 保持同步（双实现，改动需两处一致）
-  var hasMobileSrc =
-    mobileMode === "single"
-      ? !!(mobileCfg.src && String(mobileCfg.src))
-      : !!(mobileCfg.images && mobileCfg.images.length > 0);
+  // 移动端是否有有效来源由 SSR 统一判定（src/utils/image-suffix.ts
+  // bannerMobileVars() 的 mobileActive），移动容器 #banner-mobile 仅在
+  // mobileActive 为 true 时渲染；此处直接以容器是否存在为准，避免 JS 侧
+  // 重复实现判定逻辑造成双实现漂移（此前双实现需两处同步维护）
+  var hasMobileSrc = !!document.getElementById("banner-mobile");
   if (!hasMobileSrc) return;
 
   var desktop = document.getElementById("banner");

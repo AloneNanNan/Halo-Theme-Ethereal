@@ -16,6 +16,7 @@ declare namespace astroHTML.JSX {
     "th:content"?: string;
     "th:lang"?: string;
     "th:classappend"?: string;
+    "xmlns:th"?: string;
     "th:inline"?: string;
     "th:replace"?: string;
     "th:alt"?: string;
@@ -23,6 +24,8 @@ declare namespace astroHTML.JSX {
     "th:attr"?: string;
     "th:datetime"?: string;
     "th:title"?: string;
+    "th:placeholder"?: string;
+    "th:maxlength"?: string;
     "th:class"?: string;
     "th:switch"?: string;
     "th:case"?: string;

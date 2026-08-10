@@ -11,7 +11,11 @@
   window.__etherealBannerMediaBound = true;
 
   function initVideo(video, btn) {
-    if (!video || !btn) return;
+    if (!video) return;
+    // 按钮可空：showPauseBtn=false 时按钮被隐藏（btn 为 null），此时仅跳过
+    // 按钮相关逻辑（点击/图标/aria），视频生命周期管理（自动播放兜底、
+    // 屏幕外暂停恢复、加载失败隐藏）仍须保留，避免关闭按钮后视频失控
+    var hasBtn = !!btn;
 
     // userPaused = 用户「手动暂停」标记：点击按钮后的目标状态（点暂停→true，
     // 点播放→false），屏幕外恢复时据此决定是否自动续播，保持用户手动暂停。
@@ -24,6 +28,7 @@
     }
 
     function setPausedState(paused) {
+      if (!hasBtn) return;
       var icon = btn.querySelector("span");
       if (icon) {
         icon.className = paused
@@ -35,13 +40,17 @@
 
     function playVideo() {
       var p = video.play();
-      // 自动播放被拒（如浏览器策略）时回到暂停态图标，避免图标与真实状态不符
-      if (p && p.catch) {
-        p.catch(function () {
+      // 只在 play() 成功时切到播放图标、失败时保持/回到暂停图标，
+      // 避免先同步置 false 再异步 catch 置 true 造成的图标闪动
+      if (p && p.then) {
+        p.then(function () {
+          setPausedState(false);
+        }).catch(function () {
           setPausedState(true);
         });
+      } else {
+        setPausedState(false);
       }
-      setPausedState(false);
     }
 
     function pauseVideo() {
@@ -53,16 +62,18 @@
 
     // 供 banner-src-switch.js 在直接驱动播放/暂停时同步按钮图标（图标类名单一
     // 来源保持在本文件，避免双份 class 字符串漂移）
-    video.__etherealSyncIcon = function (paused) {
-      setPausedState(paused);
-    };
+    if (hasBtn) {
+      video.__etherealSyncIcon = function (paused) {
+        setPausedState(paused);
+      };
 
-    btn.addEventListener("click", function () {
-      userPaused = video.paused ? false : true;
-      syncUserPausedFlag();
-      if (video.paused) playVideo();
-      else pauseVideo();
-    });
+      btn.addEventListener("click", function () {
+        userPaused = video.paused ? false : true;
+        syncUserPausedFlag();
+        if (video.paused) playVideo();
+        else pauseVideo();
+      });
+    }
 
     // 自动播放兜底（muted+playsinline 下 autoplay 应生效，双保险；
     // 独立来源开启时视频无 autoplay 属性、由切换引擎驱动 load/play，
@@ -112,7 +123,7 @@
 
     // 初始图标同步：移动端视频初始为 paused（preload=none），静态 HTML 是
     // 暂停图标，先归位为播放图标；桌面 autoplay 启动后由 loadeddata 兜底回正
-    if (video.paused) {
+    if (hasBtn && video.paused) {
       setPausedState(true);
     }
   }

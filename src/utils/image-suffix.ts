@@ -120,7 +120,8 @@ function bannerMobileVars(): string {
     "useMobileSrc=${theme.config?.base?.banner?.useMobileSrc == true}, " +
     "mobileMode=${theme.config?.base?.banner?.mobile?.mode ?: 'single'}, " +
     "mobileSrc=${#strings.defaultString(theme.config?.base?.banner?.mobile?.src, '')}, " +
-    "mobileImages=${theme.config?.base?.banner?.mobile?.images ?: {}}, " +
+    // th:each / #lists.isEmpty 对 null 均按空处理，无需 ?: {} 空 Map 兜底
+    "mobileImages=${theme.config?.base?.banner?.mobile?.images}, " +
     "mobileActive=${useMobileSrc and ((mobileMode == 'single' and !#strings.isEmpty(mobileSrc)) or (mobileMode == 'carousel' and !#lists.isEmpty(mobileImages)))}"
   );
 }

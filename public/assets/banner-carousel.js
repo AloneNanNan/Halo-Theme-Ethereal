@@ -63,6 +63,7 @@
     var count = slides.length;
     var index = 0;
     var timer = null;
+    var cleanupTimer = null; // 切换后的幻灯片清理定时器（快速连点时不累积）
     var visible = true;
     var dotsWrap = null;
 
@@ -196,7 +197,9 @@
       to.classList.add("active");
       index = i;
       stop();
-      setTimeout(function () {
+      if (cleanupTimer !== null) clearTimeout(cleanupTimer);
+      cleanupTimer = setTimeout(function () {
+        cleanupTimer = null;
         for (var j = 0; j < count; j++) {
           if (j !== index) {
             slides[j].classList.remove("active", "visible");
