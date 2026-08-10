@@ -361,6 +361,24 @@ spec:
                   step: 10
                   value: 700
                   help: "轮播图切换动画时长（原 700ms），随动画速度档位变化"
+        - $formkit: group
+          name: mobileMenu
+          label: 移动端菜单栏
+          value:
+            style: accordion
+          children:
+            - $formkit: select
+              name: style
+              id: mobileMenu_style
+              key: mobileMenu_style
+              label: 菜单样式
+              value: accordion
+              help: "手风琴：从导航栏下方展开下拉面板，带子菜单手风琴折叠；抽屉：从右侧滑出的圆角卡片，子菜单平铺展示"
+              options:
+                - label: 手风琴样式
+                  value: accordion
+                - label: 抽屉样式
+                  value: drawer
         - $formkit: menuRadio
           id: menu
           name: menu

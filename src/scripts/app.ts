@@ -252,7 +252,8 @@ setClickOutsideToClose("display-setting", [
   "display-setting",
   "display-settings-switch",
 ]);
-setClickOutsideToClose("nav-menu-panel", ["nav-menu-panel", "nav-menu-switch"]);
+// 注：nav-menu-panel 已改为右侧抽屉（body.nav-menu-open 驱动），关闭逻辑由
+// navbar.js 统一处理（遮罩点击/关闭按钮/链接点击/ESC），不再作为 float-panel 处理
 setClickOutsideToClose("search-panel", [
   "search-panel",
   "search-bar",

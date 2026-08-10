@@ -46,7 +46,7 @@ const className = Astro.props.class;
     </a>
 
     <div
-      class="invisible md:visible flex md:w-auto w-0 overflow-hidden md:overflow-visible"
+      class="invisible lg:visible flex lg:w-auto w-0 overflow-hidden lg:overflow-visible"
       th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
     >
       <div class="contents" th:if="${menu != null}">
@@ -142,7 +142,7 @@ const className = Astro.props.class;
         th:name="#{nav.navMenu}"
         aria-label="Menu"
         name="Nav Menu"
-        class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90 md:!hidden"
+        class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90 lg:!hidden"
         id="nav-menu-switch"
         type="button"
       >

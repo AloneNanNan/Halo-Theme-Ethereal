@@ -1,4 +1,100 @@
+---
+// 移动端菜单栏：按后台配置（基础设置 → 移动端菜单栏 → 菜单样式）渲染两种模式。
+//  - accordion（默认）：从导航栏下方展开的下拉面板，子菜单手风琴折叠（原版样式）
+//  - drawer：从右侧滑出的圆角卡片抽屉，子菜单平铺展示（新样式）
+// 数据源一致：均读取 Halo 菜单（theme.config?.base?.menu 或主菜单）。
+// 两种模式的开关逻辑见 public/assets/navbar.js（以 #nav-menu-root 是否
+// 存在判定模式）。
+---
+
+<!-- 抽屉模式（mobileMenu.style = drawer） -->
 <div
+  th:if="${theme.config?.base?.mobileMenu?.style == 'drawer'}"
+  id="nav-menu-root"
+  th:aria-label="#{nav.navMenu}"
+>
+  <div id="nav-menu-overlay" aria-hidden="true"></div>
+  <div
+    id="nav-menu-panel"
+    th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+    class="nav-drawer"
+    role="dialog"
+    aria-modal="true"
+    th:aria-label="#{nav.navMenu}"
+  >
+    <!-- 头部：站点标题 + 关闭按钮 -->
+    <div class="nav-drawer-header flex items-center justify-between px-3 py-2">
+      <a
+        th:href="@{/}"
+        class="btn-plain scale-animation h-10 rounded-lg px-3 font-bold active:scale-95"
+      >
+        <div class="flex flex-row items-center text-md text-(--primary)">
+          <span class="icon-[tabler--smart-home] mr-2 text-[1.5rem]"></span>
+          <span th:text="${site.title}">Ethereal</span>
+        </div>
+      </a>
+      <button
+        type="button"
+        th:aria-label="#{nav.closeMenu}"
+        aria-label="Close Menu"
+        id="nav-menu-close"
+        class="btn-plain scale-animation group h-10 w-10 rounded-lg active:scale-90"
+      >
+        <span
+          class="icon-[material-symbols--close-rounded] text-[1.25rem] transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
+        ></span>
+      </button>
+    </div>
+
+    <!-- 菜单内容：一级菜单为一组，组间分割线分隔；组内平铺（一级自身 + 子项）。
+         一级链接恒渲染；子项用 th:each（无子项时为空集合不渲染，天然平铺） -->
+    <div class="nav-drawer-body px-2 pb-4">
+      <div class="contents" th:if="${menu != null}">
+        <div th:each="menuItem, itemStat : ${menu.menuItems}">
+          <!-- 组间分割线（除第一组外） -->
+          <div
+            th:unless="${itemStat.index == 0}"
+            class="nav-drawer-divider my-2 border-t border-black/10 dark:border-white/10"
+          >
+          </div>
+          <a
+            th:href="@{${menuItem.status.href}}"
+            th:target="${menuItem.spec.target?.value}"
+            class="nav-drawer-link"
+            data-nav-link
+          >
+            <span class="truncate" th:text="${menuItem.status.displayName}"
+              >Menu</span
+            >
+            <span
+              th:if="${menuItem.spec.target?.value == '_blank'}"
+              class="icon-[fa6-solid--arrow-up-right-from-square] flex-shrink-0 text-[0.9rem] text-black/50 dark:text-white/50"
+            ></span>
+          </a>
+          <a
+            th:each="childItem : ${menuItem.children}"
+            th:href="@{${childItem.status.href}}"
+            th:target="${childItem.spec.target?.value}"
+            class="nav-drawer-link"
+            data-nav-link
+          >
+            <span class="truncate" th:text="${childItem.status.displayName}"
+              >子菜单</span
+            >
+            <span
+              th:if="${childItem.spec.target?.value == '_blank'}"
+              class="icon-[fa6-solid--arrow-up-right-from-square] flex-shrink-0 text-[0.9rem] text-black/50 dark:text-white/50"
+            ></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 手风琴模式（默认，mobileMenu.style = accordion 或未配置） -->
+<div
+  th:unless="${theme.config?.base?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-panel"
   th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
   class="float-panel float-panel-closed fixed right-4 px-2 py-2 w-40"
@@ -20,8 +116,7 @@
             class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
           ></span>
         </a>
-        <!-- 子菜单展开按钮：原 th:onclick 已移除（CSP 友好），由本文件脚本的面板级事件委托处理，
-             data-submenu-id 供委托定位目标面板 -->
+        <!-- 子菜单展开按钮：由本文件脚本的面板级事件委托处理，data-submenu-id 供委托定位 -->
         <button
           th:if="${menuItem.children != null && !menuItem.children.isEmpty()}"
           type="button"
@@ -60,90 +155,3 @@
     </div>
   </div>
 </div>
-
-<script is:inline>
-  (function () {
-    // 切换子菜单显示/隐藏（手风琴：同时只展开一个）；
-    // 不再挂 window，仅由下方面板级事件委托调用（原内联 th:onclick 已移除）
-    function toggleSubmenu(buttonEl, submenuId) {
-      var submenu = document.getElementById(submenuId);
-      if (!submenu) return;
-      var arrow = buttonEl.querySelector("span");
-      var isExpanded = !submenu.classList.contains("hidden");
-
-      // 收起其他已展开的子菜单
-      var panel = document.getElementById("nav-menu-panel");
-      if (panel) {
-        var openSubmenus = panel.querySelectorAll(
-          '[id^="submenu-"]:not(.hidden)',
-        );
-        openSubmenus.forEach(function (openSm) {
-          if (openSm.id !== submenuId) {
-            openSm.classList.add("hidden");
-            var flexDiv = openSm.previousElementSibling;
-            if (flexDiv) {
-              var toggleBtn = flexDiv.querySelector(".submenu-toggle");
-              if (toggleBtn) {
-                var btnArrow = toggleBtn.querySelector("span");
-                if (btnArrow) btnArrow.classList.remove("rotate-90");
-                toggleBtn.setAttribute("aria-expanded", "false");
-              }
-            }
-          }
-        });
-      }
-
-      // 切换当前子菜单
-      submenu.classList.toggle("hidden");
-      if (arrow) {
-        arrow.classList.toggle("rotate-90");
-      }
-      buttonEl.setAttribute("aria-expanded", String(!isExpanded));
-    }
-
-    // 子菜单展开按钮：面板级事件委托替代内联 th:onclick（CSP 友好）。
-    // 目标面板 id 从按钮 data-submenu-id 读取；面板位于 Swup 容器之外跨页面持久，
-    // 委托只绑定一次（window 标志兜底：本委托与下方 initNavMenuPanel 的链接绑定是两条独立逻辑，
-    // 防止脚本因任何原因重复执行时二次绑定导致双次切换；Navbar 无条件渲染本面板，加载时必存在）。
-    // 保留原 th:onclick 的 stopPropagation 语义：阻止冒泡到 document，
-    // 避免其它面板的“点击外部关闭”逻辑响应本次点击。
-    var panel = document.getElementById("nav-menu-panel");
-    if (panel && !window.__navMenuSubmenuBound) {
-      window.__navMenuSubmenuBound = true;
-      panel.addEventListener("click", function (e) {
-        var toggleBtn =
-          e.target && e.target.closest
-            ? e.target.closest(".submenu-toggle")
-            : null;
-        if (!toggleBtn) return;
-        e.stopPropagation();
-        var submenuId = toggleBtn.getAttribute("data-submenu-id");
-        if (submenuId) toggleSubmenu(toggleBtn, submenuId);
-      });
-    }
-
-    // 初始化菜单面板
-    function initNavMenuPanel() {
-      var panel = document.getElementById("nav-menu-panel");
-      if (!panel) return;
-
-      // 为所有菜单链接添加点击事件，点击后关闭面板
-      var links = panel.querySelectorAll("a");
-      links.forEach(function (link) {
-        link.addEventListener("click", function () {
-          panel.classList.add("float-panel-closed");
-        });
-      });
-    }
-
-    // 确保 DOM 加载完成后初始化
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initNavMenuPanel);
-    } else {
-      initNavMenuPanel();
-    }
-
-    // 换页后重新初始化：由 SwupScriptsPlugin 重执行本脚本时自动覆盖；
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
-  })();
-</script>

@@ -331,6 +331,167 @@
     border-radius: 0 0 var(--radius-large) var(--radius-large);
   }
 
+  /* ── 移动端抽屉菜单（NavMenuPanel）──
+     结构完全复刻外链跳转模态框（#ext-link-modal / #ext-link-backdrop）：
+     root 是 fixed 全屏容器，遮罩用 absolute + backdrop-filter（不是 fixed），
+     面板 absolute 定位于容器内。整个 root 由 navbar.js 动态 append 到 body
+     直接子级（模态框同款），脱离 OverlayScrollbars 滚动容器与 navbar 的
+     backdrop-filter 合成层，保证模糊按真实视口采样、与滚动位置一致。
+     开关由 body.nav-menu-open 驱动。 */
+  #nav-menu-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  #nav-menu-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.nav-menu-open #nav-menu-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 注：以下抽屉规则全部限定在 #nav-menu-root 内，避免误作用于手风琴模式
+     （手风琴面板 id 也是 nav-menu-panel，若不加限定会被抽屉的默认隐藏样式
+      opacity:0/translate:110% 命中，导致手风琴点开无反应） */
+  #nav-menu-root #nav-menu-panel {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    width: 20rem;
+    max-width: calc(100vw - 1rem);
+    overflow: hidden;
+    border-radius: var(--radius-large);
+    background-color: var(--card-bg);
+    box-shadow: 0 20px 50px rgb(0 0 0 / 0.2);
+    translate: 110% 0;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :root.dark #nav-menu-root #nav-menu-panel {
+    box-shadow: 0 20px 50px rgb(0 0 0 / 0.5);
+  }
+
+  /* 注：抽屉背景固定为不透明 var(--card-bg)（见上方主规则），
+     不再套用 navbar_blur 磨砂——避免与遮罩模糊叠加造成"双层模糊"过度透明 */
+
+  body.nav-menu-open #nav-menu-root #nav-menu-panel {
+    translate: 0 0;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 抽屉内部布局：头部 + 可滚动菜单区 */
+  #nav-menu-root #nav-menu-panel .nav-drawer-header {
+    flex-shrink: 0;
+  }
+
+  #nav-menu-root #nav-menu-panel .nav-drawer-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* 菜单链接：一级项与组内项同级显示（二级不缩进）；
+     左内边距与左侧高亮竖线间距对称（竖线 left 0.5rem 距边缘 + 竖线宽 3px +
+     0.5rem 距文字 = 文字起始 1.1875rem，两侧均为 8px）；
+     active 按压内凹（轻微缩放下沉）；
+     hover 动效参考分类小组件：背景变浅 + 左内边距增大（位移感）+ 文字变主题色 */
+  .nav-drawer-link {
+    @apply relative flex items-center justify-between gap-3 rounded-lg pl-[1.1875rem] pr-3 py-2.5 font-bold text-black/75 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-[1.375rem] hover:text-(--primary) active:scale-[0.97] active:bg-(--btn-plain-bg-active) dark:text-white/75 dark:hover:text-(--primary);
+  }
+
+  /* 打开抽屉时菜单项从右往左淡入：由 navbar.js 在打开瞬间为每个
+     .nav-drawer-link 设置递增 animation-delay，配合本动画逐项浮现；
+     仅作用于 drawer 打开态 */
+  @keyframes nav-menu-link-in {
+    from {
+      opacity: 0;
+      translate: 8px 0;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  body.nav-menu-open #nav-menu-root #nav-menu-panel .nav-drawer-link {
+    animation: nav-menu-link-in 300ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  /* 组间分割线：仅在抽屉内生效 */
+  #nav-menu-root #nav-menu-panel .nav-drawer-divider {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  /* 当前页高亮：主题色淡背景 + 主题色文字 + 左侧主题色竖线装饰 */
+  .nav-drawer-link.nav-drawer-link-active {
+    background: color-mix(in oklab, var(--primary) 12%, transparent);
+    color: var(--primary);
+  }
+
+  .nav-drawer-link.nav-drawer-link-active::before {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    translate: 0 -50%;
+    width: 3px;
+    height: 40%;
+    border-radius: 999px;
+    background: var(--primary);
+    transition: left 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* hover 时文字随 pl 右移（1.1875rem → 1.375rem，增量 3px），
+     竖线同步右移 3px（0.5rem → 0.6875rem），保持相对位置 */
+  .nav-drawer-link.nav-drawer-link-active:hover::before {
+    left: 0.6875rem;
+  }
+
+  .nav-drawer-link.nav-drawer-link-active:hover {
+    background: color-mix(in oklab, var(--primary) 18%, transparent);
+  }
+  /* 注：抽屉打开时的滚动锁定由 navbar.js 内联管理（模态框同款，仅
+     body overflow hidden），无 CSS 版本 */
+
+  /* 抽屉打开时隐藏右下角浮动按钮（回顶/首页/评论/自定义）：
+     它们 z-index 999 高于抽屉，会遮挡抽屉右下角；滚动锁定后回顶按钮
+     虽会收起，但首页/评论/自定义按钮仍显示，故统一隐藏 */
+  body.nav-menu-open .floating-controls {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+
+  /* 桌面端（≥1024px / lg）不使用抽屉，防止跨断点残留；
+     平板（md~lg）与移动端共用抽屉菜单 */
+  @media (min-width: 1024px) {
+    #nav-menu-root #nav-menu-overlay,
+    #nav-menu-root #nav-menu-panel {
+      display: none !important;
+    }
+  }
+
   /* 文章摘要 */
   .summary-box {
     @apply relative mb-5 overflow-hidden rounded-xl;

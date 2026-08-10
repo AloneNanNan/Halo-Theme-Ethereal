@@ -295,8 +295,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <WaveEffect />
     <div id="page-height-extend" class="hidden h-[300vh]"></div>
     <style is:global>
-      /* 移动端强制导航栏始终可见 */
-      @media (max-width: 767px) {
+      /* 移动/平板端（<1024px / lg）强制导航栏始终可见且固定 */
+      @media (max-width: 1023px) {
         #navbar-wrapper {
           position: fixed !important;
           top: 0 !important;
