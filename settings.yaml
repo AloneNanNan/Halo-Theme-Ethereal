@@ -56,6 +56,14 @@ spec:
                 - "video/mp4"
                 - "video/webm"
               help: "支持图片（含 GIF/WebP/APNG 动图）与视频（MP4/WebM，静音循环播放）"
+            - $formkit: switch
+              name: showPauseBtn
+              id: banner_showPauseBtn
+              key: banner_showPauseBtn
+              if: "$get(banner_enable).value && $get(banner_mode).value === 'single'"
+              label: 显示暂停按钮
+              value: true
+              help: "视频模式下在右下角显示播放/暂停按钮；关闭后视频仅自动静音循环播放，无手动控制（移动端同样生效）"
             - $formkit: group
               name: carousel
               id: banner_carousel

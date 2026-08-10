@@ -29,6 +29,8 @@ export interface Banner {
   /** 展示形态：single 单图/视频（默认）| carousel 多图轮播 */
   mode?: string;
   src: string;
+  /** 是否显示右下角播放/暂停按钮（视频模式，默认显示；移动端沿用） */
+  showPauseBtn?: boolean;
   /** 轮播配置（mode == 'carousel' 时生效） */
   carousel?: BannerCarousel;
   /** 是否启用移动端（<768px）独立来源 */

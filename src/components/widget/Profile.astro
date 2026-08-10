@@ -36,9 +36,10 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
         <!-- 在线状态图标（昵称右侧，不参与居中布局）：点击切换由 profile-status.ts 处理。
              注意：th:text 会替换元素内部全部子元素，因此本徽标必须与昵称 span 平级，
              不能作为带 th:text 元素的子节点，否则会被运行时覆盖掉 -->
-        <span
+        <button
           th:if="${theme.config?.sidebar?.profile?.statusSettings?.enable != false}"
           id="profile-status-badge"
+          type="button"
           class="flex size-5 cursor-pointer items-center justify-center text-lg transition hover:scale-110 active:scale-95"
           style="position: absolute; right: -28px; top: 50%; transform: translateY(-50%);"
           aria-label="切换当前状态"
@@ -77,7 +78,7 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
             th:case="*"
             class="icon-[mingcute--leaf-fill] text-green-500 status-pulse"
           ></span>
-        </span>
+        </button>
       </span>
     </div>
     <div class="mx-auto mb-2 h-1 w-5 rounded-full bg-(--primary) transition">
