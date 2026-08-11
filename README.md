@@ -70,6 +70,7 @@
 - **图片速度优化** — 支持主流 CDN/对象存储的实时图片压缩缩放，大幅降低封面图和正文图片加载体积
 - **自定义字体** — 支持上传 TTF/OTF/WOFF/WOFF2 字体文件或引用 Google Fonts CSS，全局替换站点字体
 - **深色/浅色模式** — 支持跟随系统、手动切换，后台可配置默认配色
+- **个人在线状态** — 个人简介小组件支持展示在线状态与自定义文案，管理员登录后可在前台直接切换，无需后台设置
 
 ---
 
@@ -113,6 +114,7 @@
 | 热门文章    | 热度排行                                                   |
 | 自定义 HTML | 自由嵌入任意内容                                           |
 | 目录（TOC） | 文章内容导航，仅在三栏布局中显示                           |
+| 最近日程    | 配合「日程日历」插件，展示近期日程安排                     |
 
 ### 页面支持
 
@@ -126,6 +128,8 @@
 - [x] 朋友圈（插件）
 - [x] 装备展示（插件）
 - [x] 项目作品集（插件）
+- [x] 心愿便签（插件）
+- [x] 日程日历（插件）
 - [x] 404 错误页
 - [x] 自定义页面
 
@@ -144,6 +148,8 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 | 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 & 自助提交友链 |
 | 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示                             |
 | 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示                       |
+| 心愿便签     | [应用市场](https://www.halo.run/store/apps/app-vicvoqxy) | 心愿墙便签发布与展示                 |
+| 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0) | 日程/日历展示，配合最近日程小组件    |
 | API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd) | 文章字数统计 API & 降低后端压力      |
 
 ---
@@ -152,13 +158,14 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 
 本主题以下功能依赖外部第三方服务，请在使用前了解：
 
-| 功能       | 外部服务                                         | 说明                                                                                                                         |
-| :--------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 天气小组件 | [腾讯位置服务](https://lbs.qq.com)               | 需用户自行申请 WebService API Key（[免费注册](https://lbs.qq.com/dev/console/application/mine)），用于 IP 定位和天气数据查询 |
-| 音乐播放器 | [Meting](https://github.com/metowolf/Meting-API) | 默认使用 Meting 公共 API 获取网易云/QQ/酷狗等平台的歌单歌曲数据，支持在设置中替换为自建 API                                  |
-| 一言小组件 | [一言开发者中心](https://developer.hitokoto.cn)  | 随机获取一句名言短句，无需 API Key；支持自定义 API 地址、5 秒超时和本地兜底文案                                              |
+| 功能         | 外部服务                                         | 说明                                                                                                                         |
+| :----------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 天气小组件   | [腾讯位置服务](https://lbs.qq.com)               | 需用户自行申请 WebService API Key（[免费注册](https://lbs.qq.com/dev/console/application/mine)），用于 IP 定位和天气数据查询 |
+| 音乐播放器   | [Meting](https://github.com/metowolf/Meting-API) | 默认使用 Meting 公共 API 获取网易云/QQ/酷狗等平台的歌单歌曲数据，支持在设置中替换为自建 API                                  |
+| 一言小组件   | [一言开发者中心](https://developer.hitokoto.cn)  | 随机获取一句名言短句，无需 API Key；支持自定义 API 地址、5 秒超时和本地兜底文案                                              |
+| 入场欢迎卡片 | [腾讯位置服务](https://lbs.qq.com)               | 复用于天气小组件的 WebService API Key 进行 IP 定位，无需单独配置；默认关闭，需在「基础设置 → 欢迎弹窗」开启                  |
 
-> 以上服务均为可选功能，不影响主题核心的博客浏览体验。天气、音乐、一言小组件需在侧边栏设置中手动添加后才会发起网络请求。
+> 以上服务均为可选功能，不影响主题核心的博客浏览体验。天气、音乐、一言、入场欢迎卡片需在侧边栏/基础设置中手动添加或开启后才会发起网络请求。
 
 ---
 
@@ -189,6 +196,7 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 halo-theme-ethereal/
 ├── .github/                     # GitHub 工作流
 │   └── workflows/
+│       ├── ci.yaml              # 构建、版本检测与发布 Release
 │       └── cd.yaml              # 发布时同步到 Halo 应用市场
 ├── .husky/                      # git 钩子（pre-commit 代码格式化）
 ├── i18n/                        # 国际化翻译文件
@@ -231,6 +239,9 @@ halo-theme-ethereal/
 │   │   ├── equipments.astro     # 装备展示
 │   │   ├── portfolio.astro      # 项目集列表
 │   │   ├── portfolio-detail.astro # 项目集详情
+│   │   ├── wishes.astro         # 心愿便签
+│   │   ├── schedule-calendar.astro # 日程日历
+│   │   ├── schedule-calendar-card.astro # 日程日历卡片组件
 │   │   ├── error/               # 错误页面
 │   │   │   └── 404.astro        # 404 页面
 │   │   └── page.astro           # 自定义页面
@@ -259,7 +270,7 @@ halo-theme-ethereal/
 
 ## 开发
 
-> 需要 **Node.js >= 22.12.0** 和 **pnpm**
+> 需要 **Node.js >= 22.12.0**（推荐 24.x，见仓库根目录 `.nvmrc`）和 **pnpm**
 
 ```bash
 # 克隆项目
