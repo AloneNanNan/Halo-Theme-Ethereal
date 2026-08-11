@@ -362,28 +362,10 @@ spec:
                   value: 700
                   help: "轮播图切换动画时长（原 700ms），随动画速度档位变化"
         - $formkit: group
-          name: mobileMenu
-          label: 移动端菜单栏
-          value:
-            style: accordion
-          children:
-            - $formkit: select
-              name: style
-              id: mobileMenu_style
-              key: mobileMenu_style
-              label: 菜单样式
-              value: accordion
-              help: "手风琴：从导航栏下方展开下拉面板，带子菜单手风琴折叠；抽屉：从右侧滑出的圆角卡片，子菜单平铺展示"
-              options:
-                - label: 手风琴样式
-                  value: accordion
-                - label: 抽屉样式
-                  value: drawer
-        - $formkit: group
           name: welcome
           label: 欢迎弹窗
           value:
-            enable: true
+            enable: false
             position: bottom-right
             title: "欢迎来到我的博客！"
             template: "来自 {location} 的小伙伴，很高兴遇见你！"
@@ -394,7 +376,7 @@ spec:
               id: welcome_enable
               key: welcome_enable
               label: 启用
-              value: true
+              value: false
               help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key"
             - $formkit: select
               name: position
@@ -569,6 +551,30 @@ spec:
               label: 卡片悬浮效果
               value: true
               help: "卡片悬停时轻微上移并显示主题色阴影"
+        - $formkit: group
+          name: mobileMenu
+          label: 菜单栏设置
+          value:
+            style: accordion
+          children:
+            - $formkit: select
+              name: style
+              id: mobileMenu_style
+              key: mobileMenu_style
+              label: 移动端菜单样式
+              value: accordion
+              help: "手风琴：从导航栏下方展开下拉面板，带子菜单手风琴折叠；抽屉：从右侧滑出的圆角卡片，子菜单平铺展示"
+              options:
+                - label: 手风琴样式
+                  value: accordion
+                - label: 抽屉样式
+                  value: drawer
+            - $formkit: switch
+              name: navbarFixed
+              id: navbarFixed
+              label: 固定导航栏
+              value: false
+              help: "开启后桌面端导航栏始终固定在页面顶部，滚动页面时不会自动收起（移动端默认始终固定）"
 
         - $formkit: group
           name: floatingButtons

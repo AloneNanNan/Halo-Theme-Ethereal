@@ -20,6 +20,14 @@ export interface Base {
   menu: string;
 }
 
+/** 菜单栏设置 */
+export interface MobileMenuConfig {
+  /** 移动端菜单样式：accordion（手风琴）/ drawer（抽屉） */
+  style?: "accordion" | "drawer";
+  /** 固定导航栏：开启后桌面端导航栏始终固定在顶部，滚动时不自动收起（移动端默认始终固定） */
+  navbarFixed?: boolean;
+}
+
 /** 欢迎弹窗配置 */
 export interface WelcomePopupConfig {
   /** 功能总开关 */
@@ -102,6 +110,8 @@ export interface Style {
   color_scheme: string;
   enable_change_color_scheme: boolean;
   styleSwitches?: StyleSwitches;
+  /** 菜单栏设置 */
+  mobileMenu?: MobileMenuConfig;
   floatingButtons?: FloatingButtons;
   externalFont?: ExternalFont;
 }

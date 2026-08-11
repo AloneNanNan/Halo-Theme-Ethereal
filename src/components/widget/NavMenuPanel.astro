@@ -9,7 +9,7 @@
 
 <!-- 抽屉模式（mobileMenu.style = drawer） -->
 <div
-  th:if="${theme.config?.base?.mobileMenu?.style == 'drawer'}"
+  th:if="${theme.config?.style?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-root"
   th:aria-label="#{nav.navMenu}"
 >
@@ -94,7 +94,7 @@
 
 <!-- 手风琴模式（默认，mobileMenu.style = accordion 或未配置） -->
 <div
-  th:unless="${theme.config?.base?.mobileMenu?.style == 'drawer'}"
+  th:unless="${theme.config?.style?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-panel"
   th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
   class="float-panel float-panel-closed fixed right-4 px-2 py-2 w-40"

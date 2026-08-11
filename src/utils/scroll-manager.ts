@@ -95,6 +95,8 @@ function scrollFunction() {
 
   if (window.innerWidth < MOBILE_BREAKPOINT) return;
   if (!bannerEnabled || !navbar) return;
+  // 固定导航栏模式：跳过隐藏逻辑，始终显示
+  if (document.documentElement.dataset.navbarFixed === "true") return;
   // threshold = bannerHeightPx - navbarHeight - panelOverlap(rem→px) - baseSpacing
   const threshold =
     bannerHeightPx -
