@@ -1224,9 +1224,15 @@ spec:
           name: contentDisplay
           label: 内容显示
           value:
+            showCover: true
             content_size: prose-base
             content_theme: prose-gray
           children:
+            - $formkit: switch
+              name: showCover
+              label: 显示封面图
+              value: true
+              help: "在文章页正文上方显示封面图；关闭后列表/卡片仍正常显示封面，仅文章页内不重复显示"
             - $formkit: select
               name: content_size
               label: 字体大小

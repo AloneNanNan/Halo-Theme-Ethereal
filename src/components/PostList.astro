@@ -151,6 +151,10 @@ const { pagination = "posts" } = Astro.props;
   #post-list-container.post-grid-mode .post-card-title::before {
     display: none !important;
   }
+  /* 网格：hover 箭头对齐标题首行（标题缩小为 1.35rem/1.75rem 行高） */
+  #post-list-container.post-grid-mode .post-card-arrow {
+    top: calc((1.75rem - 2rem) / 2) !important;
+  }
   /* 网格：元信息与统计缩小 */
   #post-list-container.post-grid-mode .post-meta,
   #post-list-container.post-grid-mode .post-card-stats {

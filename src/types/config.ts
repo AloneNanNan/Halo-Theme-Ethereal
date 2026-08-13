@@ -282,6 +282,7 @@ export interface License {
 }
 
 export interface ContentDisplay {
+  showCover?: boolean;
   content_size: string;
   content_theme: string;
 }

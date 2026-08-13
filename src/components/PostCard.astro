@@ -21,11 +21,11 @@ const statIconClass =
   >
     <a
       th:href="@{${post.status.permalink}}"
-      class="post-card-title group mb-3 block w-full text-3xl font-bold text-90 transition before:absolute before:left-[18px] before:top-[35px] before:hidden before:h-5 before:w-1 before:rounded-md before:bg-(--primary) hover:text-(--primary) active:text-(--title-active) dark:hover:text-(--primary) dark:active:text-(--title-active) md:before:block"
+      class="post-card-title relative group mb-3 block w-full text-3xl font-bold text-90 transition before:absolute before:-left-[18px] before:top-2 before:hidden before:h-5 before:w-1 before:rounded-md before:bg-(--primary) hover:text-(--primary) active:text-(--title-active) dark:hover:text-(--primary) dark:active:text-(--title-active) md:before:block"
     >
       <span th:text="${post.spec.title}">Post title</span>
       <span
-        class="icon-[material-symbols--chevron-right-rounded] absolute z-30 hidden -translate-x-1 translate-y-0.5 text-[2rem] text-(--primary) opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 md:inline"
+        class="post-card-arrow icon-[material-symbols--chevron-right-rounded] absolute z-30 hidden -translate-x-1 text-[2rem] text-(--primary) opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 top-0.5 md:inline"
       ></span>
     </a>
 

@@ -85,7 +85,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       <div class="onload-animation">
         <PostMeta class="mb-5" />
         <div
-          th:if="${not #strings.isEmpty(post.spec.cover)}"
+          th:if="${not #strings.isEmpty(post.spec.cover) and theme.config?.post?.contentDisplay?.showCover != false}"
           id="post-cover"
           class="mb-5 overflow-hidden rounded-xl"
           th:with={imageSuffixThWith("p?.article_image_width ?: 1200")}
