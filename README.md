@@ -270,6 +270,8 @@ halo-theme-ethereal/
 
 ## 开发
 
+> 面向 AI 协作者：仓库根目录提供 [`AGENTS.md`](./AGENTS.md)，内含构建命令、目录约定、Halo/Thymeleaf 约定、常见坑与提交规范。使用 AI 编码工具（Codex / opencode / Cursor 等）贡献前请先阅读。
+
 > 需要 **Node.js >= 22.12.0**（推荐 24.x，见仓库根目录 `.nvmrc`）和 **pnpm**
 
 ```bash
