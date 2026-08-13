@@ -11,7 +11,7 @@ spec:
           name: banner
           label: Banner
           value:
-            enable: true
+            displayMode: banner
             mode: single
             src: "/themes/Ethereal/assets/images/demo-banner.png"
             carousel:
@@ -26,16 +26,23 @@ spec:
               text: "© 2022 Ethereal"
               url: ""
           children:
-            - $formkit: switch
-              name: enable
-              id: banner_enable
-              label: 启用
-              value: true
-              help: "启用横幅"
+            - $formkit: select
+              name: displayMode
+              id: banner_displayMode
+              label: 模式
+              value: banner
+              help: "关闭：不显示横幅；横幅模式：非首页显示 35vh 横幅、首页延伸至 65vh；全屏模式：非首页同横幅模式，首页 banner 占满整屏（100vh）"
+              options:
+                - label: 关闭
+                  value: disabled
+                - label: 横幅模式
+                  value: banner
+                - label: 全屏模式
+                  value: fullscreen
             - $formkit: select
               name: mode
               id: banner_mode
-              if: "$get(banner_enable).value"
+              if: "$get(banner_displayMode).value !== 'disabled'"
               label: 类型
               value: single
               help: "单图/视频：显示一张图片或视频，按文件类型自动识别；多图轮播：多张静态图片循环切换"
@@ -48,7 +55,7 @@ spec:
               name: src
               id: banner_src
               key: banner_src
-              if: "$get(banner_enable).value && $get(banner_mode).value === 'single'"
+              if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_mode).value === 'single'"
               label: 图片/视频
               value: "/themes/Ethereal/assets/images/demo-banner.png"
               accepts:
@@ -60,7 +67,7 @@ spec:
               name: showPauseBtn
               id: banner_showPauseBtn
               key: banner_showPauseBtn
-              if: "$get(banner_enable).value && $get(banner_mode).value === 'single'"
+              if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_mode).value === 'single'"
               label: 显示暂停按钮
               value: true
               help: "视频模式下在右下角显示播放/暂停按钮；关闭后视频仅自动静音循环播放，无手动控制（移动端同样生效）"
@@ -68,7 +75,7 @@ spec:
               name: carousel
               id: banner_carousel
               key: banner_carousel
-              if: "$get(banner_enable).value && $get(banner_mode).value === 'carousel'"
+              if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_mode).value === 'carousel'"
               label: 轮播设置
               value:
                 images: []
@@ -120,7 +127,7 @@ spec:
             - $formkit: switch
               name: useMobileSrc
               id: banner_useMobileSrc
-              if: "$get(banner_enable).value"
+              if: "$get(banner_displayMode).value !== 'disabled'"
               label: 移动端独立来源
               value: false
               help: "开启后为移动端（小于 768px）单独设置 banner 视频/图片来源；关闭时两端共用同一来源"
@@ -128,7 +135,7 @@ spec:
               name: mobile
               id: banner_mobile
               key: banner_mobile
-              if: "$get(banner_enable).value && $get(banner_useMobileSrc).value"
+              if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_useMobileSrc).value"
               label: 移动端设置
               value:
                 mode: single
@@ -150,7 +157,7 @@ spec:
                   name: src
                   id: banner_mobile_src
                   key: banner_mobile_src
-                  if: "$get(banner_enable).value && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'single'"
+                  if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'single'"
                   label: 图片/视频（移动端）
                   value: ""
                   accepts:
@@ -162,7 +169,7 @@ spec:
                   name: images
                   id: banner_mobile_images
                   key: banner_mobile_images
-                  if: "$get(banner_enable).value && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'carousel'"
+                  if: "$get(banner_displayMode).value !== 'disabled' && $get(banner_useMobileSrc).value && $get(banner_mobile_mode).value === 'carousel'"
                   label: 轮播图片（移动端）
                   multiple: true
                   accepts:
@@ -171,7 +178,7 @@ spec:
                   help: "移动端轮播图片，按顺序循环切换；留空则移动端使用电脑端来源。外部随机图接口建议使用无状态服务，uapis.cn 等接口存在同会话返回同一张图的问题"
             - $formkit: select
               name: position
-              if: "$get(banner_enable).value"
+              if: "$get(banner_displayMode).value !== 'disabled'"
               label: 位置
               value: "center"
               options:
@@ -183,7 +190,7 @@ spec:
                   label: 底部
             - $formkit: group
               name: credit
-              if: "$get(banner_enable).value"
+              if: "$get(banner_displayMode).value !== 'disabled'"
               label: 版权信息
               children:
                 - $formkit: switch
@@ -202,7 +209,7 @@ spec:
                   value:
         - $formkit: group
           name: bannerText
-          if: "$get(banner_enable).value"
+          if: "$get(banner_displayMode).value !== 'disabled'"
           label: 标题与副标题
           value:
             enable: true

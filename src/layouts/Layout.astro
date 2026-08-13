@@ -8,7 +8,10 @@ import {
 } from "../utils/speed-style";
 import {
   AUTO_MODE,
-  BANNER_HEIGHT_EXTEND,
+  BANNER_EXTEND_ROUNDING,
+  BANNER_HEIGHT,
+  BANNER_HEIGHT_HOME,
+  BANNER_HEIGHT_HOME_FULLSCREEN,
   DARK_MODE,
   DEFAULT_THEME,
   LIGHT_MODE,
@@ -83,6 +86,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
+  th:data-banner-display="${theme.config?.base?.banner?.displayMode ?: 'banner'}"
   th:with={speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
@@ -133,7 +137,10 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         LIGHT_MODE,
         DARK_MODE,
         AUTO_MODE,
-        BANNER_HEIGHT_EXTEND,
+        BANNER_HEIGHT,
+        BANNER_HEIGHT_HOME,
+        BANNER_HEIGHT_HOME_FULLSCREEN,
+        BANNER_EXTEND_ROUNDING,
         PAGE_WIDTH,
         bannerVersion,
       }}
@@ -183,11 +190,17 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           `${PAGE_WIDTH}rem`,
         );
 
-        // 与 constants.ts calcBannerHeightExtend 保持一致
+        // 与 constants.ts 的 calcBannerHeightExtend 保持同式；延伸量 =
+        // 首页高度(全屏 100vh / 横幅 65vh) − 基础 35vh。数值来自注入的
+        // 常量（勿硬编码），确保与 constants.ts / variables.css 不脱节
+        const __homeVh =
+          document.documentElement.dataset.bannerDisplay === "fullscreen"
+            ? BANNER_HEIGHT_HOME_FULLSCREEN
+            : BANNER_HEIGHT_HOME;
         let offset = Math.floor(
-          window.innerHeight * (BANNER_HEIGHT_EXTEND / 100),
+          window.innerHeight * ((__homeVh - BANNER_HEIGHT) / 100),
         );
-        offset = offset - (offset % 4);
+        offset = offset - (offset % BANNER_EXTEND_ROUNDING);
         document.documentElement.style.setProperty(
           "--banner-height-extend",
           `${offset}px`,
@@ -287,9 +300,11 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     />
     <slot name="head" />
   </head>
+  <!-- is-home 服务端初值仅作首帧兜底（避免 JS 运行前无 FOUC 感知）；运行期以
+       客户端 isHomePath（utils/banner-sync.ts）为权威，换页时由 syncHomeClass 纠正 -->
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
-    th:classappend="${(theme.config?.base?.banner?.enable ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
+    th:classappend="${(theme.config?.base?.banner?.displayMode != 'disabled' ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
     th:style="|--bannerOffset: ${theme.config?.base?.banner?.position == 'top' ? '30vh' : (theme.config?.base?.banner?.position == 'bottom' ? '0' : '15vh')};|"
     data-overlayscrollbars-initialize
   >
@@ -316,7 +331,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
         /* 防止内容被固定导航栏遮挡 */
         #top-row {
-          height: 4.5rem !important;
+          height: var(--navbar-height) !important;
         }
       }
 
@@ -336,14 +351,14 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
         /* 防止内容被固定导航栏遮挡 */
         html[data-navbar-fixed="true"] #top-row {
-          height: 4.5rem !important;
+          height: var(--navbar-height) !important;
         }
         /* 非首页侧边栏吸顶位置下移 */
         html[data-navbar-fixed="true"] body:not(.is-home) #sidebar-sticky,
         html[data-navbar-fixed="true"]
           body:not(.is-home)
           #right-sidebar-sticky {
-          top: calc(4.5rem + 1rem) !important;
+          top: calc(var(--navbar-height) + 1rem) !important;
         }
         /* 首页侧边栏吸顶位置下移（首页有banner） */
         html[data-navbar-fixed="true"]
@@ -352,7 +367,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         html[data-navbar-fixed="true"]
           body.is-home.enable-banner
           #right-sidebar-sticky {
-          top: calc(1rem - var(--banner-height-extend) + 4.5rem) !important;
+          top: calc(
+            1rem - var(--banner-height-extend) + var(--navbar-height)
+          ) !important;
         }
       }
     </style>

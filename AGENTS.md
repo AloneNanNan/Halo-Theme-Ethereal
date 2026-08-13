@@ -35,7 +35,7 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**。它先用 Astro �
 - `src/types/config.ts` — `theme.config` 的类型定义
 - `src/utils/*.ts` — 工具（`post-list-config.ts`、`image-suffix.ts`）
 - `settings.yaml` — **后台主题设置表单**（改后台开关/设置项在这里）
-- `theme.yaml` — 主题元信息，**版本号唯一来源**（`version` 字段）
+- `theme.yaml` — 主题元信息，**版本号唯一来源**（`version` 字段）。**禁止修改 `version` 字段**：版本号只能由发布流程手工提升，AI 不得改动，否则会造成线上主题版本错乱。
 - `i18n/` — 多语言文案
 - `templates/` — 构建产物（勿手改，会被 `astro build` 覆盖）
 

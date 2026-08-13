@@ -1,13 +1,14 @@
-// 滚动 & 窗口调整处理（back-to-top、TOC、导航栏）
+// 滚动 & 窗口调整处理（back-to-top、TOC、导航栏）。
+// banner/波浪/is-home 同步逻辑在 banner-sync.ts（含 resize 重算延伸高度）。
 import {
   BANNER_HEIGHT,
-  BANNER_HEIGHT_HOME,
   MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
-  calcBannerHeightExtend,
 } from "../constants/constants";
+import { bannerHomeHeight } from "./banner-sync";
 
 // 语义化常量，替代硬编码魔法数字
-const NAVBAR_HEIGHT_PX = 72; // 导航栏高度（约 4.5rem）
+// 导航栏高度（4.5rem × 16px），与 CSS 变量 --navbar-height 对应（variables.css）
+const NAVBAR_HEIGHT_PX = 72;
 const BASE_SPACING_PX = 16; // 基础间距（1rem = 16px）
 // 移动/平板（<1024px / lg）共用抽屉菜单，导航栏不随滚动隐藏；
 // 桌面端（≥lg）才启用导航栏滚动隐藏
@@ -15,42 +16,12 @@ const MOBILE_BREAKPOINT = 1024;
 
 const bannerEnabled = Boolean(document.getElementById("banner-wrapper"));
 
-const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
-
-function syncHomeClass(pathname = window.location.pathname) {
-  let normalizedPath = pathname.replace(/\/+$/, "") || "/";
-  if (basePath && normalizedPath.startsWith(basePath)) {
-    normalizedPath =
-      normalizedPath.slice(basePath.length).replace(/\/+$/, "") || "/";
-  }
-  if (normalizedPath.endsWith("/index.html")) {
-    normalizedPath = normalizedPath.slice(0, -"/index.html".length) || "/";
-  }
-  const isHome = normalizedPath === "/" || normalizedPath === "/index";
-  const wave = document.getElementById("wave-container");
-  if (wave) {
-    // 注意顺序：getComputedStyle 会强制同步样式刷新。若先切 is-home 再读
-    // getComputedStyle，grid 的 translate 过渡会在该 flush 时刻启动，而 wave
-    // 的 transform 要到下一帧才提交——两条过渡起点错开一帧，缓动前段移动快，
-    // 视觉上表现为 wave 先动、先到终点，与下部页面产生间隙。
-    // 先读变量（此时样式干净，flush 无副作用）→ wave 与 is-home 同一脏批次
-    // 提交，两条过渡同帧开始。
-    const ext = getComputedStyle(document.documentElement)
-      .getPropertyValue("--banner-height-extend")
-      .trim();
-    const offset = isHome ? ext : "0px";
-    const value = "translateY(calc(-100% + 1px + " + offset + "))";
-    // 标准 transform 已覆盖所有现代浏览器（含 Safari 9+），无需 -webkit- 前缀
-    wave.style.transform = value;
-  }
-  document.body.classList.toggle("is-home", isHome);
-}
-
 // 缓存 DOM 引用，避免每次 scroll 帧重复 getElementById
 // 使用 isConnected 自动检测 Swup 页面切换后的失效引用
 let _backToTopBtn: HTMLElement | null = null;
 let _toc: HTMLElement | null = null;
 let _navbar: HTMLElement | null = null;
+let _grid: HTMLElement | null = null;
 
 function getBackToTopBtn() {
   if (!_backToTopBtn?.isConnected)
@@ -66,13 +37,17 @@ function getNavbar() {
     _navbar = document.getElementById("navbar-wrapper");
   return _navbar;
 }
+function getGrid() {
+  if (!_grid?.isConnected) _grid = document.getElementById("main-grid");
+  return _grid;
+}
 
 function scrollFunction() {
   const backToTopBtn = getBackToTopBtn();
   const toc = getToc();
   const navbar = getNavbar();
   const currentBannerHeight = document.body.classList.contains("is-home")
-    ? BANNER_HEIGHT_HOME
+    ? bannerHomeHeight
     : BANNER_HEIGHT;
   const bannerHeightPx = window.innerHeight * (currentBannerHeight / 100);
   const tocRevealHeightPx = window.innerHeight * (BANNER_HEIGHT / 100);
@@ -110,6 +85,31 @@ function scrollFunction() {
   );
 }
 
+// 全屏首页向下箭头（#scroll-down-indicator）点击目标：手算平滑滚动到内容区。
+// 落点 = 网格顶边 − 首页间距（--banner-home-content-gap）− 固定导航栏高度，
+// 使"页面背景顶部边缘"（banner 底边，100vh）对齐视口顶部而非网格顶边。
+// Chrome 平滑 scrollIntoView 会忽略 scroll-margin，故必须手算；间距直接读
+// CSS 变量（rem）按根字号换算 px，不再借用 scroll-margin-top 传值（语义扭曲）。
+// 固定导航栏（html[data-navbar-fixed="true"]）常驻顶部且滚动后不隐藏，落点需
+// 再上移导航栏高度使"导航栏底边"对齐页面背景顶部边缘；高度动态测量（移动端
+// 强制固定，断点间可能不同），非固定模式为 0（导航栏滚动后自动隐藏，无需让位）
+export function scrollDownToContent(): void {
+  const grid = getGrid();
+  if (!grid) return;
+  const cs = getComputedStyle(document.documentElement);
+  const gap =
+    (parseFloat(cs.getPropertyValue("--banner-home-content-gap")) || 0) *
+    (parseFloat(cs.fontSize) || 16);
+  const navbarOffset =
+    document.documentElement.dataset.navbarFixed === "true"
+      ? getNavbar()?.getBoundingClientRect().height || 0
+      : 0;
+  window.scrollTo({
+    top: window.scrollY + grid.getBoundingClientRect().top - gap - navbarOffset,
+    behavior: "smooth",
+  });
+}
+
 let scrollTicking = false;
 window.addEventListener("scroll", function () {
   if (!scrollTicking) {
@@ -121,13 +121,4 @@ window.addEventListener("scroll", function () {
   }
 });
 
-window.addEventListener("resize", () => {
-  const offset = calcBannerHeightExtend(window.innerHeight);
-  document.documentElement.style.setProperty(
-    "--banner-height-extend",
-    `${offset}px`,
-  );
-  syncHomeClass();
-});
-
-export { scrollFunction, syncHomeClass };
+export { scrollFunction };

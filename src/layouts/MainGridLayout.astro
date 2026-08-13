@@ -6,7 +6,6 @@ import Navbar from "../components/Navbar.astro";
 import RightSideBar from "../components/widget/RightSideBar.astro";
 import SideBar from "../components/widget/SideBar.astro";
 import TOC from "../components/widget/TOC.astro";
-import { BANNER_HEIGHT, BANNER_HEIGHT_EXTEND } from "../constants/constants";
 import {
   bannerMobileThWith,
   bannerThWith,
@@ -32,12 +31,6 @@ const {
 ---
 
 <style is:global>
-  :root {
-    --banner-vh: 35vh;
-    --panel-overlap: 3.5rem;
-    --panel-top: calc(var(--banner-vh) - var(--panel-overlap));
-  }
-
   /* Banner 轮播：首张 SSR 即显（.active 带 display:block），其余 display:none
      延迟加载，切换时 JS 两步加类（visible → active）驱动透明度/位移过渡；
      时长变量随动画档位（--dur-banner-transition）注入。
@@ -107,11 +100,11 @@ const {
 
   <div
     id="banner-wrapper"
-    th:if="${theme.config?.base?.banner?.enable}"
+    th:if="${theme.config?.base?.banner?.displayMode != 'disabled'}"
     th:with={bannerThWith()}
     th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
-    style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
+    th:style="|top: calc(-1 * var(--banner-height-extend))|"
   >
     <link
       rel="preload"
@@ -289,13 +282,30 @@ const {
         >
         </div>
       </div>
+      <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区 -->
+      <!-- 落点 = 网格顶边 − --banner-home-content-gap：页面背景顶部边缘（banner
+           底边）对齐视口顶部，内容区在其下留出间距。
+           必须用 <button> 而非 <a href="#main-grid">：Swup ScrollPlugin 会拦截
+           hash 锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin
+           与 JS 目标），导致落点贴在内容顶边 -->
+      <button
+        th:if="${theme.config?.base?.banner?.displayMode == 'fullscreen'}"
+        id="scroll-down-indicator"
+        type="button"
+        aria-label="向下滚动查看内容"
+        class="scroll-down-indicator"
+      >
+        <span
+          class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
+        ></span>
+      </button>
     </div>
   </div>
 
   <div
     id="main-panel-wrapper"
     class="pointer-events-none absolute z-30 w-full"
-    th:style="${theme.config?.base?.banner?.enable ? 'top: calc(var(--banner-height) - 3.5rem)' : 'top: 5.5rem'}"
+    th:style="${theme.config?.base?.banner?.displayMode != 'disabled' ? 'top: calc(var(--banner-height) - var(--panel-overlap))' : 'top: var(--no-banner-panel-top)'}"
   >
     <div
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
@@ -305,14 +315,14 @@ const {
         id="main-grid"
         class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
-        th:style="${theme.config?.base?.banner?.enable ? 'min-height: calc(100vh - var(--banner-height) + 3.5rem)' : 'min-height: calc(100vh - 5.5rem)'}"
+        th:style="${theme.config?.base?.banner?.displayMode != 'disabled' ? 'min-height: calc(100vh - var(--banner-height) + var(--panel-overlap))' : 'min-height: calc(100vh - var(--no-banner-panel-top))'}"
       >
         <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
              （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
              url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
         <a
           id="banner-credit"
-          th:if="${theme.config?.base?.banner?.enable != false and theme.config?.base?.banner?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.banner?.credit?.url)}"
+          th:if="${theme.config?.base?.banner?.displayMode != 'disabled' and theme.config?.base?.banner?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.banner?.credit?.url)}"
           th:href="${theme.config?.base?.banner?.credit?.url}"
           target="_blank"
           rel="noopener"
@@ -380,7 +390,7 @@ const {
               id="toc-wrapper"
               th:if="${tocEnabled}"
               class="pointer-events-auto absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
-              th:classappend="${theme.config?.base?.banner?.enable ? ' toc-hide' : ''}"
+              th:classappend="${theme.config?.base?.banner?.displayMode != 'disabled' ? ' toc-hide' : ''}"
             >
               <div
                 id="toc-inner-wrapper"
@@ -423,6 +433,25 @@ const {
     th:if="${theme.config?.base?.bannerText != null and theme.config?.base?.bannerText?.subtitleEffect == 'drop'}"
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
   ></script>
+
+  <script is:inline>
+    // 全屏模式首页向下箭头：点击平滑滚动到内容区。落点计算见
+    // utils/scroll-manager.ts 的 scrollDownToContent()（app.ts 挂到
+    // window.__etherealScrollDown）。事件委托置于 Swup 容器外，
+    // 直接访问与 Swup 导航均生效（is:inline 无法 import，故走 window 桥接）
+    (function () {
+      if (window.__scrollDownIndicatorBound) return;
+      window.__scrollDownIndicatorBound = true;
+      document.addEventListener("click", function (e) {
+        var btn =
+          e.target && e.target.closest
+            ? e.target.closest("#scroll-down-indicator")
+            : null;
+        if (!btn) return;
+        window.__etherealScrollDown && window.__etherealScrollDown();
+      });
+    })();
+  </script>
 
   <script
     th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"

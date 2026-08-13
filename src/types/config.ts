@@ -48,7 +48,8 @@ export interface ThemeColor {
 }
 
 export interface Banner {
-  enable: boolean;
+  /** 显示模式：disabled 关闭 | banner 横幅模式（默认，首页延伸 65vh）| fullscreen 全屏模式（首页 100vh） */
+  displayMode?: "disabled" | "banner" | "fullscreen";
   /** 展示形态：single 单图/视频（默认）| carousel 多图轮播 */
   mode?: string;
   src: string;

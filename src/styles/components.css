@@ -166,18 +166,47 @@
   }
 
   .enable-banner #main-panel-wrapper {
-    @apply top-[calc(var(--banner-height)-3.5rem)];
+    top: calc(var(--banner-height) - var(--panel-overlap));
+  }
+
+  /* 全屏模式首页：banner 占满整屏，内容区从 100vh 之下开始（不交叠）。
+     top = 100vh − 延伸像素，与 #main-grid 的 translate-y-(--banner-height-extend)
+     抵消后精确落在 100vh，避免延伸像素取整导致的顶部残留露白。
+     +--banner-home-content-gap：首页内容区顶部留出的页面背景间距（原
+     #main-grid padding-top）。折进 panel top 而非 padding——该 top 在首页↔
+     其他页切换时由 home-switch 过渡（html.home-switch #main-panel-wrapper
+     transition: top）平滑变化，padding 需单独补 transition-property 且易
+     失步/闪烁，折进来则天然无闪烁。
+     全屏标记统一读 <html data-banner-display>（与 JS 同源，无 body class） */
+  html[data-banner-display="fullscreen"] body.is-home #main-panel-wrapper {
+    top: calc(
+      var(--banner-height-home) - var(--banner-height-extend) +
+        var(--banner-home-content-gap)
+    ) !important;
+  }
+
+  /* 全屏首页向下箭头（#scroll-down-indicator）的落点间距：网格顶边向上留出
+     --banner-home-content-gap，使"页面背景顶部边缘"（banner 底边，100vh）对齐
+     视口顶部而非内容/组件顶边贴住视口顶。间距值由 scroll-manager.ts 的
+     scrollDownToContent() 直接读 CSS 变量换算（Chrome 平滑 scrollIntoView 会
+     忽略 scroll-margin，只能 JS 手算），不再借用 scroll-margin-top 传值 */
+
+  /* 首页↔其他页切换：panel 的 top（35vh ↔ 35vh−3.5rem）原为瞬变，swap 瞬间
+     内容+组件跳变 3.5rem 形成"先闪"；home-switch 阶段给 top 加与网格/banner
+     同速（--dur-banner）同曲线过渡，消除瞬跳，整体平滑联动 */
+  html.home-switch #main-panel-wrapper {
+    transition: top var(--dur-banner, 700ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
   #wave-container {
     top: var(--banner-height);
-    -webkit-transform: translateY(calc(-100% + 1px));
-    transform: translateY(calc(-100% + 1px));
+    /* 覆盖量用 --wave-cover-offset（4px）：与 utils/banner-sync.ts 读取同一变量，
+       保证波浪底边恒盖过 banner 底边（100vh），不露 1~2px 图片缝 */
+    transform: translateY(calc(-100% + var(--wave-cover-offset)));
     /* 时长与 banner 装配件统一用 --dur-banner（随速度档位）：
        硬编码 700ms 会在舒缓档（800ms）/疾速档（500ms）与 banner/主网格
        移速不一致，wave 领先产生间隙 */
-    -webkit-transition: -webkit-transform var(--dur-banner, 700ms)
-      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
     transition: transform var(--dur-banner, 700ms)
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
@@ -209,7 +238,8 @@
   }
 
   .enable-banner #top-row {
-    @apply h-[calc(var(--banner-height-home)-4.5rem)] transition-all duration-300;
+    @apply transition-all duration-300;
+    height: calc(var(--banner-height-home) - var(--navbar-height));
   }
 
   /* 标题/副标题淡入淡出：时长与 banner 装配件位移统一（--dur-banner 随档位） */
@@ -220,6 +250,56 @@
   #banner-overlay.banner-text-hidden {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* 全屏模式首页：向下滚动指示箭头（点击平滑滚动到内容区）。
+     overlay 本身 pointer-events-none，仅在可见（无 banner-text-hidden）时
+     箭头可点击，避免换页后隐藏状态下产生不可见热区 */
+  #banner-overlay .scroll-down-indicator {
+    pointer-events: none;
+    position: absolute;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgb(255 255 255 / 0.85);
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  #banner-overlay:not(.banner-text-hidden) .scroll-down-indicator {
+    pointer-events: auto;
+  }
+
+  #banner-overlay .scroll-down-indicator:hover {
+    color: rgb(255 255 255 / 1);
+  }
+
+  #banner-overlay .scroll-down-icon {
+    font-size: 4.5rem;
+    line-height: 1;
+    animation: scroll-down-bounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.3));
+  }
+
+  @media (max-width: 767.98px) {
+    #banner-overlay .scroll-down-icon {
+      font-size: 3.5rem;
+    }
+
+    #banner-overlay .scroll-down-indicator {
+      bottom: 4rem;
+    }
+  }
+
+  @keyframes scroll-down-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(8px);
+    }
   }
 
   .navbar-hidden {

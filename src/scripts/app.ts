@@ -27,7 +27,8 @@ import {
   getHue,
   setHue,
 } from "../utils/setting-utils";
-import { syncHomeClass, scrollFunction } from "../utils/scroll-manager";
+import { scrollDownToContent, scrollFunction } from "../utils/scroll-manager";
+import { syncHomeClass, isHomePath } from "../utils/banner-sync";
 import { initLegacyAdmonitions } from "../utils/legacy-admonitions";
 import { initExternalLinkRedirect } from "../utils/external-link-redirect";
 import { initProfileStatus } from "../utils/profile-status";
@@ -192,6 +193,37 @@ function setupSwup() {
   // 保持 150ms 默认错落延迟。
   window.swup.hooks.on("content:replace", initCustomScrollbar);
   window.swup.hooks.on("content:replace", destroyAll, { before: true });
+  // 首页↔其他页换页（is-home 变化时）：挂 home-switch，让新内容淡入与横幅/网格
+  // 700ms 平滑位移同速，两侧组件随网格一起滑动，换入即最终布局，消除"内容先
+  // 显示、再位移"的闪烁。URL 在 animation:out:start 前已由 Swup pushState 更新，
+  // 可预判新页。
+  window.swup.hooks.on("animation:out:start", () => {
+    if (!document.body.classList.contains("enable-banner")) {
+      document.documentElement.classList.remove("home-switch");
+      return;
+    }
+    const nextIsHome = isHomePath();
+    const currentIsHome = document.body.classList.contains("is-home");
+    document.documentElement.classList.toggle(
+      "home-switch",
+      nextIsHome !== currentIsHome,
+    );
+  });
+  // 旧内容已淡出、新内容未换入的空档切换 is-home，横幅/网格/波浪的 700ms
+  // 位移发生在不可见阶段（跳过动画的换页维持原 page:view 同步）
+  window.swup.hooks.on(
+    "content:replace",
+    () => {
+      if (document.documentElement.classList.contains("is-changing")) {
+        syncHomeClass();
+      }
+    },
+    { before: true },
+  );
+  // 换入动画结束（含被 home-switch 拉长的 700ms 淡入）后移除，两侧组件淡回
+  window.swup.hooks.on("animation:in:end", () => {
+    document.documentElement.classList.remove("home-switch");
+  });
   window.swup.hooks.on("content:replace", () => {
     const rightToc = document.querySelector(
       "#right-sidebar table-of-contents",
@@ -259,6 +291,12 @@ setClickOutsideToClose("search-panel", [
   "search-bar",
   "search-switch",
 ]);
+
+// 向下箭头滚动目标：暴露给 MainGridLayout 内联事件委托脚本调用（按钮与委托
+// 位于 Swup 容器外，模块本体仅执行一次，无需额外防重绑定守卫）
+if (!(window as any).__etherealScrollDown) {
+  (window as any).__etherealScrollDown = scrollDownToContent;
+}
 
 init();
 void initContentLightbox();

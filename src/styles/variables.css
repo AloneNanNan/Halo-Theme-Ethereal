@@ -5,6 +5,22 @@
   --page-width: 75rem;
   --banner-height: 35vh;
   --banner-height-home: 65vh;
+  --banner-height-extend: 30vh;
+  /* 全屏首页内容区顶部间距（原 #main-grid padding-top，现折进 panel top） */
+  --banner-home-content-gap: 1.5rem;
+  /* 波浪底边相对 banner 底边的额外覆盖量：banner 底边已精确落在 100vh，
+     波浪底 = 35vh + extend + 余量，取整余量不足时会露 1~2px 图片缝，
+     此偏移保证波浪恒盖过 banner 底边（与 utils/banner-sync.ts 共用） */
+  --wave-cover-offset: 4px;
+  /* 主内容面板与 banner 的交叠量：panel top = var(--banner-height) − 此值。
+     与 constants.ts MAIN_PANEL_OVERLAPS_BANNER_HEIGHT(3.5) 同值，勿单独改 */
+  --panel-overlap: 3.5rem;
+  /* banner 禁用时主内容面板的顶部位置：固定导航栏 4.5rem + 1rem 间距 */
+  --no-banner-panel-top: 5.5rem;
+  /* 导航栏高度（桌面/移动固定模式同值）；scroll-manager.ts NAVBAR_HEIGHT_PX 与之对应 */
+  --navbar-height: 4.5rem;
+  /* banner 图片定位平移量：position=top→30vh / bottom→0 / center→15vh，
+     由 Layout.astro 按后台设置注入覆盖，此为默认兜底 */
   --bannerOffset: 15vh;
   --post-card-cover-width: 28%;
 
@@ -127,4 +143,13 @@
   --admonitions-color-important: oklch(0.75 0.14 310);
   --admonitions-color-warning: oklch(0.75 0.14 60);
   --admonitions-color-caution: oklch(0.65 0.2 25);
+}
+
+/* 全屏模式：首页 banner 占满整屏（100vh），其余机制（延伸/平移）随
+   --banner-height-home 自动推导。数值与 src/constants/constants.ts 的
+   BANNER_HEIGHT_HOME_FULLSCREEN / BANNER_HEIGHT_EXTEND_FULLSCREEN 对应
+   （这里仅作 JS 接管前的首帧兜底，运行期由 JS 以像素值覆盖） */
+html[data-banner-display="fullscreen"] {
+  --banner-height-home: 100vh;
+  --banner-height-extend: 65vh;
 }

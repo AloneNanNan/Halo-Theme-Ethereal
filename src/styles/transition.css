@@ -144,3 +144,12 @@ html[data-speed="snappy"] #banner-subtitle-wrapper {
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
 }
+
+/* —— 首页↔其他页换页（home-switch，is-home 变化时由 app.ts 挂载）——
+   换入瞬间横幅/网格/波浪 700ms 平滑上升/下沉，两侧组件随网格一起滑动；
+   主内容淡入与位移同速（--dur-banner），完全显示时位移恰好结束，
+   消除"内容先显示、再位移"的闪烁。is-rendering 仅换入阶段存在
+   （content:replace 加入、visit:end 清除），故退场淡出仍保持 --dur-swup 不变。 */
+html.home-switch.is-rendering .transition-swup-fade {
+  transition-duration: var(--dur-banner, 700ms);
+}
