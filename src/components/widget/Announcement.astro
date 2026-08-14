@@ -55,10 +55,14 @@ const { class: className } = Astro.props;
     function apply() {
       try {
         if (sessionStorage.getItem(KEY) === "1") {
-          var el = document.querySelector(
-            'widget-layout[data-id="announcement"]',
-          );
-          if (el && el.parentElement) el.parentElement.style.display = "none";
+          // 两栏/三栏布局下公告可能同时渲染两份（左侧兜底 + 右侧主显），
+          // querySelector 只命中第一份（PC 上是被 xl:!hidden 隐藏的左侧），
+          // 导致点击关闭后可见的那份不消失——必须隐藏全部实例。
+          document
+            .querySelectorAll('widget-layout[data-id="announcement"]')
+            .forEach(function (el) {
+              if (el.parentElement) el.parentElement.style.display = "none";
+            });
         }
       } catch (e) {}
     }

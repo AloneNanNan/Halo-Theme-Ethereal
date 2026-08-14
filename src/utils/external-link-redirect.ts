@@ -454,6 +454,11 @@ export function initExternalLinkRedirect() {
       ) as Element | undefined;
       if (!anchor) return;
 
+      // 下载链接一律放行：download 属性表示下载而非导航，不应被外链跳转拦截。
+      // 否则会对程序化 <a download> 的 click 执行 preventDefault，导致
+      // 下载无反应（如文章分享海报的"保存图片"被 data: 协议黑名单误伤）。
+      if (anchor.hasAttribute("download")) return;
+
       const href =
         anchor.getAttribute("href") || anchor.getAttribute("xlink:href");
       if (!href) return;
