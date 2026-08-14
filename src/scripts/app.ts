@@ -193,12 +193,20 @@ function setupSwup() {
   // 保持 150ms 默认错落延迟。
   window.swup.hooks.on("content:replace", initCustomScrollbar);
   window.swup.hooks.on("content:replace", destroyAll, { before: true });
-  // 首页↔其他页换页（is-home 变化时）：挂 home-switch，让新内容淡入与横幅/网格
-  // 700ms 平滑位移同速，两侧组件随网格一起滑动，换入即最终布局，消除"内容先
-  // 显示、再位移"的闪烁。URL 在 animation:out:start 前已由 Swup pushState 更新，
-  // 可预判新页。
+  // 首页↔其他页换页（is-home 变化时）挂 home-switch：仅全屏模式启用——
+  // 让新内容淡入与横幅/网格 700ms 位移同速，换入即最终布局，消除"内容先显示、
+  // 再位移"的闪烁（全屏下位移大 100vh↔35vh，且波浪下移出视口、缝隙不可见）。
+  // 横幅模式回归 1.1.0 行为：不在 content:replace 提前切 is-home，换入后内容
+  // 与波浪/横幅同速滑动（page:view 同步），避免"波浪滑过内容顶边露 1px 背景缝"
+  // （Edge 75% 缩放可复现）。URL 在 animation:out:start 前已由 Swup pushState
+  // 更新，可预判新页。
+  const isFullscreenMode =
+    document.documentElement.dataset.bannerDisplay === "fullscreen";
   window.swup.hooks.on("animation:out:start", () => {
-    if (!document.body.classList.contains("enable-banner")) {
+    if (
+      !document.body.classList.contains("enable-banner") ||
+      !isFullscreenMode
+    ) {
       document.documentElement.classList.remove("home-switch");
       return;
     }
@@ -209,12 +217,17 @@ function setupSwup() {
       nextIsHome !== currentIsHome,
     );
   });
-  // 旧内容已淡出、新内容未换入的空档切换 is-home，横幅/网格/波浪的 700ms
-  // 位移发生在不可见阶段（跳过动画的换页维持原 page:view 同步）
+  // 旧内容已淡出、新内容未换入的空档切换 is-home（仅全屏模式：横幅/网格/波浪
+  // 的 700ms 位移发生在不可见阶段，跳过动画的换页维持原 page:view 同步）。
+  // 横幅模式不提前切换——新内容以旧 is-home 定位换入，page:view 后再整体滑动，
+  // 内容与波浪/横幅同速联动，不产生波浪越过内容顶边时的 1px 缝隙
   window.swup.hooks.on(
     "content:replace",
     () => {
-      if (document.documentElement.classList.contains("is-changing")) {
+      if (
+        document.documentElement.classList.contains("is-changing") &&
+        isFullscreenMode
+      ) {
         syncHomeClass();
       }
     },

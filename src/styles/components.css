@@ -199,10 +199,20 @@
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
+  /* 波浪位置完全由 CSS 驱动：
+       基值 —— 底边盖过 banner 底边（35vh）+ 4px 覆盖量（--wave-cover-offset）；
+       首页（body.is-home）—— 再加延伸量 --banner-height-extend（px，head 脚本 /
+       banner-sync 写入），波浪底边落到首页 banner 底边（65vh / 100vh）；
+       全屏首页 —— 再整体下移 20%（translateY 的 % 即元素自身高度，各断点
+       h-28/32/36 等比下移，只露出波峰层，实心底部移出视口）。
+      使用 transform 而非 translate 属性：与 1.1.0 一致（该版本在 Edge 下无
+      "波浪与页面顶部边缘"合成缝隙）。translate 属性层在非整数 devicePixelRatio
+      （如 1.5）下栅格化边界处理不同，动画时会在波浪边界露 1px 缝；transform
+      走独立合成路径无此问题。锁步不依赖属性——同 --dur-banner、同缓动、
+      同帧切换（body.is-home）即可严格同步。CSS 驱动保留：修复 Safari 首帧
+      getComputedStyle 读不到延伸量的时序问题 */
   #wave-container {
     top: var(--banner-height);
-    /* 覆盖量用 --wave-cover-offset（4px）：与 utils/banner-sync.ts 读取同一变量，
-       保证波浪底边恒盖过 banner 底边（100vh），不露 1~2px 图片缝 */
     transform: translateY(calc(-100% + var(--wave-cover-offset)));
     /* 时长与 banner 装配件统一用 --dur-banner（随速度档位）：
        硬编码 700ms 会在舒缓档（800ms）/疾速档（500ms）与 banner/主网格
@@ -211,17 +221,29 @@
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
-  /* 加载早期（页面未就绪）wave 不过渡：syncHomeClass 首次设置 transform 时
-     （首页 banner 延伸 30vh）若带 700ms 过渡会形成"横向条带"位移观感；
-     app.ts 首次同步完成后（双 rAF）给 <html> 加 page-ready 恢复平滑过渡 */
+  body.is-home #wave-container {
+    transform: translateY(
+      calc(-100% + var(--wave-cover-offset) + var(--banner-height-extend))
+    );
+  }
+
+  html[data-banner-display="fullscreen"] body.is-home #wave-container {
+    transform: translateY(
+      calc(-100% + var(--wave-cover-offset) + var(--banner-height-extend) + 20%)
+    );
+  }
+
+  /* 加载早期（页面未就绪）wave 不过渡：避免 is-home 初始校正时 transform
+     带 700ms 过渡形成"横向条带"位移观感；app.ts 首次同步完成后（双 rAF）
+     给 <html> 加 page-ready 恢复平滑过渡 */
   html:not(.page-ready) #wave-container {
     transition: none;
   }
 
   /* 显式 0 长度基值：is-home 切换时 translate 在 length↔length 间过渡。
-     translate: none 与长度不可插值（CSS Transforms 2），会导致网格瞬移而
-     wave 慢滑，两者移速不一致、露出 banner 图片。
-     修复后 wave（transform 700ms）与网格（translate 700ms）同速同步滑动，
+     translate: none 与长度不可插值（CSS Transforms 2），会导致网格瞬移。
+     wave 用 transform、网格/banner 用 translate，属性不同但同为 --dur-banner、
+     同缓动、同帧切换（body.is-home），天然同步滑动，
      无需任何 is-changing 覆盖（wave 保持自然过渡，不闪现） */
   .enable-banner #main-grid,
   .enable-banner #banner-wrapper {
@@ -253,11 +275,12 @@
   }
 
   /* 全屏模式首页：向下滚动指示箭头（点击平滑滚动到内容区）。
-     overlay 本身 pointer-events-none，仅在可见（无 banner-text-hidden）时
-     箭头可点击，避免换页后隐藏状态下产生不可见热区 */
-  #banner-overlay .scroll-down-indicator {
-    pointer-events: none;
+     独立于 #banner-overlay 渲染，故不受 bannerText.enable 影响；
+     仅全屏模式首页显示（th:if fullscreen + body.is-home 门控），
+     非首页由 body:not(.is-home) 隐藏，避免换页后产生不可见热区 */
+  #scroll-down-indicator {
     position: absolute;
+    z-index: 20;
     bottom: 5rem;
     left: 50%;
     transform: translateX(-50%);
@@ -266,15 +289,15 @@
     transition: color 0.3s ease;
   }
 
-  #banner-overlay:not(.banner-text-hidden) .scroll-down-indicator {
-    pointer-events: auto;
+  body:not(.is-home) #scroll-down-indicator {
+    display: none;
   }
 
-  #banner-overlay .scroll-down-indicator:hover {
+  #scroll-down-indicator:hover {
     color: rgb(255 255 255 / 1);
   }
 
-  #banner-overlay .scroll-down-icon {
+  #scroll-down-indicator .scroll-down-icon {
     font-size: 4.5rem;
     line-height: 1;
     animation: scroll-down-bounce 2s ease-in-out infinite;
@@ -282,11 +305,11 @@
   }
 
   @media (max-width: 767.98px) {
-    #banner-overlay .scroll-down-icon {
+    #scroll-down-indicator .scroll-down-icon {
       font-size: 3.5rem;
     }
 
-    #banner-overlay .scroll-down-indicator {
+    #scroll-down-indicator {
       bottom: 4rem;
     }
   }

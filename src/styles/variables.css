@@ -8,10 +8,13 @@
   --banner-height-extend: 30vh;
   /* 全屏首页内容区顶部间距（原 #main-grid padding-top，现折进 panel top） */
   --banner-home-content-gap: 1.5rem;
-  /* 波浪底边相对 banner 底边的额外覆盖量：banner 底边已精确落在 100vh，
-     波浪底 = 35vh + extend + 余量，取整余量不足时会露 1~2px 图片缝，
-     此偏移保证波浪恒盖过 banner 底边（与 utils/banner-sync.ts 共用） */
-  --wave-cover-offset: 4px;
+  /* 波浪底边相对 banner 底边的覆盖量：banner 底边 = 35vh + 30vh(CSS)，而
+     --banner-height-extend 是 4px 向下取整的像素值（余量 0~4px 会吃掉部分
+     覆盖）。覆盖量必须 > 取整步长(4px) + 安全边距，故设 8px：
+     实际覆盖 = 8 − 取整余量 ∈ [4, 8)px，任意 DPR 下波浪底边都能干净地低于
+     banner 底边（≥4px CSS = ≥6 设备像素 @DPR1.5），避免过渡动画中波浪底边
+     与 banner/页面背景边界亚像素错位露 1px 缝隙（Edge DPR 1.5 复现） */
+  --wave-cover-offset: 8px;
   /* 主内容面板与 banner 的交叠量：panel top = var(--banner-height) − 此值。
      与 constants.ts MAIN_PANEL_OVERLAPS_BANNER_HEIGHT(3.5) 同值，勿单独改 */
   --panel-overlap: 3.5rem;

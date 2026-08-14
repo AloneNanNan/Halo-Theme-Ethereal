@@ -282,24 +282,25 @@ const {
         >
         </div>
       </div>
-      <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区 -->
-      <!-- 落点 = 网格顶边 − --banner-home-content-gap：页面背景顶部边缘（banner
-           底边）对齐视口顶部，内容区在其下留出间距。
-           必须用 <button> 而非 <a href="#main-grid">：Swup ScrollPlugin 会拦截
-           hash 锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin
-           与 JS 目标），导致落点贴在内容顶边 -->
-      <button
-        th:if="${theme.config?.base?.banner?.displayMode == 'fullscreen'}"
-        id="scroll-down-indicator"
-        type="button"
-        aria-label="向下滚动查看内容"
-        class="scroll-down-indicator"
-      >
-        <span
-          class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
-        ></span>
-      </button>
     </div>
+    <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区。
+         独立于 #banner-overlay 渲染——标题/副标题关闭（bannerText.enable=false）
+         时箭头也必须显示（仅全屏模式首页）。落点 = 网格顶边 −
+         --banner-home-content-gap：页面背景顶部边缘（banner 底边）对齐视口顶部。
+         必须用 <button> 而非 <a href="#main-grid">：Swup ScrollPlugin 会拦截 hash
+         锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin 与
+         JS 目标）。非首页由 components.css 的 body:not(.is-home) 规则隐藏 -->
+    <button
+      th:if="${theme.config?.base?.banner?.displayMode == 'fullscreen'}"
+      id="scroll-down-indicator"
+      type="button"
+      aria-label="向下滚动查看内容"
+      class="scroll-down-indicator"
+    >
+      <span
+        class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
+      ></span>
+    </button>
   </div>
 
   <div

@@ -49,11 +49,11 @@ export function calcBannerHeightExtend(
   return offset - (offset % BANNER_EXTEND_ROUNDING);
 }
 
-// 全屏首页波浪下移量（相对 #wave-container 自身高度的百分比，translateY 的 %
-// 即元素自身高度）：波浪整体下移，只露出上半部分（波峰层）。用百分比使
-// h-28/h-32/h-36 各断点等比下移，固定像素会在不同断点留下不同大小的残余
-// 实心带。仅全屏首页生效，横幅模式与其他页面保持原样（见 utils/banner-sync.ts）
-export const FULLSCREEN_WAVE_DOWNSHIFT = "20%";
+// 全屏首页波浪下移量已内联进 components.css #wave-container 的全屏规则
+// （transform: translateY(... + 20%)）：波浪整体下移、只露出波峰层。用百分比
+// 使 h-28/h-32/h-36 各断点等比下移（translateY 的 % 即元素自身高度），固定
+// 像素会在不同断点留下不同大小的残余实心带。仅全屏首页生效，横幅模式与
+// 其他页面保持原样
 
 // The height the main panel overlaps the banner, unit: rem
 export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 3.5;

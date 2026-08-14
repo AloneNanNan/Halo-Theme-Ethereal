@@ -7,7 +7,6 @@ import {
   bannerExtendVh,
   bannerHomeVh,
   calcBannerHeightExtend,
-  FULLSCREEN_WAVE_DOWNSHIFT,
 } from "../constants/constants";
 
 // 全屏模式由 <html data-banner-display> 标记；首页 banner 高度 / 延伸高度
@@ -32,52 +31,32 @@ function isHomePath(pathname = window.location.pathname): boolean {
   return normalizedPath === "/" || normalizedPath === "/index";
 }
 
-// wave 位于 Layout（Swup 容器外）跨页持久，缓存引用即可；
-// isConnected 自动检测换页后的失效引用（与 scroll-manager 的缓存同模式）
-let _wave: HTMLElement | null = null;
-function getWave() {
-  if (!_wave?.isConnected) _wave = document.getElementById("wave-container");
-  return _wave;
-}
-
+// 同步 body.is-home。波浪位置不再由 JS 计算——完全由 CSS 驱动（body.is-home +
+// html[data-banner-display] + --banner-height-extend，见 components.css
+// #wave-container 系列规则），与网格/横幅同 --dur-banner、同缓动、同帧切换，
+// 天然同步开始，无需此前"先 getComputedStyle 再切类"的顺序处理（Safari 首帧
+// getComputedStyle 读不到 head 脚本刚写入的延伸量，波浪曾错位）
 function syncHomeClass(pathname = window.location.pathname) {
-  const isHome = isHomePath(pathname);
-  const wave = getWave();
-  if (wave) {
-    // 注意顺序：getComputedStyle 会强制同步样式刷新。若先切 is-home 再读
-    // getComputedStyle，grid 的 translate 过渡会在该 flush 时刻启动，而 wave
-    // 的 transform 要到下一帧才提交——两条过渡起点错开一帧，缓动前段移动快，
-    // 视觉上表现为 wave 先动、先到终点，与下部页面产生间隙。
-    // 先读变量（此时样式干净，flush 无副作用）→ wave 与 is-home 同一脏批次
-    // 提交，两条过渡同帧开始。
-    const cs = getComputedStyle(document.documentElement);
-    const ext = cs.getPropertyValue("--banner-height-extend").trim();
-    // 覆盖量读取与 components.css #wave-container 基值同一变量
-    // （--wave-cover-offset），避免两处各自写死数值而失步；
-    // "4px" 回退与 variables.css :root 默认值一致
-    const cover = cs.getPropertyValue("--wave-cover-offset").trim() || "4px";
-    const offset = isHome ? ext : "0px";
-    const downshift =
-      isHome && bannerFullscreen ? ` + ${FULLSCREEN_WAVE_DOWNSHIFT}` : "";
-    // cover 保证波浪底边恒盖过 banner 底边（100vh）：banner 底边已用与
-    // --banner-height-extend 相同的像素值精确落在 100vh，而波浪底 =
-    // 35vh + extend + 余量；取整（向下取 BANNER_EXTEND_ROUNDING 倍数）会使
-    // 余量不足时露出 1~2px banner 图片缝
-    const value = `translateY(calc(-100% + ${cover} + ${offset}${downshift}))`;
-    wave.style.transform = value;
-  }
-  document.body.classList.toggle("is-home", isHome);
+  document.body.classList.toggle("is-home", isHomePath(pathname));
 }
 
-// 视口变化时重算延伸像素并重新同步波浪（Layout.astro head 内联脚本负责首帧
-// 计算，此处负责运行期响应式，两处同用 calcBannerHeightExtend 的公式）
-window.addEventListener("resize", () => {
+// 重算延伸像素写入 CSS 变量。head 内联脚本负责首帧计算（解析期 innerHeight），
+// 此处负责运行期响应式（resize）与首屏后纠正
+function refreshBannerExtend(): void {
   const offset = calcBannerHeightExtend(window.innerHeight, bannerExtendHeight);
   document.documentElement.style.setProperty(
     "--banner-height-extend",
     `${offset}px`,
   );
-  syncHomeClass();
-});
+}
+
+// Safari 首次导航：解析期 window.innerHeight 与最终视口可能不一致（布局未
+// 定型 / 地址栏收展），head 脚本按该值算出的首帧延伸量会偏小，导致波浪/网格
+// 首帧错位、且除非刷新否则不会自愈。load 后视口已稳定，重算一次纠正（波浪为
+// CSS 变量驱动，改写变量后自动重解析；Chrome 下该值为幂等，无副作用）。
+// resize 同理重算；is-home 只与路径相关，由 app.ts 的 init / 换页钩子维护，
+// 此处无需重复同步
+window.addEventListener("load", refreshBannerExtend);
+window.addEventListener("resize", refreshBannerExtend);
 
 export { syncHomeClass, isHomePath };
