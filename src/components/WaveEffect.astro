@@ -1,7 +1,11 @@
+---
+
+---
+
 <!-- 三选开关渲染门：旧布尔 false 与三选 'disabled' 均不渲染（'enabled'/'desktop_only'/旧 true 渲染容器与脚本）；
      'desktop_only' 的移动端跳过由 wave.js 运行时守卫处理（Thymeleaf 无法判断 UA） -->
 <div
-  th:if="${theme.config?.base?.banner?.displayMode != 'disabled' && theme.config?.style?.styleSwitches?.banner_wave != false && theme.config?.style?.styleSwitches?.banner_wave != 'disabled'}"
+  th:if="${bannerHasMedia && theme.config?.style?.styleSwitches?.banner_wave != false && theme.config?.style?.styleSwitches?.banner_wave != 'disabled'}"
   id="wave-container"
   class="pointer-events-none absolute z-20 block left-0 right-0 h-32 sm:h-28 md:h-32 lg:h-36 overflow-hidden"
 >

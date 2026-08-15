@@ -325,6 +325,117 @@
     }
   }
 
+  /* ── 全屏透明模式（displayMode == 'transparent'）──
+     布局等同「关闭」（无 enable-banner：内容区贴顶、无波浪/横幅文字），
+     仅把 #banner-wrapper 的媒体层（单图/视频/轮播/移动端图）复用为整屏
+     壁纸：fixed 铺满、位于内容下方。结合「高级材质」（navbar-blur-enabled）
+     使内容/组件卡片磨砂透明，露出壁纸 */
+  html[data-banner-display="transparent"] #banner-wrapper {
+    position: fixed !important;
+    inset: 0 !important;
+    height: 100vh !important;
+    height: 100lvh !important;
+    z-index: 0 !important;
+    opacity: var(--transparent-wallpaper-opacity, 0.8) !important;
+  }
+
+  html[data-banner-display="transparent"] #banner,
+  html[data-banner-display="transparent"] #banner-mobile {
+    height: 100% !important;
+  }
+
+  /* 壁纸背景不需要横幅文字/署名/媒体播放按钮 */
+  html[data-banner-display="transparent"] #banner-overlay,
+  html[data-banner-display="transparent"] #banner-credit,
+  html[data-banner-display="transparent"] #banner-play-btn,
+  html[data-banner-display="transparent"] #banner-play-btn-mobile {
+    display: none !important;
+  }
+
+  /* 壁纸磨砂：背景图片/视频模糊 + 轻压暗，形成柔和的背景遮罩
+     （与 Firefly overlay 同思路）；卡片靠半透明背景透出这张模糊壁纸来
+     呈现磨砂感（见下方说明），因此壁纸模糊值即磨砂强度；
+     scale 放大裁掉模糊边缘（外层 overflow-hidden 兜底）。
+     独立于「高级材质」开关 */
+  html[data-banner-display="transparent"] #banner img,
+  html[data-banner-display="transparent"] #banner-mobile img,
+  html[data-banner-display="transparent"] #banner video,
+  html[data-banner-display="transparent"] #banner-mobile video {
+    filter: blur(var(--transparent-wallpaper-blur, 10px)) brightness(0.95);
+    transform: scale(1.06);
+  }
+
+  /* 卡片磨砂：需同时开启 banner「全屏透明」与「高级材质」两个开关。
+     作用于文章卡（.post-card）、页面级大容器、侧边栏组件卡、浮层面板、
+     导航栏（.navbar-blur）、悬浮按钮（.floating-btn），以及列表条目卡
+     （.btn-card-outline：瞬间/分类/装备/友链/日程/项目集等）。
+     仅 .btn-regular（标签卡）保持纯色。
+     实现方式：卡片只做半透明背景（不透出壁纸），不加 backdrop-filter——
+     磨砂感来自壁纸自身的模糊透过卡片透出。若给卡片加 backdrop-filter，
+     换页/入场动画中祖先 opacity<1 会形成 backdrop root，挡掉卡片对壁纸的
+     采样，磨砂会在过渡动画期间暂时消失（淡入结束才"啪"地出现）。
+     注意：不可用 .bg-(--card-bg) 通配——会命中 #post-list-container 等
+     包装容器使其成为 backdrop root，内层卡片失效；也不可覆盖
+     .bg-(--primary)（分组控件选中态的主题色高亮） */
+  html[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .card-base:not(.btn-regular):not(.bg-\(--primary\)),
+  html[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
+      .bg-\(--primary\)
+    ),
+  html[data-banner-display="transparent"] body.navbar-blur-enabled .float-panel,
+  html[data-banner-display="transparent"] body.navbar-blur-enabled .navbar-blur,
+  html[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .floating-btn {
+    background-color: rgb(
+      255 255 255 / var(--transparent-card-alpha, 0.6)
+    ) !important;
+  }
+
+  :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .card-base:not(.btn-regular):not(.bg-\(--primary\)),
+  :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
+      .bg-\(--primary\)
+    ),
+  :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .float-panel,
+  :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .navbar-blur,
+  :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .floating-btn {
+    background-color: rgb(
+      0 0 0 / var(--transparent-card-alpha, 0.6)
+    ) !important;
+  }
+
+  /* 全局模糊开关：按钮磨砂放在自身会淡入淡出的外层 .floating-btn 上
+     （任务栏式）。元素自身的 opacity<1 不会挡掉它自己的 backdrop-filter
+     （backdrop root 只作用于后代），因此淡入淡出时磨砂始终存在、不闪失；
+     内层 .btn-card 透明以露出外层的磨砂面。
+     透明模式的配色覆写在上方"卡片磨砂"选择器里；非透明模式保持固定值 */
+  body.navbar-blur-enabled .floating-btn {
+    background-color: rgb(255 255 255 / 0.62);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  :root.dark body.navbar-blur-enabled .floating-btn {
+    background-color: rgb(0 0 0 / 0.65);
+  }
+
+  body.navbar-blur-enabled .floating-btn .btn-card {
+    background-color: transparent !important;
+  }
+
   .navbar-hidden {
     @apply -translate-y-[4.5rem] pointer-events-none;
   }
@@ -754,8 +865,16 @@
   padding-right: 0.75rem !important;
 }
 
-.layout-three-column [data-toc-entry].visible {
-  background: color-mix(in oklab, var(--primary) 10%, transparent) !important;
+/* TOC 目录项活动标题颜色 - 二栏/三栏一致 */
+.layout-two-column [data-toc-entry].visible .toc-title {
+  color: var(--primary) !important;
+}
+
+/* 三栏布局 active-indicator 与目录条目同宽（条目左右各内缩 0.75rem，
+   避免虚线框占满整个小组件宽度而比标题高亮更宽） */
+.layout-three-column #active-indicator {
+  left: 0.75rem !important;
+  right: 0.75rem !important;
 }
 
 .layout-three-column [data-toc-entry].visible .toc-title {
@@ -765,7 +884,7 @@
 /* TOC 目录项 hover 动效 - 文字变主题色 */
 [data-toc-entry]:hover .toc-title {
   color: var(--primary);
-  transition: color 150ms ease;
+  transition: color var(--toc-transition-duration) ease;
 }
 
 /* 三栏 TOC hover 左内边距增加（覆盖 px-2 被 !important 重写的 padding） */

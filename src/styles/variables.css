@@ -2,6 +2,8 @@
   --hue: 250;
   --radius-large: 1rem;
   --content-delay: 150ms;
+  /* TOC 目录高亮/悬浮过渡时长（TOC.astro 的 duration-() 与 components.css 共用） */
+  --toc-transition-duration: 150ms;
   --page-width: 75rem;
   --banner-height: 35vh;
   --banner-height-home: 65vh;

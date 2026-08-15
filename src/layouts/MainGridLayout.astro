@@ -100,7 +100,7 @@ const {
 
   <div
     id="banner-wrapper"
-    th:if="${theme.config?.base?.banner?.displayMode != 'disabled'}"
+    th:if="${bannerMode != 'disabled'}"
     th:with={bannerThWith()}
     th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
@@ -129,7 +129,7 @@ const {
       <img
         th:src="${srcX}"
         th:alt="${site.title}"
-        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:style="|object-position: ${theme.config?.base?.bannerStyle?.position ?: 'center'}|"
         th:attr="loading=${mobileActive ? 'lazy' : 'eager'},fetchpriority=${mobileActive ? 'low' : 'high'}"
         decoding="async"
         class="h-full w-full object-cover"
@@ -146,8 +146,8 @@ const {
            banner-src-switch.js 在激活时接管 -->
       <video
         id="banner-video"
-        th:src="${theme.config?.base?.banner?.src}"
-        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:src="${theme.config?.base?.bannerStyle?.src}"
+        th:style="|object-position: ${theme.config?.base?.bannerStyle?.position ?: 'center'}|"
         th:attr="autoplay=${!mobileActive ? 'autoplay' : null},preload=${mobileActive ? 'none' : 'auto'}"
         class="h-full w-full object-cover"
         muted
@@ -156,7 +156,7 @@ const {
         tabindex="-1"></video>
       <button
         id="banner-play-btn"
-        th:if="${theme.config?.base?.banner?.showPauseBtn == null or theme.config?.base?.banner?.showPauseBtn}"
+        th:if="${theme.config?.base?.bannerStyle?.showPauseBtn == null or theme.config?.base?.bannerStyle?.showPauseBtn}"
         type="button"
         aria-label="暂停播放"
         class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
@@ -171,10 +171,10 @@ const {
       class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
       <img
-        th:each="img, imgStat : ${theme.config?.base?.banner?.carousel?.images}"
+        th:each="img, imgStat : ${theme.config?.base?.bannerStyle?.carousel?.images}"
         th:src={carouselImgSrcExpr()}
         th:alt="${site.title}"
-        th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+        th:style="|object-position: ${theme.config?.base?.bannerStyle?.position ?: 'center'}|"
         th:classappend="${imgStat.index == 0 ? 'active' : ''}"
         th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
         decoding="async"
@@ -195,7 +195,7 @@ const {
         <ImageWrapper
           src="${srcX}"
           alt="${site.title}"
-          position="${theme.config?.base?.banner?.position ?: 'center'}"
+          position="${theme.config?.base?.bannerStyle?.position ?: 'center'}"
           loading="lazy"
           fetchpriority="low"
           class="h-full object-cover"
@@ -208,7 +208,7 @@ const {
         <video
           id="banner-video-mobile"
           th:src="${mobileSrc}"
-          th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+          th:style="|object-position: ${theme.config?.base?.bannerStyle?.position ?: 'center'}|"
           class="h-full w-full object-cover"
           muted
           loop
@@ -217,7 +217,7 @@ const {
           tabindex="-1"></video>
         <button
           id="banner-play-btn-mobile"
-          th:if="${theme.config?.base?.banner?.showPauseBtn == null or theme.config?.base?.banner?.showPauseBtn}"
+          th:if="${theme.config?.base?.bannerStyle?.showPauseBtn == null or theme.config?.base?.bannerStyle?.showPauseBtn}"
           type="button"
           aria-label="暂停播放"
           class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
@@ -234,7 +234,7 @@ const {
           th:each="img, imgStat : ${mobileImages}"
           th:src={carouselImgSrcExpr()}
           th:alt="${site.title}"
-          th:style="|object-position: ${theme.config?.base?.banner?.position ?: 'center'}|"
+          th:style="|object-position: ${theme.config?.base?.bannerStyle?.position ?: 'center'}|"
           th:classappend="${imgStat.index == 0 ? 'active' : ''}"
           loading="lazy"
           fetchpriority="low"
@@ -291,7 +291,7 @@ const {
          锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin 与
          JS 目标）。非首页由 components.css 的 body:not(.is-home) 规则隐藏 -->
     <button
-      th:if="${theme.config?.base?.banner?.displayMode == 'fullscreen'}"
+      th:if="${bannerMode == 'fullscreen'}"
       id="scroll-down-indicator"
       type="button"
       aria-label="向下滚动查看内容"
@@ -306,7 +306,7 @@ const {
   <div
     id="main-panel-wrapper"
     class="pointer-events-none absolute z-30 w-full"
-    th:style="${theme.config?.base?.banner?.displayMode != 'disabled' ? 'top: calc(var(--banner-height) - var(--panel-overlap))' : 'top: var(--no-banner-panel-top)'}"
+    th:style="${bannerHasMedia ? 'top: calc(var(--banner-height) - var(--panel-overlap))' : 'top: var(--no-banner-panel-top)'}"
   >
     <div
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
@@ -316,15 +316,15 @@ const {
         id="main-grid"
         class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
-        th:style="${theme.config?.base?.banner?.displayMode != 'disabled' ? 'min-height: calc(100vh - var(--banner-height) + var(--panel-overlap))' : 'min-height: calc(100vh - var(--no-banner-panel-top))'}"
+        th:style="${bannerHasMedia ? 'min-height: calc(100vh - var(--banner-height) + var(--panel-overlap))' : 'min-height: calc(100vh - var(--no-banner-panel-top))'}"
       >
         <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
              （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
              url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
         <a
           id="banner-credit"
-          th:if="${theme.config?.base?.banner?.displayMode != 'disabled' and theme.config?.base?.banner?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.banner?.credit?.url)}"
-          th:href="${theme.config?.base?.banner?.credit?.url}"
+          th:if="${bannerHasMedia and theme.config?.base?.bannerStyle?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.bannerStyle?.credit?.url)}"
+          th:href="${theme.config?.base?.bannerStyle?.credit?.url}"
           target="_blank"
           rel="noopener"
           class="group onload-animation absolute -top-13 right-4 flex h-9 items-center justify-center rounded-full bg-black/60 px-3 transition-all hover:bg-black/70 hover:pr-9 active:bg-black/80"
@@ -334,7 +334,7 @@ const {
           ></span>
           <span
             class="text-xs text-white/75"
-            th:text="${theme.config?.base?.banner?.credit?.text}"></span>
+            th:text="${theme.config?.base?.bannerStyle?.credit?.text}"></span>
           <span
             class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"
           ></span>
@@ -391,7 +391,7 @@ const {
               id="toc-wrapper"
               th:if="${tocEnabled}"
               class="pointer-events-auto absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
-              th:classappend="${theme.config?.base?.banner?.displayMode != 'disabled' ? ' toc-hide' : ''}"
+              th:classappend="${bannerHasMedia ? ' toc-hide' : ''}"
             >
               <div
                 id="toc-inner-wrapper"
@@ -400,7 +400,7 @@ const {
               >
                 <div id="toc" class="transition-swup-fade h-full w-full">
                   <div class="h-8 w-full" />
-                  <TOC />
+                  <TOC showEmptyMessage={false} />
                   <div class="h-8 w-full" />
                 </div>
               </div>

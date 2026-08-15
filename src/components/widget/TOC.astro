@@ -1,24 +1,36 @@
 ---
 interface Props {
   class?: string;
+  /** 无目录时是否显示"此文章无目录"占位（三栏目录小组件默认显示；二栏悬浮目录关闭） */
+  showEmptyMessage?: boolean;
 }
 
-const className = Astro.props.class;
+const { showEmptyMessage = true } = Astro.props;
+const className = Astro.props.class ?? "";
 ---
 
+<!-- z-0：使 table-of-contents 成为堆叠上下文，把 #active-indicator 的 -z-10
+     约束在本组件内（画在卡片之上、条目之下）；否则 -z-10 会透到根上下文，
+     被不透明白卡片背景盖住，非透明模式下高亮/虚线完全看不见 -->
 <table-of-contents
-  class:list={[className, "group relative block"]}
+  class:list={[className, "group relative z-0 block"]}
   th:attr="data-max-depth=${theme.config?.post != null and theme.config?.post?.toc?.toc_depth != null ? theme.config?.post?.toc?.toc_depth : 2}"
   th:data-empty-text="#{common.notoc}"
 >
   <div
     id="active-indicator"
-    class="-z-10 absolute left-0 right-0 rounded-xl border-2 border-dashed border-(--toc-btn-hover) bg-(--toc-btn-hover) transition-all group-hover:border-(--toc-btn-active) group-hover:bg-transparent"
+    class="-z-10 absolute left-0 right-0 rounded-xl border-2 border-dashed border-transparent bg-(--primary)/10 transition-all duration-(--toc-transition-duration) group-hover:border-(--primary) group-hover:bg-transparent"
     style="opacity: 0"
   >
   </div>
-  <div id="toc-empty" class="hidden px-2 py-4 text-center text-sm text-50">
-  </div>
+  {
+    showEmptyMessage && (
+      <div
+        id="toc-empty"
+        class="hidden px-2 py-4 text-center text-sm text-50"
+      />
+    )
+  }
 </table-of-contents>
 
 <script>
@@ -155,7 +167,7 @@ const className = Astro.props.class;
         link.dataset.tocEntry = "true";
         link.href = `#${heading.id}`;
         link.className =
-          "px-2 flex gap-2 relative transition-all w-full min-h-9 rounded-xl hover:bg-(--toc-btn-hover) hover:pl-3 active:bg-(--toc-btn-active) py-2";
+          "px-2 flex gap-2 relative transition-all duration-(--toc-transition-duration) w-full min-h-9 rounded-xl hover:bg-(--toc-btn-hover) hover:pl-3 active:bg-(--toc-btn-active) py-2";
         // 三栏布局：调整条目边距以适配更窄的 TOC 宽度
         if (this.closest(".layout-three-column")) {
           link.style.marginLeft = "0.75rem";
@@ -170,7 +182,7 @@ const className = Astro.props.class;
             ${depth === minDepth + 1 ? '<div class="transition w-2 h-2 rounded-[0.1875rem] bg-(--toc-badge-bg)"></div>' : ""}
             ${depth >= minDepth + 2 ? '<div class="transition w-1.5 h-1.5 rounded-sm bg-black/5 dark:bg-white/10"></div>' : ""}
           </div>
-          <div class="toc-title transition text-sm ${depth >= minDepth + 2 ? "text-30" : "text-50"}"></div>
+          <div class="toc-title transition duration-(--toc-transition-duration) text-sm ${depth >= minDepth + 2 ? "text-30" : "text-50"}"></div>
         `;
         const titleEl = link.querySelector(".toc-title");
         if (titleEl) {
@@ -216,50 +228,16 @@ const className = Astro.props.class;
     }
 
     toggleActiveHeading() {
-      const isThreeColumn = this.closest(".layout-three-column");
-      const primaryColor = isThreeColumn
-        ? getComputedStyle(document.documentElement)
-            .getPropertyValue("--primary")
-            .trim()
-        : "";
-      let i = this.active.length - 1;
-      let min = this.active.length - 1;
+      let min = this.active.length;
       let max = -1;
-      while (i >= 0 && !this.active[i]) {
-        this.tocEntries[i]?.classList.remove(this.visibleClass);
-        if (isThreeColumn && this.tocEntries[i]) {
-          this.tocEntries[i].style.background = "";
-          const t = this.tocEntries[i].querySelector(
-            ".toc-title",
-          ) as HTMLElement;
-          if (t) t.style.color = "";
+      for (let i = 0; i < this.active.length; i++) {
+        if (this.active[i]) {
+          this.tocEntries[i]?.classList.add(this.visibleClass);
+          min = Math.min(min, i);
+          max = Math.max(max, i);
+        } else {
+          this.tocEntries[i]?.classList.remove(this.visibleClass);
         }
-        i--;
-      }
-      while (i >= 0 && this.active[i]) {
-        this.tocEntries[i]?.classList.add(this.visibleClass);
-        if (isThreeColumn && this.tocEntries[i]) {
-          this.tocEntries[i].style.background =
-            `color-mix(in oklab, ${primaryColor} 10%, transparent)`;
-          const t = this.tocEntries[i].querySelector(
-            ".toc-title",
-          ) as HTMLElement;
-          if (t) t.style.color = primaryColor;
-        }
-        min = Math.min(min, i);
-        max = Math.max(max, i);
-        i--;
-      }
-      while (i >= 0) {
-        this.tocEntries[i]?.classList.remove(this.visibleClass);
-        if (isThreeColumn && this.tocEntries[i]) {
-          this.tocEntries[i].style.background = "";
-          const t = this.tocEntries[i].querySelector(
-            ".toc-title",
-          ) as HTMLElement;
-          if (t) t.style.color = "";
-        }
-        i--;
       }
 
       if (min > max || !this.tocEl || !this.activeIndicator) {

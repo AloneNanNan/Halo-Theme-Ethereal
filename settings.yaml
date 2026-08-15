@@ -8,10 +8,70 @@ spec:
       label: 基础设置
       formSchema:
         - $formkit: group
-          name: banner
-          label: Banner
+          name: bannerLayout
+          label: Banner 布局
           value:
             displayMode: banner
+            wallpaperOpacity: 0.8
+            wallpaperBlur: 10
+            cardOpacity: 0.6
+          children:
+            - $formkit: select
+              name: displayMode
+              id: banner_displayMode
+              label: 模式
+              value: banner
+              help: "关闭/纯色模式：不显示横幅，页面为纯色背景；横幅模式：非首页显示 35vh 横幅、首页延伸至 65vh；全屏模式：非首页同横幅模式，首页 banner 占满整屏（100vh）；全屏透明：无横幅、整屏壁纸作为页面背景，配合「高级材质」使内容与组件卡片磨砂透明"
+              options:
+                - label: 关闭/纯色模式
+                  value: disabled
+                - label: 横幅模式
+                  value: banner
+                - label: 全屏模式
+                  value: fullscreen
+                - label: 全屏透明
+                  value: transparent
+            - $formkit: number
+              name: wallpaperOpacity
+              id: banner_transparent_wallpaperOpacity
+              key: banner_transparent_wallpaperOpacity
+              if: "$get(banner_displayMode).value === 'transparent'"
+              label: 壁纸透明度
+              min: 0.3
+              max: 1
+              step: 0.05
+              value: 0.8
+              validation: "min:0.3|max:1"
+              help: "壁纸整体不透明度（0.3~1，默认 0.8），调低后露出页面底色"
+            - $formkit: number
+              name: wallpaperBlur
+              id: banner_transparent_wallpaperBlur
+              key: banner_transparent_wallpaperBlur
+              if: "$get(banner_displayMode).value === 'transparent'"
+              label: 背景模糊度
+              min: 0
+              max: 24
+              step: 1
+              value: 10
+              validation: "min:0|max:24"
+              help: "壁纸背景模糊强度（0~24 px，默认 10），值越大越柔和；导航栏与悬浮按钮糊到的内容随之改变"
+            - $formkit: number
+              name: cardOpacity
+              id: banner_transparent_cardOpacity
+              key: banner_transparent_cardOpacity
+              if: "$get(banner_displayMode).value === 'transparent'"
+              label: 卡片透明度
+              min: 0.3
+              max: 1
+              step: 0.05
+              value: 0.6
+              validation: "min:0.3|max:1"
+              help: "内容/组件卡片、导航栏与悬浮按钮的半透明程度（0.3~1，默认 0.6），需同时开启「高级材质」"
+        - $formkit: group
+          name: bannerStyle
+          if: "$get(banner_displayMode).value !== 'disabled'"
+          label: Banner 样式
+          value:
             mode: single
             src: "/themes/Ethereal/assets/images/demo-banner.png"
             carousel:
@@ -26,19 +86,6 @@ spec:
               text: "© 2022 Ethereal"
               url: ""
           children:
-            - $formkit: select
-              name: displayMode
-              id: banner_displayMode
-              label: 模式
-              value: banner
-              help: "关闭：不显示横幅；横幅模式：非首页显示 35vh 横幅、首页延伸至 65vh；全屏模式：非首页同横幅模式，首页 banner 占满整屏（100vh）"
-              options:
-                - label: 关闭
-                  value: disabled
-                - label: 横幅模式
-                  value: banner
-                - label: 全屏模式
-                  value: fullscreen
             - $formkit: select
               name: mode
               id: banner_mode
@@ -552,7 +599,7 @@ spec:
               name: navbar_blur
               label: 高级材质
               value: true
-              help: "启用后导航栏等元素变为半透明磨砂模糊效果"
+              help: "启用后导航栏等元素变为半透明磨砂模糊效果；同时开启 banner「全屏透明」模式时，内容与组件卡片也会变为磨砂透明"
             - $formkit: switch
               name: card_hover_lift
               label: 卡片悬浮效果

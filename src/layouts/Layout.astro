@@ -6,6 +6,7 @@ import {
   speedCustomStyleThWith,
   speedCustomStyleThExpr,
 } from "../utils/speed-style";
+import { bannerModeThWith } from "../utils/image-suffix";
 import {
   AUTO_MODE,
   BANNER_EXTEND_ROUNDING,
@@ -86,8 +87,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
-  th:data-banner-display="${theme.config?.base?.banner?.displayMode ?: 'banner'}"
-  th:with={speedCustomStyleThWith()}
+  th:data-banner-display="${bannerMode}"
+  th:with={bannerModeThWith() + ", " + speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
   data-overlayscrollbars-initialize
@@ -304,8 +305,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
        客户端 isHomePath（utils/banner-sync.ts）为权威，换页时由 syncHomeClass 纠正 -->
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
-    th:classappend="${(theme.config?.base?.banner?.displayMode != 'disabled' ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
-    th:style="|--bannerOffset: ${theme.config?.base?.banner?.position == 'top' ? '30vh' : (theme.config?.base?.banner?.position == 'bottom' ? '0' : '15vh')};|"
+    th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
+    th:style="|--bannerOffset: ${theme.config?.base?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.base?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.base?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.base?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.base?.bannerLayout?.cardOpacity ?: 0.6};|"
     data-overlayscrollbars-initialize
   >
     <ConfigCarrier />
@@ -397,6 +398,21 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           top: calc(
             1rem - var(--banner-height-extend) + var(--navbar-height)
           ) !important;
+        }
+        /* 首页无 banner（关闭/纯色、全屏透明）：侧边栏吸顶到固定导航栏下方 */
+        html[data-navbar-fixed="true"]
+          body.is-home:not(.enable-banner)
+          #sidebar-sticky,
+        html[data-navbar-fixed="true"]
+          body.is-home:not(.enable-banner)
+          #right-sidebar-sticky {
+          top: calc(var(--navbar-height) + 1rem) !important;
+        }
+        /* 右侧栏吸顶（含文章目录）高度：吸顶位置下移了导航栏高度，
+           max-height 必须同步扣除，否则目录底部会溢出屏幕下方约一个导航栏高度 */
+        html[data-navbar-fixed="true"]
+          #right-sidebar-sticky:has(#toc-inner-wrapper-right) {
+          max-height: calc(100vh - var(--navbar-height) - 2rem) !important;
         }
       }
     </style>

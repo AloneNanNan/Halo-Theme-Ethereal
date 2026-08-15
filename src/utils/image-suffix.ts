@@ -60,6 +60,22 @@ export function makeImageSuffix(
 }
 
 /**
+ * Banner 显示模式相关 th:with 局部变量串，供 Layout.astro 的 <html> 使用：
+ * - bannerMode  —— 有效显示模式（bannerLayout 优先，回退旧版 base.banner，
+ *                  再兜底 'banner'）。用嵌套 #strings.defaultString 而非链式
+ *                  Elvis（Thymeleaf 无法解析括号包裹的链式 ?:，会 500）。
+ * - bannerHasMedia —— 当前是否为「横幅/全屏」（有横幅媒体）；
+ *                  transparent 与 disabled 都视为无横幅。
+ * 定义在 <html> 上后，整站模板直接引用这两个原子变量做条件判断。
+ */
+export function bannerModeThWith(): string {
+  return (
+    "bannerMode=${#strings.defaultString(#strings.defaultString(theme.config?.base?.bannerLayout?.displayMode, theme.config?.base?.banner?.displayMode), 'banner')}, " +
+    "bannerHasMedia=${bannerMode == 'banner' or bannerMode == 'fullscreen'}"
+  );
+}
+
+/**
  * Banner 渲染所需的 th:with 局部变量串：在图片处理后缀变量基础上追加
  * mode（single/carousel，缺省 single）、srcX（单图 URL + 可加后缀时的
  * 后缀，供 th:href/th:src 静态属性引用）与 isVideo（single 模式下 src
@@ -69,11 +85,12 @@ export function makeImageSuffix(
  * 供移动端容器渲染条件与其内层 th:with 引用。
  */
 export function bannerThWith(): string {
-  const src = "#strings.defaultString(theme.config?.base?.banner?.src, '')";
+  const src =
+    "#strings.defaultString(theme.config?.base?.bannerStyle?.src, '')";
   return (
     imageSuffixThWith("p?.banner_width ?: 1920") +
     ", " +
-    bannerMediaVars(src, "theme.config?.base?.banner?.mode ?: 'single'") +
+    bannerMediaVars(src, "theme.config?.base?.bannerStyle?.mode ?: 'single'") +
     ", " +
     bannerMobileVars()
   );
@@ -117,11 +134,11 @@ function bannerMediaVars(srcExpr: string, modeExpr: string): string {
  */
 function bannerMobileVars(): string {
   return (
-    "useMobileSrc=${theme.config?.base?.banner?.useMobileSrc == true}, " +
-    "mobileMode=${theme.config?.base?.banner?.mobile?.mode ?: 'single'}, " +
-    "mobileSrc=${#strings.defaultString(theme.config?.base?.banner?.mobile?.src, '')}, " +
+    "useMobileSrc=${theme.config?.base?.bannerStyle?.useMobileSrc == true}, " +
+    "mobileMode=${theme.config?.base?.bannerStyle?.mobile?.mode ?: 'single'}, " +
+    "mobileSrc=${#strings.defaultString(theme.config?.base?.bannerStyle?.mobile?.src, '')}, " +
     // th:each / #lists.isEmpty 对 null 均按空处理，无需 ?: {} 空 Map 兜底
-    "mobileImages=${theme.config?.base?.banner?.mobile?.images}, " +
+    "mobileImages=${theme.config?.base?.bannerStyle?.mobile?.images}, " +
     "mobileActive=${useMobileSrc and ((mobileMode == 'single' and !#strings.isEmpty(mobileSrc)) or (mobileMode == 'carousel' and !#lists.isEmpty(mobileImages)))}"
   );
 }

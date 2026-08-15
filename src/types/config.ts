@@ -14,7 +14,8 @@ export interface ThemeConfig {
 
 // ========== 基础设置 ==========
 export interface Base {
-  banner: Banner;
+  bannerLayout: BannerLayout;
+  bannerStyle: BannerStyle;
   bannerText?: BannerText;
   welcome?: WelcomePopupConfig;
   menu: string;
@@ -47,9 +48,20 @@ export interface ThemeColor {
   fixed: boolean;
 }
 
-export interface Banner {
-  /** 显示模式：disabled 关闭 | banner 横幅模式（默认，首页延伸 65vh）| fullscreen 全屏模式（首页 100vh） */
-  displayMode?: "disabled" | "banner" | "fullscreen";
+/** Banner 布局：仅显示模式切换 + 全屏透明模式的透明度/模糊设置 */
+export interface BannerLayout {
+  /** 显示模式：disabled 关闭 | banner 横幅模式（默认，首页延伸 65vh）| fullscreen 全屏模式（首页 100vh）| transparent 全屏透明（无横幅、整屏壁纸背景） */
+  displayMode?: "disabled" | "banner" | "fullscreen" | "transparent";
+  /** 全屏透明模式：壁纸整体不透明度（0.3-1，默认 0.8，仅 transparent 模式生效） */
+  wallpaperOpacity?: number;
+  /** 全屏透明模式：壁纸背景模糊强度（px，0-24，仅 transparent 模式生效） */
+  wallpaperBlur?: number;
+  /** 全屏透明模式：卡片/导航栏/悬浮按钮的半透明程度（0.3-1，设为 1 即不透明，需开启高级材质，仅 transparent 模式生效） */
+  cardOpacity?: number;
+}
+
+/** Banner 样式：类型/图片来源/轮播/位置/版权等 */
+export interface BannerStyle {
   /** 展示形态：single 单图/视频（默认）| carousel 多图轮播 */
   mode?: string;
   src: string;
