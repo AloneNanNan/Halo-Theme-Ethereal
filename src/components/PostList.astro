@@ -61,8 +61,9 @@ const { pagination = "posts" } = Astro.props;
   }
 
   /* 封面：移到卡片顶部。默认内缩（grid-cover-inset）：按卡片内边距内缩、四角圆角。
-     等高网格中卡片被拉伸时，封面 flex-grow: 1 吸收剩余高度（基础保持 2:1，
-     有剩余空间才加高），补齐摘要下方的空白，避免留白 */
+     封面固定为 2:1 统一高度，不随等高网格拉伸；剩余高度由内容区吸收，
+     摘要下方留白（见下方内容区规则）。开启「封面高度自适应」时由
+     .grid-cover-fill 覆盖为 flex-grow 吸收 */
   #post-list-container.post-grid-mode .post-card-cover {
     position: relative !important;
     top: auto !important;
@@ -74,8 +75,16 @@ const { pagination = "posts" } = Astro.props;
     aspect-ratio: 2 / 1 !important;
     margin: 1rem 1rem 0 !important;
     border-radius: 0.75rem !important;
-    flex-grow: 1 !important;
     flex-shrink: 0 !important;
+  }
+
+  /* 封面高度自适应（grid-cover-fill）：封面 flex-grow 吸收等高网格的剩余高度，
+     同排卡片封面等高、摘要下方不留白；内容区回到自然高度不拉伸 */
+  #post-list-container.post-grid-mode.grid-cover-fill .post-card-cover {
+    flex-grow: 1 !important;
+  }
+  #post-list-container.post-grid-mode.grid-cover-fill .post-card-content {
+    flex-grow: 0 !important;
   }
 
   /* 封面贴边（grid-cover-full）：撑满卡片顶部，仅上两角圆角 */
@@ -116,12 +125,12 @@ const { pagination = "posts" } = Astro.props;
   }
 
   /* 内容区：占满整卡宽度，去掉列表模式的右侧封面留白。
-     等高网格中不参与拉伸（flex-grow: 0），剩余高度全部由封面吸收，
-     避免摘要下方留白；底部 stats 靠 mt-auto 贴底对齐 */
+     等高网格中由内容区吸收剩余高度（flex-grow: 1），封面保持固定 2:1；
+     内容区内部 stats 靠 mt-auto 贴底，摘要与统计之间自然留白 */
   #post-list-container.post-grid-mode .post-card-content {
     width: 100% !important;
     padding: 0.75rem 1rem 1rem !important;
-    flex-grow: 0 !important;
+    flex-grow: 1 !important;
   }
 
   /* ===== 列表模式桌面端（≥768px）：内容区宽度与右侧留白 =====
@@ -151,9 +160,15 @@ const { pagination = "posts" } = Astro.props;
   #post-list-container.post-grid-mode .post-card-title::before {
     display: none !important;
   }
-  /* 网格：hover 箭头对齐标题首行（标题缩小为 1.35rem/1.75rem 行高） */
+  /* hover 箭头垂直对齐标题末行：末行中心 = 100% - 行高/2，配合
+     base 的 -translate-y-1/2（箭头中心 = top 值），多行标题也落在
+     最后一行而非居中于整块。列表标题行高为 text-3xl 的 2.25rem */
+  #post-list-container .post-card-arrow {
+    top: calc(100% - 2.25rem / 2) !important;
+  }
+  /* 网格：标题行高收窄为 1.35rem/1.75rem，末行中心相应下移 */
   #post-list-container.post-grid-mode .post-card-arrow {
-    top: calc((1.75rem - 2rem) / 2) !important;
+    top: calc(100% - 1.75rem / 2) !important;
   }
   /* 网格：元信息与统计缩小 */
   #post-list-container.post-grid-mode .post-meta,

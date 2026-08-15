@@ -3,11 +3,11 @@
  *
  * 与 settings.yaml 的 post.postList 配置组对应，读取：
  *   defaultMode / coverPosition / descriptionLines / grid.masonry /
- *   grid.coverFullWidth
+ *   grid.coverFullWidth / grid.coverAutoHeight
  *
  * 渲染结果输出到 PostList.astro 的容器上：
  *   th:classappend -> 追加布局类（post-grid-mode / post-list-mode / cover-left /
- *                     grid-cover-inset|full）
+ *                     grid-cover-inset|full / grid-cover-fill）
  *   th:attr        -> data-masonry（供瀑布流 JS 读取）
  *   th:style       -> --post-card-min-width（写死 320px）/ --post-desc-lines
  *
@@ -27,15 +27,23 @@ export function postListContainerThWith(): string {
     "descLines=${postList?.descriptionLines ?: 2}, " +
     "masonry=${postList?.grid?.masonry == true}, " +
     "coverFullWidth=${postList?.grid?.coverFullWidth == true}, " +
+    "coverAutoHeight=${postList?.grid?.coverAutoHeight != false}, " +
     "gridClass=${defaultMode == 'grid' ? ' post-grid-mode' : ' post-list-mode'}, " +
     "coverExtra=${defaultMode != 'grid' and coverPosition == 'left' ? ' cover-left' : ''}, " +
-    "gridExtra=${defaultMode == 'grid' and coverFullWidth ? ' grid-cover-full' : ' grid-cover-inset'}"
+    "gridExtra=${defaultMode == 'grid' and coverFullWidth ? ' grid-cover-full' : ' grid-cover-inset'}, " +
+    "gridFill=${defaultMode == 'grid' and !masonry and coverAutoHeight ? ' grid-cover-fill' : ''}"
   );
 }
 
 /** 追加的布局类：'文本' + ${变量} 交替拼接，避免 ${} 内复杂嵌套 */
 export function postListContainerClass(): string {
-  return "' '" + " + ${gridClass}" + " + ${coverExtra}" + " + ${gridExtra}";
+  return (
+    "' '" +
+    " + ${gridClass}" +
+    " + ${coverExtra}" +
+    " + ${gridExtra}" +
+    " + ${gridFill}"
+  );
 }
 
 /** 供瀑布流 JS 读取的数据属性（与 public/assets/post-list-layout.js 约定一致） */

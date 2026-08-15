@@ -1150,6 +1150,7 @@ spec:
             grid:
               masonry: false
               coverFullWidth: false
+              coverAutoHeight: true
           children:
             - $formkit: select
               name: defaultMode
@@ -1193,6 +1194,7 @@ spec:
               children:
                 - $formkit: switch
                   name: masonry
+                  id: postList_grid_masonry
                   key: postList_grid_masonry
                   label: 瀑布流
                   value: false
@@ -1203,6 +1205,15 @@ spec:
                   label: 封面贴边
                   value: false
                   help: "开启后封面撑满卡片顶部贴边（仅上两角圆角）；关闭则封面按内边距内缩，四角圆角"
+                # 注：瀑布流下该开关隐藏（if），隐藏字段不持久化——开启再关闭瀑布流后
+                # 会恢复为默认 true。瀑布流本就不参与等高，此重置无实际影响，可接受
+                - $formkit: switch
+                  name: coverAutoHeight
+                  key: postList_grid_coverAutoHeight
+                  if: "$get(postList_grid_masonry).value !== true"
+                  label: 封面高度自适应
+                  value: true
+                  help: "开启后封面自动拉伸填满卡片剩余高度，等高网格下同排卡片封面等高、摘要下方不留白；关闭后封面固定 2:1 高度，摘要下方留白（仅等高网格生效，瀑布流下自动隐藏）"
         - $formkit: group
           name: license
           label: 版权声明

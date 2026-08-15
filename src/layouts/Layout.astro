@@ -335,6 +335,23 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
+      /* 固定导航栏宽度跟随内容区：fixed 脱离文档流后若不显式收窄，
+         会占满整屏（视口 <75rem 时卡片 max-w 撑满屏幕；宽屏时缺少
+         #top-row 的 md:px-4 内边距、与内容边缘齐平）。按 #top-row
+         同款几何收窄并居中，保证与未固定时完全一致。
+         注意：宽度规则同时出现在本块（平板恒 fixed，选择器用
+         #navbar-wrapper）与下方 1024+ 块（桌面按开关 fixed，选择器带
+         html[data-navbar-fixed="true"]），两者无法合并（1024+ 非 fixed
+         时不能收窄）。改动时务必与 #top-row 的 md:px-4 / xl:w-[92vw] 同步 */
+      @media (min-width: 768px) and (max-width: 1023px) {
+        #navbar-wrapper {
+          margin-left: auto !important;
+          margin-right: auto !important;
+          width: calc(100% - 2rem) !important;
+          max-width: calc(var(--page-width) - 2rem) !important;
+        }
+      }
+
       /* 桌面端固定导航栏：与移动端方案一致，使用 fixed 定位强制始终可见 */
       @media (min-width: 1024px) {
         html[data-navbar-fixed="true"] #navbar-wrapper {
@@ -342,7 +359,17 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           top: 0 !important;
           left: 0 !important;
           right: 0 !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          width: calc(100% - 2rem) !important;
+          max-width: calc(var(--page-width) - 2rem) !important;
           z-index: 50 !important;
+        }
+        /* xl 起 #top-row 由 w-full 换为 xl:w-[92vw]，宽度同步跟随 */
+        @media (min-width: 80rem) {
+          html[data-navbar-fixed="true"] #navbar-wrapper {
+            width: calc(92vw - 2rem) !important;
+          }
         }
         html[data-navbar-fixed="true"] #navbar-wrapper.navbar-hidden {
           translate: none !important;
