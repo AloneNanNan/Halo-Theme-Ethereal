@@ -47,7 +47,7 @@ function scrollFunction() {
   const toc = getToc();
   const navbar = getNavbar();
   const currentBannerHeight = document.body.classList.contains("is-home")
-    ? bannerHomeHeight
+    ? bannerHomeHeight()
     : BANNER_HEIGHT;
   const bannerHeightPx = window.innerHeight * (currentBannerHeight / 100);
   const tocRevealHeightPx = window.innerHeight * (BANNER_HEIGHT / 100);

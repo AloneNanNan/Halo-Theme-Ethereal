@@ -29,3 +29,6 @@ pnpm-debug.log*
 .codebuddy/
 
 templates/
+
+# opencode 工具配置
+.opencode/

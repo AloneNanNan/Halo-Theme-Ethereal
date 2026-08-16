@@ -200,12 +200,15 @@ function setupSwup() {
   // 与波浪/横幅同速滑动（page:view 同步），避免"波浪滑过内容顶边露 1px 背景缝"
   // （Edge 75% 缩放可复现）。URL 在 animation:out:start 前已由 Swup pushState
   // 更新，可预判新页。
-  const isFullscreenMode =
-    document.documentElement.dataset.bannerDisplay === "fullscreen";
+  // 当前是否全屏模式：运行时读取 <html data-banner-display>（访客可在面板切换
+  // 壁纸模式，默认非全屏时手动切到全屏也应生效），不能按初始化时的值缓存
+  function isFullscreenMode(): boolean {
+    return document.documentElement.dataset.bannerDisplay === "fullscreen";
+  }
   window.swup.hooks.on("animation:out:start", () => {
     if (
       !document.body.classList.contains("enable-banner") ||
-      !isFullscreenMode
+      !isFullscreenMode()
     ) {
       document.documentElement.classList.remove("home-switch");
       return;
@@ -226,7 +229,7 @@ function setupSwup() {
     () => {
       if (
         document.documentElement.classList.contains("is-changing") &&
-        isFullscreenMode
+        isFullscreenMode()
       ) {
         syncHomeClass();
       }

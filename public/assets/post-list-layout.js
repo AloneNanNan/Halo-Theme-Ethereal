@@ -116,6 +116,11 @@
     bindImageLoad();
   }
 
+  // 暴露重排入口：访客切换文章布局（visitor-post-layout.js / 显示设置面板）
+  // 换类后调用，按当前容器类决定应用瀑布流或恢复 CSS grid。
+  // 幂等覆盖赋值，Swup 换页重执行本脚本时不会产生重复绑定。
+  window.__postListRelayout = init;
+
   // 窗口尺寸变化时重排（防抖），只绑定一次避免 Swup 换页后重复监听
   if (!window.__postListLayoutResizeBound) {
     window.__postListLayoutResizeBound = true;

@@ -100,11 +100,9 @@ const {
 
   <div
     id="banner-wrapper"
-    th:if="${bannerMode != 'disabled'}"
     th:with={bannerThWith()}
     th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
-    th:style="|top: calc(-1 * var(--banner-height-extend))|"
   >
     <link
       rel="preload"
@@ -291,7 +289,6 @@ const {
          锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin 与
          JS 目标）。非首页由 components.css 的 body:not(.is-home) 规则隐藏 -->
     <button
-      th:if="${bannerMode == 'fullscreen'}"
       id="scroll-down-indicator"
       type="button"
       aria-label="向下滚动查看内容"
@@ -303,11 +300,7 @@ const {
     </button>
   </div>
 
-  <div
-    id="main-panel-wrapper"
-    class="pointer-events-none absolute z-30 w-full"
-    th:style="${bannerHasMedia ? 'top: calc(var(--banner-height) - var(--panel-overlap))' : 'top: var(--no-banner-panel-top)'}"
-  >
+  <div id="main-panel-wrapper" class="pointer-events-none absolute z-30 w-full">
     <div
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
       th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
@@ -316,14 +309,13 @@ const {
         id="main-grid"
         class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
-        th:style="${bannerHasMedia ? 'min-height: calc(100vh - var(--banner-height) + var(--panel-overlap))' : 'min-height: calc(100vh - var(--no-banner-panel-top))'}"
       >
         <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
              （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
              url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
         <a
           id="banner-credit"
-          th:if="${bannerHasMedia and theme.config?.base?.bannerStyle?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.bannerStyle?.credit?.url)}"
+          th:if="${theme.config?.base?.bannerStyle?.credit?.enable != false and !#strings.isEmpty(theme.config?.base?.bannerStyle?.credit?.url)}"
           th:href="${theme.config?.base?.bannerStyle?.credit?.url}"
           target="_blank"
           rel="noopener"
@@ -391,7 +383,6 @@ const {
               id="toc-wrapper"
               th:if="${tocEnabled}"
               class="pointer-events-auto absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
-              th:classappend="${bannerHasMedia ? ' toc-hide' : ''}"
             >
               <div
                 id="toc-inner-wrapper"

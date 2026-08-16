@@ -481,7 +481,6 @@ spec:
           label: 主题颜色
           value:
             hue: 250
-            fixed: false
           children:
             - $formkit: number
               name: hue
@@ -491,11 +490,6 @@ spec:
               label: 色调
               value: 250
               help: "主题颜色的默认色调，从0到360。红色：0，蓝绿色：200，青色：250，粉红色：345"
-            - $formkit: switch
-              name: fixed
-              label: 固定色调
-              value: false
-              help: "隐藏访问者的主题彩色选择器"
         - $formkit: group
           name: colorScheme
           label: 配色方案
@@ -629,6 +623,73 @@ spec:
               label: 固定导航栏
               value: false
               help: "开启后桌面端导航栏始终固定在页面顶部，滚动页面时不会自动收起（移动端默认始终固定）"
+            - $formkit: group
+              name: visitorStyle
+              label: 访客样式切换
+              value:
+                enable: true
+                hue: true
+                postListLayout: true
+                cardStyle: true
+                wallpaperMode: true
+                wallpaperSettings: true
+                transparent: true
+              children:
+                - $formkit: switch
+                  name: enable
+                  id: visitorStyle_enable
+                  key: visitorStyle_enable
+                  label: 允许访客切换样式
+                  value: true
+                  help: "总开关：开启后访客可在导航栏显示设置面板中切换下列样式；关闭则不显示任何样式切换开关"
+                - $formkit: switch
+                  name: hue
+                  id: visitorStyle_hue
+                  key: visitorStyle_hue
+                  if: "$get(visitorStyle_enable).value"
+                  label: 主题色相切换
+                  value: true
+                  help: "访客可在面板中调节主题色相；关闭则隐藏色相选择器，固定为主题颜色中设置的色调"
+                - $formkit: switch
+                  name: postListLayout
+                  id: visitorStyle_postListLayout
+                  key: visitorStyle_postListLayout
+                  if: "$get(visitorStyle_enable).value"
+                  label: 文章布局切换
+                  value: true
+                  help: "访客可在列表 / 网格布局间切换，后台「文章卡片布局」的默认模式仍作为初始值"
+                - $formkit: switch
+                  name: cardStyle
+                  id: visitorStyle_cardStyle
+                  key: visitorStyle_cardStyle
+                  if: "$get(visitorStyle_enable).value"
+                  label: 卡片样式切换
+                  value: true
+                  help: "访客可开关卡片悬浮效果、高级材质（磨砂）与瀑布流，后台「样式开关」的值仍作为默认"
+                - $formkit: switch
+                  name: wallpaperMode
+                  id: visitorStyle_wallpaperMode
+                  key: visitorStyle_wallpaperMode
+                  if: "$get(visitorStyle_enable).value"
+                  label: 壁纸模式切换
+                  value: true
+                  help: "访客可在纯色背景 / 横幅 / 全屏 / 全屏透明四种模式间切换，后台「横幅布局」的显示模式仍作为默认"
+                - $formkit: switch
+                  name: wallpaperSettings
+                  id: visitorStyle_wallpaperSettings
+                  key: visitorStyle_wallpaperSettings
+                  if: "$get(visitorStyle_enable).value"
+                  label: 壁纸设置切换
+                  value: true
+                  help: "横幅 / 全屏模式下，访客可开关横幅底部波浪动效；后台「样式开关」的波浪设置仍作为默认，后台关闭时前台不显示该开关"
+                - $formkit: switch
+                  name: transparent
+                  id: visitorStyle_transparent
+                  key: visitorStyle_transparent
+                  if: "$get(visitorStyle_enable).value"
+                  label: 透明设置调节
+                  value: true
+                  help: "仅横幅「全屏透明」模式下显示，访客可调节壁纸透明度 / 模糊度 / 卡片透明度"
 
         - $formkit: group
           name: floatingButtons

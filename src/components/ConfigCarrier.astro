@@ -1,7 +1,22 @@
 <div
   id="config-carrier"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
-  th:data-hue-fixed="${theme.config?.style?.themeColor?.fixed}"
+  th:data-hue-fixed="${theme.config?.style?.mobileMenu?.visitorStyle?.enable == false or theme.config?.style?.mobileMenu?.visitorStyle?.hue == false}"
   th:data-theme-name="${theme.metadata.name}"
+  th:data-visitor-enable="${theme.config?.style?.mobileMenu?.visitorStyle?.enable != false}"
+  th:data-visitor-layout="${theme.config?.style?.mobileMenu?.visitorStyle?.postListLayout != false}"
+  th:data-visitor-card-style="${theme.config?.style?.mobileMenu?.visitorStyle?.cardStyle != false}"
+  th:data-masonry-default="${theme.config?.post?.postList?.grid?.masonry == true}"
+  th:data-visitor-transparent="${theme.config?.style?.mobileMenu?.visitorStyle?.transparent != false}"
+  th:data-visitor-wallpaper-mode="${theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperMode != false}"
+  th:data-banner-display-default="${#strings.defaultString(#strings.defaultString(theme.config?.base?.bannerLayout?.displayMode, theme.config?.base?.banner?.displayMode), 'banner')}"
+  th:data-visitor-wallpaper-settings="${theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperSettings != false}"
+  th:data-banner-title-default="${theme.config?.base?.bannerText?.enable != false and (!#strings.isEmpty(theme.config?.base?.bannerText?.title) or !#strings.isEmpty(theme.config?.base?.bannerText?.subtitles))}"
+  th:data-wave-default="${theme.config?.style?.styleSwitches?.banner_wave != false and theme.config?.style?.styleSwitches?.banner_wave != 'disabled'}"
+  th:data-card-hover-lift="${theme.config?.style?.styleSwitches?.card_hover_lift != false}"
+  th:data-navbar-blur="${theme.config?.style?.styleSwitches?.navbar_blur == true}"
+  th:data-wallpaper-opacity="${theme.config?.base?.bannerLayout?.wallpaperOpacity ?: 0.8}"
+  th:data-wallpaper-blur="${theme.config?.base?.bannerLayout?.wallpaperBlur ?: 10}"
+  th:data-wallpaper-card-alpha="${theme.config?.base?.bannerLayout?.cardOpacity ?: 0.6}"
 >
 </div>

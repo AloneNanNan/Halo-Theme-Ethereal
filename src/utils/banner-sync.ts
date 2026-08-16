@@ -9,12 +9,18 @@ import {
   calcBannerHeightExtend,
 } from "../constants/constants";
 
-// 全屏模式由 <html data-banner-display> 标记；首页 banner 高度 / 延伸高度
-// 随模式推导（全屏 100vh / 横幅 65vh）
-const bannerFullscreen =
-  document.documentElement.dataset.bannerDisplay === "fullscreen";
-export const bannerHomeHeight = bannerHomeVh(bannerFullscreen);
-export const bannerExtendHeight = bannerExtendVh(bannerFullscreen);
+// 全屏模式由 <html data-banner-display> 标记；首页 banner 高度随模式推导
+// （全屏 100vh / 横幅 65vh）。访客可在运行期切换壁纸模式（setting-utils 的
+// applyBannerDisplay 会改写 data-banner-display），因此一律现场读取、不缓存
+// 模块加载时的快照（refreshBannerExtend 同此约定）
+function isFullscreenBanner(): boolean {
+  return document.documentElement.dataset.bannerDisplay === "fullscreen";
+}
+
+/** 首页 banner 高度（vh）：按当前模式实时计算，供滚动逻辑消费 */
+export function bannerHomeHeight(): number {
+  return bannerHomeVh(isFullscreenBanner());
+}
 
 const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
 
@@ -41,9 +47,16 @@ function syncHomeClass(pathname = window.location.pathname) {
 }
 
 // 重算延伸像素写入 CSS 变量。head 内联脚本负责首帧计算（解析期 innerHeight），
-// 此处负责运行期响应式（resize）与首屏后纠正
+// 此处负责运行期响应式（resize）与首屏后纠正。访客可在运行期切换壁纸模式
+// （setting-utils 的 applyBannerDisplay 会重写 data-banner-display 并重算延伸），
+// 因此每次按 <html data-banner-display> 现场判定模式，而非用模块加载时的快照
 function refreshBannerExtend(): void {
-  const offset = calcBannerHeightExtend(window.innerHeight, bannerExtendHeight);
+  const fullscreen =
+    document.documentElement.dataset.bannerDisplay === "fullscreen";
+  const offset = calcBannerHeightExtend(
+    window.innerHeight,
+    bannerExtendVh(fullscreen),
+  );
   document.documentElement.style.setProperty(
     "--banner-height-extend",
     `${offset}px`,

@@ -8,22 +8,19 @@ const className = Astro.props.class;
 ---
 
 <div id="navbar" class="z-50">
-  <!-- 顶部延伸层（始终 blur） -->
-  <div
-    class="absolute left-0 right-0 -top-8 h-8 bg-(--card-bg) transition"
-    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? 'navbar-blur' : ''"
-  >
-  </div>
+  <!-- 顶部延伸层（开高级材质时模糊，关闭时纯色卡片背景）：
+       navbar-blur 类恒挂载，由 body.navbar-blur-enabled 单一控制（访客/后台同源），
+       模糊与纯色样式见 components.css -->
+  <div class="navbar-blur absolute left-0 right-0 -top-8 h-8 transition"></div>
 
   <!-- 分离的模糊背景层：承载 backdrop-filter，避免 Backdrop Root 阻断子元素 -->
   <div
-    class="absolute left-0 right-0 top-0 h-[4.5rem] transition"
-    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? 'navbar-blur rounded-(--radius-large) !rounded-t-none' : 'bg-(--card-bg) rounded-(--radius-large) !rounded-t-none'"
+    class="navbar-blur absolute left-0 right-0 top-0 h-[4.5rem] rounded-(--radius-large) !rounded-t-none transition"
     style="max-width: var(--page-width); margin: 0 auto;"
   >
   </div>
 
-  <!-- 内容层：无 backdrop-filter，z-index 高于模糊层；
+  <!-- 内容层：无 backdrop-filter，z-index 高于模糊层，背景透明（露下层模糊/纯色）；
        id="navbar-card" 供欢迎弹窗等按导航栏卡片实际边缘（max-w 居中后）对齐 -->
   <div
     id="navbar-card"
@@ -31,7 +28,6 @@ const className = Astro.props.class;
       className,
       "relative z-10 mx-auto flex h-[4.5rem] max-w-(--page-width) items-center justify-between px-4 rounded-(--radius-large) !rounded-t-none",
     ]}
-    th:classappend="${theme.config?.style?.styleSwitches?.navbar_blur} ? '!bg-transparent' : 'bg-(--card-bg)'"
   >
     <!-- 首页链接：可见文本即站点标题，作为天然可访问名；
          不设 aria-label，避免与可见文本不一致触发 WCAG 2.5.3 Label in Name 违规 -->
@@ -121,9 +117,10 @@ const className = Astro.props.class;
 
     <div class="flex items-center">
       <Search client:only="svelte" />
-      <!-- 面板切换不再使用内联 onclick（CSP 友好），由 public/assets/navbar.js 的 document 级事件委托统一处理 -->
+      <!-- 面板切换不再使用内联 onclick（CSP 友好），由 public/assets/navbar.js 的 document 级事件委托统一处理。
+           入口可见性：总开关开启且任一分区可用（主题色相/文章布局/卡片样式/壁纸模式/壁纸设置/透明设置）；总开关关闭则入口隐藏 -->
       <button
-        th:unless="${theme.config?.style?.themeColor?.fixed}"
+        th:if="${theme.config?.style?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.style?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.transparent != false))}"
         th:aria-label="#{nav.displaySettings}"
         aria-label="Display Settings"
         class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90"

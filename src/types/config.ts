@@ -27,6 +27,26 @@ export interface MobileMenuConfig {
   style?: "accordion" | "drawer";
   /** 固定导航栏：开启后桌面端导航栏始终固定在顶部，滚动时不自动收起（移动端默认始终固定） */
   navbarFixed?: boolean;
+  /** 访客样式切换 */
+  visitorStyle?: VisitorStyleConfig;
+}
+
+/** 访客样式切换：控制显示设置面板中访客可自助切换的项，缺省视为开启 */
+export interface VisitorStyleConfig {
+  /** 总开关：关闭后不显示任何样式切换开关 */
+  enable?: boolean;
+  /** 主题色相切换 */
+  hue?: boolean;
+  /** 文章布局（列表/网格）切换 */
+  postListLayout?: boolean;
+  /** 卡片样式（悬浮效果/高级材质/瀑布流）切换 */
+  cardStyle?: boolean;
+  /** 壁纸模式（纯色背景/横幅/全屏/全屏透明）切换 */
+  wallpaperMode?: boolean;
+  /** 壁纸设置（横幅/全屏下的波浪开关）切换 */
+  wallpaperSettings?: boolean;
+  /** 透明设置（透明度/模糊度/卡片透明度）调节，仅全屏透明模式下显示 */
+  transparent?: boolean;
 }
 
 /** 欢迎弹窗配置 */
@@ -45,7 +65,6 @@ export interface WelcomePopupConfig {
 
 export interface ThemeColor {
   hue: number;
-  fixed: boolean;
 }
 
 /** Banner 布局：仅显示模式切换 + 全屏透明模式的透明度/模糊设置 */

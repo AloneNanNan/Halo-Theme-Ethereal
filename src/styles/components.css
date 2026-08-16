@@ -165,6 +165,21 @@
     display: none;
   }
 
+  /* 主内容面板顶部位置（原 MainGridLayout th:style 内联，改 CSS 驱动以支持
+     访客运行期切换壁纸模式）：无横幅（disabled/transparent）→ 贴顶；横幅/全屏
+     （enable-banner）→ 交叠 banner 底边（--panel-overlap） */
+  #main-panel-wrapper {
+    top: var(--no-banner-panel-top);
+  }
+
+  #main-grid {
+    min-height: calc(100vh - var(--no-banner-panel-top));
+  }
+
+  .enable-banner #main-grid {
+    min-height: calc(100vh - var(--banner-height) + var(--panel-overlap));
+  }
+
   .enable-banner #main-panel-wrapper {
     top: calc(var(--banner-height) - var(--panel-overlap));
   }
@@ -197,6 +212,33 @@
   html.home-switch #main-panel-wrapper {
     transition: top var(--dur-banner, 700ms)
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+  }
+
+  /* 布局/瀑布流切换：旧内容出场动画（下滑淡出，与 Swup 退场同方向），
+     出场结束后由 setting-utils.ts 挂 content-entrance-animating 播放入场动画，
+     形成完整的出场→入场切换。退出时长用 --dur-swup、延迟归零
+     （覆盖 transition.css 里 #content-wrapper 的入场错峰延迟） */
+  #content-wrapper.content-exit-animating {
+    animation: content-exit var(--dur-swup, 200ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))
+      forwards;
+    animation-delay: 0ms;
+  }
+  @keyframes content-exit {
+    to {
+      opacity: 0;
+      translate: 0 2rem;
+    }
+  }
+
+  /* 布局/瀑布流切换入场：与页面入场（.onload-animation 的 fade-in-up）同款
+     动画与错峰延迟，入场结束后由 setting-utils.ts 摘除类（不用 onload-animation
+     本类，避免被 app.ts 的 animationend 委托在同一次事件里误删） */
+  #content-wrapper.content-entrance-animating {
+    opacity: 0;
+    animation: var(--dur-entry, 300ms) fade-in-up;
+    animation-fill-mode: forwards;
+    animation-delay: min(var(--content-delay), var(--dur-entry-max, 400ms));
   }
 
   /* 波浪位置完全由 CSS 驱动：
@@ -250,6 +292,12 @@
     translate: 0 0;
   }
 
+  /* banner 媒体容器恒渲染（原 th:if + th:style 内联 top，改 CSS 驱动以支持
+     访客运行期切换壁纸模式）；disabled 整体隐藏、transparent 由固定定位覆写 */
+  #banner-wrapper {
+    top: calc(-1 * var(--banner-height-extend));
+  }
+
   .enable-banner #banner-wrapper {
     @apply h-(--banner-height-home);
   }
@@ -276,7 +324,8 @@
 
   /* 全屏模式首页：向下滚动指示箭头（点击平滑滚动到内容区）。
      独立于 #banner-overlay 渲染，故不受 bannerText.enable 影响；
-     仅全屏模式首页显示（th:if fullscreen + body.is-home 门控），
+     仅全屏模式首页显示（html[data-banner-display=fullscreen] + body.is-home 门控，
+     非全屏模式由 html:not([data-banner-display=fullscreen]) 隐藏，原 th:if 移除），
      非首页由 body:not(.is-home) 隐藏，避免换页后产生不可见热区 */
   #scroll-down-indicator {
     position: absolute;
@@ -323,6 +372,50 @@
     50% {
       transform: translateY(8px);
     }
+  }
+
+  /* ── 访客壁纸模式切换支持 ──
+     #banner-wrapper 已去掉 th:if 恒渲染，显隐/定位全部由 html[data-banner-display]
+     门控，访客运行期切换模式无需重建 DOM。disabled：横幅整体隐藏（含署名/箭头）；
+     波浪仅横幅/全屏显示，透明模式与访客关闭（body.wave-disabled）亦隐藏 */
+  html[data-banner-display="disabled"] #banner-wrapper,
+  html[data-banner-display="disabled"] #banner-credit,
+  html[data-banner-display="disabled"] #scroll-down-indicator,
+  html[data-banner-display="disabled"] #wave-container,
+  html[data-banner-display="transparent"] #wave-container,
+  body.wave-disabled #wave-container {
+    display: none !important;
+  }
+
+  /* 首页壁纸标题访客关闭：隐藏 banner 标题/副标题层（body.banner-title-disabled） */
+  body.banner-title-disabled #banner-overlay {
+    display: none !important;
+  }
+
+  /* 向下滚动箭头仅全屏模式显示（原 th:if fullscreen，改 CSS 门控） */
+  html:not([data-banner-display="fullscreen"]) #scroll-down-indicator {
+    display: none;
+  }
+
+  /* 目录仅在横幅/全屏模式隐藏（原服务端 bannerHasMedia 的 toc-hide，改 CSS 门控） */
+  html[data-banner-display="banner"] #toc-wrapper,
+  html[data-banner-display="fullscreen"] #toc-wrapper {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* 壁纸模式切换过渡：panel top / grid min-height·translate 随模式变化平滑过渡
+     （复用 --dur-banner）。由 applyBannerDisplay 临时加 html.banner-mode-transitioning
+     启用，过渡结束后移除恢复默认 */
+  html.banner-mode-transitioning #main-panel-wrapper,
+  html.banner-mode-transitioning #main-grid {
+    transition:
+      top var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      min-height var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      translate var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
   /* ── 全屏透明模式（displayMode == 'transparent'）──
@@ -486,7 +579,10 @@
     text-decoration-color: var(--link-active);
   }
 
-  .navbar-blur {
+  /* 高级材质开启：导航栏模糊（同 submenu-panel / floating-btn，由
+     body.navbar-blur-enabled 单一控制——后台关闭或访客关闭都会移除该 class，
+     保证菜单栏与二级面板/悬浮按钮行为一致） */
+  body.navbar-blur-enabled .navbar-blur {
     transition: none !important;
     background-color: rgb(255 255 255 / 0.62) !important;
     -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
@@ -495,12 +591,17 @@
     border-bottom: 1px solid rgb(0 0 0 / 0.06);
   }
 
-  :root.dark .navbar-blur {
+  :root.dark body.navbar-blur-enabled .navbar-blur {
     background-color: rgb(0 0 0 / 0.65) !important;
     -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
     backdrop-filter: saturate(180%) blur(20px) !important;
     box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.2);
     border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  /* 高级材质关闭：navbar-blur 类恒挂载，退回纯色卡片背景 */
+  body:not(.navbar-blur-enabled) .navbar-blur {
+    background-color: var(--card-bg) !important;
   }
 
   .submenu-panel {

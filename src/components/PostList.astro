@@ -34,6 +34,13 @@ const { pagination = "posts" } = Astro.props;
 </div>
 <Pagination context={pagination} class="mb-4 onload-animation" />
 
+<!-- 访客布局覆盖：同步脚本，须在瀑布流脚本之前执行（先换类再排瀑布流），
+     Swup 换页由 SwupScriptsPlugin 按序重执行，见 visitor-post-layout.js 头注释。
+     is:inline 必须显式声明：仅 src 无其他属性的 script 会被 Astro 当模块打包而丢弃 -->
+<script
+  is:inline
+  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/visitor-post-layout.js?v=${ASSET_VERSION}`}
+></script>
 <!-- 瀑布流（Masonry）布局脚本：仅 grid + masonry 时启用，见 post-list-layout.js -->
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/post-list-layout.js?v=${ASSET_VERSION}`}

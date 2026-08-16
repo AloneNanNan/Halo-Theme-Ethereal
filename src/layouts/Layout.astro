@@ -47,6 +47,27 @@ const i18nInlineScript = `<script th:inline="javascript">
     "theme.light": \`[(#{theme.light})]\`,
     "theme.resetDefault": \`[(#{theme.resetDefault})]\`,
     "theme.system": \`[(#{theme.system})]\`,
+    "display.layout": \`[(#{display.layout})]\`,
+    "display.tabAppearance": \`[(#{display.tabAppearance})]\`,
+    "display.tabWallpaper": \`[(#{display.tabWallpaper})]\`,
+    "display.layoutList": \`[(#{display.layoutList})]\`,
+    "display.layoutGrid": \`[(#{display.layoutGrid})]\`,
+    "display.cardStyle": \`[(#{display.cardStyle})]\`,
+    "display.cardHoverLift": \`[(#{display.cardHoverLift})]\`,
+    "display.navbarBlur": \`[(#{display.navbarBlur})]\`,
+    "display.masonry": \`[(#{display.masonry})]\`,
+    "display.wallpaper": \`[(#{display.wallpaper})]\`,
+    "display.wallpaperOpacity": \`[(#{display.wallpaperOpacity})]\`,
+    "display.wallpaperBlur": \`[(#{display.wallpaperBlur})]\`,
+    "display.wallpaperCardAlpha": \`[(#{display.wallpaperCardAlpha})]\`,
+    "display.wallpaperMode": \`[(#{display.wallpaperMode})]\`,
+    "display.wallpaperModeDisabled": \`[(#{display.wallpaperModeDisabled})]\`,
+    "display.wallpaperModeBanner": \`[(#{display.wallpaperModeBanner})]\`,
+    "display.wallpaperModeFullscreen": \`[(#{display.wallpaperModeFullscreen})]\`,
+    "display.wallpaperModeTransparent": \`[(#{display.wallpaperModeTransparent})]\`,
+    "display.wallpaperSettings": \`[(#{display.wallpaperSettings})]\`,
+    "display.bannerTitle": \`[(#{display.bannerTitle})]\`,
+    "display.wave": \`[(#{display.wave})]\`,
     "nav.lightDark": \`[(#{nav.lightDark})]\`,
     "widget.music.noPlaying": \`[(#{widget.music.noPlaying})]\`,
     "widget.music.lyrics": \`[(#{widget.music.lyrics})]\`,
@@ -81,7 +102,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 <html
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
-  th:data-hue-fixed="${theme.config?.style?.themeColor?.fixed}"
+  th:data-hue-fixed="${theme.config?.style?.mobileMenu?.visitorStyle?.enable == false or theme.config?.style?.mobileMenu?.visitorStyle?.hue == false}"
   th:data-navbar-fixed="${theme.config?.style?.mobileMenu?.navbarFixed}"
   th:data-theme-anim-style="${theme.config?.style?.colorScheme?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
@@ -310,6 +331,113 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     data-overlayscrollbars-initialize
   >
     <ConfigCarrier />
+    <!-- 访客样式覆盖启动脚本：紧跟 ConfigCarrier（body 首元素），在可见内容
+         解析前应用 body class 与壁纸变量，无 FOUC。body 不被 Swup 替换，
+         仅需首载执行一次；文章布局覆盖见 visitor-post-layout.js。
+         开关关闭时忽略并清理对应 localStorage（与 __eecs 语义一致）。 -->
+    <script is:inline>
+      (function () {
+        var carrier = document.getElementById("config-carrier");
+        if (!carrier) return;
+        var d = carrier.dataset;
+        var on = function (value) {
+          return value !== "false";
+        };
+        var enable = on(d.visitorEnable);
+        var body = document.body;
+
+        // 卡片样式：悬浮效果 / 高级材质
+        if (enable && on(d.visitorCardStyle)) {
+          var lift = localStorage.getItem("cardHoverLift");
+          if (lift != null) {
+            body.classList.toggle("card-hover-lift-enabled", lift === "true");
+          }
+          var blur = localStorage.getItem("navbarBlur");
+          if (blur != null) {
+            body.classList.toggle("navbar-blur-enabled", blur === "true");
+          }
+        } else {
+          localStorage.removeItem("cardHoverLift");
+          localStorage.removeItem("navbarBlur");
+        }
+
+        // 透明设置（全屏透明模式）：覆盖 body 内联变量
+        if (enable && on(d.visitorTransparent)) {
+          var num = function (key) {
+            var n = parseFloat(localStorage.getItem(key) || "");
+            return isNaN(n) ? null : n;
+          };
+          var opacity = num("wallpaperOpacity");
+          var wBlur = num("wallpaperBlur");
+          var alpha = num("wallpaperCardAlpha");
+          if (opacity != null) {
+            body.style.setProperty(
+              "--transparent-wallpaper-opacity",
+              String(opacity),
+            );
+          }
+          if (wBlur != null) {
+            body.style.setProperty(
+              "--transparent-wallpaper-blur",
+              wBlur + "px",
+            );
+          }
+          if (alpha != null) {
+            body.style.setProperty("--transparent-card-alpha", String(alpha));
+          }
+        } else {
+          localStorage.removeItem("wallpaperOpacity");
+          localStorage.removeItem("wallpaperBlur");
+          localStorage.removeItem("wallpaperCardAlpha");
+        }
+
+        // 壁纸模式访客覆盖：写 html[data-banner-display] + 切 body.enable-banner，
+        // 并重算延伸像素（与 constants.ts 的 calcBannerHeightExtend 同式：
+        // extendVh 对应 bannerExtendVh，全屏 65 / 横幅 30；%4 对齐对应
+        // BANNER_EXTEND_ROUNDING，勿硬编码到别处）。内容解析前生效无 FOUC
+        if (enable && on(d.visitorWallpaperMode)) {
+          var bannerModes = ["disabled", "banner", "fullscreen", "transparent"];
+          var mode = localStorage.getItem("bannerDisplay");
+          if (bannerModes.indexOf(mode) === -1) {
+            mode = d.bannerDisplayDefault || "banner";
+          }
+          var extendVh = mode === "fullscreen" ? 65 : 30;
+          var offset = Math.floor(window.innerHeight * (extendVh / 100));
+          offset = offset - (offset % 4);
+          document.documentElement.setAttribute("data-banner-display", mode);
+          document.documentElement.style.setProperty(
+            "--banner-height-extend",
+            offset + "px",
+          );
+          body.classList.toggle(
+            "enable-banner",
+            mode === "banner" || mode === "fullscreen",
+          );
+        } else {
+          localStorage.removeItem("bannerDisplay");
+        }
+
+        // 壁纸设置访客覆盖（波浪 + 首页壁纸标题）：关闭时给 body 加对应
+        // 隐藏类（CSS 门控）；开启/缺省时由后台默认决定
+        if (enable && on(d.visitorWallpaperSettings)) {
+          var waveDefault = d.waveDefault !== "false";
+          var waveStored = localStorage.getItem("bannerWave");
+          var waveOn = waveStored == null ? waveDefault : waveStored === "true";
+          if (!waveOn) body.classList.add("wave-disabled");
+
+          var bannerTitleDefault = d.bannerTitleDefault !== "false";
+          var bannerTitleStored = localStorage.getItem("bannerTitle");
+          var bannerTitleOn =
+            bannerTitleStored == null
+              ? bannerTitleDefault
+              : bannerTitleStored === "true";
+          if (!bannerTitleOn) body.classList.add("banner-title-disabled");
+        } else {
+          localStorage.removeItem("bannerWave");
+          localStorage.removeItem("bannerTitle");
+        }
+      })();
+    </script>
     <slot />
     <WaveEffect />
     <!-- 欢迎弹窗：置于 Swup 容器之外，换页不被替换销毁，弹窗逻辑仅首载执行一次 -->
