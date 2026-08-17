@@ -113,9 +113,19 @@
     @apply before:mx-1.5 before:text-sm before:font-medium before:text-(--meta-divider) before:content-['/'];
   }
 
-  .toc-hide,
-  .toc-not-ready {
+  .toc-hide {
     @apply pointer-events-none opacity-0;
+  }
+
+  /* 换页期间隐藏目录（两栏 #toc-wrapper + 三栏右侧边栏 TOC）：门控挂在
+     <html> 的 toc-not-ready 类上而非容器自身——Swup 换页会替换
+     #toc-container / #right-sidebar 容器，加在旧节点上的类随旧节点销毁，
+     新节点无类导致换页期间目录提前显示；<html> 不被 Swup 替换，
+     标记跨换页存活（visit:start 加、visit:end 移除，见 app.ts） */
+  html.toc-not-ready #toc-wrapper,
+  html.toc-not-ready #right-sidebar table-of-contents {
+    pointer-events: none;
+    opacity: 0;
   }
 
   #toc-inner-wrapper {

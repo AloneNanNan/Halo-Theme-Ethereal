@@ -86,7 +86,19 @@ export default defineConfig({
       // the default value `transition-` cause transition delay
       // when the Tailwind class `transition-all` is used
       containers: ["#swup-container", "#toc-container", "#right-sidebar"],
-      smoothScrolling: true,
+      // 跨页平滑滚动由后台开关 style.styleSwitches.page_transition_scroll 控制
+      // （默认关闭=瞬时）。构建期保持插件启用，app.ts 的 visit:start 钩子按
+      // 配置覆盖 visit.scroll.animate 实现开/关，无需重建主题。
+      // 注：@swup/astro 类型声明为 boolean，但运行时会透传给 SwupScrollPlugin
+      // 选项对象（enabledPlugins 的 options === true ? {} : options 分支），
+      // 故此处需绕过类型限制
+      smoothScrolling: /** @type {any} */ ({
+        animateScroll: {
+          betweenPages: true,
+          samePageWithHash: true,
+          samePage: true,
+        },
+      }),
       cache: false, // 禁用缓存，避免友链页面内容不完整
       // I25：删除 preload——cache:false 下 @swup/astro 强制禁用 preload（死配置），
       // 保留会误导未来误启用（每 hover = 整页 HTML 拉取，成为带宽放大面）

@@ -37,7 +37,6 @@ const className = Astro.props.class ?? "";
   class TableOfContents extends HTMLElement {
     tocEl: HTMLElement | null = null;
     visibleClass = "visible";
-    observer?: IntersectionObserver;
     mutationObserver?: MutationObserver;
     scrollHandler?: () => void;
     resizeHandler?: () => void;
@@ -59,7 +58,6 @@ const className = Astro.props.class ?? "";
     }
 
     disconnectedCallback() {
-      this.observer?.disconnect();
       this.mutationObserver?.disconnect();
       this.removeWindowListeners();
       this.tocEl?.removeEventListener("click", this.handleAnchorClick);
@@ -78,7 +76,6 @@ const className = Astro.props.class ?? "";
     };
 
     reset() {
-      this.observer?.disconnect();
       this.mutationObserver?.disconnect();
       this.removeWindowListeners();
       this.tocEl?.removeEventListener("click", this.handleAnchorClick);
@@ -156,6 +153,10 @@ const className = Astro.props.class ?? "";
       this.tocEl.addEventListener("click", this.handleAnchorClick, {
         capture: true,
       });
+      // 条目先追加到 DocumentFragment，最后一次性 insertBefore：避免逐条
+      // 插入（每次 childList 变化都会使布局失效，长文换页后 TOC 初始化时
+      // 反复触发整页重排——实测 visit:end 后 300ms 级卡顿来源）
+      const fragment = document.createDocumentFragment();
       this.headings.forEach((heading, index) => {
         if (!heading.id) {
           heading.id = `heading-${index}`;
@@ -188,32 +189,39 @@ const className = Astro.props.class ?? "";
         if (titleEl) {
           titleEl.textContent = title;
         }
-        this.insertBefore(link, this.activeIndicator);
+        fragment.appendChild(link);
         this.tocEntries.push(link);
       });
+      this.insertBefore(fragment, this.activeIndicator);
 
-      // I23：用 IntersectionObserver 驱动高亮更新（声明未用的 observer 真正实例化），
-      // scroll 降为 rAF 节流兜底（IO 不触发/不支持的场景），消除每 tick 多次布局读取
-      this.observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((entry) => entry.isIntersecting)) {
-            this.updateActiveByScroll();
-          }
-        },
-        { rootMargin: "-96px 0px 0px 0px" },
-      );
-      this.headings.forEach((heading) => this.observer?.observe(heading));
-
+      // 高亮更新由 scroll/resize 的 rAF 节流驱动（currentHeadingIndex 仅读
+      // getBoundingClientRect，无样式写交错时读取不强制重排——layout thrash
+      // 根源是「写 class → 读 rect」交替，已由 toggleActiveHeading 先读后写
+      // 消除）。不引入 IntersectionObserver 快照：isIntersecting 是「与视口
+      // 相交」而非「顶边越过 96px 线」，集合取 max 会指向视口底部标题而非
+      // 阅读区顶部标题，与原 currentHeadingIndex 语义不等价（I23 曾引入，
+      // 已回退）
       let scrollTicking = false;
       this.scrollHandler = () => {
         if (scrollTicking) return;
         scrollTicking = true;
         requestAnimationFrame(() => {
           scrollTicking = false;
+          // 换页期间（html.toc-not-ready）目录被 CSS 隐藏，跳过高亮计算：
+          // 平滑回顶滚动时每帧读 rect + 写 class 纯属浪费（不可见），
+          // 显示后（类移除）自动恢复
+          if (document.documentElement.classList.contains("toc-not-ready")) {
+            return;
+          }
           this.updateActiveByScroll();
         });
       };
-      this.resizeHandler = () => this.updateActiveByScroll();
+      this.resizeHandler = () => {
+        if (document.documentElement.classList.contains("toc-not-ready")) {
+          return;
+        }
+        this.updateActiveByScroll();
+      };
       window.addEventListener("scroll", this.scrollHandler, { passive: true });
       window.addEventListener("resize", this.resizeHandler);
       this.updateActiveByScroll();
@@ -230,18 +238,21 @@ const className = Astro.props.class ?? "";
     toggleActiveHeading() {
       let min = this.active.length;
       let max = -1;
+      // 先只遍历 active 数组计算 min/max（不碰 DOM），再统一读一次布局、
+      // 最后写入 class/style：避免「写 class → 读 rect → 写 style」的
+      // 写-读交错强制重排（单帧内仅一次布局计算）
       for (let i = 0; i < this.active.length; i++) {
         if (this.active[i]) {
-          this.tocEntries[i]?.classList.add(this.visibleClass);
           min = Math.min(min, i);
           max = Math.max(max, i);
-        } else {
-          this.tocEntries[i]?.classList.remove(this.visibleClass);
         }
       }
 
       if (min > max || !this.tocEl || !this.activeIndicator) {
         this.activeIndicator?.setAttribute("style", "opacity: 0");
+        for (let i = 0; i < this.active.length; i++) {
+          this.tocEntries[i]?.classList.remove(this.visibleClass);
+        }
         return;
       }
 
@@ -254,6 +265,9 @@ const className = Astro.props.class ?? "";
         "style",
         `top: ${top}px; height: ${bottom - top}px`,
       );
+      for (let i = 0; i < this.active.length; i++) {
+        this.tocEntries[i]?.classList.toggle(this.visibleClass, this.active[i]);
+      }
     }
 
     scrollToActiveHeading() {
@@ -266,17 +280,33 @@ const className = Astro.props.class ?? "";
       const topmost = activeHeading[0];
       const bottommost = activeHeading[activeHeading.length - 1];
       const tocHeight = this.tocEl.clientHeight;
-      const top =
-        bottommost.getBoundingClientRect().bottom -
-          topmost.getBoundingClientRect().top <
-        0.9 * tocHeight
-          ? topmost.offsetTop - 32
-          : bottommost.offsetTop - tocHeight * 0.8;
+      const scrollTop = this.tocEl.scrollTop;
+      // 统一坐标系：以滚动容器 tocEl 为基准（rect 差值），不再混用 offsetTop
+      // （相对最近 positioned 祖先，即 table-of-contents）与 scrollTop（相对
+      // tocEl）——两者隔着 h-8 spacer 等元素，混用依赖巧合的 32px 才成立
+      const tocTop = this.tocEl.getBoundingClientRect().top;
+      const topOffset =
+        topmost.getBoundingClientRect().top - tocTop + scrollTop;
+      const bottomOffset =
+        bottommost.getBoundingClientRect().bottom - tocTop + scrollTop;
+      // 已在可视区内（含 32px 内边距容差）则跳过：避免快速滚动时每个
+      // crossing 都 scrollTo 触发写布局，仅在越出可视区时定位
+      if (
+        topOffset >= scrollTop + 32 &&
+        bottomOffset <= scrollTop + tocHeight - 32
+      ) {
+        return;
+      }
 
+      // 仅 active 变化时（update 只在 dirty 后调用）一次性定位，不用 smooth：
+      // 平滑滚动会持续触发 scroll 事件并放大重排，改为直接落位
+      const top =
+        bottomOffset - topOffset < 0.9 * tocHeight
+          ? topOffset - 32
+          : bottomOffset - tocHeight * 0.8;
       this.tocEl.scrollTo({
         top,
         left: 0,
-        behavior: "smooth",
       });
     }
 
@@ -318,13 +348,18 @@ const className = Astro.props.class ?? "";
       const activeIndex = this.currentHeadingIndex();
       if (activeIndex < 0) return;
 
-      this.active = this.tocEntries.map((_, index) => index === activeIndex);
+      const active = this.tocEntries.map((_, index) => index === activeIndex);
+      // dirty 检查：高亮未变化时跳过 indicator 定位/滚动，消除每 tick 布局读取
+      if (active.every((value, index) => value === this.active[index])) {
+        return;
+      }
       if (
         this.anchorNavTarget &&
         this.anchorNavTarget.getBoundingClientRect().top <= 100
       ) {
         this.anchorNavTarget = null;
       }
+      this.active = active;
       this.update();
     };
   }
