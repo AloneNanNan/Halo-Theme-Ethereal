@@ -1,3 +1,210 @@
+// 友链页脚本合并（构建产物：public/assets/links.bundle.js，源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
+// 由 requirements / collapse / copy / link-apply / random-visit 合并，各 IIFE 守卫独立保留；
+// link-apply 与 random-visit 的原 th:if 门控移除，改由内部守卫（元素不存在即不绑定/不执行）
+
+// 渲染友链须知和免责申明列表
+(function () {
+  function render() {
+    var lists = document.querySelectorAll(
+      ".requirements-list, .disclaimer-list",
+    );
+    lists.forEach(function (list) {
+      if (list.dataset.rendered) return;
+      list.dataset.rendered = "true";
+      var text = list.getAttribute("data-text");
+      if (text) {
+        var lines = text.split("\n");
+        lines.forEach(function (line) {
+          if (line.trim()) {
+            var li = document.createElement("li");
+            li.textContent = line.trim();
+            list.appendChild(li);
+          }
+        });
+      }
+    });
+  }
+
+  // 初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", render);
+  } else {
+    render();
+  }
+
+  // 换页后重新渲染由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+})();
+
+// 折叠面板交互（平滑展开/收起动画）
+(function () {
+  function init() {
+    document.querySelectorAll(".collapse-content").forEach(function (c) {
+      if (c.dataset.transitionBound) return;
+      c.dataset.transitionBound = "true";
+      c.style.transition = "max-height 0.35s ease";
+      c.addEventListener("transitionend", function (e) {
+        if (e.propertyName === "max-height") {
+          if (c.classList.contains("open")) {
+            c.style.overflow = "visible";
+            c.style.maxHeight = "";
+          }
+        }
+      });
+    });
+
+    var headers = document.querySelectorAll("[data-collapse-target]");
+    headers.forEach(function (header) {
+      if (header.dataset.collapseBound) return;
+      header.dataset.collapseBound = "true";
+
+      header.addEventListener("click", function () {
+        var targetId = header.getAttribute("data-collapse-target");
+        var content = document.getElementById(targetId);
+        var icon = header.querySelector(".collapse-icon");
+        if (!content) return;
+
+        var isOpen = content.classList.contains("open");
+
+        document
+          .querySelectorAll(".collapse-content.open")
+          .forEach(function (c) {
+            if (c !== content) {
+              closePanel(c);
+              var otherIcon = (
+                c.parentElement || c.closest(".collapse-item")
+              ).querySelector(".collapse-icon");
+              if (otherIcon) otherIcon.classList.remove("is-expanded");
+            }
+          });
+
+        if (!isOpen) {
+          openPanel(content, icon);
+        } else {
+          closePanel(content, icon);
+        }
+      });
+    });
+
+    document.querySelectorAll(".collapse-content.open").forEach(function (c) {
+      c.style.maxHeight = c.scrollHeight + "px";
+      c.style.overflow = "visible";
+    });
+    document
+      .querySelectorAll(".collapse-content:not(.open)")
+      .forEach(function (c) {
+        c.style.maxHeight = "0px";
+        c.style.overflow = "hidden";
+      });
+  }
+
+  function openPanel(content, icon) {
+    content.style.overflow = "hidden";
+    content.classList.add("open");
+    content.style.maxHeight = content.scrollHeight + "px";
+    if (icon) icon.classList.add("is-expanded");
+  }
+
+  function closePanel(content, icon) {
+    var currentHeight = content.scrollHeight;
+    content.style.overflow = "hidden";
+    if (currentHeight <= 0) {
+      content.style.maxHeight = "0px";
+      content.classList.remove("open");
+      if (icon) icon.classList.remove("is-expanded");
+      return;
+    }
+    content.style.maxHeight = currentHeight + "px";
+    content.offsetHeight;
+    content.style.maxHeight = "0px";
+    content.classList.remove("open");
+    if (icon) icon.classList.remove("is-expanded");
+  }
+
+  // 初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  // Swup 页面切换后重新初始化
+  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+})();
+
+// 复制功能
+(function () {
+  function init() {
+    var buttons = document.querySelectorAll(".copy-btn");
+    buttons.forEach(function (btn) {
+      if (btn.dataset.copyBound) return;
+      btn.dataset.copyBound = "true";
+
+      btn.addEventListener("click", function () {
+        var text = btn.getAttribute("data-copy-text");
+        if (!text) {
+          var container = btn.closest(".flex");
+          if (container) {
+            var link = container.querySelector("a");
+            if (link) {
+              text = link.href || link.textContent;
+            }
+          }
+        }
+
+        if (text) {
+          text = text.trim();
+          var textSpan = btn.querySelector("span:last-child");
+          var iconSpan = btn.querySelector(
+            ".icon-\\[material-symbols--content-copy-outline-rounded\\]",
+          );
+          var originalText = textSpan ? textSpan.textContent : "";
+          var originalClasses = iconSpan ? iconSpan.className : "";
+
+          if (textSpan) textSpan.textContent = "已复制";
+          if (iconSpan)
+            iconSpan.className =
+              "icon-[material-symbols--check-rounded] text-sm";
+          btn.disabled = true;
+          btn.classList.add("text-(--primary)");
+
+          navigator.clipboard
+            .writeText(text)
+            .then(function () {
+              setTimeout(function () {
+                if (textSpan) textSpan.textContent = originalText;
+                if (iconSpan) iconSpan.className = originalClasses;
+                btn.disabled = false;
+                btn.classList.remove("text-(--primary)");
+              }, 2000);
+            })
+            .catch(function () {
+              console.warn("[Copy] Clipboard write failed");
+              setTimeout(function () {
+                if (textSpan) textSpan.textContent = originalText;
+                if (iconSpan) iconSpan.className = originalClasses;
+                btn.disabled = false;
+                btn.classList.remove("text-(--primary)");
+              }, 2000);
+            });
+        }
+      });
+    });
+  }
+
+  // 初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  // Swup 页面切换后重新初始化
+  // 换页后重新绑定由 SwupScriptsPlugin 重执行覆盖；
+  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+})();
+
 // 申请友链 - 模态框交互 + REST API 提交
 // 事件委托，兼容 Swup 无刷新切换；模态框 HTML 由 links 页面渲染
 (function () {
@@ -293,4 +500,99 @@
 
   // 首次加载时将模态框挂载到 body（换页场景由上方 astro:after-swap 覆盖）
   mountModalToBody();
+})();
+
+// 随机访问友链 - 从页面已渲染的友链卡片中随机选择
+// 事件委托，不受 Swup 无刷新切换影响
+// 点击后图标匀速旋转 1.5 秒再执行随机跳转，增加趣味性
+(function () {
+  // 只绑定一次：本脚本在 links 页面内（Swup 容器），每次进出该页都会被
+  // SwupScriptsPlugin 克隆重执行——不守卫则多个闭包各持独立 spinning 标志，
+  // 换页 N 次后一次点击会触发 N 个委托、打开 N 个随机链接。
+  if (window.__randomVisitBound) return;
+  window.__randomVisitBound = true;
+
+  var SPIN_DELAY = 1500; // 旋转等待时长（ms）
+  var spinning = false; // 防止重复点击
+
+  // 通过临时 <a> 元素点击，让外链跳转模态框拦截
+  function openViaAnchor(url) {
+    var a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // 停止旋转，恢复按钮
+  function stopSpin(btn) {
+    spinning = false;
+    btn.classList.remove("spinning");
+    var label = btn.querySelector(".random-visit-label");
+    if (label) label.textContent = "随机访问";
+  }
+
+  // 旋转动画：匀速慢转（1s/圈，由 CSS 默认值控制），到时执行跳转
+  function startSpin(btn, callback) {
+    btn.classList.add("spinning");
+    var label = btn.querySelector(".random-visit-label");
+    if (label) label.textContent = "抽取中...";
+    setTimeout(callback, SPIN_DELAY);
+  }
+
+  // 从页面已渲染的友链卡片中收集链接。
+  // 友链 <a> 带 data-link-group（分组显示名），与后台「随机访问分组」填写的名称一致，
+  // 避免 REST API group 参数（匹配 metadata.name）与显示名不匹配的问题。
+  function collectUrls(btn) {
+    var allowed = (btn.getAttribute("data-random-groups") || "").trim();
+    var groups = null;
+    if (allowed) {
+      groups = allowed
+        .split(/[\n,]/)
+        .map(function (g) {
+          return g.trim();
+        })
+        .filter(Boolean);
+    }
+
+    var urls = [];
+    var anchors = document.querySelectorAll("a[data-link-group]");
+    for (var i = 0; i < anchors.length; i++) {
+      var a = anchors[i];
+      if (!a.href) continue;
+      if (groups && groups.indexOf(a.getAttribute("data-link-group")) === -1) {
+        continue;
+      }
+      // 只收集 http/https 链接（a.href property 已解析为绝对 URL），
+      // javascript: 等危险 scheme 不进随机访问池
+      if (!/^https?:\/\//i.test(a.href)) continue;
+      urls.push(a.href);
+    }
+    return urls;
+  }
+
+  // 执行随机访问
+  function doRandomVisit(btn) {
+    var urls = collectUrls(btn);
+    if (urls.length === 0) {
+      alert("暂无可随机访问的友链");
+      stopSpin(btn);
+      return;
+    }
+    openViaAnchor(urls[Math.floor(Math.random() * urls.length)]);
+    stopSpin(btn);
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("#random-visit-btn");
+    if (!btn || spinning) return;
+
+    spinning = true;
+    startSpin(btn, function () {
+      doRandomVisit(btn);
+    });
+  });
 })();

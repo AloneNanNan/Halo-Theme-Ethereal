@@ -1,11 +1,17 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import fs from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 
 import { stripHtmlCommentsInDir } from "./scripts/strip-html-comments.mjs";
+import {
+  compileAssets,
+  copyVendorAssets,
+  compressAssetsInDir,
+} from "./scripts/build-assets.mjs";
 
 import Icons from "unplugin-icons/vite";
 import svelte from "@astrojs/svelte";
@@ -33,6 +39,37 @@ const stripHtmlComments = {
   },
 };
 
+// 经典脚本资产管线：
+//  - build:start：把 src/scripts/assets/*.ts 编译为 IIFE 经典脚本输出到 public/assets/
+//    （须先于 Astro 拷贝 public/，见 scripts/build-assets.mjs），并采集 public/assets
+//    全部 *.js 文件名作为 build:done 压缩白名单
+//  - build:done：压缩 outDir/assets/ 下由 public/ 拷贝来的经典脚本
+//    （只压缩白名单内的 public 产物，跳过 Astro/Vite 的 hashed module 产物）
+/** @type {import("astro").AstroIntegration} */
+const buildAssets = {
+  name: "build-assets",
+  hooks: {
+    "astro:build:start": async () => {
+      await compileAssets();
+      await copyVendorAssets();
+      const names = await fs.promises.readdir(
+        join(fileURLToPath(new URL("./public/assets/", import.meta.url))),
+      );
+      publicAssetJs = names.filter((f) => f.endsWith(".js"));
+    },
+    "astro:build:done": async ({ dir }) => {
+      await compressAssetsInDir(
+        join(fileURLToPath(dir), "assets"),
+        publicAssetJs,
+      );
+    },
+  },
+};
+
+// build:start 时从 public/assets 采集的经典脚本文件名，供 build:done 压缩白名单使用
+/** @type {string[]} */
+let publicAssetJs = [];
+
 export default defineConfig({
   base: "/themes/Ethereal",
   build: {
@@ -42,13 +79,28 @@ export default defineConfig({
   outDir: "./templates",
   integrations: [
     stripHtmlComments,
+    buildAssets,
     swup({
       theme: false,
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
       // the default value `transition-` cause transition delay
       // when the Tailwind class `transition-all` is used
       containers: ["#swup-container", "#toc-container", "#right-sidebar"],
-      smoothScrolling: true,
+      // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"）：app.ts 在
+      // content:scroll 接管并调用 window.scrollTo 原生平滑，插件的
+      // betweenPages 平滑（scrl JS 引擎）被跳过，不再参与跨页滚动。
+      // 保留 SwupScrollPlugin 是因为同页锚点（目录点击）的 samePageWithHash
+      // 平滑仍依赖它——此处保持插件启用与 animateScroll 对象配置不变。
+      // 注：@swup/astro 类型声明为 boolean，但运行时会透传给 SwupScrollPlugin
+      // 选项对象（enabledPlugins 的 options === true ? {} : options 分支），
+      // 故此处需绕过类型限制
+      smoothScrolling: /** @type {any} */ ({
+        animateScroll: {
+          betweenPages: true,
+          samePageWithHash: true,
+          samePage: true,
+        },
+      }),
       cache: false, // 禁用缓存，避免友链页面内容不完整
       // I25：删除 preload——cache:false 下 @swup/astro 强制禁用 preload（死配置），
       // 保留会误导未来误启用（每 hover = 整页 HTML 拉取，成为带宽放大面）

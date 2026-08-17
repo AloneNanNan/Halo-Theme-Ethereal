@@ -151,7 +151,14 @@ const className = Astro.props.class;
     </div>
 
     <NavMenuPanel />
-    <DisplaySettings client:only="svelte" />
+    <!-- 显示设置面板（I27）：与入口按钮同条件门控——总开关关闭或全部分区关闭时，
+         面板及其 client:only chunk 不随页面传输（th:if 包住组件输出，含 module script 标签） -->
+    <span
+      th:if="${theme.config?.style?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.style?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.transparent != false))}"
+      th:remove="tag"
+    >
+      <DisplaySettings client:only="svelte" />
+    </span>
   </div>
 </div>
 

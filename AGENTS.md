@@ -26,6 +26,20 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**。它先用 Astro �
 
 **重要：改完代码后运行的校验是 `pnpm astro check` 和 `pnpm build:only`。** 两类产物的位置不同：`astro build` 的 HTML 模板输出到 `templates/`；`pnpm package` 打出的发布 zip 输出到 `dist/`。两者都是构建生成、勿手动编辑——要改就改 `src/` 后重新构建。
 
+**经典脚本资产管线**（I27 引入，`astro.config.mjs` 的 `buildAssets` integration）：
+
+```
+src/scripts/assets/*.ts →(esbuild IIFE, build:start)→ public/assets/*.js
+src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
+→(astro 拷贝 public/)→ templates/assets/*.js →(esbuild 压缩, build:done)→ 产物
+```
+
+- **`src/scripts/assets/` 是全部经典脚本源码（含 `// @ts-nocheck` 的 legacy 脚本），`public/assets/` 是纯产物目录，勿手改**。legacy 脚本（wave/navbar/wishes/upvote/banner-* 等）迁入后统一 `.ts` 后缀（兼容 nodemon watch，esbuild 照常编译）。
+- `src/scripts/vendor/` 存放第三方 vendored 资产（如 qrcode.bundle.js UMD），构建期原样拷贝、不经过 esbuild 编译。
+- `_` 前缀文件（如 `_theme-config.ts`）是被 import 的共享模块，不是独立入口，esbuild 会内联进各入口。
+- 产物带 `/*__ETHEMEAL_MINIFIED__*/` 标记；build:done 只压缩白名单内 public 产物，不碰 Astro/Vite 的 hashed module 文件。
+- **nodemon 的 ext 不含 js 是有意的**：编译产物写入 public/ 不会触发重建（防编译→重建死循环）。不要给 nodemon.json 加 js；改脚本源码统一用 `.ts` 后缀。
+
 ## 目录结构速览
 
 - `src/pages/*.astro` — 页面模板（`post.astro`、`index.astro`、`category.astro` 等）
@@ -34,6 +48,8 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**。它先用 Astro �
 - `src/styles/*.css` — 全局样式与 CSS 变量（`variables.css` 定义主题色/圆角等）
 - `src/types/config.ts` — `theme.config` 的类型定义
 - `src/utils/*.ts` — 工具（`post-list-config.ts`、`image-suffix.ts`）
+- `src/scripts/assets/*.ts` — 经典脚本源码（全部脚本统一管理，esbuild 编译为 IIFE 输出到 `public/assets/`，见「构建与校验命令」）
+- `src/scripts/vendor/` — 第三方 vendored 资产（原样拷贝，不经编译）
 - `settings.yaml` — **后台主题设置表单**（改后台开关/设置项在这里）
 - `theme.yaml` — 主题元信息，**版本号唯一来源**（`version` 字段）。**禁止修改 `version` 字段**：版本号只能由发布流程手工提升，AI 不得改动，否则会造成线上主题版本错乱。
 - `i18n/` — 多语言文案
@@ -84,6 +100,13 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**。它先用 Astro �
 - `public/assets/visitor-post-layout.js`（同步，首帧换布局类）必须在 `public/assets/post-list-layout.js`（defer，瀑布流）**之前**，`PostList.astro` 中标签顺序保证；两者均由 SwupScriptsPlugin 按序重执行。
 - `post-list-layout.js` 暴露 `window.__postListRelayout`，访客换类后调用它触发瀑布流重排/复位。
 - `Layout.astro` body 起始处（`<ConfigCarrier />` 后）的 `is:inline` 脚本应用卡片/壁纸变量，仅在首载运行一次（body 不被 Swup 替换）。
+
+**脚本门控约定**（I27，改动脚本时同步检查）：
+
+- **文章页三件套**：`post-like.js` / `post-share.js` / `post-reward.js` 在 `post.astro` 各自按 `actionBar.like/share/reward` 子开关 `th:if` 门控；`qrcode.bundle.js` 不在模板引用，由 `post-share.js` 首次生成海报时经按钮 `data-qr-src` 动态注入（`window.__etherealQRState` 守卫，加载失败走 hasQR 退化）。
+- **banner 脚本**：`MainGridLayout.astro` 中 6 个 banner 脚本包在 `{isHomePage && <div th:with={bannerThWith()} th:remove="tag">}` 内，按 `mode == 'carousel'` / `isVideo` / `mobileActive` 精确门控——与 `#banner-wrapper` 的 `th:with` 同源表达式，新增模式时两处条件必须一致。
+- **friends/links 合并**：`friends.bundle.js`（4 脚本合并）在 `friends.astro` 以 `not #lists.isEmpty(allItems.items)` 门控（空列表不加载）；`links.bundle.js`（5 脚本合并）恒加载，link-apply/random-visit 的外部门控已移除，改由脚本内部元素存在性守卫承担（新增 links 功能时往 bundle 加 IIFE + 守卫）。
+- **`window.__themeConfig` 缓存契约**：`#theme-config` JSON 由首个消费脚本 parse 并写入 `window.__themeConfig`，其余脚本（含 public/ legacy 的 wave/banner-carousel/banner-src-switch、WelcomePopup 内联脚本）直接复用，不得各自重复 `JSON.parse`。
 
 **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处，缺一会回退到组件内的中文兜底。
 

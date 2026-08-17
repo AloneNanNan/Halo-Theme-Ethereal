@@ -5,6 +5,10 @@ dist/
 # generated types
 .astro/
 
+# 经典脚本编译产物（源码在 src/scripts/assets/ 与 src/scripts/vendor/，
+# 构建时由 build-assets integration 生成，见 AGENTS.md「经典脚本资产管线」）
+public/assets/*.js
+
 # dependencies
 node_modules/
 

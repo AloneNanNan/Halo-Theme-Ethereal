@@ -133,12 +133,22 @@ function bannerMediaVars(srcExpr: string, modeExpr: string): string {
  * （双实现，改动需两处一致，同 CDN_SUFFIX_RAW 约定）。
  */
 function bannerMobileVars(): string {
+  const mobileSrc = "theme.config?.base?.bannerStyle?.mobile?.src";
   return (
     "useMobileSrc=${theme.config?.base?.bannerStyle?.useMobileSrc == true}, " +
     "mobileMode=${theme.config?.base?.bannerStyle?.mobile?.mode ?: 'single'}, " +
-    "mobileSrc=${#strings.defaultString(theme.config?.base?.bannerStyle?.mobile?.src, '')}, " +
+    "mobileSrc=${#strings.defaultString(" +
+    mobileSrc +
+    ", '')}, " +
     // th:each / #lists.isEmpty 对 null 均按空处理，无需 ?: {} 空 Map 兜底
     "mobileImages=${theme.config?.base?.bannerStyle?.mobile?.images}, " +
+    // 移动端独立视频判定：供 MainGridLayout 的 banner-media.js 门控使用
+    // （桌面/移动可独立配置：桌面单图 + 移动视频时 mobileActive 为 true 但桌面 isVideo 为 false）
+    "mobileIsVideo=${mobileMode == 'single' and (" +
+    urlEndsWith(mobileSrc, ".mp4") +
+    " or " +
+    urlEndsWith(mobileSrc, ".webm") +
+    ")}, " +
     "mobileActive=${useMobileSrc and ((mobileMode == 'single' and !#strings.isEmpty(mobileSrc)) or (mobileMode == 'carousel' and !#lists.isEmpty(mobileImages)))}"
   );
 }

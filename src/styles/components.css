@@ -113,9 +113,19 @@
     @apply before:mx-1.5 before:text-sm before:font-medium before:text-(--meta-divider) before:content-['/'];
   }
 
-  .toc-hide,
-  .toc-not-ready {
+  .toc-hide {
     @apply pointer-events-none opacity-0;
+  }
+
+  /* 换页期间隐藏目录（两栏 #toc-wrapper + 三栏右侧边栏 TOC）：门控挂在
+     <html> 的 toc-not-ready 类上而非容器自身——Swup 换页会替换
+     #toc-container / #right-sidebar 容器，加在旧节点上的类随旧节点销毁，
+     新节点无类导致换页期间目录提前显示；<html> 不被 Swup 替换，
+     标记跨换页存活（visit:start 加、visit:end 移除，见 app.ts） */
+  html.toc-not-ready #toc-wrapper,
+  html.toc-not-ready #right-sidebar table-of-contents {
+    pointer-events: none;
+    opacity: 0;
   }
 
   #toc-inner-wrapper {
@@ -397,9 +407,12 @@
     display: none;
   }
 
-  /* 目录仅在横幅/全屏模式隐藏（原服务端 bannerHasMedia 的 toc-hide，改 CSS 门控） */
-  html[data-banner-display="banner"] #toc-wrapper,
-  html[data-banner-display="fullscreen"] #toc-wrapper {
+  /* 目录仅在横幅/全屏模式隐藏（原服务端 bannerHasMedia 的 toc-hide，改 CSS 门控）。
+     门控滚动感知：html:not(.toc-revealed) 表示视口仍在顶部横幅区（首帧默认隐藏
+     防 FOUC），滚动超过横幅高度后由 scroll-manager 加 .toc-revealed 解除隐藏；
+     disabled/transparent 模式无门控，目录恒显 */
+  html[data-banner-display="banner"]:not(.toc-revealed) #toc-wrapper,
+  html[data-banner-display="fullscreen"]:not(.toc-revealed) #toc-wrapper {
     pointer-events: none;
     opacity: 0;
   }
@@ -857,7 +870,7 @@
     }
   }
 
-  /* 点赞失败提示：upvote.js / post.bundle.js 失败回滚时临时添加该 class，1.2s 后由 JS 移除。
+  /* 点赞失败提示：upvote.js / post-like.js 失败回滚时临时添加该 class，1.2s 后由 JS 移除。
      抖动 + 红色，用于无文案提示（避免新增 i18n 键）；
      !important 用于压过按钮的 hover:text-(--primary)，且不依赖 Tailwind 类名扫描；
      颜色引用 variables.css 的 --upvote-error */

@@ -5,7 +5,7 @@ import { imageSuffixThWith, CDN_SUFFIX_PATTERNS } from "../utils/image-suffix";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
 // ASSET_VERSION 由 astro.config.mjs 构建期从 theme.yaml 注入（vite.define），
-// 用于替代原 `?v=${Date.now()}`——那会让浏览器每次访问都重新下载 156KB 的 post.bundle.js，
+// 用于替代原 `?v=${Date.now()}`——那会让浏览器每次访问都重新下载脚本（曾用于 156KB 的 post.bundle.js），
 // 击穿 CDN/浏览器缓存；改为随版本号变更是稳定的缓存指纹。
 ---
 
@@ -215,6 +215,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
               <button
                 id="post-share-btn"
                 th:if="${theme.config?.post?.actionBar?.share != false}"
+                data-qr-src={`${basePath}/assets/qrcode.bundle.js?v=${ASSET_VERSION}`}
                 type="button"
                 class="btn-regular group flex h-11 w-fit items-center justify-center rounded-xl px-4 text-sm font-bold active:scale-95"
                 aria-label="分享文章"
@@ -376,10 +377,21 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     />
   </div>
 
-  <!-- 操作栏脚本：仅在启用操作栏时加载（含打赏/点赞/分享），关闭时不应请求该 156KB 文件 -->
+  <!-- 操作栏脚本（I27）：拆分自原 post.bundle.js（155K，含 140K qrcode 库）。
+       三文件按子开关独立门控；qrcode.bundle.js 仅在首次生成分享海报时由
+       post-share.js 按需注入（见 post-share.js 的 loadQRCode），文章页默认负载
+       从 155K 降至 ~25K。 -->
   <script
-    th:if="${theme.config?.post?.actionBar?.enable != false}"
-    src={`${basePath}/assets/post.bundle.js?v=${ASSET_VERSION}`}
+    th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.like != false}"
+    src={`${basePath}/assets/post-like.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <script
+    th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.share != false}"
+    src={`${basePath}/assets/post-share.js?v=${ASSET_VERSION}`}
+    defer></script>
+  <script
+    th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.reward != false}"
+    src={`${basePath}/assets/post-reward.js?v=${ASSET_VERSION}`}
     defer></script>
   <script
     is:inline

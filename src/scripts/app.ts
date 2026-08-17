@@ -55,9 +55,21 @@ function initCustomScrollbar() {
         {
           scrollbars: {
             theme: "scrollbar-base scrollbar-auto py-1",
-            autoHide: "move",
+            autoHide: "scroll",
             autoHideDelay: 500,
             autoHideSuspend: false,
+          },
+          // 降低滚动/事件驱动的同步测量频率（默认 event: [33, 99]：滚动中 33ms
+          // 内即触发 update，OS 内部对 target 读尺寸 → 每帧强制重排）。放大首
+          // 延迟与间隔后，滚动时测量节流到 100ms/250ms 档，显著减少 layout
+          // thrash；其余字段保持库默认值
+          update: {
+            debounce: {
+              mutation: [0, 33],
+              resize: null,
+              event: [100, 250],
+              env: [222, 666, true],
+            },
           },
         },
       );
@@ -67,6 +79,16 @@ function initCustomScrollbar() {
     // "播放完成后再重放一次"（复现时间点即 overlayscrollbars 下载完成瞬间）。
     // 等 fade-in-up 全部结束再初始化——此时动画已被下方的一次性保护清理，
     // 移动不再触发重放；2s 兜底防动画异常卡住。等待期间原生滚动条正常工作。
+    // 挂载本身会触发一次全量重排（移动全部 body 子元素 + 尺寸测量，数百 ms），
+    // 用 requestIdleCallback 错峰到主线程空闲时执行；空闲回调不可用（Safari）
+    // 时退化为立即执行，行为与旧版一致
+    const runWhenIdle = (task: () => void): void => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(task, { timeout: 1500 });
+      } else {
+        task();
+      }
+    };
     const running = document
       .getAnimations()
       .filter(
@@ -78,10 +100,10 @@ function initCustomScrollbar() {
     if (running.length > 0) {
       void Promise.all(
         running.map((a) => a.finished.catch(() => undefined)),
-      ).then(mount);
-      setTimeout(mount, 2000);
+      ).then(() => runWhenIdle(mount));
+      setTimeout(() => runWhenIdle(mount), 2000);
     } else {
-      mount();
+      runWhenIdle(mount);
     }
   });
 }
@@ -258,20 +280,102 @@ function setupSwup() {
       import("../styles/music-player.css");
     }
   });
-  window.swup.hooks.on("visit:start", () => {
-    restoreOriginalHistoryStateHandlers();
-    // 标记会话内已发生换页（<html> 不被 Swup 替换，标记永久有效）：
-    // #right-sidebar 是 swup 容器，换页会换入带静态 onload-animation 类的新
-    // aside，transition.css 据此标记永久抑制其入场动画（首刷动画不受影响）。
-    document.documentElement.classList.add("swup-visited");
-    document.getElementById("page-height-extend")?.classList.remove("hidden");
-    document.getElementById("toc-wrapper")?.classList.add("toc-not-ready");
+  // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"，合成器驱动不占
+  // 主线程，无 scrl 引擎的每帧 JS 测量卡顿）。同页锚点（目录点击）平滑由
+  // samePageWithHash 独立控制，不受影响。
+  // TOC 恢复显示绑定「滚动真正结束」：长文从底部回顶的原生平滑可持续数百
+  // ms，晚于 visit:end + 200ms——若按 visit:end 移除 toc-not-ready，后半段
+  // 滚动中目录就已显示。滚动结束信号双通道：原生平滑派发 scrollend 事件、
+  // scrl 引擎派发 swup scroll:end（两者都监听，幂等 release）。
+  // needsScrollWait 仅对「从非顶部换页回顶」的场景置真；从顶部换页（零距离
+  // 短路无滚动结束信号）与 popstate 由 visit:end 直接移除
+  let needsScrollWait = false;
+  const releaseTocNotReady = () => {
+    document.documentElement.classList.remove("toc-not-ready");
+  };
+  window.swup.hooks.on("scroll:end", () => {
+    if (needsScrollWait) releaseTocNotReady();
   });
+  window.addEventListener("scrollend", () => {
+    if (needsScrollWait) releaseTocNotReady();
+  });
+
+  window.swup.hooks.on(
+    "visit:start",
+    (visit: {
+      scroll?: { animate?: boolean };
+      to?: { hash?: string };
+      history?: { popstate?: boolean };
+    }) => {
+      restoreOriginalHistoryStateHandlers();
+      // 标记会话内已发生换页（<html> 不被 Swup 替换，标记永久有效）：
+      // #right-sidebar 是 swup 容器，换页会换入带静态 onload-animation 类的新
+      // aside，transition.css 据此标记永久抑制其入场动画（首刷动画不受影响）。
+      document.documentElement.classList.add("swup-visited");
+      // 换页进行中：目录隐藏（CSS 门控 html.toc-not-ready，覆盖两栏/三栏）。
+      // 挂在 <html> 上而非容器类：Swup 换页会替换 #toc-container /
+      // #right-sidebar 容器，旧节点上的类随销毁，新节点无类会导致目录提前显示
+      document.documentElement.classList.add("toc-not-ready");
+      needsScrollWait =
+        !visit?.history?.popstate && !visit?.to?.hash && window.scrollY > 0;
+      // SwupScrollPlugin 在 before("visit:start")（priority -1）设置
+      // visit.scroll.animate，此处（默认 priority 0）在接管回顶滚动时覆盖为
+      // false，早于其 content:scroll 的 doScrollingBetweenPages 消费点。
+      // popstate / 带 hash 场景仍交由插件默认处理，不覆盖
+      if (!visit?.history?.popstate && !visit?.to?.hash && visit?.scroll) {
+        visit.scroll.animate = false;
+        // 原生滚动目标恒为 0，300vh 撑高防跳动无意义；且 visit:end
+        // 隐藏撑高时文档高度骤降 300vh 会触发整页大重排（换页完成后卡顿
+        // 来源）。跳过显示，visit:end 的隐藏随之变为无害 no-op
+        document.getElementById("page-height-extend")?.classList.add("hidden");
+      } else {
+        document
+          .getElementById("page-height-extend")
+          ?.classList.remove("hidden");
+      }
+    },
+  );
+  // 跨页回顶滚动接管 content:scroll，统一改用浏览器原生平滑滚动（behavior:
+  // "smooth"，合成器驱动不占主线程，无 scrl 引擎的每帧 JS 测量卡顿）：
+  // content:replace 换入新内容后布局仍 dirty，立即滚动会派发 scroll 事件
+  // → OverlayScrollbars 同步测量 → 强制整页重排（实测单帧 900ms）。延迟
+  // 双 rAF 让浏览器先完成新内容首次布局，滚动时测量命中缓存不触发重排。
+  // popstate / 带 hash 场景走插件默认逻辑（默认锚点滚动）。后注册的
+  // replace 生效（Swup 按注册顺序取最后者）
+  window.swup.hooks.replace(
+    "content:scroll",
+    (
+      visit: {
+        scroll?: { animate?: boolean };
+        to?: { hash?: string };
+        history?: { popstate?: boolean };
+      },
+      _args: unknown,
+      defaultHandler?: (visit: unknown, args: unknown) => void,
+    ) => {
+      if (!visit?.history?.popstate && !visit?.to?.hash) {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }),
+        );
+        return;
+      }
+      defaultHandler?.(visit, _args);
+    },
+  );
   window.swup.hooks.on("visit:end", () => {
     setTimeout(() => {
       document.getElementById("page-height-extend")?.classList.add("hidden");
-      document.getElementById("toc-wrapper")?.classList.remove("toc-not-ready");
+      // 未接管回顶滚动（hash/popstate/从顶部换页）直接移除；
+      // 原生平滑长文回顶由 scrollend 驱动（见上），此处跳过
+      if (!needsScrollWait) releaseTocNotReady();
     }, SWUP_VISIT_END_DELAY);
+    // 兜底：滚动结束信号异常缺失（极端场景）时 2s 后强制恢复目录，
+    // 避免永久隐藏（幂等，正常路径 scrollend/scroll:end 已先行移除）
+    if (needsScrollWait) {
+      setTimeout(releaseTocNotReady, 2000);
+    }
   });
 }
 
