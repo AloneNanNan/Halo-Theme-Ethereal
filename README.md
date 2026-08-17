@@ -2,25 +2,15 @@
 
 <p align="center">
   一款基于 <a href="https://github.com/jiewenhuang/halo-theme-fuwari">halo-theme-fuwari</a> 二次开发<br>
-  为 <a href="https://github.com/halo-dev/halo">Halo 2.x</a> 打造的 Fuwari 风格增强性主题
+  为 <a href="https://github.com/halo-dev/halo">Halo 2.x</a> 打造的 Fuwari 风格增强型主题
 </p>
 
 <p align="center">
-  <a href="https://halo.run">
-    <img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/main/theme.yaml&color=14B8A6&logo=halo" alt="Halo"/>
-  </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
-    <img src="https://img.shields.io/github/v/release/AloneNanNan/halo-theme-ethereal?color=22C55E&label=Release" alt="Release"/>
-  </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/AloneNanNan/halo-theme-ethereal?color=EC4899&label=License" alt="MIT License"/>
-  </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
-    <img src="https://img.shields.io/github/downloads/AloneNanNan/halo-theme-ethereal/total?color=F59E0B&label=Downloads" alt="Downloads"/>
-  </a>
-  <a href="https://www.halo.run/store/apps/app-zqvrlonl">
-    <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&query=%24.application.status.downloadCount&label=Store%20Downloads&color=3B82F6" alt="Store Downloads"/>
-  </a>
+  <a href="https://halo.run"><img src="https://img.shields.io/badge/dynamic/yaml?label=Halo&query=%24.spec.requires&url=https://raw.githubusercontent.com/AloneNanNan/halo-theme-ethereal/main/theme.yaml&color=14B8A6&style=flat-square" style="border-radius: 6px" alt="Halo"/></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><img src="https://img.shields.io/github/v/release/AloneNanNan/halo-theme-ethereal?color=22C55E&label=Release&style=flat-square" style="border-radius: 6px" alt="Release"/></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AloneNanNan/halo-theme-ethereal?color=EC4899&label=License&style=flat-square" style="border-radius: 6px" alt="MIT License"/></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><img src="https://img.shields.io/github/downloads/AloneNanNan/halo-theme-ethereal/total?color=F59E0B&label=Downloads&style=flat-square" style="border-radius: 6px" alt="Downloads"/></a>
+  <a href="https://www.halo.run/store/apps/app-zqvrlonl"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&query=%24.application.status.downloadCount&label=Store%20Downloads&color=3B82F6&style=flat-square" style="border-radius: 6px" alt="Store Downloads"/></a>
 </p>
 
 <p align="center">
@@ -36,7 +26,7 @@
 </div>
 
 <p align="center">
-  文档：<a href="https://www.nannax.top/docs/ethereal">主题文档</a>
+  <strong>文档：<a href="https://www.nannax.top/docs/ethereal">主题文档</a>　｜　交流群：<a href="https://qm.qq.com/q/onMpJjYvgQ">QQ 群</a></strong>
 </p>
 
 ---
@@ -47,61 +37,73 @@
 | :----------------------------------- | :--------- |
 | [楠枝小笺](https://www.nannax.top/)  | 主题开发者 |
 | [BoxCat](https://blog.lipei.online/) | 主题用户   |
-
-## 加入交流群
-
-[点击加入交流群](https://qm.qq.com/q/onMpJjYvgQ)
+| [顶呱呱的快乐](https://wuw.li/)      | 主题用户   |
 
 ## 介绍
 
-**Ethereal** 是基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（原版 [Fuwari](https://github.com/saicaca/fuwari) 的 Halo 移植版）深度二次开发的博客主题。在保留原有清爽调性的基础上，新增了大量功能和视觉改进，感谢原作的开源贡献。
+**Ethereal** 是一款为 [Halo 2.x](https://github.com/halo-dev/halo) 打造的 Fuwari 风格博客主题。它基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（原版 [Fuwari](https://github.com/saicaca/fuwari) 的 Halo 移植版）深度二次开发，并融合了 [Firefly](https://github.com/CuteLeaf/Firefly) 的清新美学与多种现代 UI 趋势，感谢原作的开源贡献。
 
-主题灵感来源于 [Firefly](https://github.com/CuteLeaf/Firefly) 的清新美学，融合了多种现代 UI 趋势，希望能为 Halo 用户提供一个 Fuwari 风格的功能增强型主题，感谢 Firefly 的开源贡献。
+在保留原版清爽调性的基础上，Ethereal 新增了大量功能与视觉改进：三栏/两栏自由布局、磨砂玻璃质感、Banner 多形态展示、丰富的侧边栏小组件、图片 CDN 实时压缩、访客前台实时换肤等，力求为 Halo 用户提供一个开箱即用的 Fuwari 风格功能增强型主题。主题使用 AI 辅助开发。
 
-主题使用AI辅助开发。
+---
 
-### 主题亮点
+## 安装
 
-- **三栏/两栏布局随心切换** — 左侧栏 + 主内容区 + 右侧栏，充分利用宽屏空间，信息层级清晰
-- **丰富的小组件** — 公告、个人简介、天气、音乐播放器、一言、站点统计、热门文章、自定义 HTML 等，左右侧边栏自由组合搭配
-- **模糊混色效果** — 导航栏磨砂玻璃效果，通透有质感；配合「全屏透明」模式，内容与组件卡片亦可呈现磨砂透明
-- **Banner 居中大标题** — 支持自定义标题/副标题/字号，打字机/文字下坠两种动效，响应式字号缩放
-- **Banner 多形态** — 支持关闭/横幅/全屏/全屏透明四种显示模式；单图（PNG/JPEG/WebP/APNG/GIF）/视频（MP4/WebM）或多图轮播（淡入淡出/滑动切换）；可为移动端（<768px）单独配置图片来源
-- **图片速度优化** — 支持主流 CDN/对象存储的实时图片压缩缩放，大幅降低封面图和正文图片加载体积
-- **自定义字体** — 支持上传 TTF/OTF/WOFF/WOFF2 字体文件或引用 Google Fonts CSS，全局替换站点字体
-- **访客前台样式切换** — 导航栏「显示设置」面板支持实时切换主题色相、文章列表/网格布局、卡片样式（悬浮 / 磨砂 / 瀑布流）、壁纸模式与透明参数
-- **个人在线状态** — 个人简介小组件支持展示在线状态与自定义文案，管理员登录后可在前台直接切换，无需后台设置
+### 系统要求
+
+- **Halo** >= 2.25.0
+
+### 在线安装（推荐）
+
+- Halo 应用商店搜索 "Ethereal" 即可一键安装
+
+### 手动安装
+
+1. 前往 [Releases](https://github.com/AloneNanNan/halo-theme-ethereal/releases) 下载最新版本的主题包（`.zip`）
+2. 进入「**Halo 后台 → 主题 → 安装**」，上传主题包
+
+> 详细的配置说明请参阅 [主题文档](https://www.nannax.top/docs/ethereal)。
 
 ---
 
 ## 功能特性
 
-### 核心功能
+### 布局与排版
 
-- [x] 三栏 / 两栏布局自由切换
-- [x] 卡片化设计，响应式布局
-- [x] 深色 / 浅色 / 跟随系统配色
-- [x] 自定义主题色（Hue 调节）
-- [x] i18n 国际化（中/英/繁体）
-- [x] 页面过渡动画（Swup）
-- [x] 丰富的小组件
-- [x] 外链跳转模态框（自定义延迟、域名白名单）
-- [x] 自定义字体
-- [x] 文章详细页分享海报与赞赏
-- [x] 图片速度优化（支持阿里云 ESA/OSS、腾讯云 EdgeOne/COS、七牛云、又拍云等主流 CDN 实时压缩）
-- [x] Banner 移动端独立图片来源（单图/视频/轮播）
-- [x] Banner 全屏与全屏透明模式（卡片磨砂）
-- [x] 访客前台样式切换面板
-- [x] 网格封面高度自适应
-- [x] 等等……
+- **三栏 / 两栏布局随心切换** — 左侧栏 + 主内容区 + 右侧栏，充分利用宽屏空间，信息层级清晰
+- **卡片化设计** — 响应式布局，适配各种屏幕尺寸
+- **深色 / 浅色 / 跟随系统配色**
+- **网格封面高度自适应**
 
-### 视觉效果
+### 视觉与动效
 
-- [x] 导航栏磨砂玻璃模糊效果
-- [x] 全屏透明壁纸背景（卡片磨砂）
-- [x] Banner 波浪动效
-- [x] 卡片悬浮效果
-- [x] 登录认证界面（动画角色交互面板）
+- **导航栏磨砂玻璃模糊效果** — 通透有质感
+- **全屏透明壁纸背景** — 内容与组件卡片亦可呈现磨砂透明
+- **Banner 波浪动效**
+- **卡片悬浮效果**
+- **Banner 居中大标题** — 支持自定义标题/副标题/字号，打字机/文字下坠两种动效，响应式字号缩放
+- **登录认证界面** — 动画角色交互面板
+
+### Banner 多形态
+
+- 支持 **关闭 / 横幅 / 全屏 / 全屏透明** 四种显示模式
+- 支持**单图**（PNG/JPEG/WebP/APNG/GIF）、**视频**（MP4/WebM）或多图**轮播**（淡入淡出/滑动切换）
+- 可为移动端（<768px）单独配置图片来源
+
+### 媒体与性能
+
+- **图片速度优化** — 支持主流 CDN/对象存储的实时图片压缩缩放，大幅降低封面图与正文图片加载体积
+- **自定义字体** — 支持上传 TTF/OTF/WOFF/WOFF2 字体文件或引用 Google Fonts CSS，全局替换站点字体
+- **分享海报与赞赏** — 文章详细页支持生成分享海报与赞赏入口
+
+### 个性化与交互
+
+- **自定义主题色** — 通过 Hue 调节随心换色
+- **访客前台样式切换** — 导航栏「显示设置」面板支持实时切换主题色相、文章列表/网格布局、卡片样式（悬浮 / 磨砂 / 瀑布流）、壁纸模式与透明参数
+- **外链跳转模态框** — 自定义延迟与域名白名单
+- **i18n 国际化** — 中 / 英 / 繁体
+- **页面过渡动画** — 基于 Swup
+- **个人在线状态** — 个人简介小组件展示在线状态与自定义文案，管理员登录后可在前台直接切换
 
 ### 侧边栏组件
 
@@ -120,22 +122,13 @@
 | 目录（TOC） | 文章内容导航，仅在三栏布局中显示                           |
 | 最近日程    | 配合「日程日历」插件，展示近期日程安排                     |
 
-### 页面支持
+---
 
-- [x] 首页
-- [x] 文章归档
-- [x] 标签列表 & 标签详情
-- [x] 分类列表 & 分类详情
-- [x] 图库展示（插件）
-- [x] 瞬间 / 说说（插件）
-- [x] 友情链接（插件）
-- [x] 朋友圈（插件）
-- [x] 装备展示（插件）
-- [x] 项目作品集（插件）
-- [x] 心愿便签（插件）
-- [x] 日程日历（插件）
-- [x] 404 错误页
-- [x] 自定义页面
+## 页面支持
+
+- [x] 首页、文章归档、标签/分类列表与详情
+- [x] 图库、瞬间、友情链接、朋友圈、装备、项目作品集、心愿便签、日程日历（需安装对应插件，见下方「插件支持」）
+- [x] 自定义页面、404 错误页
 
 ---
 
@@ -156,6 +149,15 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 | 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0) | 日程/日历展示，配合最近日程小组件    |
 | API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd) | 文章字数统计 API & 降低后端压力      |
 
+同时，也建议安装以下插件，以获得更好的体验：
+
+| 插件                 | 市场链接                                                 | 功能                    |
+| :------------------- | -------------------------------------------------------- | ----------------------- |
+| RSS                  | [应用市场](https://www.halo.run/store/apps/app-KhIVw)    | 为站点生成 RSS 订阅链接 |
+| Sitemap              | [应用市场](https://www.halo.run/store/apps/app-QDFMI)    | 为站点生成站点地图      |
+| lightgallery.js 灯箱 | [应用市场](https://www.halo.run/store/apps/app-OoggD)    | 在内容页放大显示图片    |
+| Shiki 代码高亮       | [应用市场](https://www.halo.run/store/apps/app-kzloktzn) | 在内容页高亮显示代码块  |
+
 ---
 
 ## 外部服务依赖
@@ -170,24 +172,6 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 | 入场欢迎卡片 | [腾讯位置服务](https://lbs.qq.com)               | 复用于天气小组件的 WebService API Key 进行 IP 定位，无需单独配置；默认关闭，需在「基础设置 → 欢迎弹窗」开启                  |
 
 > 以上服务均为可选功能，不影响主题核心的博客浏览体验。天气、音乐、一言、入场欢迎卡片需在侧边栏/基础设置中手动添加或开启后才会发起网络请求。
-
----
-
-## 安装
-
-### 系统要求
-
-- **Halo** >= 2.25.0
-
-### 在线安装
-
-- Halo 应用商店搜索 "Ethereal" 即可一键安装
-
-### 手动安装
-
-1. 前往 [Releases](https://github.com/AloneNanNan/halo-theme-ethereal/releases) 下载最新版本的主题包（`.zip`）
-2. 进入 Halo 后台 → **主题** → **安装**，上传主题包
-3. 启用主题并进入 **设置** 进行个性化配置
 
 ---
 

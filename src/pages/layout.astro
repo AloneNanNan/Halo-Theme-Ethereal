@@ -1,0 +1,172 @@
+---
+// Halo 2.26+ 页面布局契约模板：供插件自有前台页面（如插件模板通过
+// `th:replace="~{layout :: html(head=..., content=...)}"` 调用）复用主题外壳。
+// 契约声明见 <html th:fragment="html (head, content)">，构建后输出 templates/layout.html。
+// 该模板仅作为插件页的兜底外壳，复用全局样式 + 导航栏 + 页脚；侧边栏小组件、
+// banner、Swup 过渡、访客样式覆盖等不在契约范围内（契约只传 head / content 两个槽位）。
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import {
+  DEFAULT_THEME,
+  LIGHT_MODE,
+  DARK_MODE,
+  AUTO_MODE,
+  PAGE_WIDTH,
+} from "../constants/constants";
+import {
+  speedCustomStyleThWith,
+  speedCustomStyleThExpr,
+} from "../utils/speed-style";
+
+// 引入全局样式：顺序与 src/scripts/app.ts 的相对顺序保持一致（CSS 级联覆盖
+// 依赖导入顺序），仅省略插件页用不到的小组件样式（comment-widget /
+// external-link-modal / link-apply-modal / profile-status）。改顺序先对照 app.ts
+import "../styles/global.css";
+import "../styles/utilities.css";
+import "../styles/variables.css";
+import "../styles/base.css";
+import "../styles/theme-transition.css";
+import "../styles/components.css";
+import "../styles/markdown.css";
+import "../styles/transition.css";
+import "../styles/speed.css";
+import "../styles/scrollbar.css";
+
+const themeSettingScript = `<script type="application/json" id="theme-config" th:inline="javascript">
+       /*[[\${theme.config}]]*/
+    </script>`;
+
+// th:block 无法作为 Astro JSX 标签（含冒号），按 halo:comment 惯例用字符串注入
+const headSlot = `<th:block th:if="\${head != null}">
+      <th:block th:replace="\${head}" />
+    </th:block>`;
+const contentSlot = `<th:block th:replace="\${content}" />`;
+---
+
+<!doctype html>
+<html
+  th:lang="${#locale.toLanguageTag}"
+  th:data-hue="${theme.config?.style?.themeColor?.hue}"
+  th:data-hue-fixed="${theme.config?.style?.mobileMenu?.visitorStyle?.enable == false or theme.config?.style?.mobileMenu?.visitorStyle?.hue == false}"
+  th:data-theme-anim-style="${theme.config?.style?.colorScheme?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
+  th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
+  th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
+  th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
+  th:with={speedCustomStyleThWith()}
+  th:style={speedCustomStyleThExpr()}
+  th:fragment="html (head, content)"
+  class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
+    <meta property="og:site_name" th:content="${site.title}" />
+    <title th:text="${site.title}"></title>
+    <link rel="icon" th:href="${site.favicon}" />
+
+    <Fragment set:html={themeSettingScript} />
+    <script th:inline="javascript">
+      // 后台配色配置（与 Layout.astro 同式，供下方暗色模式初始化读取）
+      var __ecs =
+        /*[[${theme.config?.style?.colorScheme?.color_scheme ?: theme.config?.style?.color_scheme}]]*/ "auto";
+      var __eecs = /*[[${theme.config?.style?.colorScheme?.enable_change_color_scheme ?: theme.config?.style?.enable_change_color_scheme}]]*/ true;
+    </script>
+    <script
+      is:inline
+      define:vars={{
+        DEFAULT_THEME,
+        LIGHT_MODE,
+        DARK_MODE,
+        AUTO_MODE,
+        PAGE_WIDTH,
+      }}
+    >
+      (() => {
+        const configHue = document.documentElement.dataset.hue || "250";
+        const fixedHue = document.documentElement.dataset.hueFixed === "true";
+
+        var defaultScheme = DEFAULT_THEME;
+        if (
+          typeof __ecs !== "undefined" &&
+          __ecs !== null &&
+          (__ecs === LIGHT_MODE || __ecs === DARK_MODE || __ecs === AUTO_MODE)
+        ) {
+          defaultScheme = __ecs;
+        }
+        var enableChange =
+          typeof __eecs !== "undefined" && __eecs !== null ? __eecs : true;
+        var storedTheme;
+        if (enableChange && localStorage.getItem("__user_chose_theme")) {
+          storedTheme = localStorage.getItem("theme") || defaultScheme;
+        } else {
+          storedTheme = defaultScheme;
+        }
+
+        const preferredDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+
+        if (
+          storedTheme === DARK_MODE ||
+          (storedTheme === AUTO_MODE && preferredDark)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+
+        const hue = fixedHue
+          ? configHue
+          : localStorage.getItem("hue") || configHue;
+        document.documentElement.style.setProperty("--hue", hue);
+        document.documentElement.style.setProperty(
+          "--page-width",
+          `${PAGE_WIDTH}rem`,
+        );
+      })();
+    </script>
+
+    <!-- 插件页自身的 head 片段（title / meta / 样式等） -->
+    <Fragment set:html={headSlot} />
+  </head>
+  <body
+    class="relative min-h-screen transition"
+    th:classappend="${(theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
+  >
+    <!-- 与 MainGridLayout 同款导航栏外壳：顶部行 + 导航栏 -->
+    <div
+      id="top-row"
+      class="pointer-events-none relative z-50 mx-auto w-full max-w-(--page-width) px-0 transition md:px-4"
+    >
+      <div
+        id="navbar-wrapper"
+        class="pointer-events-auto sticky top-0 transition-transform duration-[var(--dur-scroll,700ms)]"
+      >
+        <Navbar />
+      </div>
+    </div>
+
+    <!-- 插件页正文 -->
+    <div id="main-panel-wrapper" class="relative z-30">
+      <div
+        class="relative mx-auto w-full max-w-(--page-width) px-4 py-6 md:px-4"
+      >
+        <main id="main-grid" class="min-w-0">
+          <div id="content-wrapper" class="onload-animation">
+            <Fragment set:html={contentSlot} />
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="mx-auto w-full max-w-(--page-width) px-4">
+      <Footer />
+    </div>
+
+    <!-- Halo 核心页脚注入（备案/统计等）；halo: 前缀元素无法直接写 JSX，按
+         halo:comment 惯例用字符串注入，避免 Astro 把 <halo:footer /> 改写为 <halo :footer> -->
+    <Fragment set:html={"<halo:footer />"} />
+  </body>
+</html>

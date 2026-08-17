@@ -31,6 +31,7 @@ declare namespace astroHTML.JSX {
     "th:case"?: string;
     "th:block"?: string;
     "th:remove"?: string;
+    "th:fragment"?: string;
     "th:name"?: string;
     "th:id"?: string;
     "th:onclick"?: string;

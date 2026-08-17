@@ -7,7 +7,7 @@ spec:
   author:
     name: 楠南NanNan
     website: https://www.nannax.top
-  description: 一款基于 Fuwari 二次开发，为 Halo 打造的 Fuwari 风格增强性主题。
+  description: 一款基于 Fuwari 二次开发，为 Halo 打造的 Fuwari 风格增强型主题。
   logo: /themes/Ethereal/assets/images/favicon-light-192.png
   homepage: https://github.com/AloneNanNan/halo-theme-ethereal#readme
   repo: https://github.com/AloneNanNan/halo-theme-ethereal
