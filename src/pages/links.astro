@@ -531,23 +531,11 @@ import CopyButton from "../components/CopyButton.astro";
     </div>
   </div>
 
+  <!-- 友链页脚本（I27）：由 requirements/collapse/copy/link-apply/random-visit 五个脚本
+       合并为单请求；link-apply 与 random-visit 的原 th:if 门控改由脚本内部守卫
+       （按钮/模态框不存在即不绑定，行为等价，见 links.bundle.js 各 IIFE 注释） -->
   <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/requirements.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/collapse.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/copy.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    th:if="${theme.config?.links?.features?.enable_apply_btn != false and linkApplicationEnabled == true}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/link-apply.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <!-- 友链随机访问（I22）：仅本页需要，从 MainGridLayout 移入；按钮门控条件同此 -->
-  <script
-    th:if="${theme.config?.links?.features?.enable_random_visit != false}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/random-visit.js?v=${ASSET_VERSION}`}
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/links.bundle.js?v=${ASSET_VERSION}`}
     defer></script>
 
   <!-- 申请友链模态框 -->

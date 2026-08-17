@@ -48,6 +48,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@halo-dev/theme-package-cli": "^1.1.1",
+    "esbuild": "^0.25.0",
     "@iconify-json/fa6-brands": "^1.2.6",
     "@iconify-json/fa6-regular": "^1.2.4",
     "@iconify-json/fa6-solid": "^1.2.4",

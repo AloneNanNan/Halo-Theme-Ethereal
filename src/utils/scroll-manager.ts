@@ -60,11 +60,22 @@ function scrollFunction() {
     );
   }
 
-  if (bannerEnabled && toc) {
-    toc.classList.toggle(
-      "toc-hide",
+  // 目录门控仅横幅/全屏模式启用（与 components.css 的
+  // html[data-banner-display=...]:not(.toc-revealed) #toc-wrapper 同源）：
+  // 视口在顶部横幅区（≤35vh）隐藏，滚动超过后给 <html> 加 .toc-revealed 解除；
+  // disabled/transparent 模式目录恒显，清除两处隐藏状态（切回横幅模式时
+  // 由 bannerModeChange 监听立即重算）
+  if (toc) {
+    const bannerDisplay = document.documentElement.dataset.bannerDisplay;
+    const tocGated =
+      bannerDisplay === "banner" || bannerDisplay === "fullscreen";
+    const atTop =
       document.body.scrollTop <= tocRevealHeightPx &&
-        document.documentElement.scrollTop <= tocRevealHeightPx,
+      document.documentElement.scrollTop <= tocRevealHeightPx;
+    toc.classList.toggle("toc-hide", tocGated && atTop);
+    document.documentElement.classList.toggle(
+      "toc-revealed",
+      tocGated && !atTop,
     );
   }
 
@@ -120,5 +131,10 @@ window.addEventListener("scroll", function () {
     scrollTicking = true;
   }
 });
+
+// 访客切换壁纸模式（setting-utils 的 applyBannerDisplay 派发）后立即重算
+// 目录显隐：切到横幅/全屏模式且视口在顶部时需补挂隐藏（toc-hide + 无
+// toc-revealed），切到 disabled/transparent 时清除隐藏状态
+window.addEventListener("bannerModeChange", scrollFunction);
 
 export { scrollFunction };

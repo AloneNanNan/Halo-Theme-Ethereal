@@ -163,11 +163,18 @@ interface Props {
     var API_BASE = "https://apis.map.qq.com/ws";
 
     function getThemeConfig() {
+      // I27：读/写 window.__themeConfig 缓存（与 scripts/assets/_theme-config.ts
+      // 及各 public 脚本共享契约），避免多脚本重复 JSON.parse
+      var cached = window.__themeConfig;
+      if (cached !== undefined) return cached;
       try {
         var el = document.getElementById("theme-config");
         if (!el || !el.textContent) return null;
-        return JSON.parse(el.textContent);
+        var parsed = JSON.parse(el.textContent);
+        window.__themeConfig = parsed;
+        return parsed;
       } catch (e) {
+        window.__themeConfig = null;
         return null;
       }
     }

@@ -8,24 +8,6 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 >
   <Fragment slot="head">
     <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
-    <!-- 朋友圈脚本（I22）：仅本页需要，从 MainGridLayout 移入；head 中在 swup-container 外，
-         IIFE 只执行一次，后续靠 swup:contentReplaced 重新 init；defer 保证 DOM 就绪 -->
-    <script
-      defer
-      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friend-authors.js?v=${ASSET_VERSION}`}
-    ></script>
-    <script
-      defer
-      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-blacklist.js?v=${ASSET_VERSION}`}
-    ></script>
-    <script
-      defer
-      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-group.js?v=${ASSET_VERSION}`}
-    ></script>
-    <script
-      defer
-      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends-load-more.js?v=${ASSET_VERSION}`}
-    ></script>
     <style is:global>
       /* 随机钓鱼按钮：点击后鱼钩图标左右摇摆（像鱼咬钩晃动） */
       .random-fish-btn.spinning .random-fish-icon {
@@ -231,5 +213,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         </p>
       </div>
     </section>
+
+    <!-- 朋友圈脚本（I27）：由原 4 个脚本合并（friend-authors/blacklist/group/load-more），
+         置于 allItems 作用域内，列表为空时整体不加载（各脚本空列表下均无用）；
+         Swup 换页由 SwupScriptsPlugin 重执行，IIFE 内守卫防重复绑定 -->
+    <script
+      th:if="${not #lists.isEmpty(allItems.items)}"
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends.bundle.js?v=${ASSET_VERSION}`}
+      defer></script>
   </div>
 </MainGridLayout>

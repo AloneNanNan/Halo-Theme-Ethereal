@@ -104,13 +104,17 @@ const {
     th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
   >
-    <link
-      rel="preload"
-      as="image"
-      fetchpriority="high"
-      th:if="${mode == 'single' and !isVideo and !mobileActive}"
-      th:href="${srcX}"
-    />
+    {
+      isHomePage && (
+        <link
+          rel="preload"
+          as="image"
+          fetchpriority="high"
+          th:if="${mode == 'single' and !isVideo and !mobileActive}"
+          th:href="${srcX}"
+        />
+      )
+    }
     <!-- 注意：下方三个 #banner 分支（单图 / 视频 / 轮播）由互斥的 th:if 保证
          同一时刻仅一个渲染，id 才不冲突；新增/调整分支条件时务必保持互斥 -->
     <div
@@ -405,26 +409,46 @@ const {
     }
   </div>
 
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
-    defer></script>
-  <script
-    th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
-  ></script>
-  <script
-    th:if="${theme.config?.base?.bannerText != null and theme.config?.base?.bannerText?.subtitleEffect == 'drop'}"
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
-  ></script>
+  <!-- Banner 脚本（I27）：仅首页加载（isHomePage 为 Astro 构建期判定），
+       并按显示模式精确门控（mode/isVideo/mobileActive 由 bannerThWith() 提供，
+       与 #banner-wrapper 的 th:with 同源表达式，无重复判定漂移）；
+       typewriter/drop 互斥门控保留并补 defer（原无 defer 阻塞渲染）。
+       th:with + th:remove="tag" 为作用域提升技巧，见 Navbar.astro 同款先例 -->
+  {
+    isHomePage && (
+      <div th:with={bannerThWith()} th:remove="tag">
+        <script
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
+          defer
+        />
+        <script
+          th:if="${mode == 'carousel' or (mobileActive and mobileMode == 'carousel')}"
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
+          defer
+        />
+        <script
+          th:if="${(mode == 'single' and isVideo) or (mobileActive and mobileIsVideo)}"
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
+          defer
+        />
+        <script
+          th:if="${mobileActive}"
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
+          defer
+        />
+        <script
+          th:if="${theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.subtitleEffect == null or theme.config?.base?.bannerText?.subtitleEffect == 'typewriter'}"
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
+          defer
+        />
+        <script
+          th:if="${theme.config?.base?.bannerText != null and theme.config?.base?.bannerText?.subtitleEffect == 'drop'}"
+          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
+          defer
+        />
+      </div>
+    )
+  }
 
   <script is:inline>
     // 全屏模式首页向下箭头：点击平滑滚动到内容区。落点计算见

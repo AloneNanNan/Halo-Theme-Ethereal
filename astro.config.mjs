@@ -1,11 +1,17 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import fs from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 
 import { stripHtmlCommentsInDir } from "./scripts/strip-html-comments.mjs";
+import {
+  compileAssets,
+  copyVendorAssets,
+  compressAssetsInDir,
+} from "./scripts/build-assets.mjs";
 
 import Icons from "unplugin-icons/vite";
 import svelte from "@astrojs/svelte";
@@ -33,6 +39,37 @@ const stripHtmlComments = {
   },
 };
 
+// 经典脚本资产管线：
+//  - build:start：把 src/scripts/assets/*.ts 编译为 IIFE 经典脚本输出到 public/assets/
+//    （须先于 Astro 拷贝 public/，见 scripts/build-assets.mjs），并采集 public/assets
+//    全部 *.js 文件名作为 build:done 压缩白名单
+//  - build:done：压缩 outDir/assets/ 下由 public/ 拷贝来的经典脚本
+//    （只压缩白名单内的 public 产物，跳过 Astro/Vite 的 hashed module 产物）
+/** @type {import("astro").AstroIntegration} */
+const buildAssets = {
+  name: "build-assets",
+  hooks: {
+    "astro:build:start": async () => {
+      await compileAssets();
+      await copyVendorAssets();
+      const names = await fs.promises.readdir(
+        join(fileURLToPath(new URL("./public/assets/", import.meta.url))),
+      );
+      publicAssetJs = names.filter((f) => f.endsWith(".js"));
+    },
+    "astro:build:done": async ({ dir }) => {
+      await compressAssetsInDir(
+        join(fileURLToPath(dir), "assets"),
+        publicAssetJs,
+      );
+    },
+  },
+};
+
+// build:start 时从 public/assets 采集的经典脚本文件名，供 build:done 压缩白名单使用
+/** @type {string[]} */
+let publicAssetJs = [];
+
 export default defineConfig({
   base: "/themes/Ethereal",
   build: {
@@ -42,6 +79,7 @@ export default defineConfig({
   outDir: "./templates",
   integrations: [
     stripHtmlComments,
+    buildAssets,
     swup({
       theme: false,
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
