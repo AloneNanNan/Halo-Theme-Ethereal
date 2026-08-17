@@ -289,17 +289,9 @@ const className = Astro.props.class ?? "";
         topmost.getBoundingClientRect().top - tocTop + scrollTop;
       const bottomOffset =
         bottommost.getBoundingClientRect().bottom - tocTop + scrollTop;
-      // 已在可视区内（含 32px 内边距容差）则跳过：避免快速滚动时每个
-      // crossing 都 scrollTo 触发写布局，仅在越出可视区时定位
-      if (
-        topOffset >= scrollTop + 32 &&
-        bottomOffset <= scrollTop + tocHeight - 32
-      ) {
-        return;
-      }
-
-      // 仅 active 变化时（update 只在 dirty 后调用）一次性定位，不用 smooth：
-      // 平滑滚动会持续触发 scroll 事件并放大重排，改为直接落位
+      // 高亮变化即跟随滚动（update 仅在 active 变化时调用，dirty 检查已在
+      // updateActiveByScroll 承担）：恢复 v1.1.1 的平滑跟随行为。目录小容器的
+      // smooth 滚动不触发 window 级 scrollHandler，无放大重排问题
       const top =
         bottomOffset - topOffset < 0.9 * tocHeight
           ? topOffset - 32
@@ -307,6 +299,7 @@ const className = Astro.props.class ?? "";
       this.tocEl.scrollTo({
         top,
         left: 0,
+        behavior: "smooth",
       });
     }
 

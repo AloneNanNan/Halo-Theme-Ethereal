@@ -128,6 +128,17 @@
     opacity: 0;
   }
 
+  /* 两栏悬浮目录宽度限制：视口不足以容纳最小目录宽度时隐藏，避免目录在
+     窄屏下挤成一条线。断点与 variables.css 的 --toc-width 公式联动
+     （两栏 --page-width 固定 75rem）：
+     --toc-width = (100vw - 75rem)/2 - 1rem >= 6rem  →  视口 >= 89rem。
+     改动 --toc-width 公式或两栏 page-width 时需同步此断点 */
+  @media (max-width: 88.99rem) {
+    #toc-wrapper {
+      display: none !important;
+    }
+  }
+
   #toc-inner-wrapper {
     mask-image: linear-gradient(
       to bottom,
