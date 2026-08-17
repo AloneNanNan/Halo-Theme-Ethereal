@@ -184,8 +184,6 @@ export interface StyleSwitches {
   banner_wave?: boolean | "enabled" | "disabled" | "desktop_only";
   navbar_blur?: boolean;
   card_hover_lift?: boolean;
-  /** 跨页平滑滚动：换页后从当前滚动位置平滑滚动回顶部（默认关闭=瞬时） */
-  page_transition_scroll?: boolean;
 }
 
 export interface FloatingButtons {

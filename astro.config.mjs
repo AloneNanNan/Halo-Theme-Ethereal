@@ -86,9 +86,11 @@ export default defineConfig({
       // the default value `transition-` cause transition delay
       // when the Tailwind class `transition-all` is used
       containers: ["#swup-container", "#toc-container", "#right-sidebar"],
-      // 跨页平滑滚动由后台开关 style.styleSwitches.page_transition_scroll 控制
-      // （默认关闭=瞬时）。构建期保持插件启用，app.ts 的 visit:start 钩子按
-      // 配置覆盖 visit.scroll.animate 实现开/关，无需重建主题。
+      // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"）：app.ts 在
+      // content:scroll 接管并调用 window.scrollTo 原生平滑，插件的
+      // betweenPages 平滑（scrl JS 引擎）被跳过，不再参与跨页滚动。
+      // 保留 SwupScrollPlugin 是因为同页锚点（目录点击）的 samePageWithHash
+      // 平滑仍依赖它——此处保持插件启用与 animateScroll 对象配置不变。
       // 注：@swup/astro 类型声明为 boolean，但运行时会透传给 SwupScrollPlugin
       // 选项对象（enabledPlugins 的 options === true ? {} : options 分支），
       // 故此处需绕过类型限制

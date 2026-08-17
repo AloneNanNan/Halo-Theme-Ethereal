@@ -6,12 +6,22 @@
 
 ### 优化
 
+- **跨页回顶滚动改用浏览器原生平滑**：换页回顶滚动统一走浏览器原生平滑（`behavior:"smooth"`，合成器驱动不占主线程），移除「样式 → 样式开关 → 跨页平滑滚动」开关；同页锚点（目录点击）与页面内滚动机制保持不变
+- **换页滚动性能**：换页回顶滚动延迟至新内容布局稳定后执行（双 rAF），避免布局 dirty 时滚动触发 OverlayScrollbars 同步测量强制整页重排（实测单帧 900ms）；TOC 条目改 DocumentFragment 一次性插入，消除逐条插入反复失效布局
+- **换页期间目录显隐**：`toc-not-ready` 门控改挂 `<html>`（覆盖两栏/三栏），规避 Swup 替换容器丢类导致目录提前显示；目录恢复显示绑定滚动结束（`scrollend` / `scroll:end` 双通道），修复长文回顶后半段目录仍显示的问题，另有 2s 兜底防永久隐藏；隐藏期间跳过高亮计算
+- **目录高亮**：toggleActiveHeading 先读后写、scrollToActiveHeading 统一坐标并加可视区判断、dirty 检查，消除写读交错强制重排
+- **OverlayScrollbars**：挂载 requestIdleCallback 错峰、update.debounce.event 节流（100ms/250ms）、autoHide 改 scroll
+- **滚动管理器**：双 scrollTop 读取合并为 window.scrollY 单次读取，读写分离
 - **文章页操作栏脚本拆分与懒加载**：原 post.bundle.js（155K，含 140K 二维码库）拆分为 post-like / post-share / post-reward 三文件，按点赞/分享/打赏子开关独立门控；二维码库（qrcode.bundle.js）仅在首次生成分享海报时按需加载，加载失败自动退化（海报无二维码），文章页默认脚本负载由 155K 降至约 25K
 - **Banner 脚本精确门控**：6 个 banner 脚本仅首页加载，并按显示模式精确裁剪（轮播/视频/移动端独立来源；门控同时覆盖桌面与移动容器独立配置，如「桌面单图 + 移动视频/轮播」）；typewriter/drop 效果脚本补 defer 消除阻塞渲染
 - **友链页/朋友圈脚本合并**：友链页 5 个脚本合并为单文件 links.bundle.js（申请/随机访问门控改由脚本内部守卫）；朋友圈 4 个脚本合并为 friends.bundle.js，且列表为空时不再加载
 - **显示设置面板门控**：后台关闭访客样式切换时，面板组件及其 JS chunk 不再随页面传输
 - **经典脚本资产管线**：新增 src/scripts/assets/ 源码目录，由 esbuild 编译为 IIFE 经典脚本；构建产物统一压缩（220K → 94K）
 - **#theme-config JSON 解析缓存**：多个脚本不再各自重复 JSON.parse，共享 window.__themeConfig 缓存
+
+### 修复
+
+- 修复目录隐藏时仍可点击的问题（`#toc-wrapper` 的 `pointer-events-auto` 工具类覆盖隐藏门控）
 
 ### 其它
 

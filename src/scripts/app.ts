@@ -28,7 +28,6 @@ import {
   setHue,
 } from "../utils/setting-utils";
 import { scrollDownToContent, scrollFunction } from "../utils/scroll-manager";
-import { getThemeConfig } from "../utils/theme-config";
 import { syncHomeClass, isHomePath } from "../utils/banner-sync";
 import { initLegacyAdmonitions } from "../utils/legacy-admonitions";
 import { initExternalLinkRedirect } from "../utils/external-link-redirect";
@@ -281,29 +280,15 @@ function setupSwup() {
       import("../styles/music-player.css");
     }
   });
-  // 跨页平滑滚动由后台开关 style.styleSwitches.page_transition_scroll 控制
-  // （默认关闭）：关闭时覆盖 SwupScrollPlugin 的 betweenPages 动画标记为瞬时，
-  // 避免长文换页平滑回顶期间 OverlayScrollbars 每帧同步测量导致的卡顿；
-  // 同页锚点（目录点击）平滑由 samePageWithHash 独立控制，不受影响。
-  // 开关开启时完整平滑，不干预。
-  const pageTransitionScrollEnabled = () => {
-    const config = getThemeConfig();
-    return (
-      (
-        config?.style as {
-          styleSwitches?: { page_transition_scroll?: boolean };
-        }
-      )?.styleSwitches?.page_transition_scroll === true
-    );
-  };
-
-  // TOC 恢复显示绑定「滚动真正结束」：长文从底部回顶的滚动（开关开启 =
-  // Swup scrl 引擎 JS 平滑，开关关闭 = 浏览器原生平滑）可持续数百 ms，
-  // 晚于 visit:end + 200ms——若按 visit:end 移除 toc-not-ready，后半段滚动
-  // 中目录就已显示。滚动结束信号双通道：scrl 引擎派发 swup scroll:end，
-  // 浏览器原生平滑派发 scrollend 事件（两者都监听，幂等 release）。
-  // needsScrollWait 仅对「由本主题接管回顶滚动」的场景置真（开关关闭 +
-  // 非 popstate + 无 hash + 从非顶部换页）；其余场景 visit:end 直接移除
+  // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"，合成器驱动不占
+  // 主线程，无 scrl 引擎的每帧 JS 测量卡顿）。同页锚点（目录点击）平滑由
+  // samePageWithHash 独立控制，不受影响。
+  // TOC 恢复显示绑定「滚动真正结束」：长文从底部回顶的原生平滑可持续数百
+  // ms，晚于 visit:end + 200ms——若按 visit:end 移除 toc-not-ready，后半段
+  // 滚动中目录就已显示。滚动结束信号双通道：原生平滑派发 scrollend 事件、
+  // scrl 引擎派发 swup scroll:end（两者都监听，幂等 release）。
+  // needsScrollWait 仅对「从非顶部换页回顶」的场景置真；从顶部换页（零距离
+  // 短路无滚动结束信号）与 popstate 由 visit:end 直接移除
   let needsScrollWait = false;
   const releaseTocNotReady = () => {
     document.documentElement.classList.remove("toc-not-ready");
@@ -331,15 +316,13 @@ function setupSwup() {
       // 挂在 <html> 上而非容器类：Swup 换页会替换 #toc-container /
       // #right-sidebar 容器，旧节点上的类随销毁，新节点无类会导致目录提前显示
       document.documentElement.classList.add("toc-not-ready");
-      const willUseNativeScroll =
-        !pageTransitionScrollEnabled() &&
-        !visit?.history?.popstate &&
-        !visit?.to?.hash;
-      needsScrollWait = willUseNativeScroll && window.scrollY > 0;
+      needsScrollWait =
+        !visit?.history?.popstate && !visit?.to?.hash && window.scrollY > 0;
       // SwupScrollPlugin 在 before("visit:start")（priority -1）设置
-      // visit.scroll.animate，此处（默认 priority 0）按开关覆盖，早于其
-      // content:scroll 的 doScrollingBetweenPages 消费点
-      if (willUseNativeScroll && visit?.scroll) {
+      // visit.scroll.animate，此处（默认 priority 0）在接管回顶滚动时覆盖为
+      // false，早于其 content:scroll 的 doScrollingBetweenPages 消费点。
+      // popstate / 带 hash 场景仍交由插件默认处理，不覆盖
+      if (!visit?.history?.popstate && !visit?.to?.hash && visit?.scroll) {
         visit.scroll.animate = false;
         // 原生滚动目标恒为 0，300vh 撑高防跳动无意义；且 visit:end
         // 隐藏撑高时文档高度骤降 300vh 会触发整页大重排（换页完成后卡顿
@@ -352,13 +335,13 @@ function setupSwup() {
       }
     },
   );
-  // 开关关闭时接管 content:scroll，改用浏览器原生平滑滚动（behavior:
+  // 跨页回顶滚动接管 content:scroll，统一改用浏览器原生平滑滚动（behavior:
   // "smooth"，合成器驱动不占主线程，无 scrl 引擎的每帧 JS 测量卡顿）：
   // content:replace 换入新内容后布局仍 dirty，立即滚动会派发 scroll 事件
   // → OverlayScrollbars 同步测量 → 强制整页重排（实测单帧 900ms）。延迟
   // 双 rAF 让浏览器先完成新内容首次布局，滚动时测量命中缓存不触发重排。
-  // 其余场景（hash/popstate/开关开启）走插件默认逻辑（scrl JS 平滑）。
-  // 后注册的 replace 生效（Swup 按注册顺序取最后者）
+  // popstate / 带 hash 场景走插件默认逻辑（默认锚点滚动）。后注册的
+  // replace 生效（Swup 按注册顺序取最后者）
   window.swup.hooks.replace(
     "content:scroll",
     (
@@ -370,11 +353,7 @@ function setupSwup() {
       _args: unknown,
       defaultHandler?: (visit: unknown, args: unknown) => void,
     ) => {
-      if (
-        !pageTransitionScrollEnabled() &&
-        !visit?.history?.popstate &&
-        !visit?.to?.hash
-      ) {
+      if (!visit?.history?.popstate && !visit?.to?.hash) {
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -388,7 +367,7 @@ function setupSwup() {
   window.swup.hooks.on("visit:end", () => {
     setTimeout(() => {
       document.getElementById("page-height-extend")?.classList.add("hidden");
-      // 未接管回顶滚动（hash/popstate/开关开启/从顶部换页）直接移除；
+      // 未接管回顶滚动（hash/popstate/从顶部换页）直接移除；
       // 原生平滑长文回顶由 scrollend 驱动（见上），此处跳过
       if (!needsScrollWait) releaseTocNotReady();
     }, SWUP_VISIT_END_DELAY);

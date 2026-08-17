@@ -599,11 +599,6 @@ spec:
               label: 卡片悬浮效果
               value: true
               help: "卡片悬停时轻微上移并显示主题色阴影"
-            - $formkit: switch
-              name: page_transition_scroll
-              label: 跨页平滑滚动
-              value: false
-              help: "开启后使用主题自带平滑滚动（可自由控制速度，长文之间可能因逐帧 JS 测量出现掉帧）；关闭则使用浏览器原生平滑滚动（更流畅，推荐）。默认关闭"
         - $formkit: group
           name: mobileMenu
           label: 菜单栏设置
