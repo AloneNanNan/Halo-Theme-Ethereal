@@ -352,7 +352,7 @@ spec:
               value: "未知星球"
               help: "未配置腾讯位置服务 Key 或定位失败时，替换 {location} 的地点文字（请填写地点名词，如：未知星球）。模板为「来自 {location} 的小伙伴」时，将显示「来自未知星球的小伙伴」"
     - group: style
-      label: 样式
+      label: 样式设置
       formSchema:
         - $formkit: group
           name: bannerStyle
