@@ -61,16 +61,16 @@ export function makeImageSuffix(
 
 /**
  * Banner 显示模式相关 th:with 局部变量串，供 Layout.astro 的 <html> 使用：
- * - bannerMode  —— 有效显示模式（bannerLayout 优先，回退旧版 base.banner，
- *                  再兜底 'banner'）。用嵌套 #strings.defaultString 而非链式
- *                  Elvis（Thymeleaf 无法解析括号包裹的链式 ?:，会 500）。
+ * - bannerMode  —— 有效显示模式（layout.bannerLayout 优先，兜底 'banner'）。
+ *                  用嵌套 #strings.defaultString 而非链式 Elvis
+ *                  （Thymeleaf 无法解析括号包裹的链式 ?:，会 500）。
  * - bannerHasMedia —— 当前是否为「横幅/全屏」（有横幅媒体）；
  *                  transparent 与 disabled 都视为无横幅。
  * 定义在 <html> 上后，整站模板直接引用这两个原子变量做条件判断。
  */
 export function bannerModeThWith(): string {
   return (
-    "bannerMode=${#strings.defaultString(#strings.defaultString(theme.config?.base?.bannerLayout?.displayMode, theme.config?.base?.banner?.displayMode), 'banner')}, " +
+    "bannerMode=${#strings.defaultString(theme.config?.layout?.bannerLayout?.displayMode, 'banner')}, " +
     "bannerHasMedia=${bannerMode == 'banner' or bannerMode == 'fullscreen'}"
   );
 }
@@ -86,11 +86,11 @@ export function bannerModeThWith(): string {
  */
 export function bannerThWith(): string {
   const src =
-    "#strings.defaultString(theme.config?.base?.bannerStyle?.src, '')";
+    "#strings.defaultString(theme.config?.style?.bannerStyle?.src, '')";
   return (
     imageSuffixThWith("p?.banner_width ?: 1920") +
     ", " +
-    bannerMediaVars(src, "theme.config?.base?.bannerStyle?.mode ?: 'single'") +
+    bannerMediaVars(src, "theme.config?.style?.bannerStyle?.mode ?: 'single'") +
     ", " +
     bannerMobileVars()
   );
@@ -133,15 +133,15 @@ function bannerMediaVars(srcExpr: string, modeExpr: string): string {
  * （双实现，改动需两处一致，同 CDN_SUFFIX_RAW 约定）。
  */
 function bannerMobileVars(): string {
-  const mobileSrc = "theme.config?.base?.bannerStyle?.mobile?.src";
+  const mobileSrc = "theme.config?.style?.bannerStyle?.mobile?.src";
   return (
-    "useMobileSrc=${theme.config?.base?.bannerStyle?.useMobileSrc == true}, " +
-    "mobileMode=${theme.config?.base?.bannerStyle?.mobile?.mode ?: 'single'}, " +
+    "useMobileSrc=${theme.config?.style?.bannerStyle?.useMobileSrc == true}, " +
+    "mobileMode=${theme.config?.style?.bannerStyle?.mobile?.mode ?: 'single'}, " +
     "mobileSrc=${#strings.defaultString(" +
     mobileSrc +
     ", '')}, " +
     // th:each / #lists.isEmpty 对 null 均按空处理，无需 ?: {} 空 Map 兜底
-    "mobileImages=${theme.config?.base?.bannerStyle?.mobile?.images}, " +
+    "mobileImages=${theme.config?.style?.bannerStyle?.mobile?.images}, " +
     // 移动端独立视频判定：供 MainGridLayout 的 banner-media.js 门控使用
     // （桌面/移动可独立配置：桌面单图 + 移动视频时 mobileActive 为 true 但桌面 isVideo 为 false）
     "mobileIsVideo=${mobileMode == 'single' and (" +

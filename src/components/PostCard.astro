@@ -38,7 +38,7 @@ const statIconClass =
 
     <div
       class="post-card-excerpt grow mb-3.5 pr-4 text-75 transition"
-      th:classappend="${theme.config?.post?.postList?.descriptionLines == 0 ? ' no-clamp' : ''}"
+      th:classappend="${theme.config?.layout?.postList?.descriptionLines == 0 ? ' no-clamp' : ''}"
       th:text="${post.status.excerpt}"
     >
       Excerpt

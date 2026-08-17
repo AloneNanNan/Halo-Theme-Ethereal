@@ -14,7 +14,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
        与 MainGridLayout 的 banner-title 条件精确互斥：banner h1 渲染条件 =
        (bannerText 开启) and (title != null)，此处为其取反 -->
   <h1
-    th:if="${not ((theme.config?.base?.bannerText == null or theme.config?.base?.bannerText?.enable == null or theme.config?.base?.bannerText?.enable) and theme.config?.base?.bannerText?.title != null)}"
+    th:if="${not ((theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.enable == null or theme.config?.style?.bannerText?.enable) and theme.config?.style?.bannerText?.title != null)}"
     class="sr-only"
     th:text="${site.title}"
   >

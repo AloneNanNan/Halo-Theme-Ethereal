@@ -1,22 +1,22 @@
 ---
-// 移动端菜单栏：按后台配置（基础设置 → 移动端菜单栏 → 菜单样式）渲染两种模式。
+// 移动端菜单栏：按后台配置（布局设置 → 菜单栏设置 → 菜单样式）渲染两种模式。
 //  - accordion（默认）：从导航栏下方展开的下拉面板，子菜单手风琴折叠（原版样式）
 //  - drawer：从右侧滑出的圆角卡片抽屉，子菜单平铺展示（新样式）
-// 数据源一致：均读取 Halo 菜单（theme.config?.base?.menu 或主菜单）。
+// 数据源一致：均读取 Halo 菜单（theme.config?.layout?.mobileMenu?.menu 或主菜单）。
 // 两种模式的开关逻辑见 public/assets/navbar.js（以 #nav-menu-root 是否
 // 存在判定模式）。
 ---
 
-<!-- 抽屉模式（mobileMenu.style = drawer） -->
+<!-- 抽屉模式（layout.mobileMenu.style = drawer） -->
 <div
-  th:if="${theme.config?.style?.mobileMenu?.style == 'drawer'}"
+  th:if="${theme.config?.layout?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-root"
   th:aria-label="#{nav.navMenu}"
 >
   <div id="nav-menu-overlay" aria-hidden="true"></div>
   <div
     id="nav-menu-panel"
-    th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+    th:with="menu = ${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.menu) ? menuFinder.getByName(theme.config?.layout?.mobileMenu?.menu) : menuFinder.getPrimary()}"
     class="nav-drawer"
     role="dialog"
     aria-modal="true"
@@ -92,11 +92,11 @@
   </div>
 </div>
 
-<!-- 手风琴模式（默认，mobileMenu.style = accordion 或未配置） -->
+<!-- 手风琴模式（默认，layout.mobileMenu.style = accordion 或未配置） -->
 <div
-  th:unless="${theme.config?.style?.mobileMenu?.style == 'drawer'}"
+  th:unless="${theme.config?.layout?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-panel"
-  th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+  th:with="menu = ${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.menu) ? menuFinder.getByName(theme.config?.layout?.mobileMenu?.menu) : menuFinder.getPrimary()}"
   class="float-panel float-panel-closed fixed right-4 px-2 py-2 w-40"
 >
   <div class="contents" th:if="${menu != null}">

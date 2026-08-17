@@ -27,7 +27,7 @@ const thClassappend = Astro.props["th:classappend"] || "";
 >
   {/* Profile：不吸顶，随页面滚动（两种布局模式一致） */}
   <div
-    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.layout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
+    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.layout?.pageLayout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
     class="hidden xl:flex w-full flex-col gap-4"
   >
     <Profile />

@@ -102,12 +102,12 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 <html
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
-  th:data-hue-fixed="${theme.config?.style?.mobileMenu?.visitorStyle?.enable == false or theme.config?.style?.mobileMenu?.visitorStyle?.hue == false}"
-  th:data-navbar-fixed="${theme.config?.style?.mobileMenu?.navbarFixed}"
-  th:data-theme-anim-style="${theme.config?.style?.colorScheme?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
+  th:data-hue-fixed="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable == false or theme.config?.layout?.mobileMenu?.visitorStyle?.hue == false}"
+  th:data-navbar-fixed="${theme.config?.layout?.mobileMenu?.navbarFixed}"
+  th:data-theme-anim-style="${theme.config?.layout?.mobileMenu?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
-  th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
+  th:data-speed="${theme.config?.style?.animationSpeed?.speedTier}"
   th:data-banner-display="${bannerMode}"
   th:with={bannerModeThWith() + ", " + speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
@@ -149,8 +149,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <script th:inline="javascript">
       // Thymeleaf 运行时注入后台配色配置（Elvis 操作符同时覆盖两种可能的路径）
       var __ecs =
-        /*[[${theme.config?.style?.colorScheme?.color_scheme ?: theme.config?.style?.color_scheme}]]*/ "auto";
-      var __eecs = /*[[${theme.config?.style?.colorScheme?.enable_change_color_scheme ?: theme.config?.style?.enable_change_color_scheme}]]*/ true;
+        /*[[${theme.config?.style?.colorScheme?.color_scheme}]]*/ "auto";
+      var __eecs = /*[[${theme.config?.layout?.mobileMenu?.enable_change_color_scheme ?: theme.config?.style?.colorScheme?.enable_change_color_scheme}]]*/ true;
     </script>
     <script
       is:inline
@@ -327,7 +327,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
     th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
-    th:style="|--bannerOffset: ${theme.config?.base?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.base?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.base?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.base?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.base?.bannerLayout?.cardOpacity ?: 0.6};|"
+    th:style="|--bannerOffset: ${theme.config?.style?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.style?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.layout?.bannerLayout?.cardOpacity ?: 0.6};|"
     data-overlayscrollbars-initialize
   >
     <ConfigCarrier />

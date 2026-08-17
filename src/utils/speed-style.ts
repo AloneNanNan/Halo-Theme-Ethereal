@@ -33,8 +33,8 @@ export const SPEED_CUSTOM_DEFAULTS = {
  */
 export function speedCustomStyleThWith(): string {
   return (
-    "sc=${theme.config?.base?.animationSpeed?.speedCustom ?: {}}, " +
-    "isCustom=${theme.config?.base?.animationSpeed?.speedTier == 'custom'}"
+    "sc=${theme.config?.style?.animationSpeed?.speedCustom ?: {}}, " +
+    "isCustom=${theme.config?.style?.animationSpeed?.speedTier == 'custom'}"
   );
 }
 

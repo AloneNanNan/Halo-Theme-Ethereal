@@ -33,13 +33,13 @@ const thClassappend = Astro.props["th:classappend"] || "";
   <div
     th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position == 'right'}"
     class="mb-4 flex w-full flex-col gap-4"
-    th:classappend="${theme.config?.sidebar?.layout?.layoutMode == 'two-column' ? '' : 'xl:!hidden'}"
+    th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:!hidden'}"
   >
     <Profile />
   </div>
   <!-- 公告：非吸顶，Profile 之后、小组件之前；两栏布局时即使设置为右侧也显示在左侧 -->
   <div
-    th:if="${theme.config?.sidebar?.announcement?.enable != false and (theme.config?.sidebar?.announcement?.position != 'right' or theme.config?.sidebar?.layout?.layoutMode == 'two-column')}"
+    th:if="${theme.config?.sidebar?.announcement?.enable != false and (theme.config?.sidebar?.announcement?.position != 'right' or theme.config?.layout?.pageLayout?.layoutMode == 'two-column')}"
     class="mb-4 flex w-full flex-col gap-4"
   >
     <Announcement class="onload-animation" />
@@ -47,7 +47,7 @@ const thClassappend = Astro.props["th:classappend"] || "";
   <!-- 公告（position=right，三栏布局）：移动端在左侧栏兜底显示（桌面隐藏，由右侧栏渲染），
        保证移动端公告始终显示在 Profile 之后、小组件之前 -->
   <div
-    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right' and theme.config?.sidebar?.layout?.layoutMode != 'two-column'}"
+    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right' and theme.config?.layout?.pageLayout?.layoutMode != 'two-column'}"
     class="mb-4 flex w-full flex-col gap-4"
     th:classappend="${'xl:!hidden'}"
   >

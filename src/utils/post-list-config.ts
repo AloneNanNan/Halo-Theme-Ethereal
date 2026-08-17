@@ -1,7 +1,7 @@
 /**
  * 文章卡片布局的 Thymeleaf 表达式生成。
  *
- * 与 settings.yaml 的 post.postList 配置组对应，读取：
+ * 与 settings.yaml 的 layout.postList 配置组对应，读取：
  *   defaultMode / coverPosition / descriptionLines / grid.masonry /
  *   grid.coverFullWidth / grid.coverAutoHeight
  *
@@ -21,7 +21,7 @@
 
 export function postListContainerThWith(): string {
   return (
-    "postList=${theme.config?.post?.postList}, " +
+    "postList=${theme.config?.layout?.postList}, " +
     "defaultMode=${postList?.defaultMode ?: 'list'}, " +
     "coverPosition=${postList?.coverPosition ?: 'right'}, " +
     "descLines=${postList?.descriptionLines ?: 2}, " +

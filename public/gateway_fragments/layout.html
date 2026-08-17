@@ -684,8 +684,13 @@
             if (tc) {
               try {
                 var c = JSON.parse(tc.textContent);
-                ds = c.defaultColorScheme || "auto";
-                ac = c.allowChangeColorScheme !== false;
+                ds =
+                  (c.style && c.style.colorScheme && c.style.colorScheme.color_scheme) ||
+                  "auto";
+                ac =
+                  (c.layout &&
+                    c.layout.mobileMenu &&
+                    c.layout.mobileMenu.enable_change_color_scheme) !== false;
               } catch (e) {}
             }
             var sch = ac && s ? s : ds;

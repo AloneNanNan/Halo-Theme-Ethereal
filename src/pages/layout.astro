@@ -47,11 +47,11 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
 <html
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
-  th:data-hue-fixed="${theme.config?.style?.mobileMenu?.visitorStyle?.enable == false or theme.config?.style?.mobileMenu?.visitorStyle?.hue == false}"
-  th:data-theme-anim-style="${theme.config?.style?.colorScheme?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
+  th:data-hue-fixed="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable == false or theme.config?.layout?.mobileMenu?.visitorStyle?.hue == false}"
+  th:data-theme-anim-style="${theme.config?.layout?.mobileMenu?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
-  th:data-speed="${theme.config?.base?.animationSpeed?.speedTier}"
+  th:data-speed="${theme.config?.style?.animationSpeed?.speedTier}"
   th:with={speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   th:fragment="html (head, content)"
@@ -70,8 +70,8 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
     <script th:inline="javascript">
       // 后台配色配置（与 Layout.astro 同式，供下方暗色模式初始化读取）
       var __ecs =
-        /*[[${theme.config?.style?.colorScheme?.color_scheme ?: theme.config?.style?.color_scheme}]]*/ "auto";
-      var __eecs = /*[[${theme.config?.style?.colorScheme?.enable_change_color_scheme ?: theme.config?.style?.enable_change_color_scheme}]]*/ true;
+        /*[[${theme.config?.style?.colorScheme?.color_scheme}]]*/ "auto";
+      var __eecs = /*[[${theme.config?.layout?.mobileMenu?.enable_change_color_scheme ?: theme.config?.style?.colorScheme?.enable_change_color_scheme}]]*/ true;
     </script>
     <script
       is:inline

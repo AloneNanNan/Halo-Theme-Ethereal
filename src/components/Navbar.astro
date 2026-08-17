@@ -45,7 +45,7 @@ const className = Astro.props.class;
 
     <div
       class="invisible lg:visible flex lg:w-auto w-0 overflow-hidden lg:overflow-visible"
-      th:with="menu = ${not #strings.isEmpty(theme.config?.base?.menu) ? menuFinder.getByName(theme.config?.base?.menu) : menuFinder.getPrimary()}"
+      th:with="menu = ${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.menu) ? menuFinder.getByName(theme.config?.layout?.mobileMenu?.menu) : menuFinder.getPrimary()}"
     >
       <div class="contents" th:if="${menu != null}">
         <div
@@ -120,7 +120,7 @@ const className = Astro.props.class;
       <!-- 面板切换不再使用内联 onclick（CSP 友好），由 public/assets/navbar.js 的 document 级事件委托统一处理。
            入口可见性：总开关开启且任一分区可用（主题色相/文章布局/卡片样式/壁纸模式/壁纸设置/透明设置）；总开关关闭则入口隐藏 -->
       <button
-        th:if="${theme.config?.style?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.style?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.transparent != false))}"
+        th:if="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.layout?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.transparent != false))}"
         th:aria-label="#{nav.displaySettings}"
         aria-label="Display Settings"
         class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90"
@@ -131,7 +131,7 @@ const className = Astro.props.class;
         ></span>
       </button>
       <span
-        th:if="${theme.config?.style?.colorScheme?.enable_change_color_scheme == null || theme.config?.style?.colorScheme?.enable_change_color_scheme}"
+        th:if="${theme.config?.layout?.mobileMenu?.enable_change_color_scheme == null || theme.config?.layout?.mobileMenu?.enable_change_color_scheme}"
         th:remove="tag"
       >
         <LightDarkSwitch client:only="svelte" />
@@ -154,7 +154,7 @@ const className = Astro.props.class;
     <!-- 显示设置面板（I27）：与入口按钮同条件门控——总开关关闭或全部分区关闭时，
          面板及其 client:only chunk 不随页面传输（th:if 包住组件输出，含 module script 标签） -->
     <span
-      th:if="${theme.config?.style?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.style?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.style?.mobileMenu?.visitorStyle?.transparent != false))}"
+      th:if="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.layout?.mobileMenu?.visitorStyle?.hue != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.postListLayout != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.cardStyle != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.wallpaperMode != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.wallpaperSettings != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.transparent != false))}"
       th:remove="tag"
     >
       <DisplaySettings client:only="svelte" />

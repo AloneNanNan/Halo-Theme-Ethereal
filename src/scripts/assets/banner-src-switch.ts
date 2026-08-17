@@ -23,7 +23,8 @@
     }
     window.__themeConfig = cfg;
   }
-  var bannerCfg = cfg && cfg.base && cfg.base.banner ? cfg.base.banner : null;
+  var bannerCfg =
+    cfg && cfg.style && cfg.style.bannerStyle ? cfg.style.bannerStyle : null;
   if (!bannerCfg || bannerCfg.useMobileSrc !== true) return;
   // 移动端是否有有效来源由 SSR 统一判定（src/utils/image-suffix.ts
   // bannerMobileVars() 的 mobileActive），移动容器 #banner-mobile 仅在

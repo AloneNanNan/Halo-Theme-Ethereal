@@ -2,10 +2,10 @@
 // Banner 多图轮播：切换动画（淡入淡出/滑动）、可点击指示点、停留定时器、
 // 预加载、屏幕外暂停。配置来自 #theme-config JSON（public/ 静态资产读不到
 // theme.config，同 wave.js）。切换动画时长 --dur-banner-transition 由动画档位
-// /custom 档注入 <html>；停留时长独立配置 banner.carousel.dwellMs 直接读 JSON，
+// /custom 档注入 <html>；停留时长独立配置 style.bannerStyle.carousel.dwellMs 直接读 JSON，
 // 不随档位变化。切换动画时长交给 CSS transition。
 // 移动端独立来源开启时存在双容器（#banner / #banner-mobile）：两个容器各自
-// 独立初始化（slides/指示点/定时器/IO 各自一份），行为设置共用 banner.carousel。
+// 独立初始化（slides/指示点/定时器/IO 各自一份），行为设置共用 style.bannerStyle.carousel。
 // 隐藏容器（display:none）的 IntersectionObserver 报 isIntersecting=false 自然
 // 暂停定时器，无需跨容器事件联动；首图 lazy 在容器被 CSS 显示后立即加载。
 (function () {
@@ -36,7 +36,8 @@
       window.__themeConfig = cfg;
     }
   }
-  var bannerCfg = cfg && cfg.base && cfg.base.banner ? cfg.base.banner : null;
+  var bannerCfg =
+    cfg && cfg.style && cfg.style.bannerStyle ? cfg.style.bannerStyle : null;
   var carouselCfg = bannerCfg && bannerCfg.carousel ? bannerCfg.carousel : {};
   var effect = carouselCfg.effect === "slide" ? "slide" : "fade";
   var showDots = carouselCfg.dots !== false;
@@ -93,7 +94,7 @@
       return readCssVar("--dur-banner-transition") || 700;
     }
 
-    // 停留时长独立配置：读取 banner.carousel.dwellMs 设置项（ms），
+    // 停留时长独立配置：读取 style.bannerStyle.carousel.dwellMs 设置项（ms），
     // 不随动画速度档位变化；切换动画时长仍跟随档位（--dur-banner-transition）
     function dwellMs() {
       var d = parseInt(carouselCfg.dwellMs, 10);

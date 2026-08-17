@@ -14,7 +14,7 @@ interface Props {
 
 <div
   id="welcome-popup-wrapper"
-  th:if="${theme.config?.base?.welcome?.enable}"
+  th:if="${theme.config?.layout?.welcome?.enable}"
   class="pointer-events-none fixed z-[1000]"
   role="status"
   aria-live="polite"
@@ -183,7 +183,7 @@ interface Props {
     if (!wrapper) return;
 
     var config = getThemeConfig();
-    var welcome = (config && config.base && config.base.welcome) || null;
+    var welcome = (config && config.layout && config.layout.welcome) || null;
     if (!welcome || welcome.enable === false) return;
 
     // 关闭记忆：本次会话内不再弹出，重新打开网站（新会话）再次弹出

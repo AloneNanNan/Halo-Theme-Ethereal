@@ -5,7 +5,7 @@ import { Icon } from "astro-icon/components";
 <div class="floating-controls block">
   <!-- 回顶按钮 - 排在前面，方便 sibling selector 联动 -->
   <div
-    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_top}"
+    th:if="${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_back_to_top}"
     id="back-to-top-btn"
     class="floating-btn to-top-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
   >
@@ -20,7 +20,7 @@ import { Icon } from "astro-icon/components";
 
   <!-- 首页按钮 -->
   <div
-    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_home}"
+    th:if="${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_back_to_home}"
     id="back-to-home-btn"
     class="floating-btn home-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
   >
@@ -34,7 +34,7 @@ import { Icon } from "astro-icon/components";
 
   <!-- 评论区按钮 - 仅文章页面显示 -->
   <div
-    th:if="${theme.config?.style?.floatingButtons == null or theme.config?.style?.floatingButtons?.enable_back_to_comment}"
+    th:if="${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_back_to_comment}"
     id="back-to-comment-btn"
     class="floating-btn comment-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
   >
@@ -49,10 +49,10 @@ import { Icon } from "astro-icon/components";
   <!-- 自定义按钮 - 显示在评论区按钮上方 -->
   <div
     class="custom-btns-wrapper"
-    th:if="${theme.config?.style?.floatingButtons != null && theme.config?.style?.floatingButtons?.customButtons != null}"
+    th:if="${theme.config?.layout?.floatingButtons != null && theme.config?.layout?.floatingButtons?.customButtons != null}"
   >
     <div
-      th:each="btn : ${theme.config?.style?.floatingButtons?.customButtons}"
+      th:each="btn : ${theme.config?.layout?.floatingButtons?.customButtons}"
       class="floating-btn custom-btn flex items-center rounded-2xl overflow-hidden pointer-events-none"
     >
       <a
