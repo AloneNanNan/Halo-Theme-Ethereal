@@ -22,7 +22,7 @@ const currentYear = new Date().getFullYear();
         >/&nbsp;<a
           class="link font-medium text-(--primary)"
           th:href="@{${theme.config?.footer?.displayLinks?.privacy_url != null ? theme.config?.footer?.displayLinks?.privacy_url : '/privacy'}}"
-          >隐私政策</a
+          th:text="#{common.privacyPolicy}">隐私政策</a
         ></span
       >
       <span

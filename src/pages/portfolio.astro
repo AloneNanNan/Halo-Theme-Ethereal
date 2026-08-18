@@ -3,7 +3,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
 <MainGridLayout
-  title="${(projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
+  title="${(projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')) + ' - ' + site.title}"
   description="#{page.portfolio.description(${site.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
@@ -23,7 +23,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <div class="min-w-0">
           <h1
             class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-            th:text="${projectFinder.setting().seoTitle ?: '作品集'}"
+            th:text="${projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')}"
           >
             作品集
           </h1>
@@ -31,18 +31,21 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             <span
               class="icon-[material-symbols--inventory-2-rounded] text-base text-(--primary)"
             ></span>
-            <span class="font-bold text-(--primary)">我的项目</span>
+            <span
+              class="font-bold text-(--primary)"
+              th:text="#{page.portfolio.subtitle}">我的项目</span
+            >
             <span class="text-30">·</span>
             <span
               th:if="${projects != null}"
-              th:text="${'共 ' + projects.total + ' 个项目'}"
+              th:text="#{page.portfolio.subtitleCount(${projects.total})}"
               class="text-50">0 个项目</span
             >
             <span
               th:if="${not #strings.isEmpty(platform) or not #strings.isEmpty(type)}"
               class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
             >
-              筛选中
+              <span th:text="#{page.portfolio.filtering}">筛选中</span>
             </span>
           </div>
         </div>
@@ -57,7 +60,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           th:href="@{/portfolio(type=${type})}"
           th:classappend="${#strings.isEmpty(platform) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
           class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-          >全部平台</a
+          th:text="#{page.portfolio.allPlatforms}">全部平台</a
         >
         <a
           th:each="entry : ${platformLabels.entrySet()}"
@@ -80,7 +83,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           th:href="@{/portfolio(platform=${platform})}"
           th:classappend="${#strings.isEmpty(type) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
           class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-          >全部类型</a
+          th:text="#{page.portfolio.allTypes}">全部类型</a
         >
         <a
           th:each="entry : ${typeLabels.entrySet()}"
@@ -108,7 +111,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               <span
                 class="icon-[material-symbols--star-rounded] text-(--primary)"
               ></span>
-              推荐项目
+              <span th:text="#{page.portfolio.featuredProjects}">推荐项目</span>
             </h2>
             <div
               class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))]"
@@ -140,7 +143,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                       <span
                         class="icon-[material-symbols--star-rounded] text-xs"
                       ></span>
-                      推荐
+                      <span th:text="#{page.portfolio.featured}">推荐</span>
                     </span>
                     <span
                       th:if="${not #strings.isEmpty(project.platform)}"
@@ -273,7 +276,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               >
                 <span class="icon-[material-symbols--code-rounded] text-sm"
                 ></span>
-                <span>仓库</span>
+                <span th:text="#{page.portfolio.repo}">仓库</span>
               </a>
               <a
                 th:if="${not #strings.isEmpty(project.demoUrl)}"
@@ -285,7 +288,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                 <span
                   class="icon-[material-symbols--play-circle-rounded] text-sm"
                 ></span>
-                <span>演示</span>
+                <span th:text="#{page.portfolio.demo}">演示</span>
               </a>
             </div>
           </div>
@@ -300,11 +303,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <span
           class="icon-[material-symbols--folder-open-rounded] text-5xl text-30"
         ></span>
-        <p class="mt-4 text-sm">暂无项目</p>
+        <p class="mt-4 text-sm" th:text="#{page.portfolio.empty}">暂无项目</p>
         <p class="mt-1 text-xs text-30">
-          去
-          <a th:href="@{/portfolio}" class="text-(--primary) hover:underline"
-            >查看全部</a
+          <span th:text="#{page.portfolio.go}">去</span>
+          <a
+            th:href="@{/portfolio}"
+            class="text-(--primary) hover:underline"
+            th:text="#{page.portfolio.viewAll}">查看全部</a
           >
         </p>
       </div>

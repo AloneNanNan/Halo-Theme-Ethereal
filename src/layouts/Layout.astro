@@ -68,6 +68,7 @@ const i18nInlineScript = `<script th:inline="javascript">
     "display.wallpaperSettings": \`[(#{display.wallpaperSettings})]\`,
     "display.bannerTitle": \`[(#{display.bannerTitle})]\`,
     "display.wave": \`[(#{display.wave})]\`,
+    "nav.language": \`[(#{nav.language})]\`,
     "nav.lightDark": \`[(#{nav.lightDark})]\`,
     "widget.music.noPlaying": \`[(#{widget.music.noPlaying})]\`,
     "widget.music.lyrics": \`[(#{widget.music.lyrics})]\`,
@@ -86,7 +87,46 @@ const i18nInlineScript = `<script th:inline="javascript">
     "widget.music.progress": \`[(#{widget.music.progress})]\`,
     "widget.music.noCover": \`[(#{widget.music.noCover})]\`,
     "widget.music.cover": \`[(#{widget.music.cover})]\`,
+    "widget.weather.loading": \`[(#{widget.weather.loading})]\`,
+    "widget.weather.error": \`[(#{widget.weather.error})]\`,
+    "widget.weather.noKey": \`[(#{widget.weather.noKey})]\`,
+    "widget.weather.updated": \`[(#{widget.weather.updated})]\`,
+    "widget.weather.humidity": \`[(#{widget.weather.humidity})]\`,
+    "widget.weather.busy": \`[(#{widget.weather.busy})]\`,
+    "widget.popularPosts.loading": \`[(#{widget.popularPosts.loading})]\`,
+    "widget.popularPosts.empty": \`[(#{widget.popularPosts.empty})]\`,
+    "widget.popularPosts.noTitle": \`[(#{widget.popularPosts.noTitle})]\`,
+    "widget.popularPosts.tenThousand": \`[(#{widget.popularPosts.tenThousand})]\`,
+    "widget.siteStats.tenThousand": \`[(#{widget.siteStats.tenThousand})]\`,
+    "widget.siteStats.today": \`[(#{widget.siteStats.today})]\`,
+    "widget.siteStats.yesterday": \`[(#{widget.siteStats.yesterday})]\`,
+    "widget.siteStats.daysAgo": \`[(#{widget.siteStats.daysAgo})]\`,
+    "widget.siteStats.monthsAgo": \`[(#{widget.siteStats.monthsAgo})]\`,
+    "widget.siteStats.yearsAgo": \`[(#{widget.siteStats.yearsAgo})]\`,
     "welcome.close": \`[(#{welcome.close})]\`,
+    "common.close": \`[(#{common.close})]\`,
+    "post.sharePoster": \`[(#{post.sharePoster})]\`,
+    "post.previewAlt": \`[(#{post.previewAlt})]\`,
+    "post.copyLink": \`[(#{post.copyLink})]\`,
+    "post.saveImage": \`[(#{post.saveImage})]\`,
+    "post.copied": \`[(#{post.copied})]\`,
+    "post.scanCode": \`[(#{post.scanCode})]\`,
+    "post.rewardSupport": \`[(#{post.rewardSupport})]\`,
+    "post.wechat": \`[(#{post.wechat})]\`,
+    "post.alipay": \`[(#{post.alipay})]\`,
+    "post.noQrConfigured": \`[(#{post.noQrConfigured})]\`,
+    "profile.switchStatus": \`[(#{profile.switchStatus})]\`,
+    "profile.customTextPlaceholder": \`[(#{profile.customTextPlaceholder})]\`,
+    "profile.confirmSwitch": \`[(#{profile.confirmSwitch})]\`,
+    "profile.gotIt": \`[(#{profile.gotIt})]\`,
+    "profile.noPermission": \`[(#{profile.noPermission})]\`,
+    "profile.networkError": \`[(#{profile.networkError})]\`,
+    "external_link.title": \`[(#{external_link.title})]\`,
+    "external_link.back": \`[(#{external_link.back})]\`,
+    "external_link.continue": \`[(#{external_link.continue})]\`,
+    "external_link.copy_link": \`[(#{external_link.copy_link})]\`,
+    "external_link.auto_redirect": \`[(#{external_link.auto_redirect})]\`,
+    "external_link.copied": \`[(#{external_link.copied})]\`,
   };
 </script>`;
 
@@ -146,11 +186,64 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 
     <Fragment set:html={themeSettingScript} />
     <Fragment set:html={i18nInlineScript} />
+    <script is:inline>
+      // 全局 i18n 助手（单一来源）：供各页面内联脚本与 Svelte 组件共用，
+      // 避免多处重复实现（历史各脚本自带的 t() 已陆续收敛到此）。
+      (function () {
+        var read = function (key, fallback) {
+          var res = window.i18nResources || {};
+          var value = res[key];
+          return value && value.indexOf("#{") === -1 ? value : fallback;
+        };
+        window.__etherealI18n = read;
+        // 语言标签归一化：zh-tw/zh-hant → zh-TW，zh* → zh-CN，其余 → en
+        window.__etherealLangTag = function (lang) {
+          var l = String(lang || "").toLowerCase();
+          if (l.indexOf("zh-tw") !== -1 || l.indexOf("zh-hant") !== -1) {
+            return "zh-TW";
+          }
+          if (l.indexOf("zh") === 0) return "zh-CN";
+          return "en";
+        };
+        // 写入 language cookie（前台切换 / 默认语言引导共用同一格式）
+        window.__etherealSetLanguage = function (lang) {
+          document.cookie =
+            "language=" + lang + "; path=/; max-age=31536000; samesite=Lax";
+        };
+        // 大数格式化：中文站以「万」为单位（÷10000），英文站以 k 为单位（÷1000）
+        window.__etherealBigNum = function (num, unitKey, unitFallback) {
+          var unit = read(unitKey, unitFallback || "k");
+          var divisor = unit === "k" ? 1000 : 10000;
+          return (num / divisor).toFixed(1).replace(/\.0$/, "") + unit;
+        };
+      })();
+    </script>
     <script th:inline="javascript">
       // Thymeleaf 运行时注入后台配色配置（Elvis 操作符同时覆盖两种可能的路径）
       var __ecs =
         /*[[${theme.config?.style?.colorScheme?.color_scheme}]]*/ "auto";
       var __eecs = /*[[${theme.config?.layout?.mobileMenu?.enable_change_color_scheme ?: theme.config?.style?.colorScheme?.enable_change_color_scheme}]]*/ true;
+    </script>
+    <script th:inline="javascript">
+      // 默认语言引导：后台「样式设置 → 主题语言 → 默认语言」非跟随系统时，
+      // 首次访问（访客未手动切换过语言）且服务端渲染语言与默认不一致时写入 cookie 并刷新一次，
+      // 由 Thymeleaf 服务端用默认语言重渲染；当前语言已匹配时无需刷新。
+      // 访客在前台手动切换后以访客选择为准（切换逻辑会写 ethereal_lang_chosen 标记）。
+      // sessionStorage 防 cookie 被禁用时无限刷新死循环。
+      (function () {
+        var defaultLang =
+          /*[[${theme.config?.style?.language?.defaultLanguage}]]*/ "auto";
+        if (!defaultLang || defaultLang === "auto") return;
+        if (document.cookie.match(/(?:^|;\s*)ethereal_lang_chosen=([^;]*)/)) {
+          return;
+        }
+        var cur = window.__etherealLangTag(document.documentElement.lang);
+        if (cur === defaultLang) return;
+        if (sessionStorage.getItem("__ethereal_lang_bootstrapped")) return;
+        sessionStorage.setItem("__ethereal_lang_bootstrapped", "1");
+        window.__etherealSetLanguage(defaultLang);
+        window.location.replace(window.location.href);
+      })();
     </script>
     <script
       is:inline

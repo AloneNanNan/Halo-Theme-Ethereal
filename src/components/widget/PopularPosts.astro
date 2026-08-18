@@ -26,7 +26,7 @@ const MAX_POSTS = 5;
         <span
           class="icon-[material-symbols--hourglass-top] mr-2 animate-spin text-base"
         ></span>
-        加载中...
+        <span th:text="#{widget.popularPosts.loading}">加载中...</span>
       </div>
     </div>
   </WidgetLayout>
@@ -36,6 +36,13 @@ const MAX_POSTS = 5;
   (function () {
     var container = document.getElementById("popular-posts-list");
     if (!container) return;
+
+    // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+    var t =
+      window.__etherealI18n ||
+      function (key, fb) {
+        return fb;
+      };
 
     // 读取主题配置获取 base path
     var themeConfig = document.getElementById("theme-config");
@@ -48,7 +55,13 @@ const MAX_POSTS = 5;
     }
 
     function formatCount(num) {
-      if (num >= 10000) return (num / 10000).toFixed(1) + "万";
+      if (num >= 10000) {
+        return window.__etherealBigNum(
+          num,
+          "widget.popularPosts.tenThousand",
+          "k",
+        );
+      }
       if (num >= 1000) return (num / 1000).toFixed(1) + "k";
       return String(num);
     }
@@ -56,7 +69,9 @@ const MAX_POSTS = 5;
     function renderList(posts) {
       if (!posts.length) {
         container.innerHTML =
-          '<div class="py-4 text-center text-sm text-neutral-400">暂无文章</div>';
+          '<div class="py-4 text-center text-sm text-neutral-400">' +
+          t("widget.popularPosts.empty", "暂无文章") +
+          "</div>";
         return;
       }
 
@@ -72,7 +87,8 @@ const MAX_POSTS = 5;
 
       for (var i = 0; i < posts.length; i++) {
         var post = posts[i];
-        var title = post.spec.title || "无标题";
+        var title =
+          post.spec.title || t("widget.popularPosts.noTitle", "无标题");
         var safeTitle = escapeHtml(title);
         var visits = (post.stats && post.stats.visit) || 0;
         var permalink = (post.status && post.status.permalink) || "";

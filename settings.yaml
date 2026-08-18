@@ -187,6 +187,12 @@ spec:
               value: false
               help: "开启后桌面端菜单栏始终固定在页面顶部，滚动页面时不会自动收起（移动端默认始终固定）"
             - $formkit: switch
+              name: enable_change_language
+              id: enable_change_language
+              label: 语言切换
+              value: true
+              help: "开启后在菜单栏显示语言切换按钮，访客可切换简体中文 / 繁體中文 / English；关闭则按「主题语言」的默认语言显示。注：切换会同步后台界面语言"
+            - $formkit: switch
               name: enable_change_color_scheme
               id: enable_change_color_scheme
               label: 配色（深浅色）切换
@@ -671,6 +677,28 @@ spec:
                   step: 15
                   value: 90
                   help: "仅擦除样式生效：0° 从左到右，90° 从上到下，180° 从右到左；未选擦除样式时隐藏该设置"
+        - $formkit: group
+          name: language
+          label: 主题语言
+          value:
+            defaultLanguage: auto
+          children:
+            - $formkit: select
+              name: defaultLanguage
+              id: defaultLanguage
+              key: defaultLanguage
+              label: 默认语言
+              value: auto
+              help: "访客未手动切换时的默认语言：跟随系统按浏览器语言显示；固定为某语言时首次访问即按该语言渲染。注：切换会同步后台界面语言"
+              options:
+                - label: 跟随系统
+                  value: auto
+                - label: 简体中文
+                  value: zh-CN
+                - label: 繁體中文
+                  value: zh-TW
+                - label: English
+                  value: en
         - $formkit: group
           name: styleSwitches
           label: 样式开关

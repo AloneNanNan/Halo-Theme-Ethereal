@@ -2,6 +2,16 @@
 import { getThemeConfig } from "./theme-config";
 import type { ExternalLink } from "../types/config";
 
+// 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+const t =
+  window.__etherealI18n ?? ((key: string, fallback: string) => fallback);
+/** 简单 {0} 占位符替换，与 i18n 参数格式一致 */
+function fmt(msg: string, ...args: (string | number)[]): string {
+  return String(msg).replace(/\{(\d+)\}/g, (m, i) =>
+    args[+i] != null ? String(args[+i]) : m,
+  );
+}
+
 let extLinkInited = false;
 
 function getConfig(): ExternalLink | null {
@@ -117,7 +127,7 @@ function buildModal(): HTMLElement {
 
   const title = document.createElement("div");
   title.className = "ext-title";
-  title.textContent = "即将离开本站";
+  title.textContent = t("external_link.title", "即将离开本站");
   card.appendChild(title);
 
   const desc = document.createElement("div");
@@ -138,12 +148,14 @@ function buildModal(): HTMLElement {
   const copyBtn = document.createElement("button");
   copyBtn.className = "ext-copy";
   copyBtn.id = "ext-copy-btn";
-  copyBtn.title = "复制";
+  copyBtn.title = t("external_link.copy_link", "复制");
   const copyIcon = document.createElement("span");
   copyIcon.className = "icon-[material-symbols--content-copy-outline-rounded]";
   copyIcon.style.cssText = "font-size:13px;line-height:1";
   copyBtn.appendChild(copyIcon);
-  copyBtn.appendChild(document.createTextNode("复制"));
+  copyBtn.appendChild(
+    document.createTextNode(t("external_link.copy_link", "复制")),
+  );
   urlBox.appendChild(copyBtn);
   card.appendChild(urlBox);
 
@@ -165,12 +177,14 @@ function buildModal(): HTMLElement {
   backBtn.className = "ext-btn-back group";
   backBtn.id = "ext-btn-back";
   backBtn.appendChild(buildCloseIcon());
-  backBtn.appendChild(document.createTextNode("返回"));
+  backBtn.appendChild(document.createTextNode(t("external_link.back", "返回")));
   btns.appendChild(backBtn);
   const goBtn = document.createElement("button");
   goBtn.className = "ext-btn-go group";
   goBtn.id = "ext-btn-go";
-  goBtn.appendChild(document.createTextNode("继续访问"));
+  goBtn.appendChild(
+    document.createTextNode(t("external_link.continue", "继续访问")),
+  );
   goBtn.appendChild(buildArrowIcon());
   btns.appendChild(goBtn);
   card.appendChild(btns);
@@ -249,7 +263,11 @@ function createOrUpdateModal(targetUrl: string) {
   const countdownEl = modal.querySelector<HTMLElement>("#ext-countdown");
   const progressBar = modal.querySelector<HTMLElement>("#ext-progress-bar");
   const progressFill = modal.querySelector<HTMLElement>("#ext-progress-fill");
-  if (countdownEl) countdownEl.textContent = delay + " 秒后自动跳转";
+  if (countdownEl)
+    countdownEl.textContent = fmt(
+      t("external_link.auto_redirect", "Auto redirect in {0} seconds"),
+      delay,
+    );
   if (countdownEl) countdownEl.style.display = delay > 0 ? "block" : "none";
   if (progressBar) progressBar.style.display = delay > 0 ? "block" : "none";
   if (progressFill) {
@@ -285,7 +303,7 @@ function bindStaticListeners(modal: HTMLElement) {
     if (icon) icon.className = "icon-[material-symbols--check-rounded]";
     if (label) {
       label.style.cssText = "";
-      label.textContent = "已复制";
+      label.textContent = t("external_link.copied", "已复制");
     }
     copyBtn.style.color = "var(--primary)";
     copyBtn.disabled = true;
@@ -296,7 +314,7 @@ function bindStaticListeners(modal: HTMLElement) {
           if (icon)
             icon.className =
               "icon-[material-symbols--content-copy-outline-rounded]";
-          if (label) label.textContent = "复制";
+          if (label) label.textContent = t("external_link.copy_link", "复制");
           copyBtn.style.color = "";
           copyBtn.disabled = false;
         }, 2000);
@@ -307,7 +325,7 @@ function bindStaticListeners(modal: HTMLElement) {
           if (icon)
             icon.className =
               "icon-[material-symbols--content-copy-outline-rounded]";
-          if (label) label.textContent = "复制";
+          if (label) label.textContent = t("external_link.copy_link", "复制");
           copyBtn.style.color = "";
           copyBtn.disabled = false;
         }, 2000);
@@ -413,7 +431,11 @@ function setupModalBehavior(
     const progressBar = modal.querySelector<HTMLElement>("#ext-progress-bar");
     if (countdownEl) countdownEl.style.display = "block";
     if (progressBar) progressBar.style.display = "block";
-    if (countdownEl) countdownEl.textContent = remaining + " 秒后自动跳转";
+    if (countdownEl)
+      countdownEl.textContent = fmt(
+        t("external_link.auto_redirect", "Auto redirect in {0} seconds"),
+        remaining,
+      );
     if (progressFill) {
       progressFill.style.transition = "none";
       progressFill.style.width = "100%";
@@ -427,7 +449,11 @@ function setupModalBehavior(
       if (remaining <= 0) {
         goToTarget();
       } else {
-        if (countdownEl) countdownEl.textContent = remaining + " 秒后自动跳转";
+        if (countdownEl)
+          countdownEl.textContent = fmt(
+            t("external_link.auto_redirect", "Auto redirect in {0} seconds"),
+            remaining,
+          );
       }
     }
     activeTimer = setInterval(tick, 1000);

@@ -58,11 +58,14 @@ import CopyButton from "../components/CopyButton.astro";
           <span
             class="icon-[material-symbols--diversity-3-rounded] text-base text-(--primary)"
           ></span>
-          <span class="font-bold text-(--primary)">朋友们</span>
+          <span
+            class="font-bold text-(--primary)"
+            th:text="#{page.links.subtitle}">朋友们</span
+          >
           <span class="text-30">·</span>
           <span
             th:if="${groups != null and not #lists.isEmpty(groups)}"
-            th:text="${'共 ' + #aggregates.sum(groups.![links.size()]) + ' 个链接'}"
+            th:text="#{page.links.subtitleCount(${#aggregates.sum(groups.![links.size()])})}"
             class="text-50">0 个链接</span
           >
         </div>
@@ -74,11 +77,14 @@ import CopyButton from "../components/CopyButton.astro";
         th:attr="data-random-groups=${theme.config?.links?.features?.random_visit_groups}"
         class="random-visit-btn btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
         title="随机访问一个友链"
+        th:title="#{page.links.randomVisitTitle}"
       >
         <span
           class="random-visit-icon icon-[material-symbols--shuffle-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
         ></span>
-        <span class="random-visit-label">随机访问</span>
+        <span class="random-visit-label" th:text="#{page.links.randomVisit}"
+          >随机访问</span
+        >
       </button>
     </div>
 
@@ -180,7 +186,7 @@ import CopyButton from "../components/CopyButton.astro";
     </div>
 
     <div th:if="${#lists.isEmpty(groups)}" class="py-12 text-center text-50">
-      暂无友情链接
+      <span th:text="#{page.links.noLinks}">暂无友情链接</span>
     </div>
   </section>
 
@@ -225,7 +231,9 @@ import CopyButton from "../components/CopyButton.astro";
             class="flex items-center justify-between gap-2 rounded-lg bg-(--btn-regular-bg) p-2"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-[11px] text-50">站点名称</div><div
+              <div class="text-[11px] text-50">
+                <span th:text="#{page.links.ownerSiteName}">站点名称</span>
+              </div><div
                 class="truncate text-[13px] text-90"
                 th:text="${theme.config?.links?.ownerInfo.owner_name}"
               >
@@ -239,7 +247,10 @@ import CopyButton from "../components/CopyButton.astro";
             class="flex items-center justify-between gap-2 rounded-lg bg-(--btn-regular-bg) p-2"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-[11px] text-50">站点描述</div><div
+              <div class="text-[11px] text-50">
+                <span th:text="#{page.links.ownerSiteDescription}"
+                  >站点描述</span>
+              </div><div
                 class="line-clamp-2 text-[13px] text-90"
                 th:text="${theme.config?.links?.ownerInfo.owner_description}"
               >
@@ -253,7 +264,9 @@ import CopyButton from "../components/CopyButton.astro";
             class="flex items-center justify-between gap-2 rounded-lg bg-(--btn-regular-bg) p-2"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-[11px] text-50">站点链接</div><div
+              <div class="text-[11px] text-50">
+                <span th:text="#{page.links.ownerSiteUrl}">站点链接</span>
+              </div><div
                 class="truncate text-[13px] text-90"
                 th:text="${theme.config?.links?.ownerInfo.owner_url}"
               >
@@ -267,7 +280,9 @@ import CopyButton from "../components/CopyButton.astro";
             class="flex items-center justify-between gap-2 rounded-lg bg-(--btn-regular-bg) p-2"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-[11px] text-50">头像链接</div><div
+              <div class="text-[11px] text-50">
+                <span th:text="#{page.links.ownerAvatarUrl}">头像链接</span>
+              </div><div
                 class="truncate text-[13px] text-90"
                 th:text="${theme.config?.links?.ownerInfo.owner_avatar}"
               >
@@ -281,7 +296,9 @@ import CopyButton from "../components/CopyButton.astro";
             class="flex items-center justify-between gap-2 rounded-lg bg-(--btn-regular-bg) p-2"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-[11px] text-50">RSS 地址</div><div
+              <div class="text-[11px] text-50">
+                <span th:text="#{page.links.ownerRss}">RSS 地址</span>
+              </div><div
                 class="truncate text-[13px] text-90"
                 th:text="${theme.config?.links?.ownerInfo.owner_rss}"
               >
@@ -310,7 +327,8 @@ import CopyButton from "../components/CopyButton.astro";
               <span
                 class="icon-[material-symbols--fact-check-outline-rounded] text-xl"
               ></span>
-            </span>申请友链
+            </span>
+            <span th:text="#{page.links.applyTitle}">申请友链</span>
           </h3>
           <div
             th:if="${applySteps != null and not #lists.isEmpty(applySteps)}"
@@ -415,7 +433,7 @@ import CopyButton from "../components/CopyButton.astro";
               <span
                 class="icon-[material-symbols--rocket-launch-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
               ></span>
-              <span>申请友链</span>
+              <span th:text="#{page.links.applyButton}">申请友链</span>
             </button>
           </div>
         </div>
@@ -554,7 +572,13 @@ import CopyButton from "../components/CopyButton.astro";
       aria-labelledby="link-apply-title"
     >
       <div class="link-apply-header">
-        <h3 id="link-apply-title" class="link-apply-title">申请友链</h3>
+        <h3
+          id="link-apply-title"
+          class="link-apply-title"
+          th:text="#{page.links.applyTitle}"
+        >
+          申请友链
+        </h3>
         <span class="link-apply-title-divider"></span>
         <button
           type="button"
@@ -562,6 +586,8 @@ import CopyButton from "../components/CopyButton.astro";
           class="link-apply-close"
           aria-label="关闭"
           title="关闭"
+          th:aria-label="#{page.links.applyClose}"
+          th:title="#{page.links.applyClose}"
         >
           <span
             class="icon-[material-symbols--close-rounded] text-xl leading-none"
@@ -572,7 +598,11 @@ import CopyButton from "../components/CopyButton.astro";
         <div class="link-apply-body">
           <!-- 第一行：网站地址 | 网站名称 -->
           <label class="link-apply-field">
-            <span class="link-apply-label">网站地址<em>*</em></span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyWebsite}">网站地址</span><em
+                >*</em
+              ></span
+            >
             <input
               type="url"
               name="url"
@@ -583,7 +613,10 @@ import CopyButton from "../components/CopyButton.astro";
             />
           </label>
           <label class="link-apply-field">
-            <span class="link-apply-label">网站名称<em>*</em></span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyName}">网站名称</span><em>*</em
+              ></span
+            >
             <input
               type="text"
               name="displayName"
@@ -591,11 +624,14 @@ import CopyButton from "../components/CopyButton.astro";
               autocomplete="off"
               spellcheck="false"
               placeholder="您的网站名称"
+              th:placeholder="#{page.links.applyNamePlaceholder}"
             />
           </label>
           <!-- 第二行：网站 Logo | 反链地址 -->
           <label class="link-apply-field">
-            <span class="link-apply-label">网站 Logo</span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyLogo}">网站 Logo</span></span
+            >
             <input
               type="url"
               name="logo"
@@ -605,7 +641,9 @@ import CopyButton from "../components/CopyButton.astro";
             />
           </label>
           <label class="link-apply-field">
-            <span class="link-apply-label">反链地址</span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyBacklink}">反链地址</span></span
+            >
             <input
               type="url"
               name="backlink"
@@ -616,25 +654,35 @@ import CopyButton from "../components/CopyButton.astro";
           </label>
           <!-- 第三行：网站描述 | RSS 地址 -->
           <label class="link-apply-field">
-            <span class="link-apply-label">网站描述</span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyDescription}">网站描述</span
+              ></span
+            >
             <textarea
               name="description"
               rows="2"
               autocomplete="off"
-              placeholder="一句话介绍您的网站"></textarea>
+              placeholder="一句话介绍您的网站"
+              th:placeholder="#{page.links.applyDescriptionPlaceholder}"
+            ></textarea>
           </label>
           <label class="link-apply-field">
-            <span class="link-apply-label">RSS 地址</span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyRss}">RSS 地址</span></span
+            >
             <textarea
               name="feedUrls"
               rows="2"
               autocomplete="off"
               spellcheck="false"
-              placeholder="每行一个 RSS/Atom 订阅地址"></textarea>
+              placeholder="每行一个 RSS/Atom 订阅地址"
+              th:placeholder="#{page.links.applyRssPlaceholder}"></textarea>
           </label>
           <!-- 第四行：联系邮箱 | 验证码 -->
           <label class="link-apply-field">
-            <span class="link-apply-label">联系邮箱</span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyEmail}">联系邮箱</span></span
+            >
             <input
               type="email"
               name="email"
@@ -644,7 +692,10 @@ import CopyButton from "../components/CopyButton.astro";
             />
           </label>
           <div class="link-apply-field">
-            <span class="link-apply-label">验证码<em>*</em></span>
+            <span class="link-apply-label"
+              ><span th:text="#{page.links.applyCaptcha}">验证码</span><em>*</em
+              ></span
+            >
             <div class="link-apply-captcha">
               <input
                 type="text"
@@ -655,12 +706,15 @@ import CopyButton from "../components/CopyButton.astro";
                 autocomplete="off"
                 spellcheck="false"
                 placeholder="输入图中字符"
+                th:placeholder="#{page.links.applyCaptchaPlaceholder}"
               />
               <img
                 id="link-apply-captcha-img"
                 class="link-apply-captcha-img"
                 alt="验证码"
                 title="点击刷新验证码"
+                th:alt="#{page.links.applyCaptcha}"
+                th:title="#{page.links.applyRefreshCaptcha}"
               />
             </div>
           </div>
@@ -680,7 +734,10 @@ import CopyButton from "../components/CopyButton.astro";
           >
             <span class="icon-[material-symbols--send-rounded] text-base"
             ></span>
-            <span class="link-apply-submit-text">提交申请</span>
+            <span
+              class="link-apply-submit-text"
+              th:text="#{page.links.applySubmit}">提交申请</span
+            >
           </button>
         </div>
       </form>

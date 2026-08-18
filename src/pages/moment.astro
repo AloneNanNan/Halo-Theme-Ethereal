@@ -83,7 +83,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               <span
                 th:if="${#lists.size(content.medium) == 1}"
                 class="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-1.5 py-0.5 text-xs font-bold text-white"
-                >长图</span
+                th:text="#{page.moments.tallImage}">长图</span
               >
             </figure>
             <video
@@ -114,6 +114,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <button
             type="button"
             aria-label="点赞"
+            th:aria-label="#{page.moments.upvote}"
             th:if="${moment.stats != null}"
             class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
             th:attr="data-moment=${moment.metadata.name}"
@@ -129,6 +130,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <button
             type="button"
             aria-label="点赞"
+            th:aria-label="#{page.moments.upvote}"
             th:unless="${moment.stats != null}"
             class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
             th:attr="data-moment=${moment.metadata.name}"

@@ -3,6 +3,13 @@
 // 构建产物：public/assets/post-share.js（源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
 // 文章分享图生成器（v4）+ 当前文章 URL 同步
 
+// 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+var t =
+  window.__etherealI18n ||
+  function (k, f) {
+    return f;
+  };
+
 // 文章协议区 URL 同步（支持 Swup 页面切换）
 (function () {
   window.__etherealSyncCurrentPostUrl = function () {
@@ -241,7 +248,8 @@
     var headerTitle = document.createElement("div");
     headerTitle.className = "text-90";
     headerTitle.style.cssText = "font-size:1.125rem;font-weight:700";
-    headerTitle.innerHTML = "<span>分享海报</span>";
+    headerTitle.innerHTML =
+      "<span>" + t("post.sharePoster", "分享海报") + "</span>";
     var divider = document.createElement("div");
     divider.className = "h-1 w-5 rounded-full bg-(--primary) transition";
     header.appendChild(headerTitle);
@@ -255,7 +263,7 @@
     img.src = imageDataUrl;
     img.style.cssText =
       "max-width:100%;height:auto;display:block;border-radius:10px";
-    img.alt = "分享图预览";
+    img.alt = t("post.previewAlt", "分享图预览");
     imgContainer.appendChild(img);
 
     // ---- 按钮行 ----
@@ -285,7 +293,9 @@
     };
     // 链接图标
     copyBtn.innerHTML =
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>复制链接</span>';
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>' +
+      t("post.copyLink", "复制链接") +
+      "</span>";
 
     // 保存图片按钮（主要按钮，参考 .ext-btn-go 样式）
     var saveBtn = document.createElement("button");
@@ -301,7 +311,9 @@
     };
     // 下载图标
     saveBtn.innerHTML =
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存图片</span>';
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>' +
+      t("post.saveImage", "保存图片") +
+      "</span>";
 
     btnRow.appendChild(copyBtn);
     btnRow.appendChild(saveBtn);
@@ -310,7 +322,7 @@
     var closeBtn = document.createElement("button");
     closeBtn.style.cssText =
       "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
-    closeBtn.setAttribute("aria-label", "关闭");
+    closeBtn.setAttribute("aria-label", t("common.close", "关闭"));
     closeBtn.innerHTML =
       '<span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>';
     closeBtn.onmouseenter = function () {
@@ -382,10 +394,14 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(function () {
             copyBtn.innerHTML =
-              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>已复制!</span>';
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>' +
+              t("post.copied", "已复制!") +
+              "</span>";
             setTimeout(function () {
               copyBtn.innerHTML =
-                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>复制链接</span>';
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>' +
+                t("post.copyLink", "复制链接") +
+                "</span>";
             }, 2000);
           });
         } else {
@@ -397,10 +413,14 @@
           document.execCommand("copy");
           document.body.removeChild(ta);
           copyBtn.innerHTML =
-            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>已复制!</span>';
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>' +
+            t("post.copied", "已复制!") +
+            "</span>";
           setTimeout(function () {
             copyBtn.innerHTML =
-              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>复制链接</span>';
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>' +
+              t("post.copyLink", "复制链接") +
+              "</span>";
           }, 2000);
         }
       } catch (e) {
@@ -693,7 +713,11 @@
       ctx.textBaseline = "middle";
       ctx.fillText("QR", qrX + qrSize / 2, qrY + qrSize / 2 - 6);
       ctx.font = "400 10px sans-serif";
-      ctx.fillText("扫码", qrX + qrSize / 2, qrY + qrSize / 2 + 12);
+      ctx.fillText(
+        t("post.scanCode", "扫码"),
+        qrX + qrSize / 2,
+        qrY + qrSize / 2 + 12,
+      );
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
     }

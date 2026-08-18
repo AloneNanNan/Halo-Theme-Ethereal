@@ -105,12 +105,20 @@ const className = Astro.props.class;
       data-fallback-source=${widget.fallback_source}"
   >
     <div class="hitokoto-main-row">
-      <p class="hitokoto-text" id="hitokotoText">加载中...</p>
+      <p
+        class="hitokoto-text"
+        id="hitokotoText"
+        th:text="#{widget.hitokoto.loading}"
+      >
+        加载中...
+      </p>
       <button
         class="hitokoto-refresh"
         id="hitokotoRefresh"
         title="换一句"
         aria-label="换一句"
+        th:title="#{widget.hitokoto.refresh}"
+        th:aria-label="#{widget.hitokoto.refresh}"
       >
         <span class="icon-[material-symbols--refresh-rounded] iconify-spin"
         ></span>

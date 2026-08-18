@@ -158,10 +158,21 @@ const style = Astro.props.style;
 
 <script is:inline th:inline="none">
   (function () {
+    // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+    var t =
+      window.__etherealI18n ||
+      function (key, fb) {
+        return fb;
+      };
+
     // 站点统计工具函数
     function formatNumber(num) {
       if (num >= 10000) {
-        return (num / 10000).toFixed(1).replace(/\.0$/, "") + "w";
+        return window.__etherealBigNum(
+          num,
+          "widget.siteStats.tenThousand",
+          "k",
+        );
       }
       return num.toLocaleString();
     }
@@ -187,11 +198,27 @@ const style = Astro.props.style;
       var now = new Date();
       var diffMs = now.getTime() - date.getTime();
       var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return "今天";
-      if (diffDays === 1) return "昨天";
-      if (diffDays < 30) return diffDays + " 天前";
-      if (diffDays < 365) return Math.floor(diffDays / 30) + " 个月前";
-      return Math.floor(diffDays / 365) + " 年前";
+      if (diffDays === 0) return t("widget.siteStats.today", "今天");
+      if (diffDays === 1) return t("widget.siteStats.yesterday", "昨天");
+      if (diffDays < 30)
+        return format(t("widget.siteStats.daysAgo", "{0} 天前"), diffDays);
+      if (diffDays < 365)
+        return format(
+          t("widget.siteStats.monthsAgo", "{0} 个月前"),
+          Math.floor(diffDays / 30),
+        );
+      return format(
+        t("widget.siteStats.yearsAgo", "{0} 年前"),
+        Math.floor(diffDays / 365),
+      );
+    }
+
+    // 简单占位符替换 {0}，与 i18n 参数格式一致
+    function format(msg) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      return String(msg).replace(/\{(\d+)\}/g, function (m, i) {
+        return args[+i] != null ? args[+i] : m;
+      });
     }
 
     // 缓存已计算的统计数据

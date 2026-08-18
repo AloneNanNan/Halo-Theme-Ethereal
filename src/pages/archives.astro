@@ -25,9 +25,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <span
             class="icon-[material-symbols--library-books-outline-rounded] text-base text-(--primary)"
           ></span>
-          <span class="font-bold text-(--primary)">文章归档</span>
+          <span
+            class="font-bold text-(--primary)"
+            th:text="#{page.archives.subtitle}">文章归档</span
+          >
           <span class="text-30">·</span>
-          <span class="text-50" th:text="'共 ' + ${totalPosts} + ' 篇文章'"
+          <span
+            class="text-50"
+            th:text="#{page.archives.subtitleCount(${totalPosts})}"
             >共 0 篇文章</span
           >
         </div>

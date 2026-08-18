@@ -22,6 +22,10 @@
 
 import { getThemeConfig, setThemeConfig } from "./theme-config";
 
+// 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+const t =
+  window.__etherealI18n ?? ((key: string, fallback: string) => fallback);
+
 export interface StatusOption {
   key: string;
   label: string;
@@ -253,7 +257,7 @@ function buildModal(): HTMLElement {
   const close = document.createElement("button");
   close.type = "button";
   close.className = "status-close";
-  close.setAttribute("aria-label", "关闭");
+  close.setAttribute("aria-label", t("common.close", "关闭"));
   const closeIcon = document.createElement("span");
   closeIcon.className = "icon-[material-symbols--close-rounded]";
   close.appendChild(closeIcon);
@@ -261,7 +265,7 @@ function buildModal(): HTMLElement {
 
   const title = document.createElement("div");
   title.className = "status-title";
-  title.textContent = "切换当前状态";
+  title.textContent = t("profile.switchStatus", "切换当前状态");
   header.appendChild(title);
 
   const divider = document.createElement("div");
@@ -340,7 +344,10 @@ function buildTextFieldNode(): HTMLElement {
   input.id = "status-text-input";
   input.className = "status-text-input";
   input.maxLength = 10;
-  input.placeholder = "自定义文案（留空用默认，限 10 字）";
+  input.placeholder = t(
+    "profile.customTextPlaceholder",
+    "自定义文案（留空用默认，限 10 字）",
+  );
   input.value = getCustomText(selectedKey);
   wrap.appendChild(input);
   return wrap;
@@ -445,14 +452,14 @@ function showTipModal(reason: "unauthorized" | "network", extraMsg?: string) {
   const p = document.createElement("p");
   p.className = "status-tip-text";
   p.textContent = isPermission
-    ? "暂无权限切换，请先登录管理员账号后再操作。"
-    : extraMsg || "网络异常，请稍后再试。";
+    ? t("profile.noPermission", "暂无权限切换，请先登录管理员账号后再操作。")
+    : extraMsg || t("profile.networkError", "网络异常，请稍后再试。");
   tip.appendChild(p);
 
   // 权限提示不显示任何底部按钮（右上角关闭即可）；错误提示保留「知道了」
   const footerNode = isPermission
     ? null
-    : buildButton("知道了", "status-btn-close");
+    : buildButton(t("profile.gotIt", "知道了"), "status-btn-close");
   showModal(tip, footerNode);
 }
 
@@ -530,7 +537,10 @@ async function openStatusModal() {
   body.appendChild(buildOptionsNode(selectedKey));
   body.appendChild(buildTextFieldNode());
 
-  showModal(body, buildButton("确认切换", "status-btn-confirm"));
+  showModal(
+    body,
+    buildButton(t("profile.confirmSwitch", "确认切换"), "status-btn-confirm"),
+  );
 }
 
 /** 确认切换：将当前选中状态修改到缓存配置并 PUT 写回 */

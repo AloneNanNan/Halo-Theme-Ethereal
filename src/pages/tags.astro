@@ -19,11 +19,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <span
           class="icon-[material-symbols--tag-rounded] text-base text-(--primary)"
         ></span>
-        <span class="font-bold text-(--primary)">文章标签</span>
+        <span class="font-bold text-(--primary)" th:text="#{page.tags.subtitle}"
+          >文章标签</span
+        >
         <span class="text-30">·</span>
         <span
           th:if="${tags != null}"
-          th:text="${'共 ' + #lists.size(tags) + ' 个标签'}"
+          th:text="#{page.tags.subtitleCount(${#lists.size(tags)})}"
           class="text-50">0 个标签</span
         >
       </div>

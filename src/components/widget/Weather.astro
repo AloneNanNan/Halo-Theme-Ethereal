@@ -41,7 +41,7 @@ const className = Astro.props.class;
       class="flex items-center justify-center gap-2 text-neutral-400 text-sm"
     >
       <span class="icon-[mdi--loading] animate-spin text-base"></span>
-      <span data-i18n="widget.weather.loading">加载中...</span>
+      <span th:text="#{widget.weather.loading}">加载中...</span>
     </div>
   </div>
 </WidgetLayout>
@@ -54,6 +54,13 @@ const className = Astro.props.class;
     var IP_CACHE_TTL = 4 * 60 * 60 * 1000; // IP 定位缓存 4 小时
     var REQUEST_GAP = 300; // 请求间隔 300ms（QPS=5 足够）
     var API_BASE = "https://apis.map.qq.com/ws";
+
+    // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+    var t =
+      window.__etherealI18n ||
+      function (key, fb) {
+        return fb;
+      };
 
     var weatherIconMap = {
       晴天: "mdi--weather-sunny",
@@ -212,7 +219,9 @@ const className = Astro.props.class;
       var timeSpan = document.createElement("span");
       timeSpan.className =
         "text-[10px] text-neutral-400 dark:text-neutral-500 ml-1";
-      timeSpan.textContent = formatTime(result._updated || Date.now()) + "更新";
+      timeSpan.textContent =
+        formatTime(result._updated || Date.now()) +
+        t("widget.weather.updated", "更新");
       left1.appendChild(timeSpan);
 
       row1.appendChild(left1);
@@ -259,7 +268,11 @@ const className = Astro.props.class;
       right2.appendChild(windSpan);
 
       var humSpan = document.createElement("span");
-      humSpan.textContent = "湿度 " + (info.humidity || "--") + "%";
+      humSpan.textContent =
+        t("widget.weather.humidity", "湿度") +
+        " " +
+        (info.humidity || "--") +
+        "%";
       right2.appendChild(humSpan);
 
       row2.appendChild(right2);
@@ -292,8 +305,7 @@ const className = Astro.props.class;
       row.appendChild(cloudIcon);
 
       var label = document.createElement("span");
-      label.setAttribute("data-i18n", "widget.weather.error");
-      label.textContent = "天气加载失败";
+      label.textContent = t("widget.weather.error", "天气加载失败");
       row.appendChild(label);
 
       wrapper.appendChild(row);
@@ -322,8 +334,7 @@ const className = Astro.props.class;
       wrapper.appendChild(keyIcon);
 
       var label = document.createElement("span");
-      label.setAttribute("data-i18n", "widget.weather.noKey");
-      label.textContent = "请配置腾讯地图 Key";
+      label.textContent = t("widget.weather.noKey", "请配置腾讯地图 Key");
       wrapper.appendChild(label);
 
       container.appendChild(wrapper);
@@ -466,7 +477,7 @@ const className = Astro.props.class;
           renderWeather(result);
         })
         .catch(function () {
-          renderError("天气服务繁忙，请稍后刷新");
+          renderError(t("widget.weather.busy", "天气服务繁忙，请稍后刷新"));
         });
     }
 

@@ -2,6 +2,13 @@
 // 构建产物：public/assets/post-reward.js（源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
 import { getThemeConfig } from "./_theme-config";
 
+// 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
+var t =
+  window.__etherealI18n ||
+  function (k, f) {
+    return f;
+  };
+
 (function () {
   "use strict";
 
@@ -22,7 +29,7 @@ import { getThemeConfig } from "./_theme-config";
     var alipay = (rs.alipay_qr || "").trim();
 
     if (!wechat && !alipay) {
-      alert("博主暂未配置收款二维码");
+      alert(t("post.noQrConfigured", "博主暂未配置收款二维码"));
       return;
     }
 
@@ -59,7 +66,8 @@ import { getThemeConfig } from "./_theme-config";
     var headerTitle = document.createElement("div");
     headerTitle.className = "text-90";
     headerTitle.style.cssText = "font-size:1.125rem;font-weight:700";
-    headerTitle.innerHTML = "<span>打赏支持</span>";
+    headerTitle.innerHTML =
+      "<span>" + t("post.rewardSupport", "打赏支持") + "</span>";
     var divider = document.createElement("div");
     divider.className = "h-1 w-5 rounded-full bg-(--primary) transition";
     header.appendChild(headerTitle);
@@ -104,12 +112,20 @@ import { getThemeConfig } from "./_theme-config";
 
     if (wechat) {
       qrRow.appendChild(
-        buildQrItem("微信", "icon-[fa6-brands--weixin]", wechat),
+        buildQrItem(
+          t("post.wechat", "微信"),
+          "icon-[fa6-brands--weixin]",
+          wechat,
+        ),
       );
     }
     if (alipay) {
       qrRow.appendChild(
-        buildQrItem("支付宝", "icon-[fa6-brands--alipay]", alipay),
+        buildQrItem(
+          t("post.alipay", "支付宝"),
+          "icon-[fa6-brands--alipay]",
+          alipay,
+        ),
       );
     }
 
@@ -117,7 +133,7 @@ import { getThemeConfig } from "./_theme-config";
     var closeBtn = document.createElement("button");
     closeBtn.style.cssText =
       "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
-    closeBtn.setAttribute("aria-label", "关闭");
+    closeBtn.setAttribute("aria-label", t("common.close", "关闭"));
     closeBtn.innerHTML =
       '<span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>';
     closeBtn.onmouseenter = function () {

@@ -35,7 +35,9 @@ import "../styles/photos-gallery-lightbox.css";
             th:text="#{page.photos.collection}">Collection</span
           >
           <span class="text-30">·</span>
-          <span class="text-50" th:text="'共 ' + ${photos.total} + ' 张图片'"
+          <span
+            class="text-50"
+            th:text="#{page.photos.subtitleCount(${photos.total})}"
             >共 0 张图片</span
           >
           <span

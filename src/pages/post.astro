@@ -190,6 +190,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 th:attr="data-post=${post.metadata.name}"
                 th:data-count="${post.stats.upvote}"
                 aria-label="点赞"
+                th:aria-label="#{post.like}"
               >
                 <span
                   id="post-like-icon"
@@ -202,10 +203,16 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 ></span>
               </button>
               <div class="flex-1 min-w-0">
-                <h3 class="text-base font-bold text-90 transition">
+                <h3
+                  class="text-base font-bold text-90 transition"
+                  th:text="#{post.supportTitle}"
+                >
                   支持与分享
                 </h3>
-                <p class="mt-1 text-sm leading-relaxed text-50 transition">
+                <p
+                  class="mt-1 text-sm leading-relaxed text-50 transition"
+                  th:text="#{post.supportDesc}"
+                >
                   如果这篇文章对你有帮助，欢迎分享给更多人或者给予支持！
                 </p>
               </div>
@@ -219,11 +226,12 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 type="button"
                 class="btn-regular group flex h-11 w-fit items-center justify-center rounded-xl px-4 text-sm font-bold active:scale-95"
                 aria-label="分享文章"
+                th:aria-label="#{post.shareTitle}"
               >
                 <span
                   class="icon-[tabler--share] mr-1.5 text-base transition-transform group-hover:scale-110"
                 ></span>
-                <span>分享</span>
+                <span th:text="#{post.share}">分享</span>
               </button>
               <button
                 id="post-reward-btn"
@@ -231,11 +239,12 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 type="button"
                 class="btn-regular group flex h-11 w-fit items-center justify-center rounded-xl px-4 text-sm font-bold active:scale-95"
                 aria-label="打赏"
+                th:aria-label="#{post.rewardTitle}"
               >
                 <span
                   class="icon-[material-symbols--volunteer-activism-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
                 ></span>
-                <span>打赏</span>
+                <span th:text="#{post.reward}">打赏</span>
               </button>
             </div>
           </div>

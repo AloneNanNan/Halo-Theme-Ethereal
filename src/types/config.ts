@@ -122,6 +122,8 @@ export interface MobileMenuConfig {
   style?: "accordion" | "drawer";
   /** 固定菜单栏：开启后桌面端菜单栏始终固定在顶部，滚动时不自动收起（移动端默认始终固定） */
   navbarFixed?: boolean;
+  /** 语言切换：开启后在菜单栏显示语言切换按钮（访客可切换站点显示语言） */
+  enable_change_language?: boolean;
   /** 配色（深浅色）切换：开启后在菜单栏显示明暗配色切换按钮 */
   enable_change_color_scheme?: boolean;
   /** 访客样式切换 */
@@ -180,10 +182,18 @@ export interface Style {
   bannerText?: BannerText;
   themeColor: ThemeColor;
   colorScheme?: ColorScheme;
+  /** 主题语言 */
+  language?: ThemeLanguage;
   styleSwitches?: StyleSwitches;
   /** 动画速度 */
   animationSpeed?: AnimationSpeed;
   externalFont?: ExternalFont;
+}
+
+/** 主题语言 */
+export interface ThemeLanguage {
+  /** 默认语言：auto 跟随系统（浏览器）/ zh-CN 简体中文 / zh-TW 繁體中文 / en English */
+  defaultLanguage?: "auto" | "zh-CN" | "zh-TW" | "en";
 }
 
 /** 动画速度 */

@@ -19,11 +19,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <span
           class="icon-[material-symbols--folder-open-rounded] text-base text-(--primary)"
         ></span>
-        <span class="font-bold text-(--primary)">文章分类</span>
+        <span
+          class="font-bold text-(--primary)"
+          th:text="#{page.categories.subtitle}">文章分类</span
+        >
         <span class="text-30">·</span>
         <span
           th:if="${categories != null}"
-          th:text="${'共 ' + #lists.size(categories) + ' 个分类'}"
+          th:text="#{page.categories.subtitleCount(${#lists.size(categories)})}"
           class="text-50">0 个分类</span
         >
       </div>

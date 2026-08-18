@@ -247,17 +247,33 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             <span
               class="wish-bar-color active"
               data-wish-color="green"
-              title="绿色"></span>
-            <span class="wish-bar-color" data-wish-color="yellow" title="黄色"
-            ></span>
-            <span class="wish-bar-color" data-wish-color="purple" title="紫色"
-            ></span>
-            <span class="wish-bar-color" data-wish-color="pink" title="粉色"
-            ></span>
-            <span class="wish-bar-color" data-wish-color="blue" title="蓝色"
-            ></span>
-            <span class="wish-bar-color" data-wish-color="orange" title="橙色"
-            ></span>
+              title="绿色"
+              th:title="#{page.wishes.colorGreen}"></span>
+            <span
+              class="wish-bar-color"
+              data-wish-color="yellow"
+              title="黄色"
+              th:title="#{page.wishes.colorYellow}"></span>
+            <span
+              class="wish-bar-color"
+              data-wish-color="purple"
+              title="紫色"
+              th:title="#{page.wishes.colorPurple}"></span>
+            <span
+              class="wish-bar-color"
+              data-wish-color="pink"
+              title="粉色"
+              th:title="#{page.wishes.colorPink}"></span>
+            <span
+              class="wish-bar-color"
+              data-wish-color="blue"
+              title="蓝色"
+              th:title="#{page.wishes.colorBlue}"></span>
+            <span
+              class="wish-bar-color"
+              data-wish-color="orange"
+              title="橙色"
+              th:title="#{page.wishes.colorOrange}"></span>
           </div>
           <button type="button" class="wish-bar-type" id="wishTypeBtn">
             <span id="wishTypeLabel">心愿</span>

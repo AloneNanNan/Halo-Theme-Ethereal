@@ -43,6 +43,7 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
           class="flex size-5 cursor-pointer items-center justify-center text-lg transition hover:scale-110 active:scale-95"
           style="position: absolute; right: -28px; top: 50%; transform: translateY(-50%);"
           aria-label="切换当前状态"
+          th:aria-label="#{profile.switchStatus}"
           th:attr="data-status=${theme.config?.sidebar?.profile?.statusSettings?.status ?: 'online'}"
           th:switch="${theme.config?.sidebar?.profile?.statusSettings?.status ?: 'online'}"
         >

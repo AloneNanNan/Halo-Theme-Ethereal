@@ -1,6 +1,19 @@
 // 构建期由 Vite define 注入（见 astro.config.mjs 的 ASSET_VERSION），此处仅补类型声明
 declare const ASSET_VERSION: string;
 
+// 全局 i18n 助手（Layout.astro head 注入，供各内联脚本 / Svelte 组件共用）
+interface Window {
+  __etherealI18n?: (key: string, fallback: string) => string;
+  __etherealLangTag?: (lang: string) => string;
+  __etherealSetLanguage?: (lang: string) => void;
+  __etherealBigNum?: (
+    num: number,
+    unitKey: string,
+    unitFallback?: string,
+  ) => string;
+  __etherealLangSwitching?: boolean;
+}
+
 // 允许在模板元素上使用 Thymeleaf 属性（Halo 服务端渲染）
 declare namespace astroHTML.JSX {
   interface HTMLAttributes {

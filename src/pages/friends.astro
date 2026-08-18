@@ -48,7 +48,10 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             <span
               class="icon-[material-symbols--groups-rounded] text-base text-(--primary)"
             ></span>
-            <span class="font-bold text-(--primary)">朋友圈</span>
+            <span
+              class="font-bold text-(--primary)"
+              th:text="#{page.friends.subtitle}">朋友圈</span
+            >
             <span class="text-30">·</span>
             <span class="text-50" th:text="#{page.friends.description}"
               >关注博主的最新动态</span
@@ -61,11 +64,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           id="random-fish-btn"
           class="random-fish-btn btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
           title="随机钓鱼"
+          th:title="#{page.friends.randomFishTitle}"
         >
           <span
             class="random-fish-icon icon-[material-symbols--phishing-outline-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
           ></span>
-          <span class="random-fish-label">随机钓鱼</span>
+          <span class="random-fish-label" th:text="#{page.friends.randomFish}"
+            >随机钓鱼</span
+          >
         </button>
       </div>
 
@@ -201,7 +207,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <span
           class="icon-[material-symbols--expand-circle-down-outline] mr-1.5 text-base"
         ></span>
-        <span>加载更多</span>
+        <span th:text="#{page.friends.loadMore}">加载更多</span>
       </button>
 
       <!-- 空状态 -->

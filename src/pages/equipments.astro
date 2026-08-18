@@ -24,16 +24,20 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <span
             class="icon-[material-symbols--devices-rounded] text-base text-(--primary)"
           ></span>
-          <span class="font-bold text-(--primary)">我的装备</span>
+          <span
+            class="font-bold text-(--primary)"
+            th:text="#{page.equipments.subtitle}">我的装备</span
+          >
           <span class="text-30">·</span>
           <span
             th:if="${equipments != null}"
-            th:text="${'共 ' + equipments.total + ' 个装备'}"
+            th:text="#{page.equipments.subtitleCount(${equipments.total})}"
             class="text-50">0 个装备</span
           >
           <span
             th:if="${not #lists.isEmpty(param.group)}"
             class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
+            th:text="#{page.equipments.filtering}"
           >
             筛选中
           </span>
@@ -47,7 +51,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       >
         <span class="icon-[material-symbols--close-rounded] mr-1 text-xl"
         ></span>
-        <span>清除筛选</span>
+        <span th:text="#{page.equipments.clearFilter}">清除筛选</span>
       </a>
     </div>
 
@@ -147,7 +151,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <span
         class="icon-[material-symbols--inventory-2-rounded] text-5xl text-30"
       ></span>
-      <p class="mt-4">暂无装备</p>
+      <p class="mt-4" th:text="#{page.equipments.empty}">暂无装备</p>
     </div>
   </section>
 

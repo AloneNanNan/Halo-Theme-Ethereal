@@ -179,7 +179,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <span
             class="text-xs font-bold"
             th:classappend="${isToday} ? 'text-(--primary)' : 'text-75'"
-            th:text="${day.dayLabel}"
+            th:text="${#temporals.dayOfWeekNameShort(#temporals.createDate(day.date, 'yyyy-MM-dd'))}"
           >
             星期一
           </span>

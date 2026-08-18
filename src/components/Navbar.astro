@@ -2,6 +2,7 @@
 import LightDarkSwitch from "./LightDarkSwitch.svelte";
 import Search from "./Search.svelte";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
+import LanguageSwitch from "./widget/LanguageSwitch.svelte";
 import NavMenuPanel from "./widget/NavMenuPanel.astro";
 
 const className = Astro.props.class;
@@ -117,6 +118,14 @@ const className = Astro.props.class;
 
     <div class="flex items-center">
       <Search client:only="svelte" />
+      <!-- 语言切换按钮：位于显示设置按钮左边。后台开关：布局设置 → 菜单栏设置 → 语言切换；
+           面板仅列三种手动语言，默认语言由「样式设置 → 主题语言」配置 -->
+      <span
+        th:if="${theme.config?.layout?.mobileMenu?.enable_change_language == null || theme.config?.layout?.mobileMenu?.enable_change_language}"
+        th:remove="tag"
+      >
+        <LanguageSwitch client:only="svelte" />
+      </span>
       <!-- 面板切换不再使用内联 onclick（CSP 友好），由 public/assets/navbar.js 的 document 级事件委托统一处理。
            入口可见性：总开关开启且任一分区可用（主题色相/文章布局/卡片样式/壁纸模式/壁纸设置/透明设置）；总开关关闭则入口隐藏 -->
       <button

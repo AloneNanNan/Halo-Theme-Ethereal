@@ -3,7 +3,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
 <MainGridLayout
-  title="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: '作品集') + ' - ' + site.title}"
+  title="${project.title + ' - ' + (projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')) + ' - ' + site.title}"
   description="#{page.portfolioDetail.description(${site.title}, ${project.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
@@ -24,7 +24,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           >
             <span class="icon-[material-symbols--star-rounded] text-base"
             ></span>
-            推荐
+            <span th:text="#{page.portfolio.featured}">推荐</span>
           </span>
           <span
             th:if="${not #strings.isEmpty(project.platform)}"
@@ -81,7 +81,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
               <span class="icon-[material-symbols--code-rounded] text-lg"
               ></span>
-              <span class="font-medium">仓库</span>
+              <span class="font-medium" th:text="#{page.portfolio.repo}"
+                >仓库</span
+              >
               <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
               ></span>
             </a>
@@ -94,7 +96,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
               <span class="icon-[material-symbols--play-circle-rounded] text-lg"
               ></span>
-              <span class="font-medium">演示</span>
+              <span class="font-medium" th:text="#{page.portfolio.demo}"
+                >演示</span
+              >
               <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
               ></span>
             </a>
@@ -107,7 +111,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
               <span class="icon-[material-symbols--description-rounded] text-lg"
               ></span>
-              <span class="font-medium">文档</span>
+              <span class="font-medium" th:text="#{page.portfolio.docs}"
+                >文档</span
+              >
               <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
               ></span>
             </a>
@@ -143,7 +149,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       >
         <!-- 技术栈 -->
         <div th:if="${not #lists.isEmpty(project.techStacks)}" class="mb-4">
-          <h3 class="mb-3 text-sm font-bold text-50">技术栈</h3>
+          <h3
+            class="mb-3 text-sm font-bold text-50"
+            th:text="#{page.portfolio.stack}"
+          >
+            技术栈
+          </h3>
           <div class="flex flex-wrap gap-2">
             <span
               th:each="tech : ${project.techStacks}"
@@ -155,7 +166,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
         <!-- 标签 -->
         <div th:if="${not #lists.isEmpty(project.tags)}">
-          <h3 class="mb-3 text-sm font-bold text-50">标签</h3>
+          <h3
+            class="mb-3 text-sm font-bold text-50"
+            th:text="#{page.portfolio.tags}"
+          >
+            标签
+          </h3>
           <div class="flex flex-wrap gap-2">
             <span
               th:each="tag : ${project.tags}"

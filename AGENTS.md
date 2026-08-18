@@ -82,6 +82,8 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - **带 `src={...}` / 属性声明的 `<script>` 会被当 `is:inline` 处理**，无法使用 TS/包导入。需要包导入的脚本务必显式加 `is:inline`，或改为模块脚本。
 - **Halo FormKit 已知坑**：互斥 `if` 条件的同类型字段必须加唯一 `key`，否则 Vue 会复用组件实例导致设置值丢失（`settings.yaml` 里已有先例）。
 - **布局/断点覆盖**：网格 vs 列表、移动端 vs 桌面端的样式差异集中在 `PostList.astro` 的 `is:global` `<style>` 块里，改卡片样式前先看那里有没有对应覆盖，别只改组件类。
+- **i18n 词条里的字面花括号必须转义**：词条值中若需要字面 `{location}` 这类占位（非 `{0}` 数字参数），必须写成 `'{'location'}'`（MessageFormat 单引号转义），否则渲染 `[(#{...})]` 时 MessageFormat 会把它当参数占位符解析并抛错，曾导致全站白屏。新增含花括号词条前先看 `i18n/default.properties` 里 `welcome.defaultTemplate` 的写法。
+- **全局 i18n 助手**：`t()` 读取 `window.i18nResources` 的客户端翻译助手统一由 `Layout.astro` 注入（`window.__etherealI18n`，另含 `__etherealLangTag`/`__etherealSetLanguage`/`__etherealBigNum`）。内联脚本复用即可，不要各自复制实现。
 
 ## 访客样式切换（显示设置面板）
 
