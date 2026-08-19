@@ -12,6 +12,51 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.skills.description(${site.title})}"
 >
+  <Fragment slot="head">
+    <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
+    <style is:global>
+      /* 技能分类筛选标签：对齐仓库 btn-card 标签风格（参考 links/equipments 分组标签） */
+      .filter-tabs-card .filter-tabs-item {
+        height: 2.25rem;
+        padding: 0 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: rgb(0 0 0 / 0.75);
+        background: var(--card-bg);
+      }
+
+      :root.dark .filter-tabs-card .filter-tabs-item {
+        color: rgb(255 255 255 / 0.75);
+      }
+
+      .filter-tabs-card .filter-tabs-item:hover:not(.active) {
+        background: var(--btn-card-bg-hover);
+      }
+
+      .filter-tabs-card .filter-tabs-item.active {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      :root.dark .filter-tabs-card .filter-tabs-item.active {
+        color: rgb(0 0 0 / 0.7);
+      }
+
+      .filter-tabs-card .filter-tabs-count {
+        margin-left: 0.25rem;
+        font-size: inherit;
+        opacity: 1;
+        color: rgb(0 0 0 / 0.5);
+      }
+
+      :root.dark .filter-tabs-card .filter-tabs-count {
+        color: rgb(255 255 255 / 0.5);
+      }
+    </style>
+  </Fragment>
+
   <div th:with="items=${theme.config?.skills?.entries?.items}">
     <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 页头 -->
@@ -50,7 +95,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         data-filter-attr="category"
       >
         <!-- 分类筛选标签 -->
-        <div class="filter-tabs mb-8">
+        <div class="filter-tabs filter-tabs-card mb-8">
           <button
             type="button"
             class="filter-tabs-item active"
