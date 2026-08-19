@@ -1,0 +1,231 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<!--
+  技能页面模板（Halo 自定义页面「技能」）。
+  数据来自主题设置（settings.yaml 的「技能」Tab）→ theme.config.skills.items，
+  每项技能渲染为一张卡片（图标 / 名称 / 熟练度 / 经验 / 进度条）；
+  分类筛选由 filter-tabs.js 在客户端处理。
+-->
+<MainGridLayout
+  title="${singlePage.spec.title + ' - ' + site.title}"
+  description="#{page.skills.description(${site.title})}"
+>
+  <div th:with="items=${theme.config?.skills?.items}">
+    <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+      <!-- 页头 -->
+      <div
+        class="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      >
+        <div class="min-w-0">
+          <h1
+            class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+            th:text="${singlePage.spec.title}"
+          >
+            技能
+          </h1>
+          <div class="flex flex-wrap items-center gap-1.5 text-sm">
+            <span
+              class="icon-[material-symbols--psychology] text-base text-(--primary)"
+            ></span>
+            <span
+              class="font-bold text-(--primary)"
+              th:text="#{page.skills.title}">技能</span
+            >
+            <span class="text-30">·</span>
+            <span
+              class="text-50"
+              th:text="${theme.config?.skills?.subtitle ?: #messages.msg('page.skills.subtitle')}"
+              >我的技术技能和专业知识</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- 筛选作用域（无数据时不渲染，改显示空状态） -->
+      <div
+        th:if="${items != null and not #lists.isEmpty(items)}"
+        class="filter-scope"
+        data-filter-attr="category"
+      >
+        <!-- 分类筛选标签 -->
+        <div class="filter-tabs mb-8">
+          <button
+            type="button"
+            class="filter-tabs-item active"
+            data-filter-value="all"
+          >
+            <span class="icon-[material-symbols--apps]"></span>
+            <span th:text="#{common.all}">全部</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+          <button
+            type="button"
+            class="filter-tabs-item"
+            data-filter-value="frontend"
+          >
+            <span class="icon-[material-symbols--web]"></span>
+            <span th:text="#{page.skills.frontend}">前端开发</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+          <button
+            type="button"
+            class="filter-tabs-item"
+            data-filter-value="backend"
+          >
+            <span class="icon-[material-symbols--dns]"></span>
+            <span th:text="#{page.skills.backend}">后端开发</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+          <button
+            type="button"
+            class="filter-tabs-item"
+            data-filter-value="database"
+          >
+            <span class="icon-[material-symbols--storage]"></span>
+            <span th:text="#{page.skills.database}">数据库</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+          <button
+            type="button"
+            class="filter-tabs-item"
+            data-filter-value="tools"
+          >
+            <span class="icon-[material-symbols--build]"></span>
+            <span th:text="#{page.skills.tools}">开发工具</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+          <button
+            type="button"
+            class="filter-tabs-item"
+            data-filter-value="other"
+          >
+            <span class="icon-[material-symbols--widgets]"></span>
+            <span th:text="#{page.skills.other}">其他技能</span>
+            <span class="filter-tabs-count"></span>
+          </button>
+        </div>
+
+        <!-- 技能卡片网格 -->
+        <div
+          class="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-4"
+        >
+          <div
+            th:each="skill, iterStat : ${items}"
+            th:with="skillColor=${#strings.isEmpty(skill.color) ? 'var(--primary)' : skill.color}, levelWidth=${skill.level == 'expert' ? '100%' : (skill.level == 'advanced' ? '80%' : (skill.level == 'intermediate' ? '60%' : (skill.level == 'beginner' ? '40%' : '20%')))}, levelText=${skill.level == 'expert' ? #messages.msg('page.skills.expert') : (skill.level == 'advanced' ? #messages.msg('page.skills.advanced') : (skill.level == 'intermediate' ? #messages.msg('page.skills.intermediate') : (skill.level == 'beginner' ? #messages.msg('page.skills.beginner') : '')))}"
+            class="skill-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/10 onload-animation"
+            data-filter-item="true"
+            th:data-category="${skill.category ?: ''}"
+            th:style="'animation-delay: min(calc(var(--content-delay) + ' + ${iterStat.index} + ' * var(--dur-entry-step)), var(--dur-entry-max, 400ms))'"
+          >
+            <div class="p-5">
+              <div class="mb-3 flex items-start gap-4">
+                <div
+                  class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
+                  th:style="'background-color:' + ${skillColor} + '20'"
+                >
+                  <span
+                    th:if="${skill.icon != null and skill.icon.value != null}"
+                    class="text-xl"
+                    th:utext="${skill.icon.value}"></span>
+                  <span
+                    th:unless="${skill.icon != null and skill.icon.value != null}"
+                    class="text-xl font-bold"
+                    th:style="'color:' + ${skillColor}"
+                    th:text="${#strings.substring(skill.name ?: '?', 0, 1)}"
+                    >S</span
+                  >
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1 flex items-center justify-between">
+                    <h3
+                      class="truncate text-lg font-bold text-90 transition-colors duration-200 group-hover:text-(--primary)"
+                      th:text="${skill.name}"
+                    >
+                      技能名
+                    </h3>
+                    <span
+                      th:if="${not #strings.isEmpty(levelText)}"
+                      class="ml-2 shrink-0 rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
+                      th:text="${levelText}">熟练度</span
+                    >
+                  </div>
+                  <p
+                    th:if="${(skill.years ?: 0) > 0 or (skill.months ?: 0) > 0}"
+                    class="text-xs text-30"
+                  >
+                    <span
+                      th:if="${(skill.years ?: 0) > 0}"
+                      th:text="|${skill.years} #{page.skills.years}|">2 年</span
+                    >
+                    <span
+                      th:if="${(skill.years ?: 0) > 0 and (skill.months ?: 0) > 0}"
+                    >
+                    </span>
+                    <span
+                      th:if="${(skill.months ?: 0) > 0}"
+                      th:text="|${skill.months} #{page.skills.months}|"
+                      >6 个月</span
+                    >
+                  </p>
+                </div>
+              </div>
+
+              <p
+                class="line-clamp-2 min-h-[2.5rem] text-sm text-50"
+                th:text="${skill.description}"
+              >
+                描述
+              </p>
+
+              <div class="mt-3 h-1.5 w-full rounded-full bg-(--btn-regular-bg)">
+                <div
+                  class="h-1.5 rounded-full transition-all duration-500"
+                  th:style="'width:' + ${levelWidth} + '; background-color:' + ${skillColor}"
+                >
+                </div>
+              </div>
+            </div>
+
+            <!-- 悬浮渐变遮罩 -->
+            <div
+              class="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            >
+            </div>
+          </div>
+        </div>
+
+        <!-- 筛选后空状态（filter-tabs.js 控制显隐） -->
+        <div class="filter-no-results hidden py-16 text-center">
+          <span
+            class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"
+          ></span>
+          <p
+            class="text-lg text-black/40 dark:text-white/40"
+            th:text="#{page.skills.noResults}"
+          >
+            该分类下暂无技能
+          </p>
+        </div>
+      </div>
+
+      <!-- 空状态（未配置任何技能） -->
+      <div
+        th:if="${items == null or #lists.isEmpty(items)}"
+        class="py-16 text-center text-50"
+      >
+        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
+        ></span>
+        <p class="mt-4 text-sm" th:text="#{page.skills.empty}">
+          暂无技能数据，请在主题设置中配置
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-tabs.js?v=${ASSET_VERSION}`}
+    defer></script>
+</MainGridLayout>

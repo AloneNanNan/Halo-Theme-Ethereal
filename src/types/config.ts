@@ -6,6 +6,8 @@ export interface ThemeConfig {
   style: Style;
   sidebar: Sidebar;
   friends: Friends;
+  timeline: Timeline;
+  skills: Skills;
   post: Post;
   footer: Footer;
   links: Links;
@@ -259,6 +261,46 @@ export interface Friends {
   pageSize: number;
   fetchLimit: number;
   enable_random_fish?: boolean;
+}
+
+// ========== 时间轴设置 ==========
+export interface Timeline {
+  subtitle?: string;
+  items?: TimelineItem[];
+}
+
+export interface TimelineItem {
+  title: string;
+  type?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+  organization?: string;
+  position?: string;
+  skills?: string;
+  achievements?: string;
+  links?: string;
+  icon?: { value?: string };
+  color?: string;
+  featured?: boolean;
+}
+
+// ========== 技能设置 ==========
+export interface Skills {
+  subtitle?: string;
+  items?: SkillItem[];
+}
+
+export interface SkillItem {
+  name: string;
+  description?: string;
+  icon?: { value?: string };
+  category?: string;
+  level?: string;
+  years?: number;
+  months?: number;
+  color?: string;
 }
 
 // ========== 侧边栏 ==========
