@@ -4,7 +4,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <!--
   技能页面模板（Halo 自定义页面「技能」）。
-  数据来自主题设置（settings.yaml 的「技能」Tab）→ theme.config.skills.items，
+  数据来自主题设置（settings.yaml 的「技能」Tab）→ theme.config.skills.entries.items，
   每项技能渲染为一张卡片（图标 / 名称 / 熟练度 / 经验 / 进度条）；
   分类筛选由 filter-tabs.js 在客户端处理。
 -->
@@ -12,7 +12,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.skills.description(${site.title})}"
 >
-  <div th:with="items=${theme.config?.skills?.items}">
+  <div th:with="items=${theme.config?.skills?.entries?.items}">
     <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 页头 -->
       <div

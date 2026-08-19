@@ -266,6 +266,10 @@ export interface Friends {
 // ========== 时间轴设置 ==========
 export interface Timeline {
   subtitle?: string;
+  entries?: TimelineEntries;
+}
+
+export interface TimelineEntries {
   items?: TimelineItem[];
 }
 
@@ -289,6 +293,10 @@ export interface TimelineItem {
 // ========== 技能设置 ==========
 export interface Skills {
   subtitle?: string;
+  entries?: SkillEntries;
+}
+
+export interface SkillEntries {
   items?: SkillItem[];
 }
 

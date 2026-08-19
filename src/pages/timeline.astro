@@ -4,7 +4,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <!--
   时间轴页面模板（Halo 自定义页面「时间轴」）。
-  数据来自主题设置（settings.yaml 的「时间轴」Tab）→ theme.config.timeline.items，
+  数据来自主题设置（settings.yaml 的「时间轴」Tab）→ theme.config.timeline.entries.items，
   每一条目渲染为纵向时间轴卡片；类型筛选与技能/成就/链接的多行字段由
   filter-tabs.js / timeline.js 在客户端处理。
 -->
@@ -12,7 +12,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.timeline.description(${site.title})}"
 >
-  <div th:with="items=${theme.config?.timeline?.items}">
+  <div th:with="items=${theme.config?.timeline?.entries?.items}">
     <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 页头 -->
       <div
