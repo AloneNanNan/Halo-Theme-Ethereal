@@ -113,7 +113,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         >
           <div
             th:each="skill, iterStat : ${items}"
-            th:with="skillColor=${#strings.isEmpty(skill.color) ? 'var(--primary)' : skill.color}, levelWidth=${skill.level == 'expert' ? '100%' : (skill.level == 'advanced' ? '80%' : (skill.level == 'intermediate' ? '60%' : (skill.level == 'beginner' ? '40%' : '20%')))}, levelText=${skill.level == 'expert' ? #messages.msg('page.skills.expert') : (skill.level == 'advanced' ? #messages.msg('page.skills.advanced') : (skill.level == 'intermediate' ? #messages.msg('page.skills.intermediate') : (skill.level == 'beginner' ? #messages.msg('page.skills.beginner') : '')))}"
+            th:with="skillColor=${#strings.isEmpty(skill.color) ? 'var(--primary)' : skill.color}, levelWidth=${skill.level == 'expert' ? '100%' : (skill.level == 'advanced' ? '80%' : (skill.level == 'intermediate' ? '60%' : (skill.level == 'beginner' ? '40%' : '20%')))}, levelText=${skill.level == 'expert' ? #messages.msg('page.skills.expert') : (skill.level == 'advanced' ? #messages.msg('page.skills.advanced') : (skill.level == 'intermediate' ? #messages.msg('page.skills.intermediate') : (skill.level == 'beginner' ? #messages.msg('page.skills.beginner') : '')))}, hasYears=${not #strings.isEmpty(skill.years) and #strings.toString(skill.years) != '0'}, hasMonths=${not #strings.isEmpty(skill.months) and #strings.toString(skill.months) != '0'}"
             class="skill-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/10 onload-animation"
             data-filter-item="true"
             th:data-category="${skill.category ?: ''}"
@@ -152,20 +152,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                       th:text="${levelText}">熟练度</span
                     >
                   </div>
-                  <p
-                    th:if="${(skill.years ?: 0) > 0 or (skill.months ?: 0) > 0}"
-                    class="text-xs text-30"
-                  >
+                  <p th:if="${hasYears or hasMonths}" class="text-xs text-30">
                     <span
-                      th:if="${(skill.years ?: 0) > 0}"
+                      th:if="${hasYears}"
                       th:text="|${skill.years} #{page.skills.years}|">2 年</span
                     >
+                    <span th:if="${hasYears and hasMonths}"> </span>
                     <span
-                      th:if="${(skill.years ?: 0) > 0 and (skill.months ?: 0) > 0}"
-                    >
-                    </span>
-                    <span
-                      th:if="${(skill.months ?: 0) > 0}"
+                      th:if="${hasMonths}"
                       th:text="|${skill.months} #{page.skills.months}|"
                       >6 个月</span
                     >
