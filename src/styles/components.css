@@ -109,45 +109,10 @@
     @apply mr-2 flex h-8 w-8 items-center justify-center rounded-md bg-(--btn-regular-bg) text-(--btn-content) transition;
   }
 
-  /* 筛选标签（时间轴 / 技能页面共用）：active 由 filter-tabs.js 切换 */
-  .filter-tabs {
-    @apply flex flex-wrap gap-2;
-  }
-
-  .filter-tabs-item {
-    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-(--radius-large) border px-4 py-2 text-sm font-medium whitespace-nowrap transition;
-    border-color: var(--line-divider);
-    background: var(--btn-regular-bg);
-    color: var(--btn-content);
-  }
-
-  .filter-tabs-item:hover:not(.active) {
-    background: var(--btn-regular-bg-hover);
-    border-color: var(--primary);
-  }
-
-  .filter-tabs-item.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-  }
-
-  :root.dark .filter-tabs-item.active {
-    color: rgb(0 0 0 / 0.7);
-  }
-
-  .filter-tabs-count {
-    @apply text-xs opacity-60;
-  }
-
-  @media (max-width: 768px) {
-    .filter-tabs-item {
-      @apply px-3 py-1.5 text-xs;
-    }
-
-    .filter-tabs-count {
-      @apply hidden;
-    }
+  /* 卡片图标盒：内联 SVG（后台自定义图标）按字号 1em 渲染，与 mask 图标/首字母大小一致 */
+  .card-icon svg {
+    width: 1em;
+    height: 1em;
   }
 
   .with-divider {

@@ -1570,7 +1570,7 @@ spec:
             - $formkit: array
               name: items
               label: 条目
-              help: "按时间顺序添加条目（建议新的在前）。开始/结束时间可填 2022-09 或 2022-09-01 等格式，结束时间留空表示「至今」"
+              help: "按时间顺序添加条目（建议新的在前）。开始/结束时间用日期选择器选择，结束时间留空表示「至今」"
               children:
                 - $formkit: text
                   name: title
@@ -1592,10 +1592,11 @@ spec:
                 - $formkit: textarea
                   name: description
                   label: 描述
-                - $formkit: text
+                - $formkit: date
                   name: startDate
                   label: 开始时间
-                - $formkit: text
+                  help: "选择开始日期，留空可只填结束时间"
+                - $formkit: date
                   name: endDate
                   label: 结束时间
                   help: "留空表示「至今」"
@@ -1619,17 +1620,17 @@ spec:
                 - $formkit: textarea
                   name: links
                   label: 相关链接
-                  help: "每行一个，格式：名称|链接（例如 GitHub|https://github.com）"
+                  help: "每行一条，支持「名称|链接」格式（如 GitHub|https://github.com），也可直接填链接；统一在新窗口打开"
                 - $formkit: iconify
                   name: icon
                   label: 图标
                   format: svg
                   help: "卡片图标，留空则按类型自动匹配"
-                - $formkit: text
+                - $formkit: color
                   name: color
                   label: 主题色
                   value: ""
-                  help: "节点与卡片图标的颜色，十六进制色值（如 #059669），留空使用主题色"
+                  help: "节点与卡片图标的颜色，留空使用主题色"
                 - $formkit: switch
                   name: featured
                   label: 精选
@@ -1706,11 +1707,11 @@ spec:
                   min: 0
                   max: 11
                   step: 1
-                - $formkit: text
+                - $formkit: color
                   name: color
                   label: 主题色
                   value: ""
-                  help: "图标底色与进度条颜色，十六进制色值（如 #3178C6），留空使用主题色"
+                  help: "图标底色与进度条颜色，留空使用主题色"
     - group: footer
       label: 页脚
       formSchema:

@@ -5,397 +5,365 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 <!--
   时间轴页面模板（Halo 自定义页面「时间轴」）。
   数据来自主题设置（settings.yaml 的「时间轴」Tab）→ theme.config.timeline.entries.items，
-  每一条目渲染为纵向时间轴卡片；类型筛选与技能/成就/链接的多行字段由
-  filter-tabs.js / timeline.js 在客户端处理。
+  每一条目渲染为纵向时间轴卡片；类型筛选通过 URL 参数（type）在服务端完成
+  （分组标签参考 links/equipments，切换即整页导航并触发入场动画），
+  技能/成就/链接的多行字段由 timeline.js 在客户端渲染。
 -->
 <MainGridLayout
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.timeline.description(${site.title})}"
 >
-  <div th:with="items=${theme.config?.timeline?.entries?.items}">
-    <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-      <!-- 页头 -->
-      <div
-        class="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
-      >
-        <div class="min-w-0">
-          <h1
-            class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-            th:text="${singlePage.spec.title}"
+  <Fragment slot="head">
+    <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
+    <style is:global>
+      .timeline-list {
+        position: relative;
+      }
+
+      .timeline-list::before {
+        content: "";
+        position: absolute;
+        left: 9px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--line-divider);
+        border-radius: 1px;
+      }
+
+      .timeline-entry {
+        position: relative;
+        padding-left: 2.5rem;
+        padding-bottom: 2rem;
+      }
+
+      .timeline-entry:last-child {
+        padding-bottom: 0;
+      }
+
+      .timeline-node {
+        position: absolute;
+        left: 0;
+        top: 1.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        border: 2.5px solid var(--card-bg);
+        box-shadow: 0 0 0 2px var(--line-divider);
+        z-index: 2;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .timeline-entry:has(.timeline-card:hover) .timeline-node,
+      .timeline-node:hover {
+        transform: scale(1.15);
+        box-shadow:
+          0 0 0 2px var(--primary),
+          0 0 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .timeline-node-current {
+        animation: timeline-pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes timeline-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 2px var(--line-divider);
+        }
+        50% {
+          box-shadow:
+            0 0 0 2px #22c55e,
+            0 0 8px rgba(34, 197, 94, 0.3);
+        }
+      }
+    </style>
+  </Fragment>
+
+  <!-- 注：类型计数用字面量投影（type == 'literal'），勿在 items.![...] 投影内引用
+       param（Map 条目会遮蔽上下文变量导致 #lists.contains(null,...) 抛异常） -->
+  <section
+    th:with="items=${theme.config?.timeline?.entries?.items},
+      edCount=${items != null ? #aggregates.sum(items.![type == 'education' ? 1 : 0]) : 0},
+      workCount=${items != null ? #aggregates.sum(items.![type == 'work' ? 1 : 0]) : 0},
+      projCount=${items != null ? #aggregates.sum(items.![type == 'project' ? 1 : 0]) : 0},
+      achCount=${items != null ? #aggregates.sum(items.![type == 'achievement' ? 1 : 0]) : 0}"
+    class="card-base onload-animation mb-4 px-6 py-6 md:px-9"
+  >
+    <!-- 页头 -->
+    <div
+      class="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+    >
+      <div class="min-w-0">
+        <h1
+          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+          th:text="${singlePage.spec.title}"
+        >
+          时间轴
+        </h1>
+        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+          <span
+            class="icon-[material-symbols--view-timeline] text-base text-(--primary)"
+          ></span>
+          <span
+            class="font-bold text-(--primary)"
+            th:text="#{page.timeline.title}">时间轴</span
           >
-            时间轴
-          </h1>
-          <div class="flex flex-wrap items-center gap-1.5 text-sm">
-            <span
-              class="icon-[material-symbols--view-timeline] text-base text-(--primary)"
-            ></span>
-            <span
-              class="font-bold text-(--primary)"
-              th:text="#{page.timeline.title}">时间轴</span
-            >
-            <span class="text-30">·</span>
-            <span
-              class="text-50"
-              th:text="${theme.config?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
-              >我的成长历程和重要里程碑</span
-            >
-          </div>
+          <span class="text-30">·</span>
+          <span
+            class="text-50"
+            th:text="${theme.config?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
+            >我的成长历程和重要里程碑</span
+          >
         </div>
       </div>
+    </div>
 
-      <!-- 筛选作用域（无数据时不渲染，改显示空状态） -->
-      <div
-        th:if="${items != null and not #lists.isEmpty(items)}"
-        class="filter-scope"
-        data-filter-attr="type"
+    <!-- 类型筛选标签（参考 links/equipments 分组标签；URL 参数切换，
+          整页导航触发 Swup 过渡 + onload-animation 入场动画） -->
+    <div
+      th:if="${items != null and not #lists.isEmpty(items)}"
+      class="mb-8 flex flex-wrap gap-2"
+    >
+      <a
+        th:href="@{${singlePage.status.permalink}}"
+        th:classappend="${#lists.isEmpty(param.type) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
+        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
       >
-        <!-- 类型筛选标签 -->
-        <div class="filter-tabs filter-tabs-card mb-8">
-          <button
-            type="button"
-            class="filter-tabs-item active"
-            data-filter-value="all"
-          >
-            <span class="icon-[material-symbols--apps]"></span>
-            <span th:text="#{common.all}">全部</span>
-            <span class="filter-tabs-count"></span>
-          </button>
-          <button
-            type="button"
-            class="filter-tabs-item"
-            data-filter-value="education"
-          >
-            <span class="icon-[material-symbols--school]"></span>
-            <span th:text="#{page.timeline.education}">教育经历</span>
-            <span class="filter-tabs-count"></span>
-          </button>
-          <button
-            type="button"
-            class="filter-tabs-item"
-            data-filter-value="work"
-          >
-            <span class="icon-[material-symbols--work]"></span>
-            <span th:text="#{page.timeline.work}">工作经历</span>
-            <span class="filter-tabs-count"></span>
-          </button>
-          <button
-            type="button"
-            class="filter-tabs-item"
-            data-filter-value="project"
-          >
-            <span class="icon-[material-symbols--code]"></span>
-            <span th:text="#{page.timeline.project}">项目经历</span>
-            <span class="filter-tabs-count"></span>
-          </button>
-          <button
-            type="button"
-            class="filter-tabs-item"
-            data-filter-value="achievement"
-          >
-            <span class="icon-[material-symbols--emoji-events]"></span>
-            <span th:text="#{page.timeline.achievement}">成就荣誉</span>
-            <span class="filter-tabs-count"></span>
-          </button>
+        <span th:text="#{common.all}">全部</span>
+        <span class="ml-1 text-30" th:text="${#lists.size(items)}">0</span>
+      </a>
+      <a
+        th:href="@{${singlePage.status.permalink}(type='education')}"
+        th:if="${edCount > 0}"
+        th:classappend="${#lists.contains(param.type, 'education') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
+        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
+      >
+        <span th:text="#{page.timeline.education}">教育经历</span>
+        <span class="ml-1 text-30" th:text="${edCount}">0</span>
+      </a>
+      <a
+        th:href="@{${singlePage.status.permalink}(type='work')}"
+        th:if="${workCount > 0}"
+        th:classappend="${#lists.contains(param.type, 'work') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
+        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
+      >
+        <span th:text="#{page.timeline.work}">工作经历</span>
+        <span class="ml-1 text-30" th:text="${workCount}">0</span>
+      </a>
+      <a
+        th:href="@{${singlePage.status.permalink}(type='project')}"
+        th:if="${projCount > 0}"
+        th:classappend="${#lists.contains(param.type, 'project') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
+        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
+      >
+        <span th:text="#{page.timeline.project}">项目经历</span>
+        <span class="ml-1 text-30" th:text="${projCount}">0</span>
+      </a>
+      <a
+        th:href="@{${singlePage.status.permalink}(type='achievement')}"
+        th:if="${achCount > 0}"
+        th:classappend="${#lists.contains(param.type, 'achievement') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
+        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
+      >
+        <span th:text="#{page.timeline.achievement}">成就荣誉</span>
+        <span class="ml-1 text-30" th:text="${achCount}">0</span>
+      </a>
+    </div>
+
+    <!-- 时间轴列表（按当前 type 参数在服务端过滤） -->
+    <div class="timeline-list">
+      <div
+        th:each="item, iterStat : ${items}"
+        th:if="${#lists.isEmpty(param.type) or #lists.contains(param.type, item.type)}"
+        th:with="typeIcon=${item.type == 'education' ? 'icon-[material-symbols--school]' : (item.type == 'work' ? 'icon-[material-symbols--work]' : (item.type == 'project' ? 'icon-[material-symbols--code]' : (item.type == 'achievement' ? 'icon-[material-symbols--emoji-events]' : 'icon-[material-symbols--event]')))}, typeText=${item.type == 'education' ? #messages.msg('page.timeline.education') : (item.type == 'work' ? #messages.msg('page.timeline.work') : (item.type == 'project' ? #messages.msg('page.timeline.project') : (item.type == 'achievement' ? #messages.msg('page.timeline.achievement') : '')))}"
+        class="timeline-entry onload-animation"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${iterStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+      >
+        <!-- 时间轴节点 -->
+        <div
+          class="timeline-node"
+          th:classappend="${#strings.isEmpty(item.endDate)} ? ' timeline-node-current' : ''"
+          th:style="${#strings.isEmpty(item.endDate) ? 'background-color:#22c55e' : (#strings.isEmpty(item.color) ? 'background-color:var(--primary)' : 'background-color:' + item.color)}"
+        >
         </div>
 
-        <!-- 时间轴列表 -->
-        <div class="timeline-list">
-          <div
-            th:each="item, iterStat : ${items}"
-            th:with="typeIcon=${item.type == 'education' ? 'icon-[material-symbols--school]' : (item.type == 'work' ? 'icon-[material-symbols--work]' : (item.type == 'project' ? 'icon-[material-symbols--code]' : (item.type == 'achievement' ? 'icon-[material-symbols--emoji-events]' : 'icon-[material-symbols--event]')))}, typeText=${item.type == 'education' ? #messages.msg('page.timeline.education') : (item.type == 'work' ? #messages.msg('page.timeline.work') : (item.type == 'project' ? #messages.msg('page.timeline.project') : (item.type == 'achievement' ? #messages.msg('page.timeline.achievement') : '')))}"
-            class="timeline-entry onload-animation"
-            data-filter-item="true"
-            th:data-type="${item.type ?: ''}"
-            th:style="'animation-delay: min(calc(var(--content-delay) + ' + ${iterStat.index} + ' * var(--dur-entry-step)), var(--dur-entry-max, 400ms))'"
-          >
-            <!-- 时间轴节点 -->
+        <!-- 卡片（悬浮效果接入主题 card-hover-lift，由后台样式开关控制） -->
+        <div
+          class="timeline-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 dark:border-white/10 card-hover-lift"
+        >
+          <div class="p-5 sm:p-6">
+            <!-- 头部：图标 + 标题/组织 + 徽章 -->
+            <div class="mb-3 flex items-center gap-3">
+              <div
+                class="card-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg)"
+                th:style="${#strings.isEmpty(item.color) ? 'color:var(--primary)' : 'color:' + item.color}"
+              >
+                <span
+                  th:if="${item.icon != null and item.icon.value != null}"
+                  class="text-xl"
+                  th:utext="${item.icon.value}"></span>
+                <span
+                  th:unless="${item.icon != null and item.icon.value != null}"
+                  class="text-xl"
+                  th:classappend="${typeIcon}"></span>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="mb-0.5 flex items-center gap-2">
+                  <h3
+                    class="text-lg font-bold text-90 transition-colors duration-200 group-hover:text-(--primary)"
+                    th:text="${item.title}"
+                  >
+                    标题
+                  </h3>
+                  <span
+                    th:if="${item.featured}"
+                    class="icon-[material-symbols--star-rounded] h-4 w-4 flex-shrink-0 text-base text-(--primary)"
+                  ></span>
+                </div>
+                <p
+                  th:if="${not #strings.isEmpty(item.organization) or not #strings.isEmpty(item.position)}"
+                  class="flex flex-wrap items-center gap-1 text-sm text-50"
+                >
+                  <span th:text="${item.organization}">组织</span>
+                  <span
+                    th:if="${not #strings.isEmpty(item.organization) and not #strings.isEmpty(item.position)}"
+                  >
+                    ·
+                  </span><span th:text="${item.position}">职位</span>
+                </p>
+              </div>
+
+              <div class="ml-2 flex flex-shrink-0 items-center gap-1.5">
+                <span
+                  th:if="${#strings.isEmpty(item.endDate)}"
+                  class="rounded-md bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400"
+                  th:text="#{page.timeline.current}">进行中</span
+                >
+                <span
+                  class="rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
+                  th:text="${typeText}">类型</span
+                >
+              </div>
+            </div>
+
+            <!-- 描述 -->
+            <p
+              th:if="${not #strings.isEmpty(item.description)}"
+              class="mb-4 text-sm leading-relaxed text-75"
+              th:text="${item.description}"
+            >
+              描述
+            </p>
+
+            <!-- 技能标签（timeline.js 渲染） -->
             <div
-              class="timeline-node"
-              th:classappend="${#strings.isEmpty(item.endDate)} ? ' timeline-node-current' : ''"
-              th:style="${#strings.isEmpty(item.endDate) ? 'background-color:#22c55e' : (#strings.isEmpty(item.color) ? 'background-color:var(--primary)' : 'background-color:' + item.color)}"
+              th:if="${not #strings.isEmpty(item.skills)}"
+              class="timeline-skills mb-4 flex flex-wrap gap-2"
+              th:data-skills="${item.skills}"
             >
             </div>
 
-            <!-- 卡片 -->
+            <!-- 成就列表（timeline.js 渲染） -->
             <div
-              class="timeline-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 hover:shadow-lg dark:border-white/10"
+              th:if="${not #strings.isEmpty(item.achievements)}"
+              class="mb-4"
             >
-              <div class="p-5 sm:p-6">
-                <!-- 头部：图标 + 标题/组织 + 徽章 -->
-                <div class="mb-3 flex items-start gap-3">
-                  <div
-                    class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-(--btn-regular-bg)"
-                    th:style="${#strings.isEmpty(item.color) ? 'color:var(--primary)' : 'color:' + item.color}"
-                  >
-                    <span
-                      th:if="${item.icon != null and item.icon.value != null}"
-                      class="text-lg"
-                      th:utext="${item.icon.value}"></span>
-                    <span
-                      th:unless="${item.icon != null and item.icon.value != null}"
-                      class="text-lg"
-                      th:classappend="${typeIcon}"></span>
-                  </div>
-
-                  <div class="min-w-0 flex-1">
-                    <div class="mb-0.5 flex items-center gap-2">
-                      <h3
-                        class="text-lg font-bold text-90 transition-colors duration-200 group-hover:text-(--primary)"
-                        th:text="${item.title}"
-                      >
-                        标题
-                      </h3>
-                      <span
-                        th:if="${item.featured}"
-                        class="icon-[material-symbols--star-rounded] h-4 w-4 flex-shrink-0 text-base text-(--primary)"
-                      ></span>
-                    </div>
-                    <p
-                      th:if="${not #strings.isEmpty(item.organization) or not #strings.isEmpty(item.position)}"
-                      class="text-sm text-50"
-                    >
-                      <span th:text="${item.organization}">组织</span>
-                      <span
-                        th:if="${not #strings.isEmpty(item.organization) and not #strings.isEmpty(item.position)}"
-                      >
-                        ·
-                      </span><span th:text="${item.position}">职位</span>
-                    </p>
-                  </div>
-
-                  <div class="ml-2 flex flex-shrink-0 items-center gap-1.5">
-                    <span
-                      th:if="${#strings.isEmpty(item.endDate)}"
-                      class="rounded-md bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400"
-                      th:text="#{page.timeline.current}">进行中</span
-                    >
-                    <span
-                      class="rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
-                      th:text="${typeText}">类型</span
-                    >
-                  </div>
-                </div>
-
-                <!-- 描述 -->
-                <p
-                  th:if="${not #strings.isEmpty(item.description)}"
-                  class="mb-4 text-sm leading-relaxed text-75"
-                  th:text="${item.description}"
-                >
-                  描述
-                </p>
-
-                <!-- 技能标签（timeline.js 渲染） -->
-                <div
-                  th:if="${not #strings.isEmpty(item.skills)}"
-                  class="timeline-skills mb-4 flex flex-wrap gap-2"
-                  th:data-skills="${item.skills}"
-                >
-                </div>
-
-                <!-- 成就列表（timeline.js 渲染） -->
-                <div
-                  th:if="${not #strings.isEmpty(item.achievements)}"
-                  class="mb-4"
-                >
-                  <h4
-                    class="mb-2 text-xs font-semibold uppercase tracking-wider text-30"
-                    th:text="#{page.timeline.achievements}"
-                  >
-                    成就荣誉
-                  </h4>
-                  <div
-                    class="timeline-ach-list"
-                    th:data-achievements="${item.achievements}"
-                  >
-                  </div>
-                </div>
-
-                <!-- 底部：日期区间 + 地点 -->
-                <div
-                  class="mb-1 flex items-center gap-4 border-t border-black/5 pt-3 text-xs text-30 dark:border-white/5"
-                >
-                  <span class="flex items-center gap-1">
-                    <span
-                      class="icon-[material-symbols--calendar-month-outline] h-3.5 w-3.5 text-xs"
-                    ></span>
-                    <span th:text="${item.startDate}">开始</span>
-                    <span>~</span>
-                    <span
-                      th:if="${#strings.isEmpty(item.endDate)}"
-                      th:text="#{page.timeline.present}">至今</span
-                    >
-                    <span
-                      th:if="${not #strings.isEmpty(item.endDate)}"
-                      th:text="${item.endDate}">结束</span
-                    >
-                  </span>
-                  <span
-                    th:if="${not #strings.isEmpty(item.location)}"
-                    class="flex items-center gap-1"
-                  >
-                    <span
-                      class="icon-[material-symbols--location-on-outline] h-3.5 w-3.5 text-xs"
-                    ></span>
-                    <span th:text="${item.location}">地点</span>
-                  </span>
-                </div>
-
-                <!-- 相关链接（timeline.js 渲染） -->
-                <div
-                  th:if="${not #strings.isEmpty(item.links)}"
-                  class="timeline-links mt-3 flex flex-wrap gap-2"
-                  th:data-links="${item.links}"
-                >
-                </div>
-              </div>
-
-              <!-- 悬浮渐变遮罩 -->
+              <h4
+                class="mb-2 text-xs font-semibold uppercase tracking-wider text-30"
+                th:text="#{page.timeline.achievements}"
+              >
+                成就荣誉
+              </h4>
               <div
-                class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                class="timeline-ach-list"
+                th:data-achievements="${item.achievements}"
               >
               </div>
             </div>
+
+            <!-- 底部：日期区间 + 地点 -->
+            <div
+              class="mb-1 flex items-center gap-4 border-t border-black/5 pt-3 text-xs text-30 dark:border-white/5"
+            >
+              <span class="flex items-center gap-1">
+                <span
+                  class="icon-[material-symbols--calendar-month-outline] h-3.5 w-3.5 text-xs"
+                ></span>
+                <span th:text="${item.startDate}">开始</span>
+                <span>~</span>
+                <span
+                  th:if="${#strings.isEmpty(item.endDate)}"
+                  th:text="#{page.timeline.present}">至今</span
+                >
+                <span
+                  th:if="${not #strings.isEmpty(item.endDate)}"
+                  th:text="${item.endDate}">结束</span
+                >
+              </span>
+              <span
+                th:if="${not #strings.isEmpty(item.location)}"
+                class="flex items-center gap-1"
+              >
+                <span
+                  class="icon-[material-symbols--location-on-outline] h-3.5 w-3.5 text-xs"
+                ></span>
+                <span th:text="${item.location}">地点</span>
+              </span>
+            </div>
+
+            <!-- 相关链接（timeline.js 渲染） -->
+            <div
+              th:if="${not #strings.isEmpty(item.links)}"
+              class="timeline-links mt-3 flex flex-wrap gap-2"
+              th:data-links="${item.links}"
+            >
+            </div>
+          </div>
+
+          <!-- 悬浮渐变遮罩 -->
+          <div
+            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          >
           </div>
         </div>
-
-        <!-- 筛选后空状态（filter-tabs.js 控制显隐） -->
-        <div class="filter-no-results hidden py-16 text-center">
-          <span
-            class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"
-          ></span>
-          <p
-            class="text-lg text-black/40 dark:text-white/40"
-            th:text="#{page.timeline.noResults}"
-          >
-            该类型下暂无内容
-          </p>
-        </div>
       </div>
+    </div>
 
-      <!-- 空状态（未配置任何条目） -->
-      <div
-        th:if="${items == null or #lists.isEmpty(items)}"
-        class="py-16 text-center text-50"
+    <!-- 筛选后空状态（选中类型下无条目时显示；计数来自外层 th:with 的字面量投影，
+            param 仅在投影外比对，规避 Map 投影遮蔽上下文变量的坑） -->
+    <div
+      th:if="${items != null and not #lists.isEmpty(items) and not #lists.isEmpty(param.type) and ((#lists.contains(param.type, 'education') and edCount == 0) or (#lists.contains(param.type, 'work') and workCount == 0) or (#lists.contains(param.type, 'project') and projCount == 0) or (#lists.contains(param.type, 'achievement') and achCount == 0))}"
+      class="py-16 text-center"
+    >
+      <span
+        class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"
+      ></span>
+      <p
+        class="text-lg text-black/40 dark:text-white/40"
+        th:text="#{page.timeline.noResults}"
       >
-        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
-        ></span>
-        <p class="mt-4 text-sm" th:text="#{page.timeline.empty}">
-          暂无时间轴内容，请在主题设置中配置
-        </p>
-      </div>
-    </section>
-  </div>
+        该类型下暂无内容
+      </p>
+    </div>
 
-  <script
-    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-tabs.js?v=${ASSET_VERSION}`}
-    defer></script>
+    <!-- 空状态（未配置任何条目） -->
+    <div
+      th:if="${items == null or #lists.isEmpty(items)}"
+      class="py-16 text-center text-50"
+    >
+      <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
+      ></span>
+      <p class="mt-4 text-sm" th:text="#{page.timeline.empty}">
+        暂无时间轴内容，请在主题设置中配置
+      </p>
+    </div>
+  </section>
+
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/timeline.js?v=${ASSET_VERSION}`}
     defer></script>
 </MainGridLayout>
-
-<style is:global>
-  /* 类型筛选标签：对齐仓库 btn-card 标签风格（参考 links/equipments 分组标签） */
-  .filter-tabs-card .filter-tabs-item {
-    height: 2.25rem;
-    padding: 0 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: rgb(0 0 0 / 0.75);
-    background: var(--card-bg);
-  }
-
-  :root.dark .filter-tabs-card .filter-tabs-item {
-    color: rgb(255 255 255 / 0.75);
-  }
-
-  .filter-tabs-card .filter-tabs-item:hover:not(.active) {
-    background: var(--btn-card-bg-hover);
-  }
-
-  .filter-tabs-card .filter-tabs-item.active {
-    background: var(--primary);
-    color: #fff;
-  }
-
-  :root.dark .filter-tabs-card .filter-tabs-item.active {
-    color: rgb(0 0 0 / 0.7);
-  }
-
-  .filter-tabs-card .filter-tabs-count {
-    margin-left: 0.25rem;
-    font-size: inherit;
-    opacity: 1;
-    color: rgb(0 0 0 / 0.5);
-  }
-
-  :root.dark .filter-tabs-card .filter-tabs-count {
-    color: rgb(255 255 255 / 0.5);
-  }
-
-  .timeline-list {
-    position: relative;
-  }
-
-  .timeline-list::before {
-    content: "";
-    position: absolute;
-    left: 9px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--line-divider);
-    border-radius: 1px;
-  }
-
-  .timeline-entry {
-    position: relative;
-    padding-left: 2.5rem;
-    padding-bottom: 2rem;
-  }
-
-  .timeline-entry:last-child {
-    padding-bottom: 0;
-  }
-
-  .timeline-node {
-    position: absolute;
-    left: 0;
-    top: 1.5rem;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    border: 2.5px solid var(--card-bg);
-    box-shadow: 0 0 0 2px var(--line-divider);
-    z-index: 2;
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  .timeline-entry:hover .timeline-node {
-    transform: scale(1.15);
-    box-shadow:
-      0 0 0 2px var(--primary),
-      0 0 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .timeline-node-current {
-    animation: timeline-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes timeline-pulse {
-    0%,
-    100% {
-      box-shadow: 0 0 0 2px var(--line-divider);
-    }
-    50% {
-      box-shadow:
-        0 0 0 2px #22c55e,
-        0 0 8px rgba(34, 197, 94, 0.3);
-    }
-  }
-</style>
