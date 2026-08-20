@@ -1,0 +1,78 @@
+---
+// 分组/筛选标签行（容器 + 「全部」tab + 动态/静态 tab 列表）。
+//
+// 动态模式：eachExpr 传 th:each 源（如 `group : ${groups}`），tab 由 tabTemplate 描述，
+//   组件内部用 `<div class="contents" th:each=...>` 包裹（组件标签上的 th:each 不会
+//   转发到根元素，故不能直接放在 FilterTab 上）。
+// 静态模式：items 数组逐项渲染（skills/timeline 的显式分类）。
+// 「全部」tab 默认文案为 `#{common.all}`，label/计数/激活判定均可按页面覆盖。
+// 各字段表达式串约定见 FilterTab.astro。
+import FilterTab from "./FilterTab.astro";
+
+interface TabItem {
+  hrefExpr?: string;
+  activeExpr?: string;
+  labelExpr?: string;
+  countExpr?: string;
+  showIfExpr?: string;
+  withExpr?: string;
+  countShowIfExpr?: string;
+  label?: string;
+}
+
+interface Props {
+  showIfExpr?: string;
+  class?: string;
+  size?: "sm" | "lg";
+  countClass?: string;
+  allHrefExpr: string;
+  allActiveExpr: string;
+  allLabelExpr?: string;
+  allLabel?: string;
+  allCountExpr?: string;
+  allCountShowIfExpr?: string;
+  eachExpr?: string;
+  tabTemplate?: TabItem;
+  items?: TabItem[];
+}
+
+const {
+  showIfExpr,
+  size = "sm",
+  countClass,
+  allHrefExpr,
+  allActiveExpr,
+  allLabelExpr = "#{common.all}",
+  allLabel = "全部",
+  allCountExpr,
+  allCountShowIfExpr,
+  eachExpr,
+  tabTemplate,
+  items = [],
+  class: className = "mb-6 flex flex-wrap gap-2",
+} = Astro.props;
+---
+
+<div th:if={showIfExpr} class={className}>
+  <FilterTab
+    hrefExpr={allHrefExpr}
+    activeExpr={allActiveExpr}
+    labelExpr={allLabelExpr}
+    label={allLabel}
+    countExpr={allCountExpr}
+    countShowIfExpr={allCountShowIfExpr}
+    size={size}
+    countClass={countClass}
+  />
+  {
+    eachExpr && tabTemplate ? (
+      <div class="contents" th:each={eachExpr}>
+        <FilterTab {...tabTemplate} size={size} countClass={countClass} />
+      </div>
+    ) : (
+      items.map((item) => (
+        <FilterTab {...item} size={size} countClass={countClass} />
+      ))
+    )
+  }
+</div>

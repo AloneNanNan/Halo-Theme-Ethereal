@@ -1,5 +1,7 @@
 ---
 import Pagination from "../components/control/Pagination.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -11,63 +13,45 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   <section
     class="card-base onload-animation mb-4 overflow-hidden px-6 py-6 md:px-9"
   >
-    <div
-      class="mb-5 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+    <PageHeader
+      containerClass="mb-5 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      titleExpr="${title}"
+      title="瞬间"
+      iconClass="icon-[material-symbols--update-rounded]"
+      labelExpr="#{page.moments.subtitle}"
+      label="我的动态"
+      subExpr="#{page.moments.subtitleCount(${moments.total})}"
+      sub="共 0 条动态"
+      filteredExpr="${not #lists.isEmpty(param.tag)}"
     >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${title}"
-        >
-          瞬间
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[material-symbols--update-rounded] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.moments.subtitle}">我的动态</span
-          >
-          <span class="text-30">·</span>
-          <span
-            class="text-50"
-            th:text="#{page.moments.subtitleCount(${moments.total})}"
-            >共 0 条动态</span
-          >
-        </div>
-      </div>
       <a
         th:href="@{/moments/rss.xml}"
         data-no-swup
         target="_blank"
         rel="noopener noreferrer"
         class="btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
+        slot="right"
       >
         <span
           class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
         ></span>
         <span>RSS</span>
       </a>
-    </div>
+    </PageHeader>
 
-    <div th:if="${not #lists.isEmpty(tags)}" class="mb-5 flex flex-wrap gap-2">
-      <a
-        th:href="@{/moments}"
-        th:classappend="${#lists.isEmpty(param.tag) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-        th:text="#{common.all}">全部</a
-      >
-      <a
-        th:each="tag : ${tags}"
-        th:href="@{/moments(tag=${tag.name})}"
-        th:classappend="${#lists.contains(param.tag, tag.name) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="${tag.name}">Tag</span>
-        <span class="ml-1 text-30" th:text="${tag.momentCount}">0</span>
-      </a>
-    </div>
+    <FilterTabs
+      showIfExpr="${not #lists.isEmpty(tags)}"
+      class="mb-5 flex flex-wrap gap-2"
+      allHrefExpr="@{/moments}"
+      allActiveExpr="#lists.isEmpty(param.tag)"
+      eachExpr="tag : ${tags}"
+      tabTemplate={{
+        hrefExpr: "@{/moments(tag=${tag.name})}",
+        activeExpr: "#lists.contains(param.tag, tag.name)",
+        labelExpr: "${tag.name}",
+        countExpr: "${tag.momentCount}",
+      }}
+    />
 
     <div th:if="${not #lists.isEmpty(moments.items)}" class="moment-list">
       <article

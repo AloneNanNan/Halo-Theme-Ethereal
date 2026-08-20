@@ -1,0 +1,60 @@
+---
+// 分组/筛选标签（单个 tab）。由 FilterTabs 统一消费，也可单独使用。
+//
+// 约定（Thymeleaf 表达式字符串传 props）：
+// - hrefExpr       完整 URL 表达式，如 `@{/links(group=${group.spec.displayName})}` 或 `@{/links}`
+// - activeExpr     裸布尔表达式（不含 ${}），组件注入三元追加激活样式，如 `#lists.contains(param.group, group.spec.displayName)`
+// - labelExpr/countExpr   完整表达式（含 ${} 或 #{}），如 `${group.spec.displayName}` / `${#lists.size(group.links)}`
+// - showIfExpr/withExpr/countShowIfExpr   完整表达式（含 ${}），如 `${frontendCount > 0}`
+// - size           默认 `sm`（h-9）；`lg`（h-10）。两者均带 shrink-0，适配 photos 横向滚动容器
+// - countClass     计数 span 样式，默认 `ml-1 text-30`；photos 传 `ml-2 text-xs opacity-70`
+interface Props {
+  hrefExpr?: string;
+  activeExpr?: string;
+  labelExpr?: string;
+  countExpr?: string;
+  showIfExpr?: string;
+  withExpr?: string;
+  countShowIfExpr?: string;
+  label?: string;
+  countClass?: string;
+  size?: "sm" | "lg";
+}
+
+const {
+  hrefExpr,
+  activeExpr,
+  labelExpr,
+  countExpr,
+  showIfExpr,
+  withExpr,
+  countShowIfExpr,
+  label,
+  countClass = "ml-1 text-30",
+  size = "sm",
+} = Astro.props;
+
+const tabClass = `btn-card shrink-0 rounded-[10px] px-3 text-sm font-bold text-75 ${
+  size === "lg" ? "h-10" : "h-9"
+}`;
+const activeAppend = activeExpr
+  ? `\${${activeExpr} ? ' bg-(--primary) text-white dark:text-black/70' : ''}`
+  : undefined;
+---
+
+<a
+  th:if={showIfExpr}
+  th:with={withExpr}
+  th:href={hrefExpr}
+  th:classappend={activeAppend}
+  class={tabClass}
+>
+  <span th:text={labelExpr}>{label}</span>
+  {
+    countExpr && (
+      <span th:if={countShowIfExpr} class={countClass} th:text={countExpr}>
+        0
+      </span>
+    )
+  }
+</a>

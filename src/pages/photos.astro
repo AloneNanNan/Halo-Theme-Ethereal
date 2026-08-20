@@ -2,6 +2,8 @@
 import PhotoExifMeta from "../components/photos/PhotoExifMeta.astro";
 import PhotoI18n from "../components/photos/PhotoI18n.astro";
 import PhotoPagination from "../components/photos/PhotoPagination.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import "../styles/photos-gallery-lightbox.css";
 ---
@@ -16,82 +18,34 @@ import "../styles/photos-gallery-lightbox.css";
   </Fragment>
 
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <div
-      class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
-    >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${title}"
-        >
-          图库
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[material-symbols--photo-library-sharp] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.photos.collection}">Collection</span
-          >
-          <span class="text-30">·</span>
-          <span
-            class="text-50"
-            th:text="#{page.photos.subtitleCount(${photos.total})}"
-            >共 0 张图片</span
-          >
-          <span
-            th:if="${not #lists.isEmpty(param.group)}"
-            class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
-            th:text="#{page.photos.filtered}"
-          >
-            Filtered
-          </span>
-        </div>
-      </div>
+    <PageHeader
+      containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+      titleExpr="${title}"
+      title="图库"
+      iconClass="icon-[material-symbols--photo-library-sharp]"
+      labelExpr="#{page.photos.collection}"
+      label="Collection"
+      subExpr="#{page.photos.subtitleCount(${photos.total})}"
+      sub="共 0 张图片"
+      filteredExpr="${not #lists.isEmpty(param.group)}"
+    />
 
-      <a
-        th:if="${not #lists.isEmpty(param.group)}"
-        th:href="@{${photoUrl.list()}}"
-        class="btn-card h-11 w-fit rounded-lg px-4 text-sm font-bold text-75"
-      >
-        <span class="icon-[material-symbols--close-rounded] mr-1 text-xl"
-        ></span>
-        <span th:text="#{page.photos.clearFilter}">Clear filter</span>
-      </a>
-    </div>
-
-    <div
-      th:if="${not #lists.isEmpty(groups)}"
+    <FilterTabs
+      showIfExpr="${not #lists.isEmpty(groups)}"
       class="mb-6 flex gap-2 overflow-x-auto pb-1"
-    >
-      <a
-        th:with="targetUrl=${photoUrl.list()}"
-        th:href="@{${targetUrl}}"
-        th:classappend="${#lists.isEmpty(param.group) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-10 shrink-0 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{common.all}">全部</span>
-        <span
-          th:if="${#lists.isEmpty(param.group)}"
-          class="ml-2 text-xs opacity-70"
-          th:text="${photos.total}">0</span
-        >
-      </a>
-      <a
-        th:each="group : ${groups}"
-        th:with="targetUrl=${photoUrl.list(group.metadata.name)}"
-        th:href="@{${targetUrl}}"
-        th:classappend="${#lists.contains(param.group, group.metadata.name) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-10 shrink-0 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="${group.spec.displayName}">Group</span>
-        <span
-          class="ml-2 text-xs opacity-70"
-          th:text="${group.status.photoCount}">0</span
-        >
-      </a>
-    </div>
+      countClass="ml-2 text-xs opacity-70"
+      allHrefExpr="@{${photoUrl.list()}}"
+      allActiveExpr="#lists.isEmpty(param.group)"
+      allCountExpr="${photos.total}"
+      allCountShowIfExpr="${#lists.isEmpty(param.group)}"
+      eachExpr="group : ${groups}"
+      tabTemplate={{
+        hrefExpr: "@{${photoUrl.list(group.metadata.name)}}",
+        activeExpr: "#lists.contains(param.group, group.metadata.name)",
+        labelExpr: "${group.spec.displayName}",
+        countExpr: "${group.status.photoCount}",
+      }}
+    />
 
     <div th:if="${not #lists.isEmpty(photos.items)}">
       <div

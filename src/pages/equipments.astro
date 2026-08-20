@@ -1,5 +1,7 @@
 ---
 import EquipmentPagination from "../components/EquipmentPagination.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -10,74 +12,32 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <!-- 标题区域 -->
-    <div
-      class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
-    >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${title}"
-        >
-          装备管理
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[material-symbols--devices-rounded] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.equipments.subtitle}">我的装备</span
-          >
-          <span class="text-30">·</span>
-          <span
-            th:if="${equipments != null}"
-            th:text="#{page.equipments.subtitleCount(${equipments.total})}"
-            class="text-50">0 个装备</span
-          >
-          <span
-            th:if="${not #lists.isEmpty(param.group)}"
-            class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
-            th:text="#{page.equipments.filtering}"
-          >
-            筛选中
-          </span>
-        </div>
-      </div>
-
-      <a
-        th:if="${not #lists.isEmpty(param.group)}"
-        th:href="@{/equipments}"
-        class="btn-card h-11 w-fit rounded-lg px-4 text-sm font-bold text-75"
-      >
-        <span class="icon-[material-symbols--close-rounded] mr-1 text-xl"
-        ></span>
-        <span th:text="#{page.equipments.clearFilter}">清除筛选</span>
-      </a>
-    </div>
+    <PageHeader
+      containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+      titleExpr="${title}"
+      title="装备管理"
+      iconClass="icon-[material-symbols--devices-rounded]"
+      labelExpr="#{page.equipments.subtitle}"
+      label="我的装备"
+      subExpr="#{page.equipments.subtitleCount(${equipments.total})}"
+      subShowIfExpr="${equipments != null}"
+      sub="0 个装备"
+      filteredExpr="${not #lists.isEmpty(param.group)}"
+    />
 
     <!-- 分组标签 -->
-    <div
-      th:if="${not #lists.isEmpty(groups)}"
-      class="mb-6 flex flex-wrap gap-2"
-    >
-      <a
-        th:href="@{/equipments}"
-        th:classappend="${#lists.isEmpty(param.group) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-        th:text="#{common.all}">全部</a
-      >
-      <a
-        th:each="group : ${groups}"
-        th:href="@{/equipments(group=${group.metadata.name})}"
-        th:classappend="${#lists.contains(param.group, group.metadata.name) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="${group.spec.displayName}">Group</span>
-        <span class="ml-1 text-30" th:text="${group.status.equipmentCount}"
-          >0</span
-        >
-      </a>
-    </div>
+    <FilterTabs
+      showIfExpr="${not #lists.isEmpty(groups)}"
+      allHrefExpr="@{/equipments}"
+      allActiveExpr="#lists.isEmpty(param.group)"
+      eachExpr="group : ${groups}"
+      tabTemplate={{
+        hrefExpr: "@{/equipments(group=${group.metadata.name})}",
+        activeExpr: "#lists.contains(param.group, group.metadata.name)",
+        labelExpr: "${group.spec.displayName}",
+        countExpr: "${group.status.equipmentCount}",
+      }}
+    />
 
     <!-- 装备卡片网格（统一分页） -->
     <div

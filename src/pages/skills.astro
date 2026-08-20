@@ -1,5 +1,7 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
@@ -25,94 +27,64 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     class="card-base onload-animation mb-4 px-6 py-6 md:px-9"
   >
     <!-- 页头 -->
-    <div
-      class="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
-    >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${singlePage.spec.title}"
-        >
-          技能
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[material-symbols--psychology] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.skills.title}">技能</span
-          >
-          <span class="text-30">·</span>
-          <span
-            class="text-50"
-            th:text="${theme.config?.skills?.subtitle ?: #messages.msg('page.skills.subtitle')}"
-            >我的技术技能和专业知识</span
-          >
-        </div>
-      </div>
-    </div>
+    <PageHeader
+      containerClass="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      titleExpr="${singlePage.spec.title}"
+      title="技能"
+      iconClass="icon-[material-symbols--psychology]"
+      labelExpr="#{page.skills.title}"
+      label="技能"
+      subExpr="${theme.config?.skills?.subtitle ?: #messages.msg('page.skills.subtitle')}"
+      sub="我的技术技能和专业知识"
+      filteredExpr="${not #lists.isEmpty(param.category)}"
+    />
 
     <!-- 分类筛选标签（参考 links/equipments 分组标签；URL 参数切换，
           整页导航触发 Swup 过渡 + onload-animation 入场动画） -->
-    <div
-      th:if="${items != null and not #lists.isEmpty(items)}"
+    <FilterTabs
+      showIfExpr="${items != null and not #lists.isEmpty(items)}"
       class="mb-8 flex flex-wrap gap-2"
-    >
-      <a
-        th:href="@{${singlePage.status.permalink}}"
-        th:classappend="${#lists.isEmpty(param.category) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{common.all}">全部</span>
-        <span class="ml-1 text-30" th:text="${#lists.size(items)}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(category='frontend')}"
-        th:if="${frontendCount > 0}"
-        th:classappend="${#lists.contains(param.category, 'frontend') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.skills.frontend}">前端开发</span>
-        <span class="ml-1 text-30" th:text="${frontendCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(category='backend')}"
-        th:if="${backendCount > 0}"
-        th:classappend="${#lists.contains(param.category, 'backend') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.skills.backend}">后端开发</span>
-        <span class="ml-1 text-30" th:text="${backendCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(category='database')}"
-        th:if="${databaseCount > 0}"
-        th:classappend="${#lists.contains(param.category, 'database') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.skills.database}">数据库</span>
-        <span class="ml-1 text-30" th:text="${databaseCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(category='tools')}"
-        th:if="${toolsCount > 0}"
-        th:classappend="${#lists.contains(param.category, 'tools') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.skills.tools}">开发工具</span>
-        <span class="ml-1 text-30" th:text="${toolsCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(category='other')}"
-        th:if="${otherCount > 0}"
-        th:classappend="${#lists.contains(param.category, 'other') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.skills.other}">其他技能</span>
-        <span class="ml-1 text-30" th:text="${otherCount}">0</span>
-      </a>
-    </div>
+      allHrefExpr="@{${singlePage.status.permalink}}"
+      allActiveExpr="#lists.isEmpty(param.category)"
+      allCountExpr="${#lists.size(items)}"
+      items={[
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(category='frontend')}",
+          activeExpr: "#lists.contains(param.category, 'frontend')",
+          labelExpr: "#{page.skills.frontend}",
+          countExpr: "${frontendCount}",
+          showIfExpr: "${frontendCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(category='backend')}",
+          activeExpr: "#lists.contains(param.category, 'backend')",
+          labelExpr: "#{page.skills.backend}",
+          countExpr: "${backendCount}",
+          showIfExpr: "${backendCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(category='database')}",
+          activeExpr: "#lists.contains(param.category, 'database')",
+          labelExpr: "#{page.skills.database}",
+          countExpr: "${databaseCount}",
+          showIfExpr: "${databaseCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(category='tools')}",
+          activeExpr: "#lists.contains(param.category, 'tools')",
+          labelExpr: "#{page.skills.tools}",
+          countExpr: "${toolsCount}",
+          showIfExpr: "${toolsCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(category='other')}",
+          activeExpr: "#lists.contains(param.category, 'other')",
+          labelExpr: "#{page.skills.other}",
+          countExpr: "${otherCount}",
+          showIfExpr: "${otherCount > 0}",
+        },
+      ]}
+    />
 
     <!-- 技能卡片网格（按当前 category 参数在服务端过滤） -->
     <div
