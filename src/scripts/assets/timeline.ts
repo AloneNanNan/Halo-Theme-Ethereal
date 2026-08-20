@@ -48,7 +48,7 @@
           li.className = "flex items-start gap-2 text-sm text-75";
           var icon = document.createElement("span");
           icon.className =
-            "icon-[material-symbols--check-circle-rounded] mt-0.5 flex-shrink-0 text-base text-green-500";
+            "icon-[material-symbols--workspace-premium-rounded] mt-0.5 flex-shrink-0 text-base text-(--primary)";
           var text = document.createElement("span");
           text.textContent = ach;
           li.appendChild(icon);

@@ -676,6 +676,46 @@
     border-radius: 0 0 var(--radius-large) var(--radius-large);
   }
 
+  /* 菜单项图标（菜单项元数据 icon，AnnotationSetting 定义，内联 SVG）：
+     保存的 SVG 自带固定 width/height 与 currentColor，此处以 CSS 覆盖尺寸，
+     统一跟随菜单文字字号与颜色（hover 变主题色时图标同步变色） */
+  .nav-menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .nav-menu-icon svg,
+  .nav-menu-icon img {
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  .nav-menu-icon-lg svg,
+  .nav-menu-icon-lg img {
+    width: 1.25em;
+    height: 1.25em;
+  }
+
+  .nav-menu-icon img {
+    object-fit: contain;
+  }
+
+  /* 菜单栏自定义 Logo：等比缩放 + 垂直居中（尺寸由模板 Tailwind 类控制） */
+  .navbar-logo {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* 桌面端导航栏菜单图标：小屏隐藏（只留文字，避免导航栏拥挤） */
+  @media (max-width: 1279px) {
+    .navbar-icon {
+      display: none !important;
+    }
+  }
+
   /* ── 移动端抽屉菜单（NavMenuPanel）──
      结构完全复刻外链跳转模态框（#ext-link-modal / #ext-link-backdrop）：
      root 是 fixed 全屏容器，遮罩用 absolute + backdrop-filter（不是 fixed），

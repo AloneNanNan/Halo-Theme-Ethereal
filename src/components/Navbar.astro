@@ -1,6 +1,7 @@
 ---
 import LightDarkSwitch from "./LightDarkSwitch.svelte";
 import Search from "./Search.svelte";
+import SiteLogo from "./SiteLogo.astro";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
 import LanguageSwitch from "./widget/LanguageSwitch.svelte";
 import NavMenuPanel from "./widget/NavMenuPanel.astro";
@@ -39,8 +40,7 @@ const className = Astro.props.class;
       <div
         class="site-title flex flex-row items-center text-md text-(--primary)"
       >
-        <span class="icon-[tabler--smart-home] mb-1 mr-2 text-[1.75rem]"></span>
-        <span th:text="${site.title}">Ethereal</span>
+        <SiteLogo />
       </div>
     </a>
 
@@ -51,7 +51,7 @@ const className = Astro.props.class;
       <div class="contents" th:if="${menu != null}">
         <div
           th:each="menuItem, itemStat : ${menu.menuItems}"
-          th:with="hasChildren = ${menuItem.children != null && !menuItem.children.isEmpty()}"
+          th:with="hasChildren = ${menuItem.children != null && !menuItem.children.isEmpty()}, menuIcon = ${#annotations.get(menuItem, 'icon')}"
           class="relative group"
         >
           <a
@@ -60,6 +60,19 @@ const className = Astro.props.class;
             class="btn-plain scale-animation h-11 rounded-lg px-5 font-bold active:scale-95 flex items-center gap-1"
           >
             <div class="flex items-center">
+              <span
+                th:if="${not #strings.isEmpty(menuIcon)}"
+                class="nav-menu-icon navbar-icon mr-1.5"
+              >
+                <img
+                  th:if="${#strings.startsWith(menuIcon, 'data:') or #strings.startsWith(menuIcon, 'http')}"
+                  th:src="${menuIcon}"
+                  alt=""
+                />
+                <span
+                  th:if="${#strings.startsWith(menuIcon, '<svg')}"
+                  th:utext="${menuIcon}"></span>
+              </span>
               <span th:text="${menuItem.status.displayName}">Menu</span>
               <span
                 th:if="${hasChildren}"
@@ -84,6 +97,19 @@ const className = Astro.props.class;
               class="touch-only group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
               <span
+                th:if="${not #strings.isEmpty(menuIcon)}"
+                class="nav-menu-icon navbar-icon mr-2"
+              >
+                <img
+                  th:if="${#strings.startsWith(menuIcon, 'data:') or #strings.startsWith(menuIcon, 'http')}"
+                  th:src="${menuIcon}"
+                  alt=""
+                />
+                <span
+                  th:if="${#strings.startsWith(menuIcon, '<svg')}"
+                  th:utext="${menuIcon}"></span>
+              </span>
+              <span
                 class="font-medium text-(--primary) truncate"
                 th:text="${menuItem.status.displayName}">概览</span
               >
@@ -98,14 +124,30 @@ const className = Astro.props.class;
             </div>
             <a
               th:each="childItem : ${menuItem.children}"
+              th:with="childIcon = ${#annotations.get(childItem, 'icon')}"
               th:href="@{${childItem.status.href}}"
               th:target="${childItem.spec.target?.value}"
               class="group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
-              <span
-                class="font-medium text-black/75 dark:text-white/75 truncate"
-                th:text="${childItem.status.displayName}">子菜单</span
-              >
+              <span class="flex min-w-0 items-center gap-2">
+                <span
+                  th:if="${not #strings.isEmpty(childIcon)}"
+                  class="nav-menu-icon nav-menu-icon-lg navbar-icon shrink-0"
+                >
+                  <img
+                    th:if="${#strings.startsWith(childIcon, 'data:') or #strings.startsWith(childIcon, 'http')}"
+                    th:src="${childIcon}"
+                    alt=""
+                  />
+                  <span
+                    th:if="${#strings.startsWith(childIcon, '<svg')}"
+                    th:utext="${childIcon}"></span>
+                </span>
+                <span
+                  class="font-medium text-black/75 dark:text-white/75 truncate"
+                  th:text="${childItem.status.displayName}">子菜单</span
+                >
+              </span>
               <span
                 th:if="${childItem.spec.target?.value == '_blank'}"
                 class="icon-[tabler--external-link] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"

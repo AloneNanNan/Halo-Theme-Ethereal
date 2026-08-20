@@ -1,0 +1,15 @@
+apiVersion: v1alpha1
+kind: AnnotationSetting
+metadata:
+  name: ethereal-menuitem-icon-3x9m2
+spec:
+  targetRef:
+    group: ""
+    kind: MenuItem
+  formSchema:
+    - $formkit: iconify
+      name: icon
+      label: 图标
+      format: svg
+      value-only: true
+      help: "菜单项左侧显示的图标，留空则不显示。图标颜色与尺寸自动跟随菜单文字，无需手动设置。"

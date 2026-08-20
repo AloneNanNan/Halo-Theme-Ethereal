@@ -1,0 +1,17 @@
+---
+// 菜单栏站点 Logo 内容：后台「菜单栏设置 → Logo」配置了图片则显示图片，否则回退主题默认图标，
+// 并附加站点标题文字。只输出内容、不含外层容器，布局由调用方（Navbar / 抽屉头部）用 flex 容器控制。
+// iconClass 控制默认图标的字号/对齐。
+const { iconClass = "text-[1.75rem] mb-1" } = Astro.props;
+---
+
+<img
+  th:if="${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
+  th:src="${theme.config?.layout?.mobileMenu?.logo}"
+  th:alt="${site.title}"
+  class="navbar-logo mr-2 h-7 w-auto shrink-0 rounded object-contain"
+/>
+<span
+  th:if="${#strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
+  class:list={["icon-[tabler--smart-home] mr-2", iconClass]}></span>
+<span th:text="${site.title}">Ethereal</span>

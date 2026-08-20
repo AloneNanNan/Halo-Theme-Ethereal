@@ -5,6 +5,7 @@
 // 数据源一致：均读取 Halo 菜单（theme.config?.layout?.mobileMenu?.menu 或主菜单）。
 // 两种模式的开关逻辑见 public/assets/navbar.js（以 #nav-menu-root 是否
 // 存在判定模式）。
+import SiteLogo from "../SiteLogo.astro";
 ---
 
 <!-- 抽屉模式（layout.mobileMenu.style = drawer） -->
@@ -29,8 +30,7 @@
         class="btn-plain scale-animation h-10 rounded-lg px-3 font-bold active:scale-95"
       >
         <div class="flex flex-row items-center text-md text-(--primary)">
-          <span class="icon-[tabler--smart-home] mr-2 text-[1.5rem]"></span>
-          <span th:text="${site.title}">Ethereal</span>
+          <SiteLogo iconClass="text-[1.5rem]" />
         </div>
       </a>
       <button
@@ -50,7 +50,10 @@
          一级链接恒渲染；子项用 th:each（无子项时为空集合不渲染，天然平铺） -->
     <div class="nav-drawer-body px-2 pb-4">
       <div class="contents" th:if="${menu != null}">
-        <div th:each="menuItem, itemStat : ${menu.menuItems}">
+        <div
+          th:each="menuItem, itemStat : ${menu.menuItems}"
+          th:with="menuIcon = ${#annotations.get(menuItem, 'icon')}"
+        >
           <!-- 组间分割线（除第一组外） -->
           <div
             th:unless="${itemStat.index == 0}"
@@ -63,9 +66,24 @@
             class="nav-drawer-link"
             data-nav-link
           >
-            <span class="truncate" th:text="${menuItem.status.displayName}"
-              >Menu</span
-            >
+            <span class="flex min-w-0 items-center gap-2">
+              <span
+                th:if="${not #strings.isEmpty(menuIcon)}"
+                class="nav-menu-icon shrink-0"
+              >
+                <img
+                  th:if="${#strings.startsWith(menuIcon, 'data:') or #strings.startsWith(menuIcon, 'http')}"
+                  th:src="${menuIcon}"
+                  alt=""
+                />
+                <span
+                  th:if="${#strings.startsWith(menuIcon, '<svg')}"
+                  th:utext="${menuIcon}"></span>
+              </span>
+              <span class="truncate" th:text="${menuItem.status.displayName}"
+                >Menu</span
+              >
+            </span>
             <span
               th:if="${menuItem.spec.target?.value == '_blank'}"
               class="icon-[fa6-solid--arrow-up-right-from-square] flex-shrink-0 text-[0.9rem] text-black/50 dark:text-white/50"
@@ -73,14 +91,30 @@
           </a>
           <a
             th:each="childItem : ${menuItem.children}"
+            th:with="childIcon = ${#annotations.get(childItem, 'icon')}"
             th:href="@{${childItem.status.href}}"
             th:target="${childItem.spec.target?.value}"
             class="nav-drawer-link"
             data-nav-link
           >
-            <span class="truncate" th:text="${childItem.status.displayName}"
-              >子菜单</span
-            >
+            <span class="flex min-w-0 items-center gap-2">
+              <span
+                th:if="${not #strings.isEmpty(childIcon)}"
+                class="nav-menu-icon shrink-0"
+              >
+                <img
+                  th:if="${#strings.startsWith(childIcon, 'data:') or #strings.startsWith(childIcon, 'http')}"
+                  th:src="${childIcon}"
+                  alt=""
+                />
+                <span
+                  th:if="${#strings.startsWith(childIcon, '<svg')}"
+                  th:utext="${childIcon}"></span>
+              </span>
+              <span class="truncate" th:text="${childItem.status.displayName}"
+                >子菜单</span
+              >
+            </span>
             <span
               th:if="${childItem.spec.target?.value == '_blank'}"
               class="icon-[fa6-solid--arrow-up-right-from-square] flex-shrink-0 text-[0.9rem] text-black/50 dark:text-white/50"
@@ -100,17 +134,35 @@
   class="float-panel float-panel-closed fixed right-4 px-2 py-2 w-40"
 >
   <div class="contents" th:if="${menu != null}">
-    <div th:each="menuItem, itemStat : ${menu.menuItems}">
+    <div
+      th:each="menuItem, itemStat : ${menu.menuItems}"
+      th:with="menuIcon = ${#annotations.get(menuItem, 'icon')}"
+    >
       <div class="flex items-center">
         <a
           th:href="@{${menuItem.status.href}}"
           th:target="${menuItem.spec.target?.value}"
           class="group flex-1 flex items-center justify-between gap-3 rounded-lg py-2 pl-3 pr-1 transition hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)"
         >
-          <span
-            class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
-            th:text="${menuItem.status.displayName}">Menu</span
-          >
+          <span class="flex min-w-0 items-center gap-2">
+            <span
+              th:if="${not #strings.isEmpty(menuIcon)}"
+              class="nav-menu-icon shrink-0"
+            >
+              <img
+                th:if="${#strings.startsWith(menuIcon, 'data:') or #strings.startsWith(menuIcon, 'http')}"
+                th:src="${menuIcon}"
+                alt=""
+              />
+              <span
+                th:if="${#strings.startsWith(menuIcon, '<svg')}"
+                th:utext="${menuIcon}"></span>
+            </span>
+            <span
+              class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
+              th:text="${menuItem.status.displayName}">Menu</span
+            >
+          </span>
           <span
             th:if="${menuItem.spec.target?.value == '_blank'}"
             class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"
@@ -138,14 +190,30 @@
       >
         <a
           th:each="childItem : ${menuItem.children}"
+          th:with="childIcon = ${#annotations.get(childItem, 'icon')}"
           th:href="@{${childItem.status.href}}"
           th:target="${childItem.spec.target?.value}"
           class="group flex items-center justify-between gap-3 rounded-lg py-2 pl-3 pr-1 transition hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)"
         >
-          <span
-            class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
-            th:text="${childItem.status.displayName}">子菜单</span
-          >
+          <span class="flex min-w-0 items-center gap-2">
+            <span
+              th:if="${not #strings.isEmpty(childIcon)}"
+              class="nav-menu-icon shrink-0"
+            >
+              <img
+                th:if="${#strings.startsWith(childIcon, 'data:') or #strings.startsWith(childIcon, 'http')}"
+                th:src="${childIcon}"
+                alt=""
+              />
+              <span
+                th:if="${#strings.startsWith(childIcon, '<svg')}"
+                th:utext="${childIcon}"></span>
+            </span>
+            <span
+              class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
+              th:text="${childItem.status.displayName}">子菜单</span
+            >
+          </span>
           <span
             th:if="${childItem.spec.target?.value == '_blank'}"
             class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.9rem] text-black/50 dark:text-white/50 flex-shrink-0"

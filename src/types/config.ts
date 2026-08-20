@@ -118,6 +118,8 @@ export interface BannerLayout {
 
 /** 菜单栏设置 */
 export interface MobileMenuConfig {
+  /** 菜单栏 Logo：自定义 Logo 图片地址，留空使用主题默认图标 */
+  logo?: string;
   /** 导航菜单：选择导航栏展示的 Halo 菜单，留空使用主菜单 */
   menu?: string;
   /** 移动端菜单样式：accordion（手风琴）/ drawer（抽屉） */

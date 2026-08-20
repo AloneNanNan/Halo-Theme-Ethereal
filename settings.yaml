@@ -162,6 +162,11 @@ spec:
           value:
             style: accordion
           children:
+            - $formkit: attachment
+              name: logo
+              label: 菜单栏 Logo
+              value: ""
+              help: "自定义菜单栏左侧 Logo 图片，留空使用主题默认图标。建议上传透明背景图片（高度约 28px），会等比缩放显示"
             - $formkit: menuSelect
               id: menu
               name: menu
