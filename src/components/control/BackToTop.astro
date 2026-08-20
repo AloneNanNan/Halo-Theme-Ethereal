@@ -46,6 +46,29 @@ import { Icon } from "astro-icon/components";
     </button>
   </div>
 
+  <!-- 目录按钮 - 仅当页面无可见目录（两栏悬浮目录 / 三栏右侧栏目录）时显示，
+       显隐由 app.ts 的 updateTocBtnVisibility 按实际可见目录判定，详见脚本注释 -->
+  <div
+    th:if="${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}"
+    id="back-to-toc-btn"
+    class="floating-btn toc-btn hide flex items-center rounded-2xl overflow-hidden pointer-events-none"
+  >
+    <button
+      th:aria-label="#{fragment.layout.toToc}"
+      aria-label="Table of Contents"
+      aria-controls="toc-popup"
+      aria-expanded="false"
+      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+    >
+      <!-- 弹窗展开时按钮切换为关闭图标（.toc-active 门控，CSS 交叉淡入 + 旋转） -->
+      <Icon
+        name="material-symbols:format-list-bulleted-rounded"
+        class="toc-menu-icon"
+      />
+      <Icon name="material-symbols:close-rounded" class="toc-close-icon" />
+    </button>
+  </div>
+
   <!-- 自定义按钮 - 显示在评论区按钮上方 -->
   <div
     class="custom-btns-wrapper"
@@ -89,6 +112,13 @@ import { Icon } from "astro-icon/components";
     border: none;
     cursor: pointer;
     pointer-events: auto;
+    /* 卡片阴影（参考 .float-panel）：浅色模式投影突出悬浮层次、深色模式柔光提边。
+       调浅：单层、收紧（负 spread）、低透明度，避免双层大虚影显得脏 */
+    box-shadow: 0 4px 14px -4px rgb(0 0 0 / 0.08);
+  }
+
+  :root.dark .floating-btn {
+    box-shadow: 0 4px 16px -4px rgb(0 0 0 / 0.3);
   }
 
   .floating-btn:active {
@@ -97,6 +127,37 @@ import { Icon } from "astro-icon/components";
 
   .floating-btn i {
     font-size: 1.75rem;
+  }
+
+  /* 目录按钮：展开弹窗时图标平滑切换为关闭（X）——两枚图标绝对定位重叠，
+     交叉淡入 + 旋转缩放，避免 display 硬切 */
+  .toc-btn button {
+    position: relative;
+  }
+
+  .toc-btn .toc-menu-icon,
+  .toc-btn .toc-close-icon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    transition:
+      opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .toc-btn .toc-close-icon {
+    opacity: 0;
+    transform: scale(0.4) rotate(-90deg);
+  }
+
+  .toc-btn.toc-active .toc-menu-icon {
+    opacity: 0;
+    transform: scale(0.4) rotate(90deg);
+  }
+
+  .toc-btn.toc-active .toc-close-icon {
+    opacity: 1;
+    transform: none;
   }
 
   /* 回顶按钮：默认隐藏在下方 */
@@ -151,6 +212,35 @@ import { Icon } from "astro-icon/components";
     pointer-events: none;
   }
 
+  /* 目录按钮：默认在评论区按钮上方一层；显隐由 app.ts 判定（页面有无可见目录） */
+  .toc-btn {
+    bottom: calc(7rem + 1.5rem);
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      bottom var(--dur-float, 350ms) cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
+  }
+
+  .toc-btn.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 回顶按钮出现 → 目录按钮上移一层 */
+  .to-top-btn:not(.hide) ~ .toc-btn {
+    bottom: calc(10.5rem + 2.25rem);
+  }
+
+  /* 当首页按钮不存在时，评论按钮占据其位置，目录按钮仅上移一层 */
+  .floating-controls:not(:has(.home-btn)) .toc-btn {
+    bottom: calc(3.5rem + 0.75rem);
+  }
+
+  .floating-controls:not(:has(.home-btn)) .to-top-btn:not(.hide) ~ .toc-btn {
+    bottom: calc(7rem + 1.5rem);
+  }
+
   /* 回顶按钮出现 → 首页按钮上移一层 */
   .to-top-btn:not(.hide) ~ .home-btn {
     bottom: calc(3.5rem + 0.75rem);
@@ -198,6 +288,74 @@ import { Icon } from "astro-icon/components";
     width: 1.75rem;
     height: 1.75rem;
   }
+
+  /* 移动端目录弹窗（swup 容器，换页整容器替换自动关闭并重建 TOC）。
+     恒渲染、CSS 门控：不用 display:none（display 切换会让卡片在首帧直接
+     落到目标态、过渡被跳过），改用 visibility 延迟切换可见性——
+     父级 #toc-popup 保持 opacity:1（父级透明度动画会把卡片 backdrop-filter
+     变成 backdrop root，导致「高级材质」磨砂在动画期间失效），淡入淡出
+     全由卡片自身 opacity/transform 承担。卡片为 fixed 定位（相对视口，
+     本容器的 right/bottom 不参与其定位），bottom/max-height 在打开时由
+     JS 按目录按钮实际位置计算。动画时长集中为 --toc-popup-duration，
+     JS 打开时读取同源变量同步高亮（避免魔法数漂移） */
+  #toc-popup {
+    --toc-popup-duration: 200ms;
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    visibility: hidden;
+    transition: visibility 0s linear var(--toc-popup-duration);
+  }
+
+  #toc-popup.toc-popup-open {
+    visibility: visible;
+    transition: visibility 0s;
+  }
+
+  /* 淡入：从目录按钮（卡片右下角）位置起，向左上展开 + 淡入 */
+  .toc-popup-card {
+    position: fixed;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    width: min(20rem, calc(100vw - 1.5rem));
+    opacity: 0;
+    transform: scale(0.85) translateY(0.75rem);
+    transform-origin: bottom right;
+    pointer-events: none;
+    box-shadow: 0 6px 24px -8px rgb(0 0 0 / 0.1);
+    transition:
+      opacity var(--toc-popup-duration) cubic-bezier(0.4, 0, 0.2, 1),
+      transform var(--toc-popup-duration) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  :root.dark .toc-popup-card {
+    box-shadow: 0 6px 24px -8px rgb(0 0 0 / 0.35);
+  }
+
+  #toc-popup.toc-popup-open .toc-popup-card {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  /* 卡片内目录滚动区：高度由 JS 按按钮上方可用空间收紧（min-h-0 保证 flex 收缩） */
+  .toc-popup-scroll {
+    min-height: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #toc-popup {
+      transition: none;
+    }
+    #toc-popup.toc-popup-open .toc-popup-card {
+      transition: none;
+    }
+    .toc-btn .toc-menu-icon,
+    .toc-btn .toc-close-icon {
+      transition: none;
+    }
+  }
 </style>
 
 <script is:raw is:inline>
@@ -221,7 +379,7 @@ import { Icon } from "astro-icon/components";
       var btn =
         e.target && e.target.closest
           ? e.target.closest(
-              "#back-to-top-btn, #back-to-home-btn, #back-to-comment-btn",
+              "#back-to-top-btn, #back-to-home-btn, #back-to-comment-btn, #back-to-toc-btn",
             )
           : null;
       if (!btn) return;
@@ -241,6 +399,173 @@ import { Icon } from "astro-icon/components";
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
+      } else if (btn.id === "back-to-toc-btn") {
+        // 呼出/收起移动端目录弹窗
+        toggleTocPopup();
+      }
+    });
+  }
+
+  // 移动端目录弹窗：#toc-popup 是 swup 容器（换页整容器替换，弹窗自动关闭、
+  // TOC 按新文章重建），本逻辑常驻 document/body（Swup 容器外只执行一次），
+  // 事件全走委托，换页后无需重新绑定。函数定义为顶层声明供上方点击委托复用。
+  function getTocPopup() {
+    return document.getElementById("toc-popup");
+  }
+
+  function getTocBtn() {
+    return document.getElementById("back-to-toc-btn");
+  }
+
+  function getTocCard() {
+    var popup = getTocPopup();
+    return popup ? popup.querySelector(".toc-popup-card") : null;
+  }
+
+  // 弹窗布局/动画常量（与 CSS 约定同源：间距 12px、视口边距 24px、
+  // 最小高度 96px、最高占视口 45%；动画时长与 --toc-popup-duration 一致，仅作 JS 兜底）
+  var TOC_POPUP_GAP = 12;
+  var TOC_POPUP_EDGE_MARGIN = 24;
+  var TOC_POPUP_MIN_HEIGHT = 96;
+  var TOC_POPUP_MAX_VH = 0.45;
+  var TOC_POPUP_ANIM_MS = 200;
+
+  // i18n 兜底：无 window.__etherealI18n 时原样返回 fallback
+  var __tocI18nFallback = function (key, fallback) {
+    return fallback;
+  };
+
+  // 展开/收起时切换按钮图标（目录 ↔ 关闭）并同步无障碍标签
+  function syncTocBtnState(open) {
+    var btn = getTocBtn();
+    if (!btn) return;
+    btn.classList.toggle("toc-active", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    var inner = btn.querySelector("button");
+    if (!inner) return;
+    var t = window.__etherealI18n || __tocI18nFallback;
+    inner.setAttribute(
+      "aria-label",
+      open
+        ? t("common.close", "Close")
+        : t("fragment.layout.toToc", "Table of Contents"),
+    );
+  }
+
+  // 弹窗卡片锚定在目录按钮正上方（按钮堆叠随回顶按钮出现而上移，故按实际 rect 定位）
+  function positionTocPopup() {
+    var btn = getTocBtn();
+    var card = getTocCard();
+    if (!btn || !card) return;
+    var rect = btn.getBoundingClientRect();
+    // 卡片底边锚在按钮上方 GAP 处；最高到按钮上方 EDGE_MARGIN，且再以视口高度
+    // 45% 封顶（移动端不占满屏），同时不小于最小高度
+    var maxHeight = Math.min(
+      rect.top - TOC_POPUP_EDGE_MARGIN,
+      window.innerHeight * TOC_POPUP_MAX_VH,
+    );
+    card.style.bottom =
+      Math.max(0, window.innerHeight - rect.top + TOC_POPUP_GAP) + "px";
+    card.style.maxHeight = Math.max(TOC_POPUP_MIN_HEIGHT, maxHeight) + "px";
+  }
+
+  function openTocPopup() {
+    var popup = getTocPopup();
+    if (!popup) return;
+    positionTocPopup();
+    popup.classList.add("toc-popup-open");
+    popup.setAttribute("aria-hidden", "false");
+    syncTocBtnState(true);
+    // 等入场缩放/淡入动画结束后再同步高亮：动画期间 getBoundingClientRect
+    // 返回缩放中的尺寸，此刻 update() 会把高亮 top/height 写死成被压缩的值
+    // （需滚动触发重算才恢复，表现为首次打开高亮高度不对）
+    var card = getTocCard();
+    var delay = TOC_POPUP_ANIM_MS + 30;
+    if (card) {
+      // 读 CSS 变量 --toc-popup-duration 作为时长唯一来源（与弹窗动画同源），
+      // 兜底用 TOC_POPUP_ANIM_MS，不再依赖 transition 短写在级联中的胜出者
+      var raw = getComputedStyle(card).getPropertyValue("--toc-popup-duration");
+      var parsed = parseFloat(raw) * 1000;
+      if (!isNaN(parsed)) delay = parsed + 30;
+    }
+    window.setTimeout(function () {
+      var toc = popup.querySelector("table-of-contents");
+      if (toc && typeof toc.update === "function") toc.update();
+    }, delay);
+  }
+
+  function closeTocPopup() {
+    var popup = getTocPopup();
+    if (!popup) return;
+    popup.classList.remove("toc-popup-open");
+    popup.setAttribute("aria-hidden", "true");
+    syncTocBtnState(false);
+  }
+
+  function toggleTocPopup() {
+    var popup = getTocPopup();
+    if (!popup) return;
+    if (popup.classList.contains("toc-popup-open")) {
+      closeTocPopup();
+    } else {
+      openTocPopup();
+    }
+  }
+
+  if (!window.__tocPopupBound) {
+    window.__tocPopupBound = true;
+    // 暴露给 app.ts（换页 content:replace / 窗口 resize 后同步按钮显隐时调用）
+    window.__etherealTocPopup = {
+      open: openTocPopup,
+      close: closeTocPopup,
+      toggle: toggleTocPopup,
+    };
+
+    // 弹窗关闭：点外部 / 点目录项（跳转后收起）/ Esc / 再次点目录按钮
+    document.addEventListener("click", function (e) {
+      var popup = getTocPopup();
+      if (!popup || !popup.classList.contains("toc-popup-open")) return;
+      if (e.target.closest("#toc-popup a[data-toc-entry]")) {
+        closeTocPopup();
+        return;
+      }
+      if (!e.target.closest("#toc-popup, #back-to-toc-btn")) {
+        closeTocPopup();
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeTocPopup();
+    });
+
+    // 悬浮控件共用一个滚动节流：弹窗开着时跟随按钮堆重定位，自定义按钮位置
+    // 在回顶按钮显隐后重算。绑在守卫块内只注册一次，避免换页重执行本脚本时
+    // 滚动监听累积（此前 custom-btns 的监听未守卫，每次换页都会多挂一个）。
+    var floatingScrollTick = false;
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (floatingScrollTick) return;
+        floatingScrollTick = true;
+        requestAnimationFrame(function () {
+          floatingScrollTick = false;
+          var popup = getTocPopup();
+          if (popup && popup.classList.contains("toc-popup-open")) {
+            positionTocPopup();
+          }
+          if (window.__etherealFloatingControlsReposition) {
+            window.__etherealFloatingControlsReposition();
+          }
+        });
+      },
+      { passive: true },
+    );
+
+    // 旋转屏幕/改窗口尺寸时保持锚定
+    window.addEventListener("resize", function () {
+      var popup = getTocPopup();
+      if (popup && popup.classList.contains("toc-popup-open")) {
+        positionTocPopup();
       }
     });
   }
@@ -283,13 +608,14 @@ import { Icon } from "astro-icon/components";
       var wrapper = document.querySelector(".custom-btns-wrapper");
       if (!wrapper) return;
 
-      // 计数可见的内置按钮（从下到上：回顶 → 首页 → 评论）
+      // 计数可见的内置按钮（从下到上：回顶 → 首页 → 评论 → 目录）
       // 直接用 classList 判断，不读取 computed style，避免 CSS 过渡中的中间值
       var visibleCount = 0;
       var builtins = [
         document.getElementById("back-to-top-btn"),
         document.getElementById("back-to-home-btn"),
         document.getElementById("back-to-comment-btn"),
+        document.getElementById("back-to-toc-btn"),
       ];
       builtins.forEach(function (btn) {
         if (btn && !btn.classList.contains("hide")) visibleCount++;
@@ -300,25 +626,13 @@ import { Icon } from "astro-icon/components";
         visibleCount === 0 ? "0" : visibleCount * BTN_STEP + "rem";
     }
 
+    // 暴露给 app.ts：换页/窗口 resize 后目录按钮显隐变化时重新计算自定义按钮位置
+    window.__etherealFloatingControlsReposition = updateCustomBtnsPosition;
+
     updateCustomBtnsPosition();
 
-    // 滚动时回顶按钮状态变化
-    var tick = false;
-    window.addEventListener(
-      "scroll",
-      function () {
-        if (!tick) {
-          requestAnimationFrame(function () {
-            updateCustomBtnsPosition();
-            tick = false;
-          });
-          tick = true;
-        }
-      },
-      { passive: true },
-    );
-
-    // 页面切换后 DOM 更新：由 SwupScriptsPlugin 换页重执行本脚本覆盖。
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 滚动重算已并入 __tocPopupBound 守卫块内的唯一滚动监听，此处不再注册，
+    // 避免换页重执行本脚本时监听累积；换页后 DOM 更新由 SwupScriptsPlugin
+    // 重执行本脚本覆盖。原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
   })();
 </script>

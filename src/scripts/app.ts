@@ -267,6 +267,11 @@ function setupSwup() {
       "#right-sidebar table-of-contents",
     ) as (HTMLElement & { refresh?: () => void }) | null;
     rightToc?.refresh?.();
+    // 换页兜底：弹窗是 swup 容器已整容器替换（自动关闭），但目录按钮在 Swup
+    // 容器外不刷新，需复位「目录」图标与 aria 状态，避免残留 X 态。
+    // （下方 updateTocBtnVisibility 的 close 只在按钮隐藏时收弹窗，两者分工不同）
+    window.__etherealTocPopup?.close?.();
+    updateTocBtnVisibility();
   });
   window.swup.hooks.on("page:view", () => {
     syncHomeClass();
@@ -379,6 +384,34 @@ function setupSwup() {
   });
 }
 
+// 目录悬浮按钮显隐（I29）：只要页面没有可见目录（两栏悬浮目录 #toc-wrapper /
+// 三栏右侧栏目录 #right-sidebar table-of-contents），就显示目录悬浮按钮——
+// 面向移动端/平板端无目录场景；空目录文章仍显示按钮，点开弹窗展示"此文章无目录"
+// 占位（与目录小组件一致）。.floating-controls 位于 Swup 容器外、换页不刷新，
+// 故换页（content:replace）与窗口 resize 都要重算：offsetParent 对 display:none
+// 祖先返回 null，可准确反映两栏/三栏 TOC 在各断点下的实际可见性。
+function updateTocBtnVisibility() {
+  const btn = document.getElementById("back-to-toc-btn");
+  if (!btn) return;
+  const hasTocWidget = !!document.querySelector("#toc-popup table-of-contents");
+  const floatingToc = document.getElementById("toc-wrapper");
+  const rightToc = document.querySelector(
+    "#right-sidebar table-of-contents",
+  ) as HTMLElement | null;
+  const hasVisibleToc = !!(
+    (floatingToc && floatingToc.offsetParent) ||
+    (rightToc && rightToc.offsetParent)
+  );
+  const show = hasTocWidget && !hasVisibleToc;
+  btn.classList.toggle("hide", !show);
+  if (!show) {
+    // 按钮隐藏（换页到无目录页 / 拉宽到有目录的断点）时同步收起弹窗
+    window.__etherealTocPopup?.close?.();
+  }
+  // 目录按钮参与自定义按钮的位置计数，显隐变化后重新计算
+  window.__etherealFloatingControlsReposition?.();
+}
+
 // ── 初始化 ──
 function init() {
   syncHomeClass();
@@ -395,6 +428,7 @@ function init() {
   initCustomScrollbar();
   showBanner();
   initLegacyAdmonitions();
+  updateTocBtnVisibility();
   if (document.querySelector(".firefly-music-player")) {
     import("../styles/music-player.css");
   }
@@ -431,3 +465,5 @@ if (window?.swup?.hooks) {
 scrollFunction();
 initExternalLinkRedirect();
 initProfileStatus();
+// 窗口尺寸变化（横竖屏切换/拉宽拉窄）后重算目录按钮显隐与弹窗锚定
+window.addEventListener("resize", updateTocBtnVisibility);

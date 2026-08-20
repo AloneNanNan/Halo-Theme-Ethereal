@@ -85,7 +85,12 @@ export default defineConfig({
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
       // the default value `transition-` cause transition delay
       // when the Tailwind class `transition-all` is used
-      containers: ["#swup-container", "#toc-container", "#right-sidebar"],
+      containers: [
+        "#swup-container",
+        "#toc-container",
+        "#right-sidebar",
+        "#toc-popup",
+      ],
       // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"）：app.ts 在
       // content:scroll 接管并调用 window.scrollTo 原生平滑，插件的
       // betweenPages 平滑（scrl JS 引擎）被跳过，不再参与跨页滚动。
@@ -225,6 +230,7 @@ export default defineConfig({
           "skip-next-rounded",
           "sync-rounded",
           "graphic-eq-rounded",
+          "format-list-bulleted-rounded",
         ],
         tabler: ["smart-home", "external-link"],
       },

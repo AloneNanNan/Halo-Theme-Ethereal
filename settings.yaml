@@ -277,6 +277,7 @@ spec:
             enable_back_to_top: true
             enable_back_to_home: true
             enable_back_to_comment: true
+            enable_toc: true
           children:
             - $formkit: switch
               name: enable_back_to_top
@@ -293,6 +294,11 @@ spec:
               label: 跳转评论
               value: true
               help: "显示右下角跳转到评论区按钮"
+            - $formkit: switch
+              name: enable_toc
+              label: 目录按钮
+              value: true
+              help: "页面无可见目录（两栏悬浮目录 / 三栏右侧栏目录）时，显示右下角目录按钮，点击呼出目录弹窗，主要面向移动端与平板端"
             - $formkit: array
               name: customButtons
               label: 自定义按钮
