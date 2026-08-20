@@ -46,7 +46,7 @@ jobs:
       # 默认初始化：不配置 queries，使用 CodeQL 默认安全查询
       - name: Initialize CodeQL
         if: ${{ inputs.query_suite == '' || inputs.query_suite == 'default' }}
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           build-mode: none
@@ -54,7 +54,7 @@ jobs:
       # 手动运行时可选择更全面的查询套件
       - name: Initialize CodeQL with selected query suite
         if: ${{ inputs.query_suite != '' && inputs.query_suite != 'default' }}
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           build-mode: none
@@ -62,6 +62,6 @@ jobs:
 
       # 执行分析并上传结果
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript-typescript"
