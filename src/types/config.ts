@@ -259,6 +259,7 @@ export interface FloatingButtons {
   enable_back_to_top?: boolean;
   enable_back_to_home?: boolean;
   enable_back_to_comment?: boolean;
+  enable_toc?: boolean;
   customButtons?: FloatingCustomButton[];
 }
 

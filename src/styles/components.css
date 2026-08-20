@@ -559,6 +559,19 @@
     background-color: transparent !important;
   }
 
+  /* 目录弹窗卡片随「高级材质」磨砂（同悬浮按钮/浮层面板）。弹窗淡入淡出
+     动画发生在卡片自身 opacity 上，不形成 backdrop root，磨砂不闪失；
+     全屏透明模式下由上方的 .card-base 卡片磨砂选择器覆盖（含卡片透明度） */
+  body.navbar-blur-enabled .toc-popup-card {
+    background-color: rgb(255 255 255 / 0.62) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+
+  :root.dark body.navbar-blur-enabled .toc-popup-card {
+    background-color: rgb(0 0 0 / 0.65) !important;
+  }
+
   .navbar-hidden {
     @apply -translate-y-[4.5rem] pointer-events-none;
   }

@@ -12,6 +12,14 @@ interface Window {
     unitFallback?: string,
   ) => string;
   __etherealLangSwitching?: boolean;
+  // 悬浮目录弹窗桥接（BackToTop.astro 注入）：app.ts 换页/调窗后复位状态用
+  __etherealTocPopup?: {
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+  };
+  // 自定义悬浮按钮位置重算（BackToTop.astro 注入）：内置按钮显隐变化后调用
+  __etherealFloatingControlsReposition?: () => void;
 }
 
 // 允许在模板元素上使用 Thymeleaf 属性（Halo 服务端渲染）

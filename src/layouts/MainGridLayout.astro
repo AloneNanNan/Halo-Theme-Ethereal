@@ -409,6 +409,47 @@ const {
     }
   </div>
 
+  <!-- 移动端目录弹窗（I29）：swup 容器，换页时整容器替换 → 弹窗自动关闭、
+       TOC 按新文章重建。仅文章页 + 目录开启 + 浮动目录按钮开启时渲染卡片；
+       目录按钮显隐由 app.ts 的 updateTocBtnVisibility 按「页面有无可见目录」
+       （两栏悬浮目录 / 三栏右侧栏目录）判定，卡片恒渲染、由点击切换显示 -->
+  <div
+    id="toc-popup"
+    th:with="tocBtnEnabled=${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}, tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+    aria-hidden="true"
+  >
+    {
+      showToc ? (
+        <div th:if="${tocBtnEnabled and tocEnabled}" th:remove="tag">
+          <div
+            class="toc-popup-card card-base pointer-events-auto"
+            role="dialog"
+            aria-modal="false"
+            th:aria-label="#{widget.toc.title}"
+          >
+            <div class="shrink-0">
+              <h3
+                class="relative mb-2 ml-8 mt-4 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+                th:text="#{widget.toc.title}"
+              >
+                目录
+              </h3>
+            </div>
+            <div
+              id="toc-popup-scroll"
+              data-toc-scroll
+              class="toc-popup-scroll hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3"
+            >
+              <TOC showEmptyMessage={true} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div />
+      )
+    }
+  </div>
+
   <!-- Banner 脚本（I27）：仅首页加载（isHomePage 为 Astro 构建期判定），
        并按显示模式精确门控（mode/isVideo/mobileActive 由 bannerThWith() 提供，
        与 #banner-wrapper 的 th:with 同源表达式，无重复判定漂移）；
