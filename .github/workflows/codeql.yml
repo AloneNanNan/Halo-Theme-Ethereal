@@ -1,0 +1,67 @@
+# .github/workflows/codeql.yml
+name: "CodeQL Security Scan"
+
+on:
+  # main 的每次提交都扫描 JavaScript/TypeScript
+  push:
+    branches:
+      - main
+  # 目标分支为 main 的 PR 也扫描
+  pull_request:
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      query_suite:
+        description: "手动运行时使用的 CodeQL 查询套件"
+        required: false
+        type: choice
+        default: default
+        options:
+          - default
+          - security-extended
+          - security-and-quality
+
+# 并发控制：同一分支/PR 新运行取消旧运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (JavaScript/TypeScript)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 默认初始化：不配置 queries，使用 CodeQL 默认安全查询
+      - name: Initialize CodeQL
+        if: ${{ inputs.query_suite == '' || inputs.query_suite == 'default' }}
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      # 手动运行时可选择更全面的查询套件
+      - name: Initialize CodeQL with selected query suite
+        if: ${{ inputs.query_suite != '' && inputs.query_suite != 'default' }}
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: ${{ inputs.query_suite }}
+
+      # 执行分析并上传结果
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:javascript-typescript"
