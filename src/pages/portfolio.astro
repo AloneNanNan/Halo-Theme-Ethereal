@@ -1,5 +1,7 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <MainGridLayout
@@ -17,85 +19,55 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   >
     <section class="card-base mb-4 px-6 py-6 md:px-9 onload-animation">
       <!-- 标题区域 -->
-      <div
-        class="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
-      >
-        <div class="min-w-0">
-          <h1
-            class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-            th:text="${projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')}"
-          >
-            作品集
-          </h1>
-          <div class="flex flex-wrap items-center gap-1.5 text-sm">
-            <span
-              class="icon-[material-symbols--inventory-2-rounded] text-base text-(--primary)"
-            ></span>
-            <span
-              class="font-bold text-(--primary)"
-              th:text="#{page.portfolio.subtitle}">我的项目</span
-            >
-            <span class="text-30">·</span>
-            <span
-              th:if="${projects != null}"
-              th:text="#{page.portfolio.subtitleCount(${projects.total})}"
-              class="text-50">0 个项目</span
-            >
-            <span
-              th:if="${not #strings.isEmpty(platform) or not #strings.isEmpty(type)}"
-              class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
-            >
-              <span th:text="#{page.portfolio.filtering}">筛选中</span>
-            </span>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+        titleExpr="${projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')}"
+        title="作品集"
+        iconClass="icon-[material-symbols--inventory-2-rounded]"
+        labelExpr="#{page.portfolio.subtitle}"
+        label="我的项目"
+        subExpr="#{page.portfolio.subtitleCount(${projects.total})}"
+        subShowIfExpr="${projects != null}"
+        sub="0 个项目"
+        filteredExpr="${not #strings.isEmpty(platform) or not #strings.isEmpty(type)}"
+      />
 
       <!-- 平台筛选 -->
-      <div
-        th:if="${platformLabels != null and not platformLabels.isEmpty()}"
+      <FilterTabs
+        showIfExpr="${platformLabels != null and not platformLabels.isEmpty()}"
         class="mb-4 flex flex-wrap gap-2"
-      >
-        <a
-          th:href="@{/portfolio(type=${type})}"
-          th:classappend="${#strings.isEmpty(platform) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-          class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-          th:text="#{page.portfolio.allPlatforms}">全部平台</a
-        >
-        <a
-          th:each="entry : ${platformLabels.entrySet()}"
-          th:with="platformCount=${projectFinder.listByPlatform(entry.key, 1, 1)}"
-          th:href="@{/portfolio(platform=${entry.key}, type=${type})}"
-          th:classappend="${#strings.equals(platform, entry.key) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-          class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-        >
-          <span th:text="${entry.value}">Platform</span>
-          <span class="ml-1 text-30" th:text="${platformCount.total}">0</span>
-        </a>
-      </div>
+        allHrefExpr="@{/portfolio(type=${type})}"
+        allActiveExpr="#strings.isEmpty(platform)"
+        allLabelExpr="#{page.portfolio.allPlatforms}"
+        allLabel="全部平台"
+        eachExpr="entry : ${platformLabels.entrySet()}"
+        tabTemplate={{
+          hrefExpr: "@{/portfolio(platform=${entry.key}, type=${type})}",
+          activeExpr: "#strings.equals(platform, entry.key)",
+          labelExpr: "${entry.value}",
+          countExpr: "${platformCount.total}",
+          withExpr:
+            "platformCount=${projectFinder.listByPlatform(entry.key, 1, 1)}",
+        }}
+      />
 
       <!-- 类型筛选 -->
-      <div
-        th:if="${typeLabels != null and not typeLabels.isEmpty()}"
+      <FilterTabs
+        showIfExpr="${typeLabels != null and not typeLabels.isEmpty()}"
         class="mb-6 flex flex-wrap gap-2"
-      >
-        <a
-          th:href="@{/portfolio(platform=${platform})}"
-          th:classappend="${#strings.isEmpty(type) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-          class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-          th:text="#{page.portfolio.allTypes}">全部类型</a
-        >
-        <a
-          th:each="entry : ${typeLabels.entrySet()}"
-          th:with="typeCount=${projectFinder.listByType(entry.key, 1, 1)}"
-          th:href="@{/portfolio(platform=${platform}, type=${entry.key})}"
-          th:classappend="${#strings.equals(type, entry.key) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-          class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-        >
-          <span th:text="${entry.value}">Type</span>
-          <span class="ml-1 text-30" th:text="${typeCount.total}">0</span>
-        </a>
-      </div>
+        allHrefExpr="@{/portfolio(platform=${platform})}"
+        allActiveExpr="#strings.isEmpty(type)"
+        allLabelExpr="#{page.portfolio.allTypes}"
+        allLabel="全部类型"
+        eachExpr="entry : ${typeLabels.entrySet()}"
+        tabTemplate={{
+          hrefExpr: "@{/portfolio(platform=${platform}, type=${entry.key})}",
+          activeExpr: "#strings.equals(type, entry.key)",
+          labelExpr: "${entry.value}",
+          countExpr: "${typeCount.total}",
+          withExpr: "typeCount=${projectFinder.listByType(entry.key, 1, 1)}",
+        }}
+      />
 
       <!-- 推荐项目（仅首页无筛选时展示） -->
       <div

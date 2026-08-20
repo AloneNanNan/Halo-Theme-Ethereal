@@ -1,5 +1,7 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import FilterTabs from "../components/control/FilterTabs.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
@@ -93,85 +95,57 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     class="card-base onload-animation mb-4 px-6 py-6 md:px-9"
   >
     <!-- 页头 -->
-    <div
-      class="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
-    >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${singlePage.spec.title}"
-        >
-          时间轴
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[mingcute--timeline-fill] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.timeline.title}">时间轴</span
-          >
-          <span class="text-30">·</span>
-          <span
-            class="text-50"
-            th:text="${theme.config?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
-            >我的成长历程和重要里程碑</span
-          >
-        </div>
-      </div>
-    </div>
+    <PageHeader
+      containerClass="mb-8 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      titleExpr="${singlePage.spec.title}"
+      title="时间轴"
+      iconClass="icon-[mingcute--timeline-fill]"
+      labelExpr="#{page.timeline.title}"
+      label="时间轴"
+      subExpr="${theme.config?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
+      sub="我的成长历程和重要里程碑"
+      filteredExpr="${not #lists.isEmpty(param.type)}"
+    />
 
     <!-- 类型筛选标签（参考 links/equipments 分组标签；URL 参数切换，
           整页导航触发 Swup 过渡 + onload-animation 入场动画） -->
-    <div
-      th:if="${items != null and not #lists.isEmpty(items)}"
+    <FilterTabs
+      showIfExpr="${items != null and not #lists.isEmpty(items)}"
       class="mb-8 flex flex-wrap gap-2"
-    >
-      <a
-        th:href="@{${singlePage.status.permalink}}"
-        th:classappend="${#lists.isEmpty(param.type) ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{common.all}">全部</span>
-        <span class="ml-1 text-30" th:text="${#lists.size(items)}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(type='education')}"
-        th:if="${edCount > 0}"
-        th:classappend="${#lists.contains(param.type, 'education') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.timeline.education}">教育经历</span>
-        <span class="ml-1 text-30" th:text="${edCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(type='work')}"
-        th:if="${workCount > 0}"
-        th:classappend="${#lists.contains(param.type, 'work') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.timeline.work}">工作经历</span>
-        <span class="ml-1 text-30" th:text="${workCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(type='project')}"
-        th:if="${projCount > 0}"
-        th:classappend="${#lists.contains(param.type, 'project') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.timeline.project}">项目经历</span>
-        <span class="ml-1 text-30" th:text="${projCount}">0</span>
-      </a>
-      <a
-        th:href="@{${singlePage.status.permalink}(type='achievement')}"
-        th:if="${achCount > 0}"
-        th:classappend="${#lists.contains(param.type, 'achievement') ? ' bg-(--primary) text-white dark:text-black/70' : ''}"
-        class="btn-card h-9 rounded-lg px-3 text-sm font-bold text-75"
-      >
-        <span th:text="#{page.timeline.achievement}">成就荣誉</span>
-        <span class="ml-1 text-30" th:text="${achCount}">0</span>
-      </a>
-    </div>
+      allHrefExpr="@{${singlePage.status.permalink}}"
+      allActiveExpr="#lists.isEmpty(param.type)"
+      allCountExpr="${#lists.size(items)}"
+      items={[
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(type='education')}",
+          activeExpr: "#lists.contains(param.type, 'education')",
+          labelExpr: "#{page.timeline.education}",
+          countExpr: "${edCount}",
+          showIfExpr: "${edCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(type='work')}",
+          activeExpr: "#lists.contains(param.type, 'work')",
+          labelExpr: "#{page.timeline.work}",
+          countExpr: "${workCount}",
+          showIfExpr: "${workCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(type='project')}",
+          activeExpr: "#lists.contains(param.type, 'project')",
+          labelExpr: "#{page.timeline.project}",
+          countExpr: "${projCount}",
+          showIfExpr: "${projCount > 0}",
+        },
+        {
+          hrefExpr: "@{${singlePage.status.permalink}(type='achievement')}",
+          activeExpr: "#lists.contains(param.type, 'achievement')",
+          labelExpr: "#{page.timeline.achievement}",
+          countExpr: "${achCount}",
+          showIfExpr: "${achCount > 0}",
+        },
+      ]}
+    />
 
     <!-- 时间轴列表（按当前 type 参数在服务端过滤） -->
     <div class="timeline-list">

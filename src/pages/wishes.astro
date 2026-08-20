@@ -1,5 +1,6 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
@@ -79,40 +80,24 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     <div id="wishBoard" class="wish-board card-base onload-animation">
       <!-- 主题风格标题区 -->
       <div class="wish-board-header px-6 py-6 md:px-9">
-        <div
-          class="flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+        <PageHeader
+          containerClass="flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+          iconClass="icon-[material-symbols--cards-star-rounded]"
+          labelExpr="#{page.wishes.boardTitle}"
+          label="心愿墙"
+          sepShowIfExpr="${not #strings.isEmpty(wishesSubtitle)}"
+          subExpr="${wishesSubtitle}"
+          subShowIfExpr="${not #strings.isEmpty(wishesSubtitle)}"
+          sub="写下你的心愿，留下你的故事"
         >
-          <div class="min-w-0">
-            <h1
-              class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-            >
-              <span th:text="${wishesTitle}">心愿便签</span>
-            </h1>
-            <div class="flex flex-wrap items-center gap-1.5 text-sm">
-              <span
-                class="icon-[material-symbols--cards-star-rounded] text-base text-(--primary)"
-              ></span>
-              <span
-                class="font-bold text-(--primary)"
-                th:text="#{page.wishes.boardTitle}">心愿墙</span
-              >
-              <span
-                th:if="${not #strings.isEmpty(wishesSubtitle)}"
-                class="text-30">·</span
-              >
-              <span
-                th:if="${not #strings.isEmpty(wishesSubtitle)}"
-                class="text-50"
-                th:text="${wishesSubtitle}">写下你的心愿，留下你的故事</span
-              >
-            </div>
-          </div>
+          <span th:text="${wishesTitle}">心愿便签</span>
           <!-- 纪念日徽章 -->
           <div
             th:if="${wishesDays}"
             class="wish-days-badge-static"
             id="wishDaysBadge"
             th:attr="data-date=${wishesDate},data-name-a=${wishesNameA},data-name-b=${wishesNameB}"
+            slot="right"
           >
             <span
               class="icon-[material-symbols--favorite-rounded] text-sm text-(--primary)"
@@ -121,7 +106,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               >在一起 <span class="wish-days-num">0</span> 天</span
             >
           </div>
-        </div>
+        </PageHeader>
       </div>
       <!-- 画布区（便签散布与拖动区域） -->
       <div class="wish-board-body">

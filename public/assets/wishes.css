@@ -225,14 +225,19 @@
 .wish-tabs::-webkit-scrollbar {
   display: none;
 }
+/* 心愿墙筛选 tab：视觉对齐分组页 FilterTab（src/components/control/FilterTab.astro）。
+   对应 Tailwind 类：h-9 / rounded-[10px] / text-sm(font-size:14px) / font-bold(font-weight:700)
+   / text-75(color:rgba(0,0,0,.75))；active 对应 bg-(--primary) text-white dark:text-black/70。
+   此处为静态 CSS（不经 Tailwind 编译），后续改 tab 尺寸/圆角/激活色时务必两处同步。 */
 .wish-tab {
-  padding: 6px 16px;
+  height: 36px;
+  padding: 0 12px;
   border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  color: rgba(0, 0, 0, 0.6);
-  background: transparent;
+  color: rgba(0, 0, 0, 0.75);
+  background: var(--card-bg);
   border: none;
   font-family: inherit;
   transition: all 0.25s;
@@ -252,7 +257,7 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 :root.dark .wish-tab {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.75);
 }
 :root.dark .wish-tab:hover {
   color: rgba(255, 255, 255, 0.9);

@@ -1,0 +1,80 @@
+---
+// 分组页页头统一组件（标题 + 副标题行 + 已筛选徽章 + 右侧 slot）。
+// 结构固定、差异参数化，样式与迁移前逐页保持一致：
+//
+// 约定（Thymeleaf 表达式字符串传 props，与 FilterTab 一致）：
+// - titleExpr/labelExpr/subExpr/subShowIfExpr/filteredExpr/sepShowIfExpr
+//     完整表达式（含 ${} 或 #{}），如 `${linksTitle}` / `#{common.filtered}`
+// - titleExpr 缺省时 h1 内容改由默认 slot 渲染（wishes 用嵌套 span）
+// - iconClass 只传 icon-[...] 名字面量（如 `icon-[material-symbols--psychology]`），
+//     组件统一追加 `text-base text-(--primary)`。名字面量留在各页源码，
+//     Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${icon}]` 动态拼接
+// - filteredExpr 缺省则整个徽章不渲染（wishes 为客户端筛选无 URL 参数）
+// - sepShowIfExpr 缺省则 `·` 恒显（与迁移前一致）；wishes 用它条件显隐。
+//     注意：不能默认跟随 subShowIfExpr——links/equipments/portfolio 的 `·`
+//     恒显而 sub 条件显，两者语义不同，必须显式传
+// - 右侧按钮/徽章放 `slot="right"`（links 随机访问 / moments RSS / wishes 纪念日）
+interface Props {
+  containerClass: string;
+  titleExpr?: string;
+  title?: string;
+  iconClass: string;
+  labelExpr: string;
+  label: string;
+  sepShowIfExpr?: string;
+  subExpr?: string;
+  subShowIfExpr?: string;
+  sub?: string;
+  filteredExpr?: string;
+}
+
+const {
+  containerClass,
+  titleExpr,
+  title = "",
+  iconClass,
+  labelExpr,
+  label,
+  sepShowIfExpr,
+  subExpr,
+  subShowIfExpr,
+  sub = "",
+  filteredExpr,
+} = Astro.props;
+---
+
+<div class={containerClass}>
+  <div class="min-w-0">
+    <h1
+      class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
+      th:text={titleExpr}
+    >
+      {titleExpr ? title : <slot />}
+    </h1>
+    <div class="flex flex-wrap items-center gap-1.5 text-sm">
+      <span class={`${iconClass} text-base text-(--primary)`}></span>
+      <span class="font-bold text-(--primary)" th:text={labelExpr}>{label}</span
+      >
+      <span th:if={sepShowIfExpr} class="text-30">·</span>
+      {
+        subExpr && (
+          <span th:if={subShowIfExpr} class="text-50" th:text={subExpr}>
+            {sub}
+          </span>
+        )
+      }
+      {
+        filteredExpr && (
+          <span
+            th:if={filteredExpr}
+            class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
+            th:text="#{common.filtered}"
+          >
+            已筛选
+          </span>
+        )
+      }
+    </div>
+  </div>
+  <slot name="right" />
+</div>
