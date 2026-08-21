@@ -217,6 +217,10 @@ jobs:
               TAG="v$TAG"
               echo "::notice::tag 未带 v 前缀，已自动补全为 $TAG"
             fi
+            if [[ -n "$SUFFIX" && "$TAG" == "v$VERSION" ]]; then
+              TAG="$TAG$SUFFIX"
+              echo "::notice::已将版本后缀追加到 tag，最终 Release tag 为 $TAG"
+            fi
             if [[ "$TAG" != "$EXPECTED_TAG" ]]; then
               echo "::error::Release tag（$TAG）与当前 theme.yaml 版本（$VERSION）及后缀（$SUFFIX）的期望值（$EXPECTED_TAG）不一致"
               echo "::error::如需发布 $TAG，请先将 theme.yaml 的 version 更新为对应版本；预发布后缀请填写如 -rc1"

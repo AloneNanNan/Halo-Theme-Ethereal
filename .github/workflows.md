@@ -47,7 +47,7 @@
 3. 按 `theme.yaml` 的 version **自动创建 tag**（如 `v1.0.8`；远程已存在则跳过，幂等）
 4. 上传 zip 到 GitHub Release（不存在则自动创建，`release.md` 存在时作为说明；已存在则更新资产）
 
-**手动发布流程（workflow_dispatch）**：发布行为由 `publish-github` / `sync-halo` 显式开关决定 → 构建 + 质量门 → 上传/更新 Release（`publish-github=true` 时 tag 可留空自动推导；填写时会自动补全缺失的 `v` 前缀，并校验与 `theme.yaml` 的 `version` 一致）。
+**手动发布流程（workflow_dispatch）**：发布行为由 `publish-github` / `sync-halo` 显式开关决定 → 构建 + 质量门 → 上传/更新 Release（`publish-github=true` 时 tag 可留空自动推导；填写基础版本号时会自动补全 `v` 前缀并追加 `version-suffix`，也支持直接填写完整 tag）。
 
 **release.md 约定**：仓库根目录的 `release.md` 自动作为 Release 说明（body）。Release 已存在时更新说明，不存在时自动创建。
 
@@ -71,7 +71,7 @@
 |---|---|---|---|---|---|---|---|---|
 | 1a | push 到 main | 版本较上一提交**增大**且 semver 合规 | 运行 → `true` | ✅ | ✅ | ✅ 创建 `vX.Y.Z`（远程已有则跳过） | ✅ 创建或更新 | **自动发布** |
 | 1b | push 到 main | 版本**未增大**或不合规 | 运行 → `false` | ❌ 跳过 | ❌ | ❌ | ❌ | 仅检测，不构建 |
-| 2a | 手动 + publish-github=true + 填 tag + sync-halo=true | 自动补全 `v` 前缀后，需等于 `v{theme.yaml 版本}` | 跳过 | ✅ | ✅ | ❌ 仅 push 运行 | ✅ 校验通过后创建/更新 | 发布到指定 tag，随后 cd 自动同步 |
+| 2a | 手动 + publish-github=true + 填 tag + sync-halo=true | 自动补全 `v` 前缀并追加后缀后，需等于期望 tag | 跳过 | ✅ | ✅ | ❌ 仅 push 运行 | ✅ 校验通过后创建/更新 | 发布到指定 tag，随后 cd 自动同步 |
 | 2b | 手动 + publish-github=true + 填 tag + sync-halo=false | 同上 | 跳过 | ✅ | ✅ | ❌ | ✅ 注入跳过标记后创建/更新 | 发布到指定 tag，**cd 跳过应用市场同步** |
 | 2c | 手动 + publish-github=true + tag 未填 | — | 跳过 | — | — | ❌ | ❌ | ❌ **报错终止**（提示显式关闭或填 tag） |
 | 3 | 手动 + publish-github=false（sync-halo 任意） | — | 跳过 | ✅ | ✅ | ❌ | ❌ | 仅构建 + artifact，**不发布**（Halo 一并忽略） |
