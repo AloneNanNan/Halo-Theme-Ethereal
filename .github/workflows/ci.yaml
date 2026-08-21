@@ -212,9 +212,16 @@ jobs:
           if [[ -z "$TAG" ]]; then
             TAG="$EXPECTED_TAG"
             echo "::notice::未填写 tag，按 theme.yaml 版本${SUFFIX:+及后缀 $SUFFIX}推导为 $TAG"
-          elif [[ "$TAG" != "$EXPECTED_TAG" ]]; then
-            echo "::error::Release tag（$TAG）与 theme.yaml 版本+后缀（$EXPECTED_TAG）不一致；预发布请在「版本后缀」填写如 -rc1"
-            exit 1
+          else
+            if [[ "$TAG" != v* ]]; then
+              TAG="v$TAG"
+              echo "::notice::tag 未带 v 前缀，已自动补全为 $TAG"
+            fi
+            if [[ "$TAG" != "$EXPECTED_TAG" ]]; then
+              echo "::error::Release tag（$TAG）与当前 theme.yaml 版本（$VERSION）及后缀（$SUFFIX）的期望值（$EXPECTED_TAG）不一致"
+              echo "::error::如需发布 $TAG，请先将 theme.yaml 的 version 更新为对应版本；预发布后缀请填写如 -rc1"
+              exit 1
+            fi
           fi
           if [[ -n "$SUFFIX" ]]; then
             echo "::notice::预发布后缀生效：包内 theme.yaml 版本仍为 $VERSION（zip 文件名不变），仅 Release tag 带后缀"
