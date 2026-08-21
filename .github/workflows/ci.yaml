@@ -17,8 +17,16 @@ on:
         description: "发布到该 GitHub Release tag（可留空：按 theme.yaml 版本+版本后缀自动推导；填写时必须与推导结果一致）"
         required: false
         type: string
+      release-type:
+        description: "GitHub Release 类型"
+        required: false
+        type: choice
+        options:
+          - latest
+          - pre-release
+        default: latest
       version-suffix:
-        description: "版本后缀（如 -rc1，追加到 theme.yaml 版本后形成发布 tag；留空为无后缀）"
+        description: "预发布版本后缀（如 -rc1；release-type=pre-release 时必填）"
         required: false
         type: string
         default: ""
@@ -88,6 +96,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PUBLISH_GITHUB: ${{ github.event.inputs.publish-github }}
           INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TYPE: ${{ github.event.inputs.release-type }}
           VERSION_SUFFIX: ${{ github.event.inputs.version-suffix }}
           SYNC_HALO: ${{ github.event.inputs.sync-halo }}
         run: |
@@ -98,6 +107,7 @@ jobs:
           else
             echo "publish-github: $PUBLISH_GITHUB"
             echo "tag: $INPUT_TAG"
+            echo "release-type: $RELEASE_TYPE"
             echo "version-suffix: $VERSION_SUFFIX"
             echo "sync-halo: $SYNC_HALO"
             if [[ "$PUBLISH_GITHUB" == "false" ]]; then
@@ -178,6 +188,7 @@ jobs:
         env:
           PUBLISH_GITHUB: ${{ github.event.inputs.publish-github }}
           INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TYPE: ${{ github.event.inputs.release-type }}
           VERSION_SUFFIX: ${{ github.event.inputs.version-suffix }}
           SYNC_HALO: ${{ github.event.inputs.sync-halo }}
         run: |
@@ -190,6 +201,13 @@ jobs:
             echo "publish=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          if [[ -z "$RELEASE_TYPE" ]]; then
+            RELEASE_TYPE="latest"
+          fi
+          if [[ "$RELEASE_TYPE" != "latest" && "$RELEASE_TYPE" != "pre-release" ]]; then
+            echo "::error::Release 类型不合法：$RELEASE_TYPE（可选 latest 或 pre-release）"
+            exit 1
+          fi
           # 规范化版本后缀：去首尾空白；未带连字符时自动补 "-"
           SUFFIX=$(printf '%s' "$VERSION_SUFFIX" | tr -d '[:space:]')
           if [[ -n "$SUFFIX" && "$SUFFIX" != -* ]]; then
@@ -198,6 +216,14 @@ jobs:
           fi
           if [[ -n "$SUFFIX" && ! "$SUFFIX" =~ ^-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
             echo "::error::版本后缀格式不合法：$SUFFIX（需为 - 开头的 semver 预发布段，如 -rc1、-beta.2）"
+            exit 1
+          fi
+          if [[ "$RELEASE_TYPE" == "pre-release" && -z "$SUFFIX" ]]; then
+            echo "::error::pre-release 类型必须填写版本后缀（如 -rc1、-beta.2）"
+            exit 1
+          fi
+          if [[ "$RELEASE_TYPE" == "latest" && -n "$SUFFIX" ]]; then
+            echo "::error::latest 类型不能填写版本后缀；带后缀的版本请选择 pre-release"
             exit 1
           fi
           # 解析 theme.yaml 版本，推导发布 tag = v<version><suffix>
@@ -233,6 +259,7 @@ jobs:
           echo "publish=true" >> "$GITHUB_ENV"
           echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+          echo "RELEASE_TYPE=$RELEASE_TYPE" >> "$GITHUB_ENV"
           echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "校验通过：发布 tag $TAG"
 
@@ -243,6 +270,7 @@ jobs:
         if: github.event_name == 'push' || steps.release-config.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TYPE: ${{ github.event.inputs.release-type || 'latest' }}
           SYNC_HALO: ${{ github.event.inputs.sync-halo }}
         run: |
           TAG="$RELEASE_TAG"
@@ -260,12 +288,25 @@ jobs:
             if [ "$WRITE_NOTES" = "1" ]; then
               gh release edit "$TAG" --notes-file /tmp/release-notes.md
             fi
+            if [[ "$RELEASE_TYPE" == "pre-release" ]]; then
+              gh release edit "$TAG" --prerelease --draft=false
+            else
+              gh release edit "$TAG" --prerelease=false --draft=false
+            fi
             echo "已更新 Release $TAG 的资产"
           else
             if [ "$WRITE_NOTES" = "1" ]; then
-              gh release create "$TAG" dist/*.zip --notes-file /tmp/release-notes.md
+              if [[ "$RELEASE_TYPE" == "pre-release" ]]; then
+                gh release create "$TAG" dist/*.zip --prerelease --notes-file /tmp/release-notes.md
+              else
+                gh release create "$TAG" dist/*.zip --notes-file /tmp/release-notes.md
+              fi
             else
-              gh release create "$TAG" dist/*.zip
+              if [[ "$RELEASE_TYPE" == "pre-release" ]]; then
+                gh release create "$TAG" dist/*.zip --prerelease
+              else
+                gh release create "$TAG" dist/*.zip
+              fi
             fi
             echo "已创建 Release $TAG 并上传资产"
           fi
