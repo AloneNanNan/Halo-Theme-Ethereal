@@ -926,7 +926,7 @@ spec:
                   name: tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单"
+                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。\n对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city
@@ -1070,7 +1070,7 @@ spec:
                   name: tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单"
+                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。\n对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city
