@@ -25,18 +25,16 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    if: ${{ (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' }}
+    if: ${{ (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch' || (github.event_name == 'repository_dispatch' && startsWith(github.event.client_payload.tag, 'v')) }}
     steps:
-      # 获取仓库中的 theme.yaml（版本兼容范围等信息来源）
-      - uses: actions/checkout@v7
-
       # 手动触发时前置校验：tag 必须以 v 开头且 Release 存在（404 时给出友好报错）
       - name: 校验 Release（手动触发）
         if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          TAG="${{ github.event.inputs.tag }}"
+          TAG="$INPUT_TAG"
           if [[ "$TAG" != v* ]]; then
             echo "::error::Release tag 必须以 v 开头（如 v1.0.4），当前输入：$TAG"
             exit 1
@@ -45,22 +43,31 @@ jobs:
             || { echo "::error::Release $TAG 不存在，请先在 GitHub 发布该 tag"; exit 1; }
           echo "Release $TAG 存在"
 
+      # 使用 Release 对应的 tag 获取 theme.yaml，保证同步内容与发布版本一致
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag || github.event.client_payload.tag }}
+
       # 解析 Release ID 和 tag（release 事件直接用；手动触发 / dispatch 按 tag 查询）
       - name: Resolve Release
         id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ github.event.client_payload.tag }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          if [[ "$EVENT_NAME" == "release" ]]; then
+            echo "tag=$RELEASE_EVENT_TAG" >> "$GITHUB_OUTPUT"
             echo "release-id=${{ github.event.release.id }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
-            TAG="${{ github.event.client_payload.tag }}"
+          elif [[ "$EVENT_NAME" == "repository_dispatch" ]]; then
+            TAG="$DISPATCH_TAG"
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
             ID=$(gh api "/repos/{owner}/{repo}/releases/tags/$TAG" --jq .id)
             echo "release-id=$ID" >> "$GITHUB_OUTPUT"
           else
-            TAG="${{ github.event.inputs.tag }}"
+            TAG="$INPUT_TAG"
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
             ID=$(gh api "/repos/{owner}/{repo}/releases/tags/$TAG" --jq .id)
             echo "release-id=$ID" >> "$GITHUB_OUTPUT"
