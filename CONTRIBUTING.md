@@ -37,20 +37,20 @@ pnpm install
 
 ## 目录速览
 
-| 路径                                      | 说明                                                         |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| `src/pages/*.astro`                       | 页面模板（`post.astro`、`index.astro`、`category.astro` 等） |
-| `src/components/`                         | 可复用组件（`*.astro` / `*.svelte`）                         |
-| `src/layouts/*.astro`                     | 页面布局（`Layout.astro`、`MainGridLayout.astro`）           |
-| `src/styles/*.css`                        | 全局样式与 CSS 变量                                          |
-| `src/types/config.ts`                     | `theme.config` 的类型定义                                    |
-| `src/utils/*.ts`                          | 工具函数                                                     |
-| `src/scripts/assets/`                     | 经典脚本源码（esbuild 编译为 IIFE 输出到 `public/assets/`）  |
-| `src/scripts/vendor/`                     | 第三方 vendored 资产（原样拷贝，不经编译）                   |
-| `settings.yaml`                           | 后台主题设置表单                                             |
-| `theme.yaml`                              | 主题元信息，**`version` 字段禁止修改**                       |
-| `i18n/`                                   | 多语言文案                                                   |
-| `templates/` / `dist/` / `public/assets/` | 构建产物（勿手改，会被构建覆盖）                             |
+| 路径                                      | 说明                                                                                                                                |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/pages/*.astro`                       | 页面模板（`post.astro`、`index.astro`、`category.astro` 等）                                                                        |
+| `src/components/`                         | 可复用组件（`*.astro` / `*.svelte`），其中 `control/` 为分组页共享控件（FilterTab/FilterTabs/PageHeader，表达式以字符串 prop 传入） |
+| `src/layouts/*.astro`                     | 页面布局（`Layout.astro`、`MainGridLayout.astro`）                                                                                  |
+| `src/styles/*.css`                        | 全局样式与 CSS 变量                                                                                                                 |
+| `src/types/config.ts`                     | `theme.config` 的类型定义                                                                                                           |
+| `src/utils/*.ts`                          | 工具函数                                                                                                                            |
+| `src/scripts/assets/`                     | 经典脚本源码（esbuild 编译为 IIFE 输出到 `public/assets/`）                                                                         |
+| `src/scripts/vendor/`                     | 第三方 vendored 资产（原样拷贝，不经编译）                                                                                          |
+| `settings.yaml`                           | 后台主题设置表单                                                                                                                    |
+| `theme.yaml`                              | 主题元信息，**`version` 字段禁止修改**                                                                                              |
+| `i18n/`                                   | 多语言文案                                                                                                                          |
+| `templates/` / `dist/` / `public/assets/` | 构建产物（勿手改，会被构建覆盖）                                                                                                    |
 
 ## 代码约定
 

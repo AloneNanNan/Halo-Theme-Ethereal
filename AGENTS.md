@@ -44,6 +44,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 
 - `src/pages/*.astro` — 页面模板（`post.astro`、`index.astro`、`category.astro` 等）
 - `src/components/*.astro` / `*.svelte` — 可复用组件（`PostCard.astro`、`PostList.astro` 等）
+- `src/components/control/` — 分组页共享控件：`FilterTab.astro` / `FilterTabs.astro`（分组筛选 tab）/ `PageHeader.astro`（页头），把 Thymeleaf 表达式当字符串 prop 传（见「组件表达式 prop 约定」）
 - `src/layouts/*.astro` — 页面布局（`Layout.astro`、`MainGridLayout.astro`）
 - `src/styles/*.css` — 全局样式与 CSS 变量（`variables.css` 定义主题色/圆角等）
 - `src/types/config.ts` — `theme.config` 的类型定义
@@ -75,6 +76,16 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - 静态资源用 `#theme.assets("/assets/...")` 或 `@{/assets/...}` 引用，构建后路径带 `/themes/Ethereal` 前缀。
 - 图片拼 CDN 参数使用 `imageSuffixThWith(...)`（见 `src/utils/image-suffix.ts`），不要在模板里手写硬编码后缀。
 
+## 组件表达式 prop 约定
+
+`src/components/control/` 下的 `FilterTab.astro` / `FilterTabs.astro` / `PageHeader.astro` 把 Thymeleaf 表达式当**字符串 prop** 传，约定如下（务必遵守，否则只在 Halo 渲染期才暴露错误）：
+
+- `activeExpr` / `allActiveExpr` 传**裸布尔表达式**（无 `${}`，如 `#lists.contains(param.group, group.spec.displayName)`）。组件会把它注入 `th:classappend` 的三元追加激活类。
+- 其余表达式 prop（`hrefExpr` / `labelExpr` / `countExpr` / `showIfExpr` / `withExpr` / `countShowIfExpr` / `subExpr` / `titleExpr` / `filteredExpr` / `sepShowIfExpr` 及 `all*` 系列）传**完整表达式**（含 `${}` 或 `#{}`）。
+- 动态 tab 列表用 `<div class="contents" th:each=...>` 包裹（组件标签上的 `th:each` 不会转发到根元素，故不能放 FilterTab 自身）。
+- `iconClass` 只传 `icon-[...]` 名字面量，组件统一追加 `text-base text-(--primary)`；图标名必须留在页面源码，Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${name}]` 动态拼接。
+- **沉默 footgun**：若把字面量误当表达式传（或漏写 `${}`），`astro build` 不报错，只在 Halo 服务端渲染时抛 Thymeleaf 解析异常。改这些组件前先读懂对应 `.astro` 文件顶部的传参注释。
+
 ## 常见坑（务必注意）
 
 - **不要改 `dist/`**：它是 `pnpm package` 打出的发布 zip 产物，改无效。要改就改 `src/` 后重新构建（HTML 模板产物在 `templates/`）。
@@ -84,6 +95,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - **布局/断点覆盖**：网格 vs 列表、移动端 vs 桌面端的样式差异集中在 `PostList.astro` 的 `is:global` `<style>` 块里，改卡片样式前先看那里有没有对应覆盖，别只改组件类。
 - **i18n 词条里的字面花括号必须转义**：词条值中若需要字面 `{location}` 这类占位（非 `{0}` 数字参数），必须写成 `'{'location'}'`（MessageFormat 单引号转义），否则渲染 `[(#{...})]` 时 MessageFormat 会把它当参数占位符解析并抛错，曾导致全站白屏。新增含花括号词条前先看 `i18n/default.properties` 里 `welcome.defaultTemplate` 的写法。
 - **全局 i18n 助手**：`t()` 读取 `window.i18nResources` 的客户端翻译助手统一由 `Layout.astro` 注入（`window.__etherealI18n`，另含 `__etherealLangTag`/`__etherealSetLanguage`/`__etherealBigNum`）。内联脚本复用即可，不要各自复制实现。
+- **外链 CDN 封面防盗链（B 站等）**：跨域 `<img>` 加载失败显示坏图、但新窗口打开又能正常加载，多半是 CDN 检查 `Referer` 头防盗链。给 `<img>` 加 `referrerpolicy="no-referrer"` 即可，见 `src/pages/bangumis.astro` 追番封面。
 
 ## 访客样式切换（显示设置面板）
 
