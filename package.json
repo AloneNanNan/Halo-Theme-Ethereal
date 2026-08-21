@@ -35,7 +35,7 @@
     "@swup/astro": "^1.8.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.1",
-    "astro-icon": "^1.1.5",
+    "astro-icon": "^1.2.0",
     "axios": "^1.19.0",
     "overlayscrollbars": "^2.16.0",
     "photoswipe": "^5.4.4",
