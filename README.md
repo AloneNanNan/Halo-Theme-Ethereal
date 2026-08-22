@@ -131,7 +131,7 @@
 
 ## 📈 下载趋势
 
-![下载趋势图](https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&query=$.points[*].downloadCount&dateQuery=$.points[*].startDate&title=商店下载趋势&label=下载量&font=space-grotesk&icon=ri%3APiDownloadBold&xTicks=3&yTicks=10&logo=false&theme=emerald)
+![下载趋势图](https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&query=$.points[*].downloadCount&dateQuery=$.points[*].startDate&title=商店下载趋势&label=下载量&font=space-grotesk&icon=ri%3APiDownloadBold&xTicks=3&yTicks=10&logo=false&theme=emerald&mode=dark)
 
 ---
 
@@ -442,9 +442,9 @@ pnpm format
   <a href="https://github.com/AloneNanNan/Halo-Theme-Ethereal/graphs/contributors">
     <picture>
       <source media="(prefers-color-scheme: dark)"
-        srcset="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=gradient&amp;size=80&amp;names=true&amp;mode=dark&amp;font=space-grotesk" />
+        srcset="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=dots&amp;size=80&amp;names=true&amp;mode=dark&amp;font=space-grotesk" />
       <img alt="Contributors"
-        src="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=gradient&amp;size=80&amp;names=true&amp;mode=light&amp;font=space-grotesk" />
+        src="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=dots&amp;size=80&amp;names=true&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
 </p>
