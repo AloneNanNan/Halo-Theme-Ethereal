@@ -155,6 +155,8 @@ export interface VisitorStyleConfig {
 /** 页面布局 */
 export interface PageLayout {
   layoutMode: string;
+  /** 分类导航栏 */
+  categoryBar?: boolean;
 }
 
 /** 文章卡片布局 */

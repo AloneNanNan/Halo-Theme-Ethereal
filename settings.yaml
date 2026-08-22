@@ -22,6 +22,13 @@ spec:
                   value: two-column
                 - label: 三栏布局
                   value: three-column
+            - $formkit: switch
+              name: categoryBar
+              id: categoryBar_enable
+              key: categoryBar_enable
+              label: 启用分类导航栏
+              value: false
+              help: "开启后将在内容区上方显示分类导航栏，包含首页、归档、文章分类及全部分类入口"
         - $formkit: group
           name: bannerLayout
           label: Banner 布局

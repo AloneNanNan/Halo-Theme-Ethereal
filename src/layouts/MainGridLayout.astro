@@ -1,5 +1,6 @@
 ---
 import BackToTop from "../components/control/BackToTop.astro";
+import CategoryBar from "../components/control/CategoryBar.astro";
 import Footer from "../components/Footer.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import Navbar from "../components/Navbar.astro";
@@ -370,17 +371,23 @@ const rightSidebarHasContentExpr = [
           </a>
 
           <!-- 主内容区 - 移动端第一项 -->
-          <main
-            id="swup-container"
-            class="transition-swup-fade col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2"
+          <div
+            class="col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2 flex flex-col gap-4"
           >
-            <div id="content-wrapper" class="onload-animation">
-              <slot />
-              <div class="footer onload-animation col-span-2 hidden lg:block">
-                <Footer />
-              </div>
+            <div
+              th:if="${theme.config?.layout?.pageLayout?.categoryBar == null or theme.config?.layout?.pageLayout?.categoryBar}"
+            >
+              <CategoryBar />
             </div>
-          </main>
+            <main id="swup-container" class="transition-swup-fade min-w-0">
+              <div id="content-wrapper" class="onload-animation">
+                <slot />
+                <div class="footer onload-animation col-span-2 hidden lg:block">
+                  <Footer />
+                </div>
+              </div>
+            </main>
+          </div>
 
           <!-- 左侧栏 - 移动端第二项，平板端用 grid 放到左侧；
              右栏为空的三栏页面不跨行（与两栏行为一致） -->

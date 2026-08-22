@@ -36,3 +36,6 @@ templates/
 
 # opencode 工具配置
 .opencode/
+
+# 文档
+docs/

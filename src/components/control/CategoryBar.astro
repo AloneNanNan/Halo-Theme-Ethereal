@@ -1,0 +1,485 @@
+---
+// 分类导航栏：首页 → 归档 → 各分类 → 全部分类，水平滚动 pill 样式。
+// 门控：由 MainGridLayout.astro 的 wrapper div 的 th:if 控制显隐。
+//
+// 数据来源：
+// - categoryFinder.listAll() — Halo Finder API，列出所有分类
+// - postFinder.list({page: 1, size: 1}).total — 总文章数
+//
+// 高亮方案：液态滑块（.category-liquid）用 CSS transform 滑动覆盖层，
+// pill 本身不变背景色，仅切换 text color，彻底消除 transition-colors 闪烁。
+// pill z-index:1 在滑块 z-index:0 上方，pill 半透明背景（6%）让滑块颜色透出。
+---
+
+<div
+  class="card-base category-bar onload-animation overflow-hidden p-3"
+  id="category-bar"
+>
+  <div class="category-bar-track flex items-center gap-2">
+    <span class="category-liquid" aria-hidden="true"></span>
+    <a
+      th:href="@{/}"
+      class="category-pill shrink-0 flex items-center justify-center rounded-xl px-3 py-1.5 text-sm active:scale-95"
+      data-category-name=""
+      data-no-swup
+      aria-label="Home"
+    >
+      <span class="icon-[material-symbols--home] text-lg"></span>
+    </a>
+
+    <a
+      th:href="@{/archives}"
+      class="category-pill shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm active:scale-95"
+      data-category-name="__archive__"
+      data-no-swup
+    >
+      <span th:text="#{page.archives.title}">归档</span>
+      <span
+        class="pill-count"
+        th:with="totalPosts = ${postFinder.list({page: 1, size: 1}).total}"
+        th:text="${totalPosts}">0</span
+      >
+    </a>
+
+    <div class="category-divider shrink-0" aria-hidden="true"></div>
+
+    <div class="category-scroll flex items-center gap-2 overflow-x-auto">
+      <div class="contents" th:each="category : ${categoryFinder.listAll()}">
+        <a
+          th:href="@{${category.status.permalink}}"
+          class="category-pill shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm active:scale-95"
+          th:attr="data-category-name=${category.spec.displayName}"
+          data-no-swup
+        >
+          <span th:text="${category.spec.displayName}">Category</span>
+          <span class="pill-count" th:text="${category.postCount ?: 0}">0</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="category-divider shrink-0" aria-hidden="true"></div>
+
+    <a
+      th:href="@{/categories}"
+      class="category-pill shrink-0 flex items-center gap-1 rounded-xl px-3 py-1.5 text-sm active:scale-95"
+      data-category-name="__categories__"
+      data-no-swup
+      aria-label="More"
+    >
+      <span th:text="#{common.more}">更多</span>
+      <span class="icon-[material-symbols--chevron-right-rounded] text-sm"
+      ></span>
+    </a>
+  </div>
+</div>
+
+<style is:global>
+  .category-bar {
+    position: relative;
+  }
+
+  .category-bar-track {
+    isolation: isolate;
+    position: relative;
+  }
+
+  .category-liquid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--primary);
+    border-radius: 0.75rem;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 1;
+  }
+
+  .category-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    --mask-fade: 1.5rem;
+  }
+
+  .category-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-scroll.can-scroll-left {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 calc(var(--mask-fade) + 0.5rem)
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 calc(var(--mask-fade) + 0.5rem)
+    );
+  }
+
+  .category-scroll.can-scroll-right {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - var(--mask-fade) - 0.5rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - var(--mask-fade) - 0.5rem),
+      transparent 100%
+    );
+  }
+
+  .category-scroll.can-scroll-left.can-scroll-right {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 calc(var(--mask-fade) + 0.5rem),
+      #000 calc(100% - var(--mask-fade) - 0.5rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 calc(var(--mask-fade) + 0.5rem),
+      #000 calc(100% - var(--mask-fade) - 0.5rem),
+      transparent 100%
+    );
+  }
+
+  .category-pill {
+    z-index: 1;
+    border: none;
+    border-radius: 0.75rem;
+    color: var(--btn-content);
+    background: color-mix(in srgb, var(--btn-content) 6%, transparent);
+    font-weight: 500;
+    gap: 0.375rem;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .category-pill:hover {
+    color: var(--primary);
+  }
+
+  .category-pill[data-active] {
+    color: white;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .category-pill[data-active] .pill-count {
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 0.9;
+  }
+
+  .category-pill[data-active]:hover {
+    opacity: 0.9;
+    border-color: transparent;
+  }
+
+  .category-pill[data-soft-active] {
+    color: color-mix(in srgb, var(--primary) 90%, var(--btn-content));
+    font-weight: 600;
+  }
+
+  .category-pill[data-soft-active]:hover {
+    color: color-mix(in srgb, var(--primary) 100%, var(--btn-content));
+  }
+
+  .category-pill[data-category-name=""] {
+    color: var(--primary);
+  }
+
+  .category-pill[data-category-name=""][data-active],
+  .category-pill[data-category-name=""][data-active]:hover {
+    color: white;
+  }
+
+  .category-pill .pill-count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.5;
+    padding: 0.05rem 0.35rem;
+    border-radius: 0.375rem;
+    background: color-mix(in srgb, var(--btn-content) 10%, transparent);
+  }
+
+  .category-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--line-divider);
+    opacity: 0.5;
+  }
+
+  .category-pill:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  @media (width <= 767px) {
+    .category-scroll.can-scroll-left,
+    .category-scroll.can-scroll-right,
+    .category-scroll.can-scroll-left.can-scroll-right {
+      mask-image: none;
+    }
+  }
+</style>
+
+<script>
+  // @ts-nocheck
+  (function () {
+    if (window.__categoryBarBound) return;
+    window.__categoryBarBound = true;
+
+    var bar = document.getElementById("category-bar");
+    if (!bar) return;
+
+    var scroll = bar.querySelector(".category-scroll");
+    var liquid = bar.querySelector(".category-liquid");
+    var track = bar.querySelector(".category-bar-track");
+
+    function pathOf(href) {
+      try {
+        return new URL(href, location.origin).pathname;
+      } catch (e) {
+        return href;
+      }
+    }
+
+    // lqbby.com 同款：getBoundingClientRect 定位，滚动期间 rAF 跟随
+    function moveLiquid(el, animate) {
+      if (!liquid || !track || !el) return;
+      var trackRect = track.getBoundingClientRect();
+      var elRect = el.getBoundingClientRect();
+      var x = elRect.left - trackRect.left;
+      var w = elRect.width;
+      x = Math.max(0, Math.min(x, trackRect.width - w));
+      if (!animate) liquid.style.transition = "none";
+      liquid.style.width = w + "px";
+      liquid.style.transform = "translateX(" + x + "px)";
+      if (!animate) {
+        void liquid.offsetWidth;
+        liquid.style.transition = "";
+      }
+    }
+
+    function moveToActive(animate) {
+      var act =
+        bar.querySelector(".category-pill[data-active]") ||
+        bar.querySelector(".category-pill[data-soft-active]");
+      if (act) {
+        moveLiquid(act, animate);
+        liquid.style.opacity = "";
+      } else if (liquid) {
+        liquid.style.opacity = "0";
+      }
+    }
+
+    function updateScrollMask() {
+      if (!scroll) return;
+      var hasOverflow = scroll.scrollWidth > scroll.clientWidth + 1;
+      var atStart = scroll.scrollLeft <= 1;
+      var atEnd =
+        scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 1;
+      scroll.classList.toggle("can-scroll-left", hasOverflow && !atStart);
+      scroll.classList.toggle("can-scroll-right", hasOverflow && !atEnd);
+    }
+
+    function setActiveCategory(currentUrl) {
+      currentUrl = currentUrl || new URL(window.location.href);
+      var path = currentUrl.pathname.replace(/\/+$/, "") || "/";
+      var params = currentUrl.searchParams;
+      var isHome = path === "/" || path === "";
+      var isArchives = path.startsWith("/archives");
+      var isCategories = path === "/categories";
+      var activeCategory = params.get("category") || "";
+      var hasTag = params.has("tag");
+      var hasUncategorized = params.has("uncategorized");
+
+      var targetName = null;
+
+      if (isHome) {
+        targetName = "";
+      } else if (isCategories) {
+        targetName = "__categories__";
+      } else if (activeCategory) {
+        targetName = activeCategory;
+      } else {
+        var pills = bar.querySelectorAll(".category-pill");
+        for (var i = 0; i < pills.length; i++) {
+          var catName = pills[i].getAttribute("data-category-name");
+          if (
+            catName &&
+            catName !== "" &&
+            catName !== "__archive__" &&
+            catName !== "__categories__"
+          ) {
+            try {
+              var pillUrl = new URL(pills[i].href, window.location.origin);
+              if (pillUrl.pathname.replace(/\/+$/, "") === path) {
+                targetName = catName;
+                break;
+              }
+            } catch (e) {}
+          }
+        }
+        if (!targetName && isArchives && !hasTag && !hasUncategorized) {
+          targetName = "__archive__";
+        }
+      }
+
+      var postCategory = (
+        bar.getAttribute("data-current-post-category") || ""
+      ).trim();
+      var targetSoftName = !targetName && postCategory ? postCategory : null;
+
+      var currentActive = bar.querySelector(".category-pill[data-active]");
+      var currentActiveName = currentActive
+        ? currentActive.getAttribute("data-category-name")
+        : undefined;
+      var currentSoftActive = bar.querySelector(
+        ".category-pill[data-soft-active]",
+      );
+      var currentSoftName = currentSoftActive
+        ? currentSoftActive.getAttribute("data-category-name")
+        : undefined;
+
+      if (
+        currentActiveName === targetName &&
+        currentSoftName === targetSoftName
+      )
+        return;
+
+      var allPills = bar.querySelectorAll(".category-pill");
+      allPills.forEach(function (pill) {
+        var name = pill.getAttribute("data-category-name");
+        var shouldBeActive = name === targetName;
+        var shouldBeSoft = !targetName && name === targetSoftName;
+
+        if (shouldBeActive) {
+          pill.setAttribute("data-active", "");
+        } else {
+          pill.removeAttribute("data-active");
+        }
+        if (shouldBeSoft) {
+          pill.setAttribute("data-soft-active", "");
+        } else {
+          pill.removeAttribute("data-soft-active");
+        }
+      });
+    }
+
+    function scrollPillIntoView(smooth) {
+      if (!scroll) return;
+      var activePill =
+        scroll.querySelector(".category-pill[data-active]") ||
+        scroll.querySelector(".category-pill[data-soft-active]");
+      if (!activePill) return;
+      if (scroll.scrollWidth <= scroll.clientWidth) return;
+      var left =
+        activePill.offsetLeft -
+        (scroll.clientWidth - activePill.offsetWidth) / 2;
+      left = Math.max(
+        0,
+        Math.min(left, scroll.scrollWidth - scroll.clientWidth),
+      );
+      scroll.scrollTo({ left: left, behavior: smooth ? "smooth" : "auto" });
+    }
+
+    // lqbby.com 同款：rAF 节流，滚动期间滑块无动画跟随
+    var liquidRaf = 0;
+    function scheduleLiquidSync() {
+      if (liquidRaf) return;
+      liquidRaf = requestAnimationFrame(function () {
+        liquidRaf = 0;
+        moveToActive(false);
+      });
+    }
+
+    function updateCategoryBar(animate) {
+      var swupContainer = document.getElementById("swup-container");
+      if (swupContainer) {
+        var postCategory =
+          swupContainer.getAttribute("data-current-post-category") || "";
+        bar.setAttribute("data-current-post-category", postCategory);
+      }
+      setActiveCategory();
+      moveToActive(animate);
+      scrollPillIntoView(true);
+      updateScrollMask();
+    }
+
+    function initScrollFeatures() {
+      if (!scroll) return;
+      if (scroll.getAttribute("data-features-bound")) {
+        updateScrollMask();
+        return;
+      }
+      scroll.setAttribute("data-features-bound", "true");
+      scroll.addEventListener(
+        "scroll",
+        function () {
+          updateScrollMask();
+          scheduleLiquidSync();
+        },
+        { passive: true },
+      );
+      updateScrollMask();
+    }
+
+    function init() {
+      initScrollFeatures();
+      updateCategoryBar();
+
+      bar.addEventListener("click", function (e) {
+        var pill = e.target.closest(".category-pill");
+        if (!pill) return;
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey
+        )
+          return;
+        var href = pill.getAttribute("href");
+        if (!href) return;
+        var targetUrl = new URL(href, window.location.href);
+        if (targetUrl.origin !== window.location.origin) return;
+
+        e.preventDefault();
+        setActiveCategory(targetUrl);
+        moveLiquid(pill, true);
+        scrollPillIntoView(true);
+
+        if (pathOf(href) === location.pathname) return;
+        if (window.swup) window.swup.navigate(href);
+        else location.href = href;
+      });
+
+      function onSwupPageView() {
+        updateCategoryBar(true);
+        initScrollFeatures();
+      }
+      if (window.swup && window.swup.hooks) {
+        window.swup.hooks.on("page:view", onSwupPageView);
+      } else {
+        document.addEventListener("astro:page-load", onSwupPageView);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>
