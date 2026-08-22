@@ -119,6 +119,51 @@ jobs:
             fi
           fi
 
+      # 手动发布时使用输入版本构建，避免为了发布新版本先修改 theme.yaml 并触发 push 发布
+      - name: 应用手动发布版本
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish-github != 'false'
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TYPE: ${{ github.event.inputs.release-type }}
+          VERSION_SUFFIX: ${{ github.event.inputs.version-suffix }}
+        run: |
+          if [[ -z "$RELEASE_TYPE" ]]; then
+            RELEASE_TYPE="latest"
+          fi
+          if [[ "$RELEASE_TYPE" != "latest" && "$RELEASE_TYPE" != "pre-release" ]]; then
+            echo "::error::Release 类型不合法：$RELEASE_TYPE（可选 latest 或 pre-release）"
+            exit 1
+          fi
+          SUFFIX=$(printf '%s' "$VERSION_SUFFIX" | tr -d '[:space:]')
+          if [[ -n "$SUFFIX" && "$SUFFIX" != -* ]]; then
+            SUFFIX="-$SUFFIX"
+          fi
+          if [[ "$RELEASE_TYPE" == "pre-release" && -z "$SUFFIX" ]]; then
+            echo "::error::pre-release 类型必须填写版本后缀（如 -rc1、-beta.2）"
+            exit 1
+          fi
+          if [[ "$RELEASE_TYPE" == "latest" && -n "$SUFFIX" ]]; then
+            echo "::error::latest 类型不能填写版本后缀；带后缀的版本请选择 pre-release"
+            exit 1
+          fi
+          TAG=$(printf '%s' "$INPUT_TAG" | tr -d '[:space:]')
+          [ -n "$TAG" ] || { echo "::error::发布时必须填写 tag"; exit 1; }
+          [[ "$TAG" == v* ]] || TAG="v$TAG"
+          BASE_VERSION="${TAG#v}"
+          if [[ -n "$SUFFIX" && "$BASE_VERSION" != *"$SUFFIX" ]]; then
+            BASE_VERSION="$BASE_VERSION$SUFFIX"
+            TAG="v$BASE_VERSION"
+          fi
+          [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]] || {
+            echo "::error::输入的版本不是合法 semver：$BASE_VERSION"
+            exit 1
+          }
+          printf -v VERSION_LINE '  version: "%s"' "$BASE_VERSION"
+          sed -i "0,/^[[:space:]]*version:/s//${VERSION_LINE}/" theme.yaml
+          echo "MANUAL_RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+          echo "MANUAL_THEME_VERSION=$BASE_VERSION" >> "$GITHUB_ENV"
+          echo "已使用手动输入版本构建：theme.yaml=$BASE_VERSION，Release tag=$TAG"
+
       # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
       - uses: pnpm/action-setup@v6
 
@@ -178,10 +223,7 @@ jobs:
           fi
           echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      # 手动触发：发布行为由显式开关决定（不靠 tag 填不填推断）
-      # publish-github=false → 仅构建不发布；true → 发布 tag 按「theme.yaml 版本 +
-      # 版本后缀」推导（version-suffix 支持 -rc1 等预发布段，留空为无后缀）；
-      # tag 输入可留空用推导结果，填写时必须与推导结果一致
+      # 手动触发：发布行为由显式开关决定；发布版本已在构建前由输入参数写入 theme.yaml
       - name: 校验发布配置（手动触发）
         id: release-config
         if: github.event_name == 'workflow_dispatch'
@@ -199,6 +241,14 @@ jobs:
             fi
             echo "publish=false" >> "$GITHUB_ENV"
             echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -n "$MANUAL_RELEASE_TAG" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "RELEASE_TAG=$MANUAL_RELEASE_TAG" >> "$GITHUB_ENV"
+            echo "RELEASE_TYPE=$RELEASE_TYPE" >> "$GITHUB_ENV"
+            echo "release_tag=$MANUAL_RELEASE_TAG" >> "$GITHUB_OUTPUT"
+            echo "手动发布版本校验通过：theme.yaml=$MANUAL_THEME_VERSION，Release tag=$MANUAL_RELEASE_TAG"
             exit 0
           fi
           if [[ -z "$RELEASE_TYPE" ]]; then
