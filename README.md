@@ -33,15 +33,16 @@
 
 ## 预览
 
-| 站点                                 | 说明       |
-| :----------------------------------- | :--------- |
-| [楠枝小笺](https://www.nannax.top/)  | 主题开发者 |
-| [BoxCat](https://blog.lipei.online/) | 主题用户   |
-| [顶呱呱的快乐](https://wuw.li/)      | 主题用户   |
+| 站点                                                   | 说明       |
+| :----------------------------------------------------- | :--------- |
+| [楠枝小笺](https://www.nannax.top/)                    | 主题开发者 |
+| [Leave_Time(时泠)的幻想书屋](https://leave-time.site/) | 主题贡献者 |
+| [BoxCat](https://blog.lipei.online/)                   | 主题用户   |
+| [顶呱呱的快乐](https://wuw.li/)                        | 主题用户   |
 
 ## 介绍
 
-**Ethereal** 是一款为 [Halo 2.x](https://github.com/halo-dev/halo) 打造的 Fuwari 风格博客主题。它基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（原版 [Fuwari](https://github.com/saicaca/fuwari) 的 Halo 移植版）深度二次开发，并融合了 [Firefly](https://github.com/CuteLeaf/Firefly) 的清新美学与多种现代 UI 趋势，感谢原作的开源贡献。
+**Ethereal** 是一款为 [Halo 2.x](https://github.com/halo-dev/halo) 打造的 Fuwari 风格博客主题。它基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（原版 [Fuwari](https://github.com/saicaca/fuwari) 的 Halo 移植版）深度二次开发，并融合了 [Firefly](https://github.com/CuteLeaf/Firefly) 的清新美学与多种现代 UI 趋势，感谢原作与 Firefly 的开源贡献。
 
 在保留原版清爽调性的基础上，Ethereal 新增了大量功能与视觉改进：三栏/两栏自由布局、磨砂玻璃质感、Banner 多形态展示、丰富的侧边栏小组件、图片 CDN 实时压缩、访客前台实时换肤等，力求为 Halo 用户提供一个开箱即用的 Fuwari 风格功能增强型主题。主题使用 AI 辅助开发。
 
@@ -313,3 +314,7 @@ pnpm format
 [MIT License](./LICENSE) © 2026 楠南NanNan
 
 本主题基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（MIT 许可）二次开发，遵守原始许可证条款。
+
+---
+
+![下载趋势图](https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&query=$.points[*].downloadCount&dateQuery=$.points[*].startDate&title=下载趋势&label=下载量&theme=purple)
