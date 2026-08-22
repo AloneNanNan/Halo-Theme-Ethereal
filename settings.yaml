@@ -332,7 +332,7 @@ spec:
               key: welcome_enable
               label: 启用
               value: false
-              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key"
+              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key，在侧边栏设置中点击「天气」小组件,配置 Key 后生效。"
             - $formkit: select
               name: position
               id: welcome_position
@@ -888,6 +888,7 @@ spec:
             - $formkit: array
               name: widgets
               label: 左侧边栏小部件
+              help: "在左侧边栏显示的部件，按顺序排列；点击部件进行详细配置"
               value:
                 - value: categories
                 - value: tag
@@ -926,7 +927,7 @@ spec:
                   name: tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单"
+                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city
@@ -1035,7 +1036,7 @@ spec:
             - $formkit: array
               name: rightWidgets
               label: 右侧边栏小部件
-              help: "仅三栏布局（布局设置中的页面布局）下生效，两栏布局时不显示右侧边栏"
+              help: "仅三栏布局（布局设置中的页面布局）下生效，两栏布局时不显示右侧边栏;点击部件进行详细配置"
               value:
                 - value: hitokoto
                 - value: site-stats
@@ -1070,7 +1071,7 @@ spec:
                   name: tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单"
+                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city

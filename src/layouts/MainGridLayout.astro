@@ -28,6 +28,24 @@ const {
   isHomePage = false,
   showToc = false,
 } = Astro.props;
+
+// 三栏布局右栏空态判定：三个子条件与 RightSideBar.astro 的组件类渲染条件
+// 逐项同源（下方注释标注了对应行号），全部不渲染时右栏视为空 → 三栏页面
+// 收起第三列（布局行为等同两栏，见下方 th:with 提升的 layoutTwoColumnOrEmpty）。
+// ⚠️ 同步约束：在 RightSideBar.astro 新增/移除组件或调整渲染条件时，必须
+// 同步更新本表达式与 RightSideBar.astro 顶部注释，勿只改一边（Thymeleaf
+// 表达式构建期不报错，缺失同步只在 Halo 渲染期暴露错误）。
+// 目录不计入空态：空态文章页的目录改走两栏浮动目录 #toc-container（其 xl
+// 门控同样读 layoutTwoColumnOrEmpty），侧栏内嵌目录随 aside 整体隐藏。
+const rightSidebarHasContentExpr = [
+  // ① Profile（display_position=right）→ RightSideBar.astro:30 渲染条件
+  "(theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position == 'right')",
+  // ② 公告（position=right）→ RightSideBar.astro:37 渲染条件
+  "(theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right')",
+  // ③ 小组件：null 时渲染默认组件（非空），仅显式清空为 [] 才算无组件
+  //     → RightSideBar.astro:82（默认组件）/ :54（显式列表）渲染条件
+  "(theme.config?.sidebar?.widgetsConfig?.rightWidgets == null or not #lists.isEmpty(theme.config?.sidebar?.widgetsConfig?.rightWidgets))",
+].join(" or ");
 ---
 
 <style is:global>
@@ -85,140 +103,90 @@ const {
 >
   <slot slot="head" name="head" />
 
+  {
+    /* 作用域提升：layoutTwoColumnOrEmpty 需同时被 #top-row（导航容器）与
+      #main-panel-wrapper（面板容器）下的网格/侧栏消费，二者无公共祖先元素，
+      故用 th:with + th:remove="tag" 包裹层定义（Navbar.astro / banner 脚本
+      同款先例），渲染期标签被移除、DOM 结构不变。右栏为空的三栏页面按两栏
+      布局渲染：收起第三列并回落 --page-width，释放右侧栏占用空间 */
+  }
   <div
-    id="top-row"
-    class="pointer-events-none relative z-50 mx-auto w-full xl:w-[92vw] max-w-(--page-width) px-0 transition-all duration-[var(--dur-scroll,700ms)] md:px-4"
-    th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
+    th:with={`layoutTwoColumnOrEmpty=\${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' or not (${rightSidebarHasContentExpr})}`}
+    th:remove="tag"
   >
     <div
-      id="navbar-wrapper"
-      class="pointer-events-auto sticky top-0 transition-transform duration-[var(--dur-scroll,700ms)]"
-    >
-      <Navbar />
-    </div>
-  </div>
-
-  <div
-    id="banner-wrapper"
-    th:with={bannerThWith()}
-    th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
-    class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
-  >
-    {
-      isHomePage && (
-        <link
-          rel="preload"
-          as="image"
-          fetchpriority="high"
-          th:if="${mode == 'single' and !isVideo and !mobileActive}"
-          th:href="${srcX}"
-        />
-      )
-    }
-    <!-- 注意：下方三个 #banner 分支（单图 / 视频 / 轮播）由互斥的 th:if 保证
-         同一时刻仅一个渲染，id 才不冲突；新增/调整分支条件时务必保持互斥 -->
-    <div
-      id="banner"
-      th:if="${mode == 'single' and !isVideo}"
-      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+      id="top-row"
+      class="pointer-events-none relative z-50 mx-auto w-full xl:w-[92vw] max-w-(--page-width) px-0 transition-all duration-[var(--dur-scroll,700ms)] md:px-4"
+      th:classappend="${layoutTwoColumnOrEmpty ? 'layout-two-column' : 'layout-three-column'}"
     >
       <div
-        class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"
+        id="navbar-wrapper"
+        class="pointer-events-auto sticky top-0 transition-transform duration-[var(--dur-scroll,700ms)]"
       >
+        <Navbar />
       </div>
-      <!-- 移动端独立来源开启时两端都可能被隐藏：首图按 mobileActive 降级 lazy，
-           由 banner-src-switch.js 在激活时升级 eager，避免隐藏端下载 -->
-      <img
-        th:src="${srcX}"
-        th:alt="${site.title}"
-        th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
-        th:attr="loading=${mobileActive ? 'lazy' : 'eager'},fetchpriority=${mobileActive ? 'low' : 'high'}"
-        decoding="async"
-        class="h-full w-full object-cover"
-        alt=""
-      />
     </div>
+
     <div
-      id="banner"
-      th:if="${mode == 'single' and isVideo}"
-      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+      id="banner-wrapper"
+      th:with={bannerThWith()}
+      th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
+      class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
     >
-      <!-- 独立来源开启时桌面视频可能被隐藏：autoplay 会覆盖 preload=none 强制
-           拉流，必须一并去掉（th:attr 值为 null 时不输出该属性），播放由
-           banner-src-switch.js 在激活时接管 -->
-      <video
-        id="banner-video"
-        th:src="${theme.config?.style?.bannerStyle?.src}"
-        th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
-        th:attr="autoplay=${!mobileActive ? 'autoplay' : null},preload=${mobileActive ? 'none' : 'auto'}"
-        class="h-full w-full object-cover"
-        muted
-        loop
-        playsinline
-        tabindex="-1"></video>
-      <button
-        id="banner-play-btn"
-        th:if="${theme.config?.style?.bannerStyle?.showPauseBtn == null or theme.config?.style?.bannerStyle?.showPauseBtn}"
-        type="button"
-        aria-label="暂停播放"
-        class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
-      >
-        <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
-        ></span>
-      </button>
-    </div>
-    <div
-      id="banner"
-      th:if="${mode == 'carousel'}"
-      class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
-    >
-      <img
-        th:each="img, imgStat : ${theme.config?.style?.bannerStyle?.carousel?.images}"
-        th:src={carouselImgSrcExpr()}
-        th:alt="${site.title}"
-        th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
-        th:classappend="${imgStat.index == 0 ? 'active' : ''}"
-        th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
-        decoding="async"
-        class="banner-slide absolute inset-0 h-full w-full object-cover"
-      />
-    </div>
-    <div
-      id="banner-mobile"
-      th:if="${mobileActive}"
-      th:with={bannerMobileThWith()}
-      class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
-    >
+      {
+        isHomePage && (
+          <link
+            rel="preload"
+            as="image"
+            fetchpriority="high"
+            th:if="${mode == 'single' and !isVideo and !mobileActive}"
+            th:href="${srcX}"
+          />
+        )
+      }
+      <!-- 注意：下方三个 #banner 分支（单图 / 视频 / 轮播）由互斥的 th:if 保证
+         同一时刻仅一个渲染，id 才不冲突；新增/调整分支条件时务必保持互斥 -->
       <div
-        id="banner-mobile-reveal"
+        id="banner"
         th:if="${mode == 'single' and !isVideo}"
         class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
-        <ImageWrapper
-          src="${srcX}"
-          alt="${site.title}"
-          position="${theme.config?.style?.bannerStyle?.position ?: 'center'}"
-          loading="lazy"
-          fetchpriority="low"
-          class="h-full object-cover"
+        <div
+          class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"
+        >
+        </div>
+        <!-- 移动端独立来源开启时两端都可能被隐藏：首图按 mobileActive 降级 lazy，
+           由 banner-src-switch.js 在激活时升级 eager，避免隐藏端下载 -->
+        <img
+          th:src="${srcX}"
+          th:alt="${site.title}"
+          th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+          th:attr="loading=${mobileActive ? 'lazy' : 'eager'},fetchpriority=${mobileActive ? 'low' : 'high'}"
+          decoding="async"
+          class="h-full w-full object-cover"
+          alt=""
         />
       </div>
       <div
+        id="banner"
         th:if="${mode == 'single' and isVideo}"
         class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
+        <!-- 独立来源开启时桌面视频可能被隐藏：autoplay 会覆盖 preload=none 强制
+           拉流，必须一并去掉（th:attr 值为 null 时不输出该属性），播放由
+           banner-src-switch.js 在激活时接管 -->
         <video
-          id="banner-video-mobile"
-          th:src="${mobileSrc}"
+          id="banner-video"
+          th:src="${theme.config?.style?.bannerStyle?.src}"
           th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+          th:attr="autoplay=${!mobileActive ? 'autoplay' : null},preload=${mobileActive ? 'none' : 'auto'}"
           class="h-full w-full object-cover"
           muted
           loop
           playsinline
-          preload="none"
           tabindex="-1"></video>
         <button
-          id="banner-play-btn-mobile"
+          id="banner-play-btn"
           th:if="${theme.config?.style?.bannerStyle?.showPauseBtn == null or theme.config?.style?.bannerStyle?.showPauseBtn}"
           type="button"
           aria-label="暂停播放"
@@ -229,373 +197,441 @@ const {
         </button>
       </div>
       <div
+        id="banner"
         th:if="${mode == 'carousel'}"
         class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
         <img
-          th:each="img, imgStat : ${mobileImages}"
+          th:each="img, imgStat : ${theme.config?.style?.bannerStyle?.carousel?.images}"
           th:src={carouselImgSrcExpr()}
           th:alt="${site.title}"
           th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
           th:classappend="${imgStat.index == 0 ? 'active' : ''}"
-          loading="lazy"
-          fetchpriority="low"
+          th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
           decoding="async"
           class="banner-slide absolute inset-0 h-full w-full object-cover"
         />
       </div>
-    </div>
-    <div
-      id="banner-overlay"
-      th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.enable == null or theme.config?.style?.bannerText?.enable}"
-      class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-4 text-center"
-      style={isHomePage ? "" : "display:none"}
-    >
-      <h1
-        id="banner-title"
-        th:if="${theme.config?.style?.bannerText?.title != null}"
-        class="font-bold text-white"
-        th:style="'font-size: ' + (${theme.config?.style?.bannerText?.titleFontSize ?: '3.5rem'}) + '; text-shadow: 0 2px 15px rgba(0,0,0,0.5)'"
-        th:text="${theme.config?.style?.bannerText?.title}"
-      >
-      </h1>
       <div
-        id="banner-subtitle-wrapper"
-        th:if="${theme.config?.style?.bannerText?.subtitles != null}"
-        class="mt-3 flex items-center gap-1"
+        id="banner-mobile"
+        th:if="${mobileActive}"
+        th:with={bannerMobileThWith()}
+        class="relative h-full w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
       >
-        <span
-          id="banner-subtitle"
-          class="text-white/90"
-          th:style="'font-size: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'}) + '; text-shadow: 0 1px 8px rgba(0,0,0,0.4)'"
-          >&nbsp;</span
-        >
-        <span
-          id="banner-cursor"
-          th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect != 'drop'}"
-          class="inline-block w-[2px] bg-white/80"
-          th:style="'height: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'})"
-        ></span>
         <div
-          id="banner-subtitles-data"
-          style="display:none"
-          aria-hidden="true"
-          th:text="${theme.config?.style?.bannerText?.subtitles}"
+          id="banner-mobile-reveal"
+          th:if="${mode == 'single' and !isVideo}"
+          class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
         >
+          <ImageWrapper
+            src="${srcX}"
+            alt="${site.title}"
+            position="${theme.config?.style?.bannerStyle?.position ?: 'center'}"
+            loading="lazy"
+            fetchpriority="low"
+            class="h-full object-cover"
+          />
+        </div>
+        <div
+          th:if="${mode == 'single' and isVideo}"
+          class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+        >
+          <video
+            id="banner-video-mobile"
+            th:src="${mobileSrc}"
+            th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+            class="h-full w-full object-cover"
+            muted
+            loop
+            playsinline
+            preload="none"
+            tabindex="-1"></video>
+          <button
+            id="banner-play-btn-mobile"
+            th:if="${theme.config?.style?.bannerStyle?.showPauseBtn == null or theme.config?.style?.bannerStyle?.showPauseBtn}"
+            type="button"
+            aria-label="暂停播放"
+            class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
+          >
+            <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
+            ></span>
+          </button>
+        </div>
+        <div
+          th:if="${mode == 'carousel'}"
+          class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
+        >
+          <img
+            th:each="img, imgStat : ${mobileImages}"
+            th:src={carouselImgSrcExpr()}
+            th:alt="${site.title}"
+            th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+            th:classappend="${imgStat.index == 0 ? 'active' : ''}"
+            loading="lazy"
+            fetchpriority="low"
+            decoding="async"
+            class="banner-slide absolute inset-0 h-full w-full object-cover"
+          />
         </div>
       </div>
-    </div>
-    <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区。
+      <div
+        id="banner-overlay"
+        th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.enable == null or theme.config?.style?.bannerText?.enable}"
+        class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-4 text-center"
+        style={isHomePage ? "" : "display:none"}
+      >
+        <h1
+          id="banner-title"
+          th:if="${theme.config?.style?.bannerText?.title != null}"
+          class="font-bold text-white"
+          th:style="'font-size: ' + (${theme.config?.style?.bannerText?.titleFontSize ?: '3.5rem'}) + '; text-shadow: 0 2px 15px rgba(0,0,0,0.5)'"
+          th:text="${theme.config?.style?.bannerText?.title}"
+        >
+        </h1>
+        <div
+          id="banner-subtitle-wrapper"
+          th:if="${theme.config?.style?.bannerText?.subtitles != null}"
+          class="mt-3 flex items-center gap-1"
+        >
+          <span
+            id="banner-subtitle"
+            class="text-white/90"
+            th:style="'font-size: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'}) + '; text-shadow: 0 1px 8px rgba(0,0,0,0.4)'"
+            >&nbsp;</span
+          >
+          <span
+            id="banner-cursor"
+            th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect != 'drop'}"
+            class="inline-block w-[2px] bg-white/80"
+            th:style="'height: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'})"
+          ></span>
+          <div
+            id="banner-subtitles-data"
+            style="display:none"
+            aria-hidden="true"
+            th:text="${theme.config?.style?.bannerText?.subtitles}"
+          >
+          </div>
+        </div>
+      </div>
+      <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区。
          独立于 #banner-overlay 渲染——标题/副标题关闭（bannerText.enable=false）
          时箭头也必须显示（仅全屏模式首页）。落点 = 网格顶边 −
          --banner-home-content-gap：页面背景顶部边缘（banner 底边）对齐视口顶部。
          必须用 <button> 而非 <a href="#main-grid">：Swup ScrollPlugin 会拦截 hash
          锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin 与
          JS 目标）。非首页由 components.css 的 body:not(.is-home) 规则隐藏 -->
-    <button
-      id="scroll-down-indicator"
-      type="button"
-      aria-label="向下滚动查看内容"
-      class="scroll-down-indicator"
-    >
-      <span
-        class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
-      ></span>
-    </button>
-  </div>
+      <button
+        id="scroll-down-indicator"
+        type="button"
+        aria-label="向下滚动查看内容"
+        class="scroll-down-indicator"
+      >
+        <span
+          class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
+        ></span>
+      </button>
+    </div>
 
-  <div id="main-panel-wrapper" class="pointer-events-none absolute z-30 w-full">
     <div
-      class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
-      th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
+      id="main-panel-wrapper"
+      class="pointer-events-none absolute z-30 w-full"
     >
       <div
-        id="main-grid"
-        class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
-        th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
+        class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
+        th:classappend="${layoutTwoColumnOrEmpty ? 'layout-two-column' : 'layout-three-column'}"
       >
-        <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
+        <div
+          id="main-grid"
+          class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
+          th:classappend="${layoutTwoColumnOrEmpty ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
+        >
+          <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
              （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
              url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
-        <a
-          id="banner-credit"
-          th:if="${theme.config?.style?.bannerStyle?.credit?.enable != false and !#strings.isEmpty(theme.config?.style?.bannerStyle?.credit?.url)}"
-          th:href="${theme.config?.style?.bannerStyle?.credit?.url}"
-          target="_blank"
-          rel="noopener"
-          class="group onload-animation absolute -top-13 right-4 flex h-9 items-center justify-center rounded-full bg-black/60 px-3 transition-all hover:bg-black/70 hover:pr-9 active:bg-black/80"
-        >
-          <span
-            class="icon-[material-symbols--copyright-outline-rounded] mr-1 text-[1.25rem] text-white/75"
-          ></span>
-          <span
-            class="text-xs text-white/75"
-            th:text="${theme.config?.style?.bannerStyle?.credit?.text}"></span>
-          <span
-            class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"
-          ></span>
-        </a>
-
-        <!-- 主内容区 - 移动端第一项 -->
-        <main
-          id="swup-container"
-          class="transition-swup-fade col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2"
-        >
-          <div id="content-wrapper" class="onload-animation">
-            <slot />
-            <div class="footer onload-animation col-span-2 hidden lg:block">
-              <Footer />
-            </div>
-          </div>
-        </main>
-
-        <!-- 左侧栏 - 移动端第二项，平板端用 grid 放到左侧 -->
-        <SideBar
-          class="onload-animation col-span-2 md:mb-4 md:col-span-1 md:row-start-1 md:col-start-1 lg:max-w-70"
-          th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:row-span-2'}"
-        />
-
-        <!-- 右侧栏 - 移动端第三项，平板隐藏，三栏显示 -->
-        <RightSideBar
-          class="col-span-2 md:hidden xl:col-span-1 xl:col-start-3 xl:row-start-1 xl:flex xl:flex-col xl:gap-4 xl:row-span-2"
-          th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'xl:!hidden' : ''}"
-          showToc={showToc}
-        />
-
-        <!-- 移动端页脚 -->
-        <div class="footer onload-animation col-span-2 block lg:hidden">
-          <Footer />
-        </div>
-      </div>
-
-      <BackToTop />
-    </div>
-  </div>
-
-  <div id="toc-container">
-    {
-      showToc ? (
-        <div
-          class="absolute z-0 hidden w-full xl:block"
-          th:classappend="${theme.config?.layout?.pageLayout?.layoutMode != 'two-column' ? 'xl:!hidden' : ''}"
-        >
-          <div
-            class="relative mx-auto max-w-(--page-width)"
-            th:with="tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+          <a
+            id="banner-credit"
+            th:if="${theme.config?.style?.bannerStyle?.credit?.enable != false and !#strings.isEmpty(theme.config?.style?.bannerStyle?.credit?.url)}"
+            th:href="${theme.config?.style?.bannerStyle?.credit?.url}"
+            target="_blank"
+            rel="noopener"
+            class="group onload-animation absolute -top-13 right-4 flex h-9 items-center justify-center rounded-full bg-black/60 px-3 transition-all hover:bg-black/70 hover:pr-9 active:bg-black/80"
           >
-            <div
-              id="toc-wrapper"
-              th:if="${tocEnabled}"
-              class="absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
-            >
-              <div
-                id="toc-inner-wrapper"
-                data-toc-scroll
-                class="hide-scrollbar fixed top-14 h-[calc(100vh-20rem)] w-(--toc-width) overflow-x-hidden overflow-y-scroll"
-              >
-                <div id="toc" class="transition-swup-fade h-full w-full">
-                  <div class="h-8 w-full" />
-                  <TOC showEmptyMessage={false} />
-                  <div class="h-8 w-full" />
-                </div>
+            <span
+              class="icon-[material-symbols--copyright-outline-rounded] mr-1 text-[1.25rem] text-white/75"
+            ></span>
+            <span
+              class="text-xs text-white/75"
+              th:text="${theme.config?.style?.bannerStyle?.credit?.text}"
+            ></span>
+            <span
+              class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"
+            ></span>
+          </a>
+
+          <!-- 主内容区 - 移动端第一项 -->
+          <main
+            id="swup-container"
+            class="transition-swup-fade col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2"
+          >
+            <div id="content-wrapper" class="onload-animation">
+              <slot />
+              <div class="footer onload-animation col-span-2 hidden lg:block">
+                <Footer />
               </div>
             </div>
-            <div id="toc" th:unless="${tocEnabled}" />
+          </main>
+
+          <!-- 左侧栏 - 移动端第二项，平板端用 grid 放到左侧；
+             右栏为空的三栏页面不跨行（与两栏行为一致） -->
+          <SideBar
+            class="onload-animation col-span-2 md:mb-4 md:col-span-1 md:row-start-1 md:col-start-1 lg:max-w-70"
+            th:classappend="${layoutTwoColumnOrEmpty ? '' : 'xl:row-span-2'}"
+          />
+
+          <!-- 右侧栏 - 移动端第三项，平板隐藏；两栏或三栏右栏为空时 xl 隐藏，
+              第三列随之收起（网格回落 md 的 [17.5rem_1fr]） -->
+          <RightSideBar
+            class="col-span-2 md:hidden xl:col-span-1 xl:col-start-3 xl:row-start-1 xl:flex xl:flex-col xl:gap-4 xl:row-span-2"
+            th:classappend="${layoutTwoColumnOrEmpty ? 'xl:!hidden' : ''}"
+            showToc={showToc}
+          />
+
+          <!-- 移动端页脚 -->
+          <div class="footer onload-animation col-span-2 block lg:hidden">
+            <Footer />
           </div>
         </div>
-      ) : (
-        <div id="toc" />
-      )
-    }
-  </div>
 
-  <!-- 移动端目录弹窗（I29）：swup 容器，换页时整容器替换 → 弹窗自动关闭、
+        <BackToTop />
+      </div>
+    </div>
+
+    <div id="toc-container">
+      {
+        showToc ? (
+          <div
+            class="absolute z-0 hidden w-full xl:block"
+            th:classappend="${layoutTwoColumnOrEmpty ? '' : 'xl:!hidden'}"
+          >
+            <div
+              class="relative mx-auto max-w-(--page-width)"
+              th:with="tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+            >
+              <div
+                id="toc-wrapper"
+                th:if="${tocEnabled}"
+                class="absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
+              >
+                <div
+                  id="toc-inner-wrapper"
+                  data-toc-scroll
+                  class="hide-scrollbar fixed top-14 h-[calc(100vh-20rem)] w-(--toc-width) overflow-x-hidden overflow-y-scroll"
+                >
+                  <div id="toc" class="transition-swup-fade h-full w-full">
+                    <div class="h-8 w-full" />
+                    <TOC showEmptyMessage={false} />
+                    <div class="h-8 w-full" />
+                  </div>
+                </div>
+              </div>
+              <div id="toc" th:unless="${tocEnabled}" />
+            </div>
+          </div>
+        ) : (
+          <div id="toc" />
+        )
+      }
+    </div>
+
+    <!-- 移动端目录弹窗（I29）：swup 容器，换页时整容器替换 → 弹窗自动关闭、
        TOC 按新文章重建。仅文章页 + 目录开启 + 浮动目录按钮开启时渲染卡片；
        目录按钮显隐由 app.ts 的 updateTocBtnVisibility 按「页面有无可见目录」
        （两栏悬浮目录 / 三栏右侧栏目录）判定，卡片恒渲染、由点击切换显示 -->
-  <div
-    id="toc-popup"
-    th:with="tocBtnEnabled=${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}, tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
-    aria-hidden="true"
-  >
-    {
-      showToc ? (
-        <div th:if="${tocBtnEnabled and tocEnabled}" th:remove="tag">
-          <div
-            class="toc-popup-card card-base pointer-events-auto"
-            role="dialog"
-            aria-modal="false"
-            th:aria-label="#{widget.toc.title}"
-          >
-            <div class="shrink-0">
-              <h3
-                class="relative mb-2 ml-8 mt-4 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
-                th:text="#{widget.toc.title}"
-              >
-                目录
-              </h3>
-            </div>
+    <div
+      id="toc-popup"
+      th:with="tocBtnEnabled=${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}, tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+      aria-hidden="true"
+    >
+      {
+        showToc ? (
+          <div th:if="${tocBtnEnabled and tocEnabled}" th:remove="tag">
             <div
-              id="toc-popup-scroll"
-              data-toc-scroll
-              class="toc-popup-scroll hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3"
+              class="toc-popup-card card-base pointer-events-auto"
+              role="dialog"
+              aria-modal="false"
+              th:aria-label="#{widget.toc.title}"
             >
-              <TOC showEmptyMessage={true} />
+              <div class="shrink-0">
+                <h3
+                  class="relative mb-2 ml-8 mt-4 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+                  th:text="#{widget.toc.title}"
+                >
+                  目录
+                </h3>
+              </div>
+              <div
+                id="toc-popup-scroll"
+                data-toc-scroll
+                class="toc-popup-scroll hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3"
+              >
+                <TOC showEmptyMessage={true} />
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div />
-      )
-    }
-  </div>
+        ) : (
+          <div />
+        )
+      }
+    </div>
 
-  <!-- Banner 脚本（I27）：仅首页加载（isHomePage 为 Astro 构建期判定），
+    <!-- Banner 脚本（I27）：仅首页加载（isHomePage 为 Astro 构建期判定），
        并按显示模式精确门控（mode/isVideo/mobileActive 由 bannerThWith() 提供，
        与 #banner-wrapper 的 th:with 同源表达式，无重复判定漂移）；
        typewriter/drop 互斥门控保留并补 defer（原无 defer 阻塞渲染）。
        th:with + th:remove="tag" 为作用域提升技巧，见 Navbar.astro 同款先例 -->
-  {
-    isHomePage && (
-      <div th:with={bannerThWith()} th:remove="tag">
-        <script
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
-          defer
-        />
-        <script
-          th:if="${mode == 'carousel' or (mobileActive and mobileMode == 'carousel')}"
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
-          defer
-        />
-        <script
-          th:if="${(mode == 'single' and isVideo) or (mobileActive and mobileIsVideo)}"
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
-          defer
-        />
-        <script
-          th:if="${mobileActive}"
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
-          defer
-        />
-        <script
-          th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect == 'typewriter'}"
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
-          defer
-        />
-        <script
-          th:if="${theme.config?.style?.bannerText != null and theme.config?.style?.bannerText?.subtitleEffect == 'drop'}"
-          src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
-          defer
-        />
-      </div>
-    )
-  }
+    {
+      isHomePage && (
+        <div th:with={bannerThWith()} th:remove="tag">
+          <script
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
+            defer
+          />
+          <script
+            th:if="${mode == 'carousel' or (mobileActive and mobileMode == 'carousel')}"
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
+            defer
+          />
+          <script
+            th:if="${(mode == 'single' and isVideo) or (mobileActive and mobileIsVideo)}"
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
+            defer
+          />
+          <script
+            th:if="${mobileActive}"
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
+            defer
+          />
+          <script
+            th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect == 'typewriter'}"
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
+            defer
+          />
+          <script
+            th:if="${theme.config?.style?.bannerText != null and theme.config?.style?.bannerText?.subtitleEffect == 'drop'}"
+            src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
+            defer
+          />
+        </div>
+      )
+    }
 
-  <script is:inline>
-    // 全屏模式首页向下箭头：点击平滑滚动到内容区。落点计算见
-    // utils/scroll-manager.ts 的 scrollDownToContent()（app.ts 挂到
-    // window.__etherealScrollDown）。事件委托置于 Swup 容器外，
-    // 直接访问与 Swup 导航均生效（is:inline 无法 import，故走 window 桥接）
-    (function () {
-      if (window.__scrollDownIndicatorBound) return;
-      window.__scrollDownIndicatorBound = true;
-      document.addEventListener("click", function (e) {
-        var btn =
-          e.target && e.target.closest
-            ? e.target.closest("#scroll-down-indicator")
-            : null;
-        if (!btn) return;
-        window.__etherealScrollDown && window.__etherealScrollDown();
-      });
-    })();
-  </script>
-
-  <script
-    th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
-    is:inline
-  >
-    // 随机钓鱼 - 点击按钮鱼钩摇摆 1.5 秒后随机跳转朋友圈文章
-    // 放到 swup-container 外部 + 事件委托，保证直接访问和 Swup 导航都生效
-    (function () {
-      var SPIN_DELAY = 1500; // 摇摆等待时长（ms）
-      var spinning = false; // 防止重复点击
-
-      function getUrls() {
-        var links = document.querySelectorAll(".friends-item-title");
-        var urls = [];
-        for (var i = 0; i < links.length; i++) {
-          var href = links[i].getAttribute("href");
-          if (href && href !== "#") urls.push(href);
-        }
-        return urls;
-      }
-
-      // 停止摇摆，恢复按钮
-      function stopSwing(btn) {
-        spinning = false;
-        btn.classList.remove("spinning");
-        var label = btn.querySelector(".random-fish-label");
-        if (label) label.textContent = "随机钓鱼";
-      }
-
-      // 鱼钩摇摆动画：0.5s 一个来回，匀速晃动
-      function startSwing(btn, callback) {
-        var icon = btn.querySelector(".random-fish-icon");
-        var label = btn.querySelector(".random-fish-label");
-        btn.classList.add("spinning");
-        if (label) label.textContent = "正在钓...";
-        if (icon) icon.style.setProperty("--swing-duration", "0.5s");
-        setTimeout(callback, SPIN_DELAY);
-      }
-
-      function doRandomFish(btn) {
-        var urls = getUrls();
-        if (urls.length === 0) {
-          alert("暂无朋友圈文章可随机跳转");
-          stopSwing(btn);
-          return;
-        }
-        var chosen = urls[Math.floor(Math.random() * urls.length)];
-        // 通过创建临时 <a> 元素并点击，让外链跳转模态框（external-link-redirect）拦截
-        var a = document.createElement("a");
-        a.href = chosen;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        stopSwing(btn);
-      }
-
-      function handleClick(e) {
-        var btn = e.target.closest("#random-fish-btn");
-        if (!btn || spinning) return;
-        e.preventDefault();
-
-        spinning = true;
-        startSwing(btn, function () {
-          doRandomFish(btn);
+    <script is:inline>
+      // 全屏模式首页向下箭头：点击平滑滚动到内容区。落点计算见
+      // utils/scroll-manager.ts 的 scrollDownToContent()（app.ts 挂到
+      // window.__etherealScrollDown）。事件委托置于 Swup 容器外，
+      // 直接访问与 Swup 导航均生效（is:inline 无法 import，故走 window 桥接）
+      (function () {
+        if (window.__scrollDownIndicatorBound) return;
+        window.__scrollDownIndicatorBound = true;
+        document.addEventListener("click", function (e) {
+          var btn =
+            e.target && e.target.closest
+              ? e.target.closest("#scroll-down-indicator")
+              : null;
+          if (!btn) return;
+          window.__etherealScrollDown && window.__etherealScrollDown();
         });
-      }
+      })();
+    </script>
 
-      var bound = false;
+    <script
+      th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
+      is:inline
+    >
+      // 随机钓鱼 - 点击按钮鱼钩摇摆 1.5 秒后随机跳转朋友圈文章
+      // 放到 swup-container 外部 + 事件委托，保证直接访问和 Swup 导航都生效
+      (function () {
+        var SPIN_DELAY = 1500; // 摇摆等待时长（ms）
+        var spinning = false; // 防止重复点击
 
-      function ensureBound() {
-        if (bound) return;
-        document.addEventListener("click", handleClick);
-        bound = true;
-      }
+        function getUrls() {
+          var links = document.querySelectorAll(".friends-item-title");
+          var urls = [];
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].getAttribute("href");
+            if (href && href !== "#") urls.push(href);
+          }
+          return urls;
+        }
 
-      // 初始加载
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", ensureBound);
-      } else {
-        ensureBound();
-      }
+        // 停止摇摆，恢复按钮
+        function stopSwing(btn) {
+          spinning = false;
+          btn.classList.remove("spinning");
+          var label = btn.querySelector(".random-fish-label");
+          if (label) label.textContent = "随机钓鱼";
+        }
 
-      // Swup 页面切换后重新确认（事件委托已在 document 上；
-      // SwupScriptsPlugin 换页重执行时 ensureBound 跳过——冗余注册已删除）。
-    })();
-  </script>
+        // 鱼钩摇摆动画：0.5s 一个来回，匀速晃动
+        function startSwing(btn, callback) {
+          var icon = btn.querySelector(".random-fish-icon");
+          var label = btn.querySelector(".random-fish-label");
+          btn.classList.add("spinning");
+          if (label) label.textContent = "正在钓...";
+          if (icon) icon.style.setProperty("--swing-duration", "0.5s");
+          setTimeout(callback, SPIN_DELAY);
+        }
+
+        function doRandomFish(btn) {
+          var urls = getUrls();
+          if (urls.length === 0) {
+            alert("暂无朋友圈文章可随机跳转");
+            stopSwing(btn);
+            return;
+          }
+          var chosen = urls[Math.floor(Math.random() * urls.length)];
+          // 通过创建临时 <a> 元素并点击，让外链跳转模态框（external-link-redirect）拦截
+          var a = document.createElement("a");
+          a.href = chosen;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          stopSwing(btn);
+        }
+
+        function handleClick(e) {
+          var btn = e.target.closest("#random-fish-btn");
+          if (!btn || spinning) return;
+          e.preventDefault();
+
+          spinning = true;
+          startSwing(btn, function () {
+            doRandomFish(btn);
+          });
+        }
+
+        var bound = false;
+
+        function ensureBound() {
+          if (bound) return;
+          document.addEventListener("click", handleClick);
+          bound = true;
+        }
+
+        // 初始加载
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", ensureBound);
+        } else {
+          ensureBound();
+        }
+
+        // Swup 页面切换后重新确认（事件委托已在 document 上；
+        // SwupScriptsPlugin 换页重执行时 ensureBound 跳过——冗余注册已删除）。
+      })();
+    </script>
+  </div>
 </Layout>

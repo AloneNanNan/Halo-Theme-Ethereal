@@ -43,6 +43,16 @@ function readBaselineVersion(explicit) {
 function parseVersion(raw) {
   const m = String(raw).match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
   if (!m) return null;
+  if ([m[1], m[2], m[3]].some((part) => part.length > 1 && part.startsWith("0"))) {
+    return null;
+  }
+  if (
+    m[4]?.split(".").some(
+      (part) => /^\d+$/.test(part) && part.length > 1 && part.startsWith("0"),
+    )
+  ) {
+    return null;
+  }
   return { major: +m[1], minor: +m[2], patch: +m[3], pre: m[4] ?? "" };
 }
 
@@ -58,7 +68,26 @@ function compareVersions(a, b) {
   if (a.pre === b.pre) return 0;
   if (!a.pre) return 1; // 正式版大于预发布
   if (!b.pre) return -1;
-  return a.pre > b.pre ? 1 : -1;
+  const aParts = a.pre.split(".");
+  const bParts = b.pre.split(".");
+  const length = Math.max(aParts.length, bParts.length);
+  for (let index = 0; index < length; index++) {
+    if (index >= aParts.length) return -1;
+    if (index >= bParts.length) return 1;
+    const aPart = aParts[index];
+    const bPart = bParts[index];
+    if (aPart === bPart) continue;
+    const aNumeric = /^\d+$/.test(aPart);
+    const bNumeric = /^\d+$/.test(bPart);
+    if (aNumeric && bNumeric) {
+      const aNumber = BigInt(aPart);
+      const bNumber = BigInt(bPart);
+      return aNumber > bNumber ? 1 : -1;
+    }
+    if (aNumeric !== bNumeric) return aNumeric ? -1 : 1;
+    return aPart > bPart ? 1 : -1;
+  }
+  return 0;
 }
 
 const current = readCurrentVersion();
