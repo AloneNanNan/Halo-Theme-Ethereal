@@ -30,16 +30,20 @@ const {
 } = Astro.props;
 
 // 三栏布局右栏空态判定：三个子条件与 RightSideBar.astro 的组件类渲染条件
-// 逐项同源，全部不渲染时右栏视为空 → 三栏页面收起第三列（布局行为等同
-// 两栏，见下方 th:with 提升的 layoutTwoColumnOrEmpty）。
+// 逐项同源（下方注释标注了对应行号），全部不渲染时右栏视为空 → 三栏页面
+// 收起第三列（布局行为等同两栏，见下方 th:with 提升的 layoutTwoColumnOrEmpty）。
+// ⚠️ 同步约束：在 RightSideBar.astro 新增/移除组件或调整渲染条件时，必须
+// 同步更新本表达式与 RightSideBar.astro 顶部注释，勿只改一边（Thymeleaf
+// 表达式构建期不报错，缺失同步只在 Halo 渲染期暴露错误）。
 // 目录不计入空态：空态文章页的目录改走两栏浮动目录 #toc-container（其 xl
 // 门控同样读 layoutTwoColumnOrEmpty），侧栏内嵌目录随 aside 整体隐藏。
 const rightSidebarHasContentExpr = [
-  // ① Profile（display_position=right）
+  // ① Profile（display_position=right）→ RightSideBar.astro:30 渲染条件
   "(theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position == 'right')",
-  // ② 公告（position=right）
+  // ② 公告（position=right）→ RightSideBar.astro:37 渲染条件
   "(theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right')",
   // ③ 小组件：null 时渲染默认组件（非空），仅显式清空为 [] 才算无组件
+  //     → RightSideBar.astro:82（默认组件）/ :54（显式列表）渲染条件
   "(theme.config?.sidebar?.widgetsConfig?.rightWidgets == null or not #lists.isEmpty(theme.config?.sidebar?.widgetsConfig?.rightWidgets))",
 ].join(" or ");
 ---

@@ -25,6 +25,15 @@ const thClassappend = Astro.props["th:classappend"] || "";
   class:list={[className, "w-full", "onload-animation"]}
   th:classappend={thClassappend}
 >
+  {
+    /*
+    ⚠️ 同步约束：本组件三处渲染条件（Profile 上+公告+小组件）与
+    MainGridLayout.astro 的 rightSidebarHasContentExpr 逐项同源，新增/移除
+    组件或调整渲染条件时，必须同步更新 MainGridLayout.astro 中对应的表达式。
+    漏同步会导致三栏右栏空态判定错误（Thymeleaf 构建期不报错，只在 Halo
+    渲染期暴露）。
+  */
+  }
   {/* Profile：不吸顶，随页面滚动（两种布局模式一致） */}
   <div
     th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.layout?.pageLayout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
