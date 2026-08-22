@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.halo.run/">
+  <a href="https://www.halo.run/" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/badge/Halo-%E2%89%A5%202.25-0a84f7.svg?font=space-grotesk&amp;logo=ri%3APiPackageDuotone&amp;mode=dark" />
@@ -21,7 +21,7 @@
         src="https://shieldcn.dev/badge/Halo-%E2%89%A5%202.25-0a84f7.svg?mode=light&amp;font=space-grotesk&amp;logo=ri%3APiPackageDuotone" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/stars/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=violet&amp;font=space-grotesk&amp;mode=dark" />
@@ -29,7 +29,7 @@
         src="https://shieldcn.dev/github/stars/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=violet&amp;label=Stars&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/dt/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=cyan&amp;font=space-grotesk&amp;label=Github+Downloads&amp;mode=dark" />
@@ -37,7 +37,7 @@
         src="https://shieldcn.dev/github/dt/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=cyan&amp;mode=light&amp;font=space-grotesk&amp;label=Github+Downloads" />
     </picture>
   </a>
-  <a href="https://www.halo.run/store/apps/app-zqvrlonl">
+  <a href="https://www.halo.run/store/apps/app-zqvrlonl" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&amp;query=%24.application.status.downloadCount&amp;label=Store+Downloads&amp;theme=blue&amp;variant=secondary&amp;font=space-grotesk&amp;logo=ri%3APiDownloadBold&amp;mode=dark" />
@@ -48,7 +48,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/release/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" />
@@ -56,7 +56,7 @@
         src="https://shieldcn.dev/github/release/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Release&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/license/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" />
@@ -64,7 +64,7 @@
         src="https://shieldcn.dev/github/license/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=License&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/actions">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/actions" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/ci/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" />
@@ -72,7 +72,7 @@
         src="https://shieldcn.dev/github/ci/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=CI&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/issues">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/issues" style="color: none; text-decoration: none;>
     <picture>
       <source media="(prefers-color-scheme: dark)"
         srcset="https://shieldcn.dev/github/issues/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" />
@@ -80,7 +80,7 @@
         src="https://shieldcn.dev/github/issues/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Issues&amp;mode=light&amp;font=space-grotesk" />
     </picture>
   </a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/commits">
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/commits" style="color: none; text-decoration: none;>
     <picture>
     <source media="(prefers-color-scheme: dark)"
       srcset="https://www.shieldcn.dev/github/commits/AloneNanNan/Halo-Theme-Ethereal.svg?variant=secondary&amp;size=sm&amp;mode=dark&amp;font=space-grotesk">
@@ -96,7 +96,7 @@
 
 ---
 
-## 🖼️ 界面预览
+## 界面预览
 
 <p align="center">
   <img src="./screenshot/home.png" alt="Ethereal 主题预览" width="800" />
@@ -104,7 +104,7 @@
 
 <div align="center">
 
-| 🔗 友链 | 👥 朋友圈 | 💻 装备 | 📸 瞬间 | 📂 项目集 |
+| 友链 | 朋友圈 | 装备 | 瞬间 | 项目集 |
 | :---: | :---: | :---: | :---: | :---: |
 | ![友链预览](./screenshot/links.png) | ![朋友圈预览](./screenshot/friends.png) | ![装备预览](./screenshot/equipments.png) | ![瞬间预览](./screenshot/moments.png) | ![项目集预览](./screenshot/portfolio.png) |
 
@@ -112,7 +112,7 @@
 
 ---
 
-## ✨ 介绍
+## 介绍
 
 **Ethereal** 是一款为 [Halo 2](https://github.com/halo-dev/halo) 打造的 Fuwari 风格博客主题。它基于 [halo-theme-fuwari](https://github.com/jiewenhuang/halo-theme-fuwari)（原版 [Fuwari](https://github.com/saicaca/fuwari) 的 Halo 移植版）深度二次开发，并融合了 [Firefly](https://github.com/CuteLeaf/Firefly) 的清新美学与多种现代 UI 趋势，感谢原作与 Firefly 的开源贡献。
 
@@ -120,7 +120,7 @@
 
 ---
 
-## 🌐 演示站点
+## 演示站点
 
 | 站点 | 说明 |
 | --- | --- |
@@ -129,13 +129,13 @@
 | [BoxCat](https://blog.lipei.online/) | 主题用户 |
 | [顶呱呱的快乐](https://wuw.li/) | 主题用户 |
 
-## 📈 下载趋势
+## 下载趋势
 
 ![下载趋势图](https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&query=$.points[*].downloadCount&dateQuery=$.points[*].startDate&title=商店下载趋势&label=下载量&font=space-grotesk&icon=ri%3APiDownloadBold&xTicks=3&yTicks=10&logo=false&theme=emerald&mode=dark)
 
 ---
 
-## 📦 安装
+## 安装
 
 ### 系统要求
 
@@ -154,7 +154,7 @@
 
 ---
 
-## 🧩 功能特性
+## 功能特性
 
 ### 布局与排版
 
@@ -212,7 +212,7 @@
 
 ---
 
-## 📄 页面支持
+## 页面支持
 
 - [x] 首页、文章归档、标签/分类列表与详情
 - [x] 图库、瞬间、友情链接、朋友圈、装备、项目作品集、心愿便签、日程日历（需安装对应插件，见下方「插件支持」）
@@ -220,7 +220,7 @@
 
 ---
 
-## 🔌 插件支持
+## 插件支持
 
 Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整体验：
 
@@ -248,7 +248,7 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 
 ---
 
-## ☁️ 外部服务依赖
+## 外部服务依赖
 
 本主题以下功能依赖外部第三方服务，请在使用前了解：
 
@@ -263,7 +263,7 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 
 ---
 
-## 🏗️ 项目结构
+## 项目结构
 
 <details>
 <summary>展开查看完整目录结构</summary>
@@ -344,7 +344,7 @@ halo-theme-ethereal/
 
 ---
 
-## 🛠️ 开发
+## 开发
 
 <a href="https://github.com/AloneNanNan/halo-theme-ethereal/graphs/contributors">
   <picture>
@@ -360,31 +360,32 @@ halo-theme-ethereal/
 > 面向 AI 协作者：仓库根目录提供 [`AGENTS.md`](./AGENTS.md)，内含构建命令、目录约定、Halo/Thymeleaf 约定、常见坑与提交规范。使用 AI 编码工具（Codex / opencode / Cursor 等）贡献前请先阅读。
 >
 > 需要 **Node.js** 和 **pnpm**
-
-<a href="https://nodejs.org/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)"
-      srcset="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" />
-    <img alt="Custom badge"
-      src="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" />
-  </picture>
-</a>
-<a href="https://nodejs.org/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)"
-      srcset="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" />
-    <img alt="Custom badge"
-      src="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" />
-  </picture>
-</a>
-<a href="https://pnpm.io/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)"
+<p>
+  <a href="https://nodejs.org/" style="color: none; text-decoration: none;>
+    <picture>
+      <source media="(prefers-color-scheme: dark)"
+        srcset="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" />
+      <img alt="Custom badge"
+        src="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" />
+    </picture>
+  </a>
+  <a href="https://nodejs.org/" style="color: none; text-decoration: none;>
+    <picture>
+      <source media="(prefers-color-scheme: dark)"
+        srcset="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" />
+      <img alt="Custom badge"
+        src="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" />
+    </picture>
+  </a>
+  <a href="https://pnpm.io/" style="color: none; text-decoration: none;>
+    <picture>
+      <source media="(prefers-color-scheme: dark)"
         srcset="https://www.shieldcn.dev/badge/Package_mgr-pnpm-F69220.svg?logo=pnpm&amp;variant=branded&amp;size=sm&amp;mode=dark&amp;font=space-grotesk">
-    <img alt="Package mgr · pnpm"
+      <img alt="Package mgr · pnpm"
         src="https://www.shieldcn.dev/badge/Package_mgr-pnpm-F69220.svg?logo=pnpm&amp;variant=branded&amp;size=sm&amp;mode=light&amp;font=space-grotesk">
-  </picture>
-</a>
+    </picture>
+  </a>
+</p>
 
 ```bash
 # 克隆项目
@@ -422,7 +423,7 @@ pnpm format
 
 ---
 
-## 🙏 致谢
+## 致谢
 
 - [Halo](https://halo.run) — 优秀的 Java 博客系统
 - [Fuwari](https://github.com/saicaca/fuwari) — 原始 Astro 主题，MIT 许可
@@ -432,7 +433,7 @@ pnpm format
 
 ---
 
-## 📃 许可证
+## 许可证
 
 [MIT License](./LICENSE) © 2026 楠南NanNan
 
