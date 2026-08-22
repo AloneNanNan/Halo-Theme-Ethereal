@@ -159,7 +159,7 @@ jobs:
             exit 1
           }
           printf -v VERSION_LINE '  version: "%s"' "$BASE_VERSION"
-          sed -i "0,/^[[:space:]]*version:/s//${VERSION_LINE}/" theme.yaml
+          sed -i "0,/^[[:space:]]*version:/s#^[[:space:]]*version:.*#${VERSION_LINE}#" theme.yaml
           echo "MANUAL_RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
           echo "MANUAL_THEME_VERSION=$BASE_VERSION" >> "$GITHUB_ENV"
           echo "已使用手动输入版本构建：theme.yaml=$BASE_VERSION，Release tag=$TAG"
