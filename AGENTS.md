@@ -97,6 +97,9 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 ## 常见坑（务必注意）
 
 - **不要改 `dist/`**：它是 `pnpm package` 打出的发布 zip 产物，改无效。要改就改 `src/` 后重新构建（HTML 模板产物在 `templates/`）。
+- **Halo 模板缓存**：改完 `templates/` 后 Halo 不会自动重载，必须到后台「主题 → 重载主题」（或重新上传主题包）才生效。服务端渲染中途抛错会表现为**浏览器一直转圈（响应流截断）而非报错页**；此时用 curl 抓页面看是否以 `</html>` 结尾、并到日志搜 `TemplateProcessingException` 定位。直接 `>` 截断 `halo.log` 会因写入偏移错位产生空字节，要用 `strings` 命令读取。
+- **Thymeleaf 同元素属性优先级：`th:if` 先于自身 `th:with` 执行**。依赖本元素 `th:with` 定义的变量不能直接放在同元素的 `th:if` 里（未定义时 SpEL 按 null 比较 → 恒 false，元素静默消失）。解法见 `MainGridLayout.astro` / timeline·skills 分页：外层包一个 `th:with` + `th:remove="tag"` 的元素先算变量，内层元素再写 `th:if`。同理，变量出了定义它的元素作用域即失效，跨块使用要么放公共祖先上、要么在目标元素重新计算。
+- **Thymeleaf 工具方法与类型坑**：`#strings.toInteger` / `#numbers.createInteger` / `#lists.subList` **都不存在**——字符串转数字用 `#conversions.convert(x, 'java.lang.Integer')`，列表切片用 List 自身的 `list.subList(from, to)`；`param.xxx` 是 `String[]` 数组，取值用 `param.xxx[0]` 并先判空和 `matches '\d+'`；FormKit number 字段存出来的可能是字符串，做算术前必须转类型。
 - **Tailwind 任意值里的 `calc(.../2)` 的 `/` 会被解析成修饰符而无法生成**。需要除法时改用等价的固定单位（如 `top-2`、`top-0.5`），或把完整 `calc()` 写进 `is:global` 的 `<style>` 块。
 - **带 `src={...}` / 属性声明的 `<script>` 会被当 `is:inline` 处理**，无法使用 TS/包导入。需要包导入的脚本务必显式加 `is:inline`，或改为模块脚本。
 - **Halo FormKit 已知坑**：互斥 `if` 条件的同类型字段必须加唯一 `key`，否则 Vue 会复用组件实例导致设置值丢失（`settings.yaml` 里已有先例）。

@@ -1545,192 +1545,217 @@ spec:
                   aspectRatio: "1/1"
                   value: ""
                   help: "上传支付宝收款二维码图片（建议 1:1 正方形）"
-    - group: friends
-      label: 朋友圈
+    - group: extendPages
+      label: 扩展页面
       formSchema:
-        - $formkit: number
-          name: pageSize
-          label: 每次加载数量
-          value: 30
-          min: 6
-          max: 100
-          step: 6
-          help: "点击「加载更多」按钮时，每次加载的动态数量"
-        - $formkit: number
-          name: fetchLimit
-          label: 拉取总条数
-          value: 20
-          min: 10
-          max: 100
-          step: 10
-          help: "从链接管理插件拉取的动态总条数，最大100条。建议设置大于「每次加载数量」"
-        - $formkit: switch
-          name: enable_random_fish
-          label: 显示随机钓鱼按钮
-          value: true
-          help: "在朋友圈页面标题右侧显示随机钓鱼按钮，点击随机跳转到一个朋友圈文章"
-        - $formkit: textarea
-          name: blacklist
-          label: 屏蔽列表
-          value: ""
-          help: "要屏蔽的博主名称，每行一个。匹配到的动态将不会在朋友圈显示"
-    - group: timeline
-      label: 时间轴
-      formSchema:
-        - $formkit: text
-          name: subtitle
-          label: 副标题
-          value: "我的成长历程和重要里程碑"
-          help: "显示在时间轴页面标题下方，留空则使用默认文案"
         - $formkit: group
-          name: entries
-          label: 时间轴条目
+          name: friends
+          label: 朋友圈页面
+          help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
           children:
-            - $formkit: array
-              name: items
-              label: 条目
-              help: "按时间顺序添加条目（建议新的在前）。开始/结束时间用日期选择器选择，结束时间留空表示「至今」"
+            - $formkit: number
+              name: pageSize
+              label: 每次加载数量
+              value: 30
+              min: 6
+              max: 100
+              step: 6
+              help: "点击「加载更多」按钮时，每次加载的动态数量"
+            - $formkit: number
+              name: fetchLimit
+              label: 拉取总条数
+              value: 20
+              min: 10
+              max: 100
+              step: 10
+              help: "从链接管理插件拉取的动态总条数，最大100条。建议设置大于「每次加载数量」"
+            - $formkit: switch
+              name: enable_random_fish
+              label: 显示随机钓鱼按钮
+              value: true
+              help: "在朋友圈页面标题右侧显示随机钓鱼按钮，点击随机跳转到一个朋友圈文章"
+            - $formkit: textarea
+              name: blacklist
+              label: 屏蔽列表
+              value: ""
+              help: "要屏蔽的博主名称，每行一个。匹配到的动态将不会在朋友圈显示"
+        - $formkit: group
+          name: timeline
+          label: 时间轴页面
+          help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
+          children:
+            - $formkit: text
+              name: subtitle
+              label: 副标题
+              value: "我的成长历程和重要里程碑"
+              help: "显示在时间轴页面标题下方，留空则使用默认文案"
+            - $formkit: number
+              name: pageSize
+              label: 每页数量
+              value: 10
+              min: 1
+              max: 50
+              step: 1
+              help: "每页显示的时间轴条目数量，设为 0 或留空则不分页"
+            - $formkit: group
+              name: entries
+              label: 时间轴条目
               children:
-                - $formkit: text
-                  name: title
-                  label: 标题
-                  validation: required
-                - $formkit: select
-                  name: type
-                  label: 类型
-                  value: education
-                  options:
-                    - label: 教育经历
+                - $formkit: array
+                  name: items
+                  label: 条目
+                  help: "按时间顺序添加条目（建议新的在前）。开始/结束时间用日期选择器选择，结束时间留空表示「至今」"
+                  children:
+                    - $formkit: text
+                      name: title
+                      label: 标题
+                      validation: required
+                    - $formkit: select
+                      name: type
+                      label: 类型
                       value: education
-                    - label: 工作经历
-                      value: work
-                    - label: 项目经历
-                      value: project
-                    - label: 成就荣誉
-                      value: achievement
-                - $formkit: textarea
-                  name: description
-                  label: 描述
-                - $formkit: date
-                  name: startDate
-                  label: 开始时间
-                  help: "选择开始日期，留空可只填结束时间"
-                - $formkit: date
-                  name: endDate
-                  label: 结束时间
-                  help: "留空表示「至今」"
-                - $formkit: text
-                  name: location
-                  label: 地点
-                - $formkit: text
-                  name: organization
-                  label: 组织 / 机构
-                - $formkit: text
-                  name: position
-                  label: 职位 / 角色
-                - $formkit: textarea
-                  name: skills
-                  label: 技能标签
-                  help: "每行一个"
-                - $formkit: textarea
-                  name: achievements
-                  label: 成就 / 亮点
-                  help: "每行一个"
-                - $formkit: textarea
-                  name: links
-                  label: 相关链接
-                  help: "每行一条，支持「名称|链接」格式（如 GitHub|https://github.com），也可直接填链接；统一在新窗口打开"
-                - $formkit: iconify
-                  name: icon
-                  label: 图标
-                  format: svg
-                  help: "卡片图标，留空则按类型自动匹配"
-                - $formkit: color
-                  name: color
-                  label: 主题色
-                  value: ""
-                  help: "节点与卡片图标的颜色，留空使用主题色"
-                - $formkit: switch
-                  name: featured
-                  label: 精选
-                  value: false
-                  help: "开启后在标题旁显示星标"
-    - group: skills
-      label: 技能
-      formSchema:
-        - $formkit: text
-          name: subtitle
-          label: 副标题
-          value: "我的技术技能和专业知识"
-          help: "显示在技能页面标题下方，留空则使用默认文案"
+                      options:
+                        - label: 教育经历
+                          value: education
+                        - label: 工作经历
+                          value: work
+                        - label: 项目经历
+                          value: project
+                        - label: 成就荣誉
+                          value: achievement
+                    - $formkit: textarea
+                      name: description
+                      label: 描述
+                    - $formkit: date
+                      name: startDate
+                      label: 开始时间
+                      help: "选择开始日期，留空可只填结束时间"
+                    - $formkit: date
+                      name: endDate
+                      label: 结束时间
+                      help: "留空表示「至今」"
+                    - $formkit: text
+                      name: location
+                      label: 地点
+                    - $formkit: text
+                      name: organization
+                      label: 组织 / 机构
+                    - $formkit: text
+                      name: position
+                      label: 职位 / 角色
+                    - $formkit: textarea
+                      name: skills
+                      label: 技能标签
+                      help: "每行一个"
+                    - $formkit: textarea
+                      name: achievements
+                      label: 成就 / 亮点
+                      help: "每行一个"
+                    - $formkit: textarea
+                      name: links
+                      label: 相关链接
+                      help: "每行一条，支持「名称|链接」格式（如 GitHub|https://github.com），也可直接填链接；统一在新窗口打开"
+                    - $formkit: iconify
+                      name: icon
+                      label: 图标
+                      format: svg
+                      help: "卡片图标，留空则按类型自动匹配"
+                    - $formkit: color
+                      name: color
+                      label: 主题色
+                      value: ""
+                      help: "节点与卡片图标的颜色，留空使用主题色"
+                    - $formkit: switch
+                      name: featured
+                      label: 精选
+                      value: false
+                      help: "开启后在标题旁显示星标"
         - $formkit: group
-          name: entries
-          label: 技能列表
+          name: skills
+          label: 技能页面
+          help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
           children:
-            - $formkit: array
-              name: items
-              label: 技能
-              help: "添加你的技能，每项生成一张卡片"
+            - $formkit: text
+              name: subtitle
+              label: 副标题
+              value: "我的技术技能和专业知识"
+              help: "显示在技能页面标题下方，留空则使用默认文案"
+            - $formkit: number
+              name: pageSize
+              label: 每页数量
+              value: 10
+              min: 1
+              max: 50
+              step: 1
+              help: "每页显示的技能卡片数量，设为 0 或留空则不分页"
+            - $formkit: group
+              name: entries
+              label: 技能列表
               children:
-                - $formkit: text
-                  name: name
-                  label: 技能名称
-                  validation: required
-                - $formkit: textarea
-                  name: description
-                  label: 描述
-                - $formkit: iconify
-                  name: icon
-                  label: 图标
-                  format: svg
-                  help: "技能图标，留空则显示名称首字母"
-                - $formkit: select
-                  name: category
-                  label: 分类
-                  value: frontend
-                  options:
-                    - label: 前端开发
+                - $formkit: array
+                  name: items
+                  label: 技能
+                  help: "添加你的技能，每项生成一张卡片"
+                  children:
+                    - $formkit: text
+                      name: name
+                      label: 技能名称
+                      validation: required
+                    - $formkit: textarea
+                      name: description
+                      label: 描述
+                    - $formkit: iconify
+                      name: icon
+                      label: 图标
+                      format: svg
+                      help: "技能图标，留空则显示名称首字母"
+                    - $formkit: select
+                      name: category
+                      label: 分类
                       value: frontend
-                    - label: 后端开发
-                      value: backend
-                    - label: 数据库
-                      value: database
-                    - label: 开发工具
-                      value: tools
-                    - label: 其他技能
-                      value: other
-                - $formkit: select
-                  name: level
-                  label: 熟练度
-                  value: intermediate
-                  options:
-                    - label: 入门
-                      value: beginner
-                    - label: 中级
+                      options:
+                        - label: 前端开发
+                          value: frontend
+                        - label: 后端开发
+                          value: backend
+                        - label: 数据库
+                          value: database
+                        - label: 开发工具
+                          value: tools
+                        - label: 其他技能
+                          value: other
+                    - $formkit: select
+                      name: level
+                      label: 熟练度
                       value: intermediate
-                    - label: 高级
-                      value: advanced
-                    - label: 专家
-                      value: expert
-                - $formkit: number
-                  name: years
-                  label: 经验（年）
-                  value: 0
-                  min: 0
-                  max: 50
-                  step: 1
-                - $formkit: number
-                  name: months
-                  label: 经验（月）
-                  value: 0
-                  min: 0
-                  max: 11
-                  step: 1
-                - $formkit: color
-                  name: color
-                  label: 主题色
-                  value: ""
-                  help: "图标底色与进度条颜色，留空使用主题色"
+                      options:
+                        - label: 入门
+                          value: beginner
+                        - label: 中级
+                          value: intermediate
+                        - label: 高级
+                          value: advanced
+                        - label: 专家
+                          value: expert
+                    - $formkit: number
+                      name: years
+                      label: 经验（年）
+                      value: 0
+                      min: 0
+                      max: 50
+                      step: 1
+                    - $formkit: number
+                      name: months
+                      label: 经验（月）
+                      value: 0
+                      min: 0
+                      max: 11
+                      step: 1
+                    - $formkit: color
+                      name: color
+                      label: 主题色
+                      value: ""
+                      help: "图标底色与进度条颜色，留空使用主题色"
     - group: footer
       label: 页脚
       formSchema:

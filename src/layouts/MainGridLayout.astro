@@ -553,7 +553,7 @@ const rightSidebarHasContentExpr = [
     </script>
 
     <script
-      th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
+      th:if="${theme.config?.extendPages?.friends?.enable_random_fish == null || theme.config?.extendPages?.friends?.enable_random_fish}"
       is:inline
     >
       // 随机钓鱼 - 点击按钮鱼钩摇摆 1.5 秒后随机跳转朋友圈文章
