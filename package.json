@@ -9,11 +9,12 @@
     "build": "astro build && pnpm package",
     "build:pkg": "pnpm build",
     "build:only": "astro build",
+    "readme:halo": "node scripts/convert-readme.mjs",
     "strip:comments": "node scripts/strip-html-comments.mjs",
     "package": "node scripts/package-theme.mjs",
     "astro": "astro",
     "check": "astro check",
-    "format": "prettier --write .",
+    "format": "prettier --write . && pnpm readme:halo",
     "prepare": "husky"
   },
   "prettier": {
@@ -66,6 +67,10 @@
     "unplugin-icons": "^23.0.1"
   },
   "lint-staged": {
-    "*.{astro,css,js,mjs,cjs,ts,svelte,json,yaml,yml,md}": "prettier --write --ignore-unknown"
+    "*.{astro,css,js,mjs,cjs,ts,svelte,json,yaml,yml,md}": "prettier --write --ignore-unknown",
+    "README.md": [
+      "prettier --write --ignore-unknown",
+      "node scripts/convert-readme.mjs"
+    ]
   }
 }

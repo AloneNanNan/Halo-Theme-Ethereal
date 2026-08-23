@@ -2,6 +2,8 @@
 dist/
 # 根目录构建产物（zip 由 CI artifact / GitHub Release 提供）
 /*.zip
+# 生成产物：由 scripts/convert-readme.mjs 从 README.md 转换（Halo 应用市场用），勿手改
+/README-Halo.md
 # generated types
 .astro/
 

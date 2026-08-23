@@ -27,13 +27,14 @@ pnpm install
 
 ### 常用命令
 
-| 命令               | 作用                                      |
-| ------------------ | ----------------------------------------- |
-| `pnpm dev`         | 开发模式，监听 `src/` 文件变更自动重建    |
-| `pnpm build:only`  | 仅执行 `astro build`，输出到 `templates/` |
-| `pnpm build`       | 完整构建 + 打包发布 zip（输出到 `dist/`） |
-| `pnpm astro check` | 类型检查，提交前务必确认 0 error          |
-| `pnpm format`      | prettier 格式化全项目                     |
+| 命令               | 作用                                           |
+| ------------------ | ---------------------------------------------- |
+| `pnpm dev`         | 开发模式，监听 `src/` 文件变更自动重建         |
+| `pnpm build:only`  | 仅执行 `astro build`，输出到 `templates/`      |
+| `pnpm build`       | 完整构建 + 打包发布 zip（输出到 `dist/`）      |
+| `pnpm astro check` | 类型检查，提交前务必确认 0 error               |
+| `pnpm format`      | prettier 格式化全项目，随后刷新 README-Halo.md |
+| `pnpm readme:halo` | 单独触发 README→README-Halo 转换               |
 
 ## 目录速览
 
@@ -57,6 +58,8 @@ pnpm install
 ### `src/` 是唯一真源
 
 `templates/` 是 `astro build` 的产物，`dist/` 是 `pnpm package` 打出的发布 zip，`public/assets/` 是经典脚本的编译产物，**三者都是构建生成，手动修改无效**。要改就改 `src/` 后重新构建。
+
+同理，根目录 `README-Halo.md` 是 `scripts/convert-readme.mjs` 从 README.md 生成的降级版（Halo 应用市场渲染器不支持 `<picture>` 徽章），已进 `.gitignore` 不提交、勿手改；改徽章只改 README.md 源文件后跑 `pnpm readme:halo` 重新生成。
 
 经典脚本请改 `src/scripts/assets/*.ts` 源码（带 `// @ts-nocheck` 的 legacy 脚本也已迁入，统一用 `.ts` 后缀），不要直接编辑 `public/assets/*.js`。
 
@@ -127,7 +130,7 @@ pnpm format        # 统一代码风格
 - 关联的 issue 编号写在括号里，多个用空格分隔（如 `(#17 #19)`）
 - 复杂改动可在提交信息正文用 `-` 逐项列出
 
-> 仓库配置了 husky + lint-staged，提交时会自动用 prettier 格式化暂存文件；若格式化产生了改动，请重新 `git add` 后再提交。
+> 仓库配置了 husky + lint-staged，提交时会自动用 prettier 格式化暂存文件；若格式化产生了改动，请重新 `git add` 后再提交。提交涉及 README.md 时还会自动重新生成本地 README-Halo.md（生成产物，不进提交）。
 
 示例：
 
