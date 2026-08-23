@@ -87,11 +87,20 @@ import PageHeader from "../components/control/PageHeader.astro";
   <!-- 注：类型计数用字面量投影（type == 'literal'），勿在 items.![...] 投影内引用
        param（Map 条目会遮蔽上下文变量导致 #lists.contains(null,...) 抛异常） -->
   <section
-    th:with="items=${theme.config?.timeline?.entries?.items},
+    th:with="items=${theme.config?.extendPages?.timeline?.entries?.items},
       edCount=${items != null ? #aggregates.sum(items.![type == 'education' ? 1 : 0]) : 0},
       workCount=${items != null ? #aggregates.sum(items.![type == 'work' ? 1 : 0]) : 0},
       projCount=${items != null ? #aggregates.sum(items.![type == 'project' ? 1 : 0]) : 0},
-      achCount=${items != null ? #aggregates.sum(items.![type == 'achievement' ? 1 : 0]) : 0}"
+      achCount=${items != null ? #aggregates.sum(items.![type == 'achievement' ? 1 : 0]) : 0},
+      pageSize=${theme.config?.extendPages?.timeline?.pageSize != null ? #conversions.convert(theme.config?.extendPages?.timeline?.pageSize, 'java.lang.Integer') : 10},
+      totalSize=${items != null ? #lists.size(items) : 0},
+      hasFilter=${not #lists.isEmpty(param.type)},
+      totalPages=${not hasFilter and pageSize > 0 ? (totalSize + pageSize - 1) / pageSize : 1},
+      rawPage=${param.page != null and param.page.length > 0 and param.page[0] matches '\d+' ? #conversions.convert(param.page[0], 'java.lang.Integer') : 1},
+      curPage=${rawPage > totalPages ? totalPages : (rawPage < 1 ? 1 : rawPage)},
+      startIndex=${(curPage - 1) * pageSize},
+      endIndex=${startIndex + pageSize > totalSize ? totalSize : startIndex + pageSize},
+      pagedItems=${not hasFilter and pageSize > 0 and totalSize > 0 ? items.subList(startIndex < 0 ? 0 : startIndex, endIndex > totalSize ? totalSize : endIndex) : items}"
     class="card-base onload-animation mb-4 px-6 py-6 md:px-9"
   >
     <!-- 页头 -->
@@ -102,7 +111,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       iconClass="icon-[mingcute--timeline-fill]"
       labelExpr="#{page.timeline.title}"
       label="时间轴"
-      subExpr="${theme.config?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
+      subExpr="${theme.config?.extendPages?.timeline?.subtitle ?: #messages.msg('page.timeline.subtitle')}"
       sub="我的成长历程和重要里程碑"
       filteredExpr="${not #lists.isEmpty(param.type)}"
     />
@@ -114,7 +123,6 @@ import PageHeader from "../components/control/PageHeader.astro";
       class="mb-8 flex flex-wrap gap-2"
       allHrefExpr="@{${singlePage.status.permalink}}"
       allActiveExpr="#lists.isEmpty(param.type)"
-      allCountExpr="${#lists.size(items)}"
       items={[
         {
           hrefExpr: "@{${singlePage.status.permalink}(type='education')}",
@@ -150,7 +158,7 @@ import PageHeader from "../components/control/PageHeader.astro";
     <!-- 时间轴列表（按当前 type 参数在服务端过滤） -->
     <div class="timeline-list">
       <div
-        th:each="item, iterStat : ${items}"
+        th:each="item, iterStat : ${pagedItems}"
         th:if="${#lists.isEmpty(param.type) or #lists.contains(param.type, item.type)}"
         th:with="typeIcon=${item.type == 'education' ? 'icon-[material-symbols--school]' : (item.type == 'work' ? 'icon-[material-symbols--work]' : (item.type == 'project' ? 'icon-[material-symbols--code]' : (item.type == 'achievement' ? 'icon-[material-symbols--emoji-events]' : 'icon-[material-symbols--event]')))}, typeText=${item.type == 'education' ? #messages.msg('page.timeline.education') : (item.type == 'work' ? #messages.msg('page.timeline.work') : (item.type == 'project' ? #messages.msg('page.timeline.project') : (item.type == 'achievement' ? #messages.msg('page.timeline.achievement') : '')))}"
         class="timeline-entry onload-animation"
@@ -336,6 +344,106 @@ import PageHeader from "../components/control/PageHeader.astro";
       </p>
     </div>
   </section>
+
+  <!-- 分页（与 Pagination.astro 同样式，位于卡片外；URL 用 ?page=N 并保留筛选参数。
+        注意：th:if 先于同元素的 th:with 执行，故变量计算放在外层包装元素上；
+        有筛选参数时 totalPages 恒为 1，分页自动隐藏（筛选视图展示全部匹配项） -->
+  <div
+    th:with="items=${theme.config?.extendPages?.timeline?.entries?.items},
+      pageSize=${theme.config?.extendPages?.timeline?.pageSize != null ? #conversions.convert(theme.config?.extendPages?.timeline?.pageSize, 'java.lang.Integer') : 10},
+      totalSize=${items != null ? #lists.size(items) : 0},
+      hasFilter=${not #lists.isEmpty(param.type)},
+      totalPages=${not hasFilter and pageSize > 0 ? (totalSize + pageSize - 1) / pageSize : 1},
+      rawPage=${param.page != null and param.page.length > 0 and param.page[0] matches '\d+' ? #conversions.convert(param.page[0], 'java.lang.Integer') : 1},
+      curPage=${rawPage > totalPages ? totalPages : (rawPage < 1 ? 1 : rawPage)},
+      sep=${not #lists.isEmpty(param.type) ? '?type=' + param.type[0] + '&' : '?'},
+      windowStart=${curPage le 3 ? 1 : (curPage ge totalPages - 2 ? (totalPages - 4 gt 1 ? totalPages - 4 : 1) : curPage - 2)},
+      windowEnd=${curPage le 3 ? (totalPages lt 5 ? totalPages : 5) : (curPage ge totalPages - 2 ? totalPages : curPage + 2)}"
+    th:remove="tag"
+  >
+    <nav
+      th:if="${totalPages gt 1}"
+      class="mb-4 onload-animation flex flex-row justify-center gap-3"
+      th:aria-label="#{pagination.label}"
+      aria-label="Pagination"
+    >
+      <a
+        th:href="${curPage gt 1 ? singlePage.status.permalink + sep + 'page=' + (curPage - 1) : ''}"
+        th:classappend="${curPage gt 1 ? '' : ' disabled'}"
+        th:aria-label="#{pagination.previous}"
+        class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
+      >
+        <span
+          class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"
+        ></span>
+      </a>
+      <div
+        class="flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300"
+      >
+        <a
+          th:if="${windowStart gt 1}"
+          th:href="${singlePage.status.permalink + sep + 'page=1'}"
+          th:aria-label="#{pagination.page(1)}"
+          class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
+          >1</a
+        >
+        <a
+          th:if="${windowStart == 3}"
+          th:href="${singlePage.status.permalink + sep + 'page=2'}"
+          th:aria-label="#{pagination.page(2)}"
+          class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
+          >2</a
+        >
+        <span
+          th:if="${windowStart gt 3}"
+          class="icon-[material-symbols--more-horiz] mx-1"></span>
+        <span
+          class="contents"
+          th:each="pn : ${#numbers.sequence(windowStart, windowEnd)}"
+        >
+          <div
+            th:if="${pn == curPage}"
+            class="flex h-11 w-11 items-center justify-center rounded-lg bg-(--primary) font-bold text-white dark:text-black/70"
+            th:text="${pn}"
+          >
+            1
+          </div>
+          <a
+            th:unless="${pn == curPage}"
+            th:href="${singlePage.status.permalink + sep + 'page=' + pn}"
+            th:aria-label="#{pagination.page(${pn})}"
+            class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
+            th:text="${pn}">2</a
+          >
+        </span>
+        <span
+          th:if="${windowEnd lt totalPages - 2}"
+          class="icon-[material-symbols--more-horiz] mx-1"></span>
+        <a
+          th:if="${windowEnd == totalPages - 2}"
+          th:href="${singlePage.status.permalink + sep + 'page=' + (totalPages - 1)}"
+          th:aria-label="#{pagination.page(${totalPages - 1})}"
+          class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
+          th:text="${totalPages - 1}"></a>
+        <a
+          th:if="${windowEnd lt totalPages}"
+          th:href="${singlePage.status.permalink + sep + 'page=' + totalPages}"
+          th:aria-label="#{pagination.page(${totalPages})}"
+          class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
+          th:text="${totalPages}"></a>
+      </div>
+      <a
+        th:href="${curPage lt totalPages ? singlePage.status.permalink + sep + 'page=' + (curPage + 1) : ''}"
+        th:classappend="${curPage lt totalPages ? '' : ' disabled'}"
+        th:aria-label="#{pagination.next}"
+        class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
+      >
+        <span
+          class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"
+        ></span>
+      </a>
+    </nav>
+  </div>
 
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/timeline.js?v=${ASSET_VERSION}`}

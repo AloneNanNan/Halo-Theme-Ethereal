@@ -5,13 +5,18 @@ export interface ThemeConfig {
   layout: Layout;
   style: Style;
   sidebar: Sidebar;
-  friends: Friends;
-  timeline: Timeline;
-  skills: Skills;
+  extendPages: ExtendPages;
   post: Post;
   footer: Footer;
   links: Links;
   external_link: ExternalLink;
+}
+
+/** 扩展页面设置：朋友圈 / 时间轴 / 技能（后台未配置的子组可能缺失，均视为可选） */
+export interface ExtendPages {
+  friends?: Friends;
+  timeline?: Timeline;
+  skills?: Skills;
 }
 
 /** 欢迎弹窗配置 */
@@ -281,6 +286,8 @@ export interface Friends {
 // ========== 时间轴设置 ==========
 export interface Timeline {
   subtitle?: string;
+  /** 每页条目数量，0 或不设置则不分页 */
+  pageSize?: number;
   entries?: TimelineEntries;
 }
 
@@ -308,6 +315,8 @@ export interface TimelineItem {
 // ========== 技能设置 ==========
 export interface Skills {
   subtitle?: string;
+  /** 每页卡片数量，0 或不设置则不分页 */
+  pageSize?: number;
   entries?: SkillEntries;
 }
 

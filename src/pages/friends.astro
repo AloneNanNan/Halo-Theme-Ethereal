@@ -29,7 +29,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
   <div
     th:remove="tag"
-    th:with="allItems = ${linkFeedFinder.list({limit: theme.config?.friends.fetchLimit})}"
+    th:with="allItems = ${linkFeedFinder.list({limit: theme.config?.extendPages?.friends?.fetchLimit})}"
   >
     <!-- 单个白板卡片包裹全部内容 -->
     <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
@@ -59,7 +59,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </div>
         </div>
         <button
-          th:if="${theme.config?.friends.enable_random_fish == null || theme.config?.friends.enable_random_fish}"
+          th:if="${theme.config?.extendPages?.friends?.enable_random_fish == null || theme.config?.extendPages?.friends?.enable_random_fish}"
           type="button"
           id="random-fish-btn"
           class="random-fish-btn btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
@@ -80,7 +80,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         th:if="${not #lists.isEmpty(allItems.items)}"
         id="friends-timeline"
         class="friends-timeline"
-        th:attr="data-batch-size=${theme.config?.friends.pageSize ?: 30}, data-blacklist=${theme.config?.friends.blacklist ?: ''}"
+        th:attr="data-batch-size=${theme.config?.extendPages?.friends?.pageSize ?: 30}, data-blacklist=${theme.config?.extendPages?.friends?.blacklist ?: ''}"
       >
         <div th:remove="tag" th:each="item, iterStat : ${allItems.items}">
           <div
