@@ -17,12 +17,13 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**。它先用 Astro �
 
 ## 构建与校验命令
 
-| 命令               | 作用                                                      |
-| ------------------ | --------------------------------------------------------- |
-| `pnpm build:only`  | 仅执行 `astro build`，输出到 `templates/`（开发调试常用） |
-| `pnpm build`       | `astro build` + `pnpm package`（打成发布 zip）            |
-| `pnpm astro check` | 类型检查，务必在改动后运行确认 0 error                    |
-| `pnpm format`      | prettier 格式化全项目                                     |
+| 命令               | 作用                                                       |
+| ------------------ | ---------------------------------------------------------- |
+| `pnpm build:only`  | 仅执行 `astro build`，输出到 `templates/`（开发调试常用）  |
+| `pnpm build`       | `astro build` + `pnpm package`（打成发布 zip）             |
+| `pnpm astro check` | 类型检查，务必在改动后运行确认 0 error                     |
+| `pnpm format`      | prettier 格式化全项目，随后自动刷新 README-Halo.md         |
+| `pnpm readme:halo` | 单独触发 README→README-Halo 转换（见「README-Halo 转换」） |
 
 **重要：改完代码后运行的校验是 `pnpm astro check` 和 `pnpm build:only`。** 两类产物的位置不同：`astro build` 的 HTML 模板输出到 `templates/`；`pnpm package` 打出的发布 zip 输出到 `dist/`。两者都是构建生成、勿手动编辑——要改就改 `src/` 后重新构建。
 
@@ -39,6 +40,15 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - `_` 前缀文件（如 `_theme-config.ts`）是被 import 的共享模块，不是独立入口，esbuild 会内联进各入口。
 - 产物带 `/*__ETHEMEAL_MINIFIED__*/` 标记；build:done 只压缩白名单内 public 产物，不碰 Astro/Vite 的 hashed module 文件。
 - **nodemon 的 ext 不含 js 是有意的**：编译产物写入 public/ 不会触发重建（防编译→重建死循环）。不要给 nodemon.json 加 js；改脚本源码统一用 `.ts` 后缀。
+
+## README-Halo 转换
+
+Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色徽章），`scripts/convert-readme.mjs` 把根目录 README.md 转换为降级版 README-Halo.md（每个 `<picture>` 块替换为内部首个 `<img>`，即浅色徽章）。
+
+- **README-Halo.md 是生成产物**：已进 `.gitignore` 与 `.prettierignore`，不提交、勿手改；改徽章只改 README.md 源文件后重新转换。
+- **触发方式三选一，产物一致**：`pnpm readme:halo` 单独触发；`pnpm format` 链尾自动刷新；提交涉及 README.md 时 pre-commit（lint-staged 的 `README.md` 任务）自动重新生成本地文件。
+- 脚本路径基于 `import.meta.url` 解析（pnpm 脚本固定以包根为 CWD，按 `../README.md` 相对 CWD 写会指向项目外），任意目录下均可运行。
+- 该文件仅供发布时手工粘贴到 halo.run 开发者后台的应用详情页——商店版本说明走 GitHub Release body（ci.yaml 用 release.md），与它无关。
 
 ## 目录结构速览
 

@@ -12,18 +12,18 @@
 </p>
 
 <p align="center">
-  <a href="https://www.halo.run/"><img alt="badge" src="https://shieldcn.dev/badge/Halo-%E2%89%A5%202.25-0a84f7.svg?mode=light&amp;font=space-grotesk&amp;logo=ri%3APiPackageDuotone" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal"><img alt="GitHub Stars" src="https://shieldcn.dev/github/stars/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=violet&amp;label=Stars&amp;mode=light&amp;font=space-grotesk" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><img alt="Github Downloads" src="https://shieldcn.dev/github/dt/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=cyan&amp;mode=light&amp;font=space-grotesk&amp;label=Github+Downloads" /></a>
-  <a href="https://www.halo.run/store/apps/app-zqvrlonl"><img alt="Store Downloads" src="https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&amp;query=%24.application.status.downloadCount&amp;label=Store+Downloads&amp;theme=blue&amp;variant=secondary&amp;font=space-grotesk&amp;logo=ri%3APiDownloadBold&amp;mode=light" /></a>
+  <a href="https://www.halo.run/"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/badge/Halo-%E2%89%A5%202.25-0a84f7.svg?font=space-grotesk&amp;logo=ri%3APiPackageDuotone&amp;mode=dark" /><img alt="Halo Version"src="https://shieldcn.dev/badge/Halo-%E2%89%A5%202.25-0a84f7.svg?mode=light&amp;font=space-grotesk&amp;logo=ri%3APiPackageDuotone" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/stars/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=violet&amp;font=space-grotesk&amp;mode=dark" /><img alt="GitHub Stars"src="https://shieldcn.dev/github/stars/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=violet&amp;label=Stars&amp;mode=light&amp;font=space-grotesk" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/downloads/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=cyan&amp;font=space-grotesk&amp;label=Github+Downloads&amp;mode=dark" /><img alt="Github Downloads"src="https://shieldcn.dev/github/downloads/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;theme=cyan&amp;mode=light&amp;font=space-grotesk&amp;label=Github+Downloads" /></picture></a>
+  <a href="https://www.halo.run/store/apps/app-zqvrlonl"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&amp;query=%24.application.status.downloadCount&amp;label=Store+Downloads&amp;theme=blue&amp;variant=secondary&amp;font=space-grotesk&amp;logo=ri%3APiDownloadBold&amp;mode=dark" /><img alt="Store Downloads"src="https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fwww.halo.run%2Fapis%2Fapi.store.halo.run%2Fv1alpha1%2Fapplications%2Fapp-zqvrlonl&amp;query=%24.application.status.downloadCount&amp;label=Store+Downloads&amp;theme=blue&amp;variant=secondary&amp;font=space-grotesk&amp;logo=ri%3APiDownloadBold&amp;mode=light" /></picture></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><img alt="Release" src="https://shieldcn.dev/github/release/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Release&amp;mode=light&amp;font=space-grotesk" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE"><img alt="MIT License" src="https://shieldcn.dev/github/license/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=License&amp;mode=light&amp;font=space-grotesk" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/actions"><img alt="CI" src="https://shieldcn.dev/github/ci/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=CI&amp;mode=light&amp;font=space-grotesk" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/issues"><img alt="issues" src="https://shieldcn.dev/github/issues/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Issues&amp;mode=light&amp;font=space-grotesk" /></a>
-  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/commits"><img alt="Commits" src="https://www.shieldcn.dev/github/commits/AloneNanNan/Halo-Theme-Ethereal.svg?variant=secondary&amp;label=Commits&amp;mode=light&amp;font=space-grotesk"></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/releases"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/release/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="Release"src="https://shieldcn.dev/github/release/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Release&amp;mode=light&amp;font=space-grotesk" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/blob/main/LICENSE"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/license/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="MIT License"src="https://shieldcn.dev/github/license/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=License&amp;mode=light&amp;font=space-grotesk" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/actions"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/ci/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="CI"src="https://shieldcn.dev/github/ci/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=CI&amp;mode=light&amp;font=space-grotesk" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/issues"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/github/issues/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="issues"src="https://shieldcn.dev/github/issues/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;label=Issues&amp;mode=light&amp;font=space-grotesk" /></picture></a>
+  <a href="https://github.com/AloneNanNan/halo-theme-ethereal/commits"><picture><source media="(prefers-color-scheme: dark)"srcset="https://www.shieldcn.dev/github/commits/AloneNanNan/Halo-Theme-Ethereal.svg?variant=secondary&amp;mode=dark&amp;font=space-grotesk"><img alt="Commits"src="https://www.shieldcn.dev/github/commits/AloneNanNan/Halo-Theme-Ethereal.svg?variant=secondary&amp;label=Commits&amp;mode=light&amp;font=space-grotesk"></picture></a>
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@
 ## 下载趋势
 
 <p align="center">
-    <img alt="Store Downloads Trend" src="https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&amp;query=$.points[*].downloadCount&amp;dateQuery=$.points[*].startDate&amp;title=商店下载趋势&amp;label=下载量&amp;font=space-grotesk&amp;icon=ri%3APiDownloadBold&amp;xTicks=3&amp;yTicks=10&amp;logo=false&amp;theme=emerald&amp;mode=light" />
+    <picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&amp;query=$.points[*].downloadCount&amp;dateQuery=$.points[*]startDate&amp;title=商店下载趋势&amp;label=下载量&amp;font=space-grotesk&amp;icon=ri%3APiDownloadBold&amp;xTicks=3&amp;yTicks=10&amp;logo=false&amp;theme=emerald&amp;mode=dark" /><img alt="Store Downloads Trend"src="https://shieldcn.dev/chart/json.svg?url=https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/app-zqvrlonl/download-trends&amp;query=$.points[*].downloadCount&amp;dateQuery=$.points[*].startDate&amp;title=商店下载趋势&amp;label=下载量&amp;font=space-grotesk&amp;icon=ri%3APiDownloadBold&amp;xTicks=3&amp;yTicks=10&amp;logo=false&amp;theme=emerald&amp;mode=light" /></picture>
 </p>
 
 ---
@@ -222,6 +222,7 @@ halo-theme-ethereal/
 │   ├── fragments/               # Halo 页面片段
 │   └── gateway_fragments/       # 网关认证片段
 ├── screenshot/                  # 主题截图
+├── scripts/                     # 构建脚本
 ├── src/
 │   ├── components/              # 组件
 │   │   ├── *.astro              # Astro 静态组件（Footer、Navbar、PostCard 等）
@@ -289,7 +290,7 @@ halo-theme-ethereal/
 ## 开发
 
 <a href="https://github.com/AloneNanNan/halo-theme-ethereal/graphs/contributors">
-  <img alt="For Contributors" src="https://shieldcn.dev/group/github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md-abcde3.svg?variant=secondary&amp;font=space-grotesk&amp;mode=light" />
+  <picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/group/badge/PRs-Welcome!+github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md+github/dependabot/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="For Contributors"src="https://shieldcn.dev/group/badge/PRs-Welcome!+github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md+github/dependabot/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=light" /></picture>
 </a>
 
 > 面向贡献者：欢迎参与开发！贡献流程、代码约定与提 PR 规范请阅读 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。
@@ -299,9 +300,9 @@ halo-theme-ethereal/
 > 需要 **Node.js >= 22.12.0**（推荐 24.x，见仓库根目录 `.nvmrc`）和 **pnpm**
 
 <p>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" /></a>
-  <a href="https://nodejs.org/"><img alt="Recommendation" src="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" /></a>
-  <a href="https://pnpm.io/"><img alt="Package mgr · pnpm" src="https://www.shieldcn.dev/badge/Package_mgr-pnpm-F69220.svg?logo=pnpm&amp;variant=branded&amp;size=sm&amp;mode=light&amp;font=space-grotesk"></a>
+  <a href="https://nodejs.org/"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" /><img alt="Node.js"src="https://shieldcn.dev/badge/Node.JS-%3E%3D%2022.12.0-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" /></picture></a>
+  <a href="https://nodejs.org/"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=dark" /><img alt="Recommendation"src="https://shieldcn.dev/badge/Recommendation-%3E%3D%2024.x-30a043.svg?variant=secondary&amp;logo=nodedotjs&amp;logoColor=ffffff&amp;font=space-grotesk&amp;mode=light" /></picture></a>
+  <a href="https://pnpm.io/"><picture><source media="(prefers-color-scheme: dark)"srcset="https://www.shieldcn.dev/badge/Package_mgr-pnpm-F69220.svg?logo=pnpm&amp;variant=branded&amp;size=sm&amp;mode=dark&amp;font=space-grotesk"><img alt="Package mgr · pnpm"src="https://www.shieldcn.dev/badge/Package_mgr-pnpm-F69220.svg?logo=pnpm&amp;variant=branded&amp;size=sm&amp;mode=light&amp;font=space-grotesk"></picture></a>
 </p>
 
 ```bash
@@ -359,5 +360,5 @@ pnpm format
 ---
 
 <p align="center">
-  <a href="https://github.com/AloneNanNan/Halo-Theme-Ethereal/graphs/contributors"><img alt="Contributors" src="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=dots&amp;size=80&amp;names=true&amp;mode=light&amp;font=space-grotesk" /></a>
+  <a href="https://github.com/AloneNanNan/Halo-Theme-Ethereal/graphs/contributors"><picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=dots&amp;size=80&amp;names=true&amp;mode=dark&amp;font=space-grotesk" /><img alt="Contributors"src="https://shieldcn.dev/contributors/AloneNanNan/Halo-Theme-Ethereal.svg?preset=dots&amp;size=80&amp;names=true&amp;mode=light&amp;font=space-grotesk" /></picture></a>
 </p>
