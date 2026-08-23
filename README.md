@@ -290,7 +290,7 @@ halo-theme-ethereal/
 ## 开发
 
 <a href="https://github.com/AloneNanNan/halo-theme-ethereal/graphs/contributors">
-  <picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/group/github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md-abcde3.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="For Contributors"src="https://shieldcn.dev/group/github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md-abcde3.svg?variant=secondary&amp;font=space-grotesk&amp;mode=light" /></picture>
+  <picture><source media="(prefers-color-scheme: dark)"srcset="https://shieldcn.dev/group/github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md+github/dependabot/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=dark" /><img alt="For Contributors"src="https://shieldcn.dev/group/github/AloneNanNan/halo-theme-ethereal/contributors+badge/Agent--friendly-AGENTS.md+github/dependabot/AloneNanNan/halo-theme-ethereal.svg?variant=secondary&amp;font=space-grotesk&amp;mode=light" /></picture>
 </a>
 
 > 面向贡献者：欢迎参与开发！贡献流程、代码约定与提 PR 规范请阅读 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。
