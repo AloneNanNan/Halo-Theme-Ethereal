@@ -1,0 +1,37 @@
+---
+// 分类/标签详情页的上下文标题。页面只负责传入当前术语的表达式，
+// 列表内容仍由页面组装，避免把路由级 PostList 隐藏在通用组件中。
+interface Props {
+  labelExpr: string;
+  label: string;
+  titleExpr: string;
+  title: string;
+  descriptionExpr?: string;
+  description?: string;
+}
+
+const {
+  labelExpr,
+  label,
+  titleExpr,
+  title,
+  descriptionExpr,
+  description = "",
+} = Astro.props;
+---
+
+<header class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+  <div class="text-sm font-medium text-50" th:text={labelExpr}>{label}</div>
+  <h1 class="mt-1 text-3xl font-bold text-90" th:text={titleExpr}>{title}</h1>
+  {
+    descriptionExpr && (
+      <p
+        class="mt-2 text-75"
+        th:if={`\${not #strings.isEmpty(${descriptionExpr.replace(/^\$\{/, "").replace(/\}$/, "")})}`}
+        th:text={descriptionExpr}
+      >
+        {description}
+      </p>
+    )
+  }
+</header>
