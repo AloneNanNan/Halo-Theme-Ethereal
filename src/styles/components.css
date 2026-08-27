@@ -1088,6 +1088,11 @@
   font-weight: 600;
 }
 
+/* Moment 插件会把正文中的 #标签渲染为 a.tag；标签列表已在内容末尾统一输出。 */
+.moment-feed-content :where(a.tag) {
+  display: none;
+}
+
 /* 朋友圈时间轴 - 纵向虚线布局
 .friends-timeline {
   display: flex;

@@ -1,5 +1,6 @@
 ---
 import PostList from "../components/PostList.astro";
+import TaxonomyHeader from "../components/control/TaxonomyHeader.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -8,22 +9,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.category.description(${site.title}, ${category.spec.displayName})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <header class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <div class="text-sm font-medium text-50" th:text="#{page.categories.title}">
-      分类
-    </div>
-    <h1
-      class="mt-1 text-3xl font-bold text-90"
-      th:text="${category.spec.displayName}"
-    >
-      Category
-    </h1>
-    <p
-      class="mt-2 text-75"
-      th:if="${not #strings.isEmpty(category.spec.description)}"
-      th:text="${category.spec.description}"
-    >
-    </p>
-  </header>
+  <TaxonomyHeader
+    labelExpr="#{page.categories.title}"
+    label="分类"
+    titleExpr="${category.spec.displayName}"
+    title="Category"
+    descriptionExpr="${category.spec.description}"
+  />
   <PostList />
 </MainGridLayout>

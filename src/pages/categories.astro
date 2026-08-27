@@ -1,5 +1,6 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <MainGridLayout
@@ -8,29 +9,18 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <div class="min-w-0">
-      <h1
-        class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-        th:text="#{page.categories.title}"
-      >
-        分类
-      </h1>
-      <div class="mb-6 flex flex-wrap items-center gap-1.5 text-sm">
-        <span
-          class="icon-[material-symbols--folder-open-rounded] text-base text-(--primary)"
-        ></span>
-        <span
-          class="font-bold text-(--primary)"
-          th:text="#{page.categories.subtitle}">文章分类</span
-        >
-        <span class="text-30">·</span>
-        <span
-          th:if="${categories != null}"
-          th:text="#{page.categories.subtitleCount(${#lists.size(categories)})}"
-          class="text-50">0 个分类</span
-        >
-      </div>
-    </div>
+    <PageHeader
+      containerClass="mb-6"
+      titleExpr="#{page.categories.title}"
+      title="分类"
+      iconClass="icon-[material-symbols--folder-open-rounded]"
+      labelExpr="#{page.categories.subtitle}"
+      label="文章分类"
+      sepShowIfExpr="${true}"
+      subExpr="#{page.categories.subtitleCount(${#lists.size(categories)})}"
+      sub="0 个分类"
+      subShowIfExpr="${categories != null}"
+    />
     <div class="grid gap-3 sm:grid-cols-2">
       <a
         th:each="category, stat : ${categories}"
