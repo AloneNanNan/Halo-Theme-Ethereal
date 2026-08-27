@@ -512,9 +512,31 @@ export function getStoredBannerTitle(): boolean {
   return stored == null ? getDefaultBannerTitle() : stored === "true";
 }
 
-/** 应用首页壁纸标题：关闭时给 body 加 banner-title-disabled（CSS 隐藏标题层） */
+/** 应用首页壁纸标题：关闭时 opacity 渐隐，开启时 fade-in-up 入场动画 */
 export function applyBannerTitle(enabled: boolean): void {
   document.body.classList.toggle("banner-title-disabled", !enabled);
+  if (enabled) {
+    // 清除 app.ts MutationObserver 固化的内联 opacity/animation，
+    // 否则 CSS 入场动画无法重新触发
+    const title = document.getElementById("banner-title");
+    const sub = document.getElementById("banner-subtitle-wrapper");
+    for (const el of [title, sub]) {
+      if (el) {
+        el.style.opacity = "";
+        el.style.animation = "";
+      }
+    }
+    // 添加入场动画 class，动画结束后移除
+    const overlay = document.getElementById("banner-overlay");
+    if (overlay) {
+      overlay.classList.add("banner-title-enter");
+      overlay.addEventListener(
+        "animationend",
+        () => overlay.classList.remove("banner-title-enter"),
+        { once: true },
+      );
+    }
+  }
 }
 
 export function setBannerTitle(enabled: boolean): void {

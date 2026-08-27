@@ -160,6 +160,24 @@ function showBanner() {
   });
 }
 
+// ── Banner overlay 显隐同步 ──
+// SSR 在非首页给 #banner-overlay 设置 display:none 内联样式，
+// 该元素在 Swup 容器外，跨页切换时不被替换，需手动同步。
+// 首次加载由 banner-responsive.ts initOverlay() 处理，
+// 此处仅覆盖 Swup 导航场景（banner-responsive.ts 不会重新执行）
+function syncBannerOverlay() {
+  const overlay = document.getElementById("banner-overlay");
+  if (!overlay) return;
+  if (overlay.style.display === "none") {
+    overlay.style.display = "";
+  }
+  const wasHidden = overlay.classList.contains("banner-text-hidden");
+  overlay.classList.toggle("banner-text-hidden", !isHomePath());
+  if (isHomePath() && wasHidden) {
+    document.dispatchEvent(new CustomEvent("banner:visible"));
+  }
+}
+
 // ── 点击外部关闭面板 ──
 function setClickOutsideToClose(panel: string, ignores: string[]) {
   document.addEventListener("click", (event) => {
@@ -275,6 +293,7 @@ function setupSwup() {
   });
   window.swup.hooks.on("page:view", () => {
     syncHomeClass();
+    syncBannerOverlay();
     void initContentLightbox();
     void initPhotosGallery();
     showBanner();

@@ -414,9 +414,25 @@
     display: none !important;
   }
 
-  /* 首页壁纸标题访客关闭：隐藏 banner 标题/副标题层（body.banner-title-disabled） */
+  /* 首页壁纸标题访客关闭：opacity 过渡渐隐（替代原 display:none，支持平滑过渡） */
   body.banner-title-disabled #banner-overlay {
-    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+
+  /* 壁纸标题开关重新开启时的入场动画（fade-in-up，与首载一致） */
+  .banner-title-enter #banner-title,
+  .banner-title-enter #banner-subtitle-wrapper {
+    animation-name: fade-in-up;
+    animation-duration: var(--dur-entry, 300ms);
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+  }
+  .banner-title-enter #banner-title {
+    animation-delay: min(50ms, var(--dur-entry-max, 400ms));
+  }
+  .banner-title-enter #banner-subtitle-wrapper {
+    animation-delay: min(130ms, var(--dur-entry-max, 400ms));
   }
 
   /* 向下滚动箭头仅全屏模式显示（原 th:if fullscreen，改 CSS 门控） */
@@ -1086,6 +1102,11 @@
 
 .moment-feed-content :where(a) {
   font-weight: 600;
+}
+
+/* Moment 插件会把正文中的 #标签渲染为 a.tag；标签列表已在内容末尾统一输出。 */
+.moment-feed-content :where(a.tag) {
+  display: none;
 }
 
 /* 朋友圈时间轴 - 纵向虚线布局

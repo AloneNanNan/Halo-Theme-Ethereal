@@ -107,18 +107,6 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             </div>
 
             <div
-              th:if="${not #lists.isEmpty(moment.spec.tags)}"
-              class="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-base"
-            >
-              <a
-                th:each="tagName : ${moment.spec.tags}"
-                th:href="@{/moments(tag=${tagName})}"
-                class="link font-medium text-(--primary)"
-                th:text="${'#' + tagName}">#Tag</a
-              >
-            </div>
-
-            <div
               th:if="${content != null and not #lists.isEmpty(content.medium)}"
               th:with="mediaCount=${#lists.size(content.medium)}"
               th:classappend="${' moment-media-count-' + mediaCount}"
@@ -169,6 +157,18 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   <span class="truncate" th:text="${momentItem.url}">Post</span>
                 </a>
               </div>
+            </div>
+
+            <div
+              th:if="${not #lists.isEmpty(moment.spec.tags)}"
+              class="mt-4 flex flex-wrap gap-x-2 gap-y-1 text-base"
+            >
+              <a
+                th:each="tagName : ${moment.spec.tags}"
+                th:href="@{/moments(tag=${tagName})}"
+                class="link font-medium text-(--primary)"
+                th:text="${'#' + tagName}">#Tag</a
+              >
             </div>
 
             <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-50">

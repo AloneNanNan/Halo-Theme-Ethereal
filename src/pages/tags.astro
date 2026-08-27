@@ -1,5 +1,6 @@
 ---
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <MainGridLayout
@@ -8,28 +9,18 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <div class="min-w-0">
-      <h1
-        class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-        th:text="#{page.tags.title}"
-      >
-        标签
-      </h1>
-      <div class="mb-6 flex flex-wrap items-center gap-1.5 text-sm">
-        <span
-          class="icon-[material-symbols--tag-rounded] text-base text-(--primary)"
-        ></span>
-        <span class="font-bold text-(--primary)" th:text="#{page.tags.subtitle}"
-          >文章标签</span
-        >
-        <span class="text-30">·</span>
-        <span
-          th:if="${tags != null}"
-          th:text="#{page.tags.subtitleCount(${#lists.size(tags)})}"
-          class="text-50">0 个标签</span
-        >
-      </div>
-    </div>
+    <PageHeader
+      containerClass="mb-6"
+      titleExpr="#{page.tags.title}"
+      title="标签"
+      iconClass="icon-[material-symbols--tag-rounded]"
+      labelExpr="#{page.tags.subtitle}"
+      label="文章标签"
+      sepShowIfExpr="${true}"
+      subExpr="#{page.tags.subtitleCount(${#lists.size(tags)})}"
+      sub="0 个标签"
+      subShowIfExpr="${tags != null}"
+    />
     <div class="flex flex-wrap gap-3">
       <a
         th:each="tag, stat : ${tags}"
