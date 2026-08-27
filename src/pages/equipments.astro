@@ -42,7 +42,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     <!-- 装备卡片网格（统一分页） -->
     <div
       th:if="${equipments != null and not #lists.isEmpty(equipments.items)}"
-      class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
+      class="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-5"
     >
       <a
         th:each="equipment, equipStat : ${equipments.items}"
@@ -51,21 +51,29 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         target="_blank"
         rel="noopener noreferrer"
         th:style="|animation-delay: min(calc(var(--content-delay) + ${equipStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-        class="btn-card btn-card-outline group min-h-28 items-start! justify-start! gap-4 rounded-xl p-4 text-left active:scale-95 onload-animation card-hover-lift"
+        class="btn-card btn-card-outline group min-w-0 flex-col items-stretch! justify-start! gap-0 overflow-hidden rounded-xl text-left active:scale-95 onload-animation card-hover-lift"
       >
         <!-- 封面 -->
         <div
           th:if="${not #strings.isEmpty(equipment.spec.cover)}"
-          class="w-full overflow-hidden rounded-lg bg-(--btn-regular-bg) -mt-1"
+          class="aspect-4/3 w-full overflow-hidden bg-(--btn-regular-bg)"
         >
           <img
             th:src="${equipment.spec.cover}"
             th:alt="${equipment.spec.displayName}"
             loading="lazy"
-            class="h-36 w-full object-cover transition group-hover:scale-105"
+            class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </div>
-        <div class="w-full min-w-0">
+        <div
+          th:if="${#strings.isEmpty(equipment.spec.cover)}"
+          class="flex aspect-4/3 w-full items-center justify-center bg-(--btn-regular-bg) text-(--primary)/45"
+        >
+          <span
+            aria-hidden="true"
+            class="icon-[material-symbols--devices-rounded] text-6xl"></span>
+        </div>
+        <div class="flex w-full min-w-0 flex-1 flex-col p-5">
           <!-- 名称+链接 -->
           <div class="flex items-start gap-2">
             <div
@@ -86,7 +94,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <!-- 规格 -->
           <div
             th:if="${not #strings.isEmpty(equipment.spec.specification)}"
-            class="mt-1.5 text-sm font-medium text-(--primary)"
+            class="mt-2 text-sm font-medium leading-5 text-(--primary)"
             th:text="${equipment.spec.specification}"
           >
             Specification
@@ -94,7 +102,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <!-- 描述 -->
           <div
             th:if="${not #strings.isEmpty(equipment.spec.description)}"
-            class="mt-1 line-clamp-2 text-sm leading-6 text-50"
+            class="mt-2 line-clamp-4 text-sm leading-6 text-50"
             th:text="${equipment.spec.description}"
           >
             Description
