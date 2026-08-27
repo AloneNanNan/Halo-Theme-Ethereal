@@ -9,6 +9,9 @@
 // 高亮方案：液态滑块（.category-liquid）用 CSS transform 滑动覆盖层，
 // pill 本身不变背景色，仅切换 text color，彻底消除 transition-colors 闪烁。
 // pill z-index:1 在滑块 z-index:0 上方，pill 半透明背景（6%）让滑块颜色透出。
+// 滑块是滚动区的兄弟而非子级（需横跨首页/归档/更多），不受 overflow 裁剪或 mask
+// 渐隐约束，故 moveLiquid 会与滚动区可见窗口求交集：半露时只铺可见段、
+// 完全滚出时隐藏，避免高亮底色溢出到相邻 pill/分隔线（issue #52）。
 ---
 
 <div
@@ -99,6 +102,7 @@
   }
 
   .category-scroll {
+    position: relative;
     scrollbar-width: none;
     -ms-overflow-style: none;
     --mask-fade: 1.5rem;
@@ -253,13 +257,27 @@
       }
     }
 
-    // lqbby.com 同款：getBoundingClientRect 定位，滚动期间 rAF 跟随
+    // getBoundingClientRect 定位，滚动期间 rAF 跟随。
+    // 滑块位于滚动区外（无 overflow 裁剪），须与滚动窗口求交集：
+    // 半露只铺可见段、完全滚出隐藏，防止底色溢出相邻 pill/分隔线。
     function moveLiquid(el, animate) {
       if (!liquid || !track || !el) return;
       var trackRect = track.getBoundingClientRect();
       var elRect = el.getBoundingClientRect();
       var x = elRect.left - trackRect.left;
       var w = elRect.width;
+      if (scroll.contains(el)) {
+        var scrollRect = scroll.getBoundingClientRect();
+        var visibleLeft = Math.max(elRect.left, scrollRect.left);
+        var visibleRight = Math.min(elRect.right, scrollRect.right);
+        if (visibleRight <= visibleLeft) {
+          liquid.style.opacity = "0";
+          return;
+        }
+        x = visibleLeft - trackRect.left;
+        w = visibleRight - visibleLeft;
+      }
+      liquid.style.opacity = "";
       x = Math.max(0, Math.min(x, trackRect.width - w));
       if (!animate) liquid.style.transition = "none";
       liquid.style.width = w + "px";
@@ -276,7 +294,6 @@
         bar.querySelector(".category-pill[data-soft-active]");
       if (act) {
         moveLiquid(act, animate);
-        liquid.style.opacity = "";
       } else if (liquid) {
         liquid.style.opacity = "0";
       }
