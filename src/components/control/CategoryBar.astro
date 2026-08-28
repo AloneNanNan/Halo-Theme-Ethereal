@@ -336,6 +336,10 @@
     // 液块挂基座层（裁剪窗之外）——可跨出滚动框盖固定 pill；
     // 滚动内容则由 .category-clip（同样不动）在溢出时裁剪
     var area = bar.querySelector(".category-stretch-area");
+    // 可见窗口必须是静态裁剪窗：.category-scroll 是 .category-stretch 的子级，
+    // 越界拉伸时随 transform 平移（rect 与 pill 同步移动，交集恒为"完整可见"），
+    // 液块将按全宽滑出基座、被固定 pill 覆盖（issue #52 修复回归）
+    var clip = bar.querySelector(".category-clip");
 
     function pathOf(href) {
       try {
@@ -360,9 +364,14 @@
       var x = elRect.left - baseRect.left;
       var w = elRect.width;
       if (scroll.contains(el)) {
-        var scrollRect = scroll.getBoundingClientRect();
-        var visibleLeft = Math.max(elRect.left, scrollRect.left);
-        var visibleRight = Math.min(elRect.right, scrollRect.right);
+        // 可见窗口取静态裁剪窗（.category-clip）而非 scroll 自身：
+        // 拉伸/回弹期间 scroll 随 transform 平移，其 rect 与 pill 同步移动，
+        // 交集永远"完整可见"——半露不缩、滑出不下架，直至被钳制卡死。
+        // clip 不动（overflow-hidden 是真视口）：半露只铺可见段、完全滚出隐藏。
+        // 非拉伸（transform 为空）时两者 rect 一致，行为等价。
+        var viewRect = (clip || scroll).getBoundingClientRect();
+        var visibleLeft = Math.max(elRect.left, viewRect.left);
+        var visibleRight = Math.min(elRect.right, viewRect.right);
         if (visibleRight <= visibleLeft) {
           liquid.style.opacity = "0";
           return;
