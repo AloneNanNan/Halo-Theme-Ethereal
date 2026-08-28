@@ -76,7 +76,7 @@
   }
 
   .scale-animation {
-    @apply relative z-0 before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-[inherit] before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
+    @apply relative z-0 before:absolute before:inset-0 before:-z-10 before:scale-[0.85] before:rounded-xl before:transition before:ease-out hover:before:scale-100 hover:before:bg-(--btn-plain-bg-hover) active:bg-transparent active:before:bg-(--btn-plain-bg-active);
   }
 
   .btn-plain.scale-animation.current-theme-btn {

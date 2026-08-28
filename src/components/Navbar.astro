@@ -57,7 +57,7 @@ const className = Astro.props.class;
           <a
             th:href="@{${menuItem.status.href}}"
             th:target="${menuItem.spec.target?.value}"
-            class="btn-plain scale-animation h-11 rounded-lg px-5 font-bold active:scale-95 flex items-center gap-1"
+            class="btn-plain scale-animation h-11 rounded-xl px-5 font-bold active:scale-95 flex items-center gap-1"
           >
             <div class="flex items-center">
               <span
@@ -87,14 +87,14 @@ const className = Astro.props.class;
           <!-- PC 端子菜单下拉 -->
           <div
             th:if="${hasChildren}"
-            class="submenu-panel absolute left-0 top-full mt-5 w-44 rounded-(--radius-large) p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 z-50"
+            class="submenu-panel absolute left-0 top-full mt-5 w-44 rounded-2xl p-2 opacity-0 pointer-events-none -translate-y-1 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 z-50"
             th:id="'pc-submenu-' + ${itemStat.index}"
           >
             <!-- 父页面概览链接（仅触控设备显示） -->
             <a
               th:href="@{${menuItem.status.href}}"
               th:target="${menuItem.spec.target?.value}"
-              class="touch-only group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
+              class="touch-only group flex items-center justify-between gap-3 rounded-xl py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
               <span
                 th:if="${not #strings.isEmpty(menuIcon)}"
@@ -127,7 +127,7 @@ const className = Astro.props.class;
               th:with="childIcon = ${#annotations.get(childItem, 'icon')}"
               th:href="@{${childItem.status.href}}"
               th:target="${childItem.spec.target?.value}"
-              class="group flex items-center justify-between gap-3 rounded-lg py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
+              class="group flex items-center justify-between gap-3 rounded-xl py-2 px-3 transition hover:bg-(--btn-plain-bg-hover) dark:hover:bg-white/10 whitespace-nowrap active:scale-95"
             >
               <span class="flex min-w-0 items-center gap-2">
                 <span
