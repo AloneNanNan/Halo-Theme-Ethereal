@@ -10,22 +10,22 @@ const expr = isTemplate ? copyText.slice(2, -1) : copyText;
       type="button"
       class="copy-btn inline-flex items-center gap-1.5 rounded-lg bg-(--primary)/8 px-2 py-1 text-xs text-(--btn-content) transition hover:bg-(--primary)/15 hover:text-(--primary) active:scale-95"
       th:attr={`data-copy-text=\${${expr}}`}
-      title="复制"
+      title="Copy"
       th:title="#{common.copy}"
     >
       <span class="icon-[material-symbols--content-copy-outline-rounded] text-sm" />
-      <span th:text="#{common.copy}">复制</span>
+      <span th:text="#{common.copy}">Copy</span>
     </button>
   ) : (
     <button
       type="button"
       class="copy-btn inline-flex items-center gap-1.5 rounded-lg bg-(--primary)/8 px-2 py-1 text-xs text-(--btn-content) transition hover:bg-(--primary)/15 hover:text-(--primary) active:scale-95"
       data-copy-text={copyText}
-      title="复制"
+      title="Copy"
       th:title="#{common.copy}"
     >
       <span class="icon-[material-symbols--content-copy-outline-rounded] text-sm" />
-      <span th:text="#{common.copy}">复制</span>
+      <span th:text="#{common.copy}">Copy</span>
     </button>
   )
 }

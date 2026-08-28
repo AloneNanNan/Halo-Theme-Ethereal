@@ -155,38 +155,31 @@
 
         if (text) {
           text = text.trim();
-          var textSpan = btn.querySelector("span:last-child");
           var iconSpan = btn.querySelector(
             ".icon-\\[material-symbols--content-copy-outline-rounded\\]",
           );
-          var originalText = textSpan ? textSpan.textContent : "";
           var originalClasses = iconSpan ? iconSpan.className : "";
 
-          if (textSpan) textSpan.textContent = "已复制";
           if (iconSpan)
             iconSpan.className =
               "icon-[material-symbols--check-rounded] text-sm";
           btn.disabled = true;
           btn.classList.add("text-(--primary)");
 
+          function restore() {
+            setTimeout(function () {
+              if (iconSpan) iconSpan.className = originalClasses;
+              btn.disabled = false;
+              btn.classList.remove("text-(--primary)");
+            }, 2000);
+          }
+
           navigator.clipboard
             .writeText(text)
-            .then(function () {
-              setTimeout(function () {
-                if (textSpan) textSpan.textContent = originalText;
-                if (iconSpan) iconSpan.className = originalClasses;
-                btn.disabled = false;
-                btn.classList.remove("text-(--primary)");
-              }, 2000);
-            })
+            .then(restore)
             .catch(function () {
               console.warn("[Copy] Clipboard write failed");
-              setTimeout(function () {
-                if (textSpan) textSpan.textContent = originalText;
-                if (iconSpan) iconSpan.className = originalClasses;
-                btn.disabled = false;
-                btn.classList.remove("text-(--primary)");
-              }, 2000);
+              restore();
             });
         }
       });
@@ -512,6 +505,11 @@
   if (window.__randomVisitBound) return;
   window.__randomVisitBound = true;
 
+  var t =
+    window.__etherealI18n ||
+    function (_key, fallback) {
+      return fallback;
+    };
   var SPIN_DELAY = 1500; // 旋转等待时长（ms）
   var spinning = false; // 防止重复点击
 
@@ -532,14 +530,14 @@
     spinning = false;
     btn.classList.remove("spinning");
     var label = btn.querySelector(".random-visit-label");
-    if (label) label.textContent = "随机访问";
+    if (label) label.textContent = t("page.links.randomVisit", "随机访问");
   }
 
   // 旋转动画：匀速慢转（1s/圈，由 CSS 默认值控制），到时执行跳转
   function startSpin(btn, callback) {
     btn.classList.add("spinning");
     var label = btn.querySelector(".random-visit-label");
-    if (label) label.textContent = "抽取中...";
+    if (label) label.textContent = t("page.links.drawing", "抽取中...");
     setTimeout(callback, SPIN_DELAY);
   }
 
@@ -578,7 +576,7 @@
   function doRandomVisit(btn) {
     var urls = collectUrls(btn);
     if (urls.length === 0) {
-      alert("暂无可随机访问的友链");
+      alert(t("page.links.noRandomLinks", "暂无可随机访问的友链"));
       stopSpin(btn);
       return;
     }

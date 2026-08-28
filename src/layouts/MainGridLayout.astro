@@ -552,6 +552,11 @@ const rightSidebarHasContentExpr = [
       // 随机钓鱼 - 点击按钮鱼钩摇摆 1.5 秒后随机跳转朋友圈文章
       // 放到 swup-container 外部 + 事件委托，保证直接访问和 Swup 导航都生效
       (function () {
+        var t =
+          window.__etherealI18n ||
+          function (_key, fallback) {
+            return fallback;
+          };
         var SPIN_DELAY = 1500; // 摇摆等待时长（ms）
         var spinning = false; // 防止重复点击
 
@@ -570,7 +575,8 @@ const rightSidebarHasContentExpr = [
           spinning = false;
           btn.classList.remove("spinning");
           var label = btn.querySelector(".random-fish-label");
-          if (label) label.textContent = "随机钓鱼";
+          if (label)
+            label.textContent = t("page.friends.randomFish", "随机钓鱼");
         }
 
         // 鱼钩摇摆动画：0.5s 一个来回，匀速晃动
@@ -578,7 +584,7 @@ const rightSidebarHasContentExpr = [
           var icon = btn.querySelector(".random-fish-icon");
           var label = btn.querySelector(".random-fish-label");
           btn.classList.add("spinning");
-          if (label) label.textContent = "正在钓...";
+          if (label) label.textContent = t("page.friends.fishing", "正在钓...");
           if (icon) icon.style.setProperty("--swing-duration", "0.5s");
           setTimeout(callback, SPIN_DELAY);
         }
@@ -586,7 +592,7 @@ const rightSidebarHasContentExpr = [
         function doRandomFish(btn) {
           var urls = getUrls();
           if (urls.length === 0) {
-            alert("暂无朋友圈文章可随机跳转");
+            alert(t("page.friends.noRandomPosts", "暂无朋友圈文章可随机跳转"));
             stopSwing(btn);
             return;
           }
