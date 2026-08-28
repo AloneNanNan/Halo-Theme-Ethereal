@@ -253,11 +253,13 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
             catCount = String(rows.length);
           }
           var subs = document.querySelectorAll(".page-header-sub");
-          if (subs.length && catName && catCount != null) {
+          if (subs.length && catName) {
+            var displayCount =
+              catCount != null && catCount !== "" ? catCount : "0";
             subs[0].textContent =
               catName +
               " · " +
-              fmt(tr("page.archives.subtitleCount", "{0} posts"), catCount);
+              fmt(tr("page.archives.subtitleCount", "{0} posts"), displayCount);
           }
         }
       }
