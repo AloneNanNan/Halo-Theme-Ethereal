@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [v1.2.1] - 2026-08-28
+
+> 呀呼！欢迎使用 **Ethereal 主题 v1.2.1** 版本
+>
+> 本次更新带来归档页分类筛选、分类导航栏滚轮/拖拽滚动与液块拖拽交互重构等体验优化，并修复首页标题、分类导航栏滑块等多处显示问题
+>
+> 如在主题使用中遇到问题或者建议，欢迎在 [Issue](https://github.com/AloneNanNan/halo-theme-ethereal/issues) 中提交。也可前往 [主题交流群](https://qm.qq.com/q/onMpJjYvgQ) 进行讨论
+
+### Tips
+
+- 更新后建议前往「主题设置 → 详细」进行 重载主题配置 & 清除模版缓存 两项操作，确保新设置项正常生效
+
 ### 新增
 
 - **归档页分类筛选**：分类导航栏与归档页联动——`/archives` 下点击分类 pill 即按该分类过滤归档列表（URL 查询参数 `?category=<slug>`，结果可分享、Swup 无感切换、分页保留筛选），并新增「未分类」筛选 pill（`?uncategorized`）；年份计数、空分组与空态页按筛选结果实时重算，未筛选中日期/标题/标签的列表样式保持归档原样 #31
@@ -25,6 +37,8 @@
 ### 其它
 
 - 新增 README→README-Halo 转换脚本并接入格式化/提交流程，修复 Github 下载量徽章错误数据（#45）
+
+**变更完整日志**: https://github.com/AloneNanNan/Halo-Theme-Ethereal/compare/v1.2.0...v1.2.1
 
 ## [v1.2.0] - 2026-08-23
 
