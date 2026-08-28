@@ -8,8 +8,6 @@ interface Props {
 const { context = "posts", style } = Astro.props;
 const className = Astro.props.class;
 const hasPages = `\${${context}.totalPages gt 1}`;
-const hasPrevious = `\${${context}.hasPrevious()}`;
-const hasNext = `\${${context}.hasNext()}`;
 const prevUrl = `@{\${${context}.prevUrl}}`;
 const nextUrl = `@{\${${context}.nextUrl}}`;
 // Layout 模板上下文不暴露请求对象（#httpServletRequest 恒为 null，见 Layout.astro 注释），

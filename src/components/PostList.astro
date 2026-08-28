@@ -44,7 +44,8 @@ const { pagination = "posts" } = Astro.props;
 <!-- 瀑布流（Masonry）布局脚本：仅 grid + masonry 时启用，见 post-list-layout.js -->
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/post-list-layout.js?v=${ASSET_VERSION}`}
-  defer></script>
+  defer
+  is:inline></script>
 
 <style is:global>
   /* ===== 网格（grid）布局容器 ===== */

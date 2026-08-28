@@ -166,42 +166,35 @@ const className = Astro.props.class;
       // 缓存按 API 区分，避免更换 API 后读到旧缓存
       var CACHE_KEY = "hitokoto_cache_" + encodeURIComponent(API);
 
-      function fetchHitokoto() {
-        return fetch(API, { signal: AbortSignal.timeout(5000) })
-          .then(function (resp) {
-            if (!resp.ok) throw new Error("Network response was not ok.");
-            var contentType = resp.headers.get("content-type") || "";
-            // JSON 响应：兼容 hitokoto 标准字段与常见自定义字段
-            if (contentType.indexOf("application/json") !== -1) {
-              return resp.json().then(function (data) {
-                return {
-                  content:
-                    data.hitokoto ||
-                    data.content ||
-                    data.sentence ||
-                    data.text ||
-                    "",
-                  author:
-                    data.from ||
-                    data.author ||
-                    data.source ||
-                    data.from_who ||
-                    "",
-                };
-              });
-            }
-            // 纯文本响应
-            return resp.text().then(function (text) {
-              return { content: text.trim(), author: "" };
-            });
-          })
-          .catch(function (e) {
-            console.warn("一言获取失败，使用默认句子", e.message);
+      async function fetchHitokoto() {
+        try {
+          var resp = await fetch(API, { signal: AbortSignal.timeout(5000) });
+          if (!resp.ok) throw new Error("Network response was not ok.");
+          var contentType = resp.headers.get("content-type") || "";
+          // JSON 响应：兼容 hitokoto 标准字段与常见自定义字段
+          if (contentType.indexOf("application/json") !== -1) {
+            var data = await resp.json();
             return {
-              content: fallbackText,
-              author: fallbackSource,
+              content:
+                data.hitokoto ||
+                data.content ||
+                data.sentence ||
+                data.text ||
+                "",
+              author:
+                data.from || data.author || data.source || data.from_who || "",
             };
-          });
+          }
+          // 纯文本响应
+          var text = await resp.text();
+          return { content: text.trim(), author: "" };
+        } catch (e) {
+          console.warn("一言获取失败，使用默认句子", e.message);
+          return {
+            content: fallbackText,
+            author: fallbackSource,
+          };
+        }
       }
 
       function updateCard(data) {

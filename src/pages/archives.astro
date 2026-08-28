@@ -1,7 +1,28 @@
 ---
+import FilterTabs from "../components/control/FilterTabs.astro";
+import FilterTab from "../components/control/FilterTab.astro";
 import Pagination from "../components/control/Pagination.astro";
 import PageHeader from "../components/control/PageHeader.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+
+// 分类筛选：由页面内分类选择器（FilterTabs，moment 同款）驱动，
+// 分类导航栏（CategoryBar）在归档页不再转换筛选模式，仅保留 permalink。
+// - 无参数：显示全部，与旧行为等价
+// - ?category=<slug>：仅显示 spec.categories 含该 slug 的文章
+// - ?uncategorized：显示未分类文章（spec.categories 为空或缺失）
+// NOTE(Halo 2.26/SpringEL 7)：列表选择/投影（.?[]/![...]）内部无法解析 Thymeleaf
+// 上下文变量（param 按根对象属性查找抛 EL1008E，见 archive 页曾崩溃日志），
+// 故谓词以**行级 th:if** 求值（迭代内顶层 context 可用，links/timeline 先例验证），
+// 年份计数与空态由行数聚合（脚本 archivesFilterPatch 补充），仅依赖
+// post.spec.categories（Post 模板对象恒有该字段）。
+// 行级谓词（迭代对象 post 为 root，param 为上下文变量——均先例验证可用）。
+// 注意 1：Halo 的 param.xxx 缺失时返回空数组而非 null，判空一律用 #lists.isEmpty。
+// 注意 2：post.spec.categories 存的是分类 metadata.name（UUID 形态），URL 参数是 slug，
+//         必须用 post.categories 对象列表（ListedPostVo 增强字段，spec.slug）匹配，
+//         spec.categories 分支仅作兜底保留。
+const postMatchRow = `(#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)) or (not #lists.isEmpty(param.category) and ((post.categories != null and #lists.contains(post.categories.![spec.slug], param.category[0])) or #lists.contains(post.spec.categories, param.category[0]))) or (#lists.isEmpty(param.category) and not #lists.isEmpty(param.uncategorized) and ((post.categories == null or #lists.isEmpty(post.categories)) and (post.spec.categories == null or #lists.isEmpty(post.spec.categories))))`;
+const topWith = `totalPosts=\${#aggregates.sum(archives.items.![#aggregates.sum(months.![posts.size()])])},filterActive=\${not #lists.isEmpty(param.category) or not #lists.isEmpty(param.uncategorized)}`;
+const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.size()])}`;
 ---
 
 <MainGridLayout
@@ -9,10 +30,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.archives.description(${site.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <div
-    th:remove="tag"
-    th:with="totalPosts=${#aggregates.sum(archives.items.![#aggregates.sum(months.![posts.size()])])}"
-  >
+  <div th:remove="tag" th:with={topWith}>
     <div class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 标题区域 -->
       <PageHeader
@@ -27,12 +45,37 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         sub="共 0 篇文章"
       />
 
-      <div
-        class="contents"
-        th:each="archive : ${archives.items}"
-        th:with="postCount=${#aggregates.sum(archive.months.![posts.size()])}"
-      >
-        <div>
+      <!-- 分类选择器（moment 同款 FilterTabs）：分类切换 + “全部” + 未分类。
+           激活判定/标签/计数均由 service 端表达式完成，无额外脚本；
+           计数挂在 countClass=archive-cat-count 供筛选态脚本读取 -->
+      <div id="archive-filter-tabs" class="mb-5 flex flex-wrap gap-2">
+        <FilterTabs
+          class="flex flex-wrap gap-2"
+          showIfExpr="${not #lists.isEmpty(categoryFinder.listAll())}"
+          allHrefExpr="@{/archives}"
+          allActiveExpr="#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)"
+          countClass="archive-cat-count ml-1 text-30"
+          eachExpr="category : ${categoryFinder.listAll()}"
+          tabTemplate={{
+            hrefExpr: "@{/archives(category=${category.spec.slug})}",
+            activeExpr: "#lists.contains(param.category, category.spec.slug)",
+            labelExpr: "${category.spec.displayName}",
+            countExpr: "${category.postCount}",
+          }}
+        />
+        <FilterTab
+          hrefExpr="@{/archives?uncategorized}"
+          activeExpr="not #lists.isEmpty(param.uncategorized)"
+          labelExpr="#{page.archives.uncategorized}"
+          label="未分类"
+        />
+      </div>
+
+      <div class="contents" th:each="archive : ${archives.items}">
+        <!-- th:attr 赋值序列不支持裸布尔项，须为 k=v 对 -->
+        <div
+          th:attr="data-archive-year-row=${archive.year}, data-year=${archive.year}"
+        >
           <div class="flex h-15 w-full flex-row items-center">
             <div
               class="w-[15%] text-right text-2xl font-bold text-75 transition md:w-[10%]"
@@ -48,7 +91,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             </div>
             <div
               class="w-[70%] text-left text-50 transition md:w-[80%]"
-              th:text="#{page.archives.count(${postCount})}"
+              th:with={yearCountThWith}
+              th:attr="data-archive-year-count=${archive.year}"
+              th:text={`#{page.archives.count(\${postCount})}`}
             >
               1 篇文章
             </div>
@@ -57,8 +102,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           <div class="contents" th:each="month : ${archive.months}">
             <a
               th:each="post : ${month.posts}"
+              th:if={`\${${postMatchRow}}`}
               th:href="@{${post.status.permalink}}"
-              th:attr="aria-label=${post.spec.title}"
+              th:attr="aria-label=${post.spec.title}, data-archive-row=${post.spec.slug}, data-year=${archive.year}"
               class="group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
             >
               <div class="flex h-full flex-row items-center justify-start">
@@ -99,7 +145,131 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </div>
         </div>
       </div>
+
+      <div
+        th:if="${#lists.isEmpty(archives.items)}"
+        class="flex flex-col items-center justify-center gap-3 py-16 text-center"
+      >
+        <span
+          class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"
+        ></span>
+        <div class="text-sm text-50" th:text="#{page.archives.empty}">
+          暂无文章
+        </div>
+      </div>
+
+      <!-- 筛选结果为空：行全部被过滤时脚本显示；初始隐藏避免无脚本时闪烁 -->
+      <div
+        id="archive-empty-filter"
+        th:if="${filterActive}"
+        hidden
+        class="flex flex-col items-center justify-center gap-3 py-16 text-center"
+      >
+        <span
+          class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"
+        ></span>
+        <div class="text-sm text-50" th:text="#{page.archives.emptyFiltered}">
+          该筛选条件下暂无文章
+        </div>
+      </div>
     </div>
     <Pagination context="archives" class="mb-4 onload-animation" />
   </div>
+
+  <!-- 筛选态补丁（行级过滤后）：按已渲染行重新统计各年可见数、隐藏空年份、显隐筛选空态。
+       非筛选态为零副作用；Swup 换页后由 SwupScriptsPlugin 重执行。 -->
+  <script is:inline>
+    // @ts-nocheck 浏览器运行时脚本
+    (function () {
+      function run() {
+        var params = new URL(window.location.href).searchParams;
+        var active = params.has("category") || params.has("uncategorized");
+        var rows = document.querySelectorAll("[data-archive-row]");
+        var yearCounts = {};
+        rows.forEach(function (row) {
+          var y = row.getAttribute("data-year");
+          if (!y) y = "";
+          yearCounts[y] = (yearCounts[y] || 0) + 1;
+        });
+
+        var tr = window.__etherealI18n;
+        var fmt = function (msg, n) {
+          return String(msg).replace("{0}", n);
+        };
+
+        document
+          .querySelectorAll("[data-archive-year-row]")
+          .forEach(function (row) {
+            var y = row.getAttribute("data-year") || "";
+            var countEl = row.querySelector("[data-archive-year-count]");
+            if (!countEl) return;
+            var total = yearCounts[y] || 0;
+            if (active) {
+              countEl.textContent = total
+                ? fmt(tr("page.archives.count", "{0} posts"), total)
+                : "";
+              row.style.display = total ? "" : "none";
+            } else {
+              row.style.display = "";
+            }
+          });
+
+        var empty = document.getElementById("archive-empty-filter");
+        if (empty) {
+          empty.hidden = !(active && rows.length === 0);
+        }
+
+        // 页头副标题：筛选态显示「分类名 · 共 N 篇文章」。分类名与文章数取自
+        // 页面内分类选择器（#archive-filter-tabs）的 FilterTab：
+        // href 的 category 参数匹配 → label span 为分类名、
+        // .archive-cat-count 为 category.postCount（服务端数据）；
+        // 未分类无计数值，回退为当前页可见行数（多数站点未分类单页可容）。
+        if (active) {
+          var catName = null;
+          var catCount = null;
+          if (params.has("category")) {
+            var slug = params.get("category");
+            var tabBox = document.getElementById("archive-filter-tabs");
+            var tab = null;
+            if (tabBox) {
+              var links = tabBox.querySelectorAll("a");
+              for (var i3 = 0; i3 < links.length; i3++) {
+                var u = new URL(links[i3].href, window.location.origin);
+                if (u.searchParams.get("category") === slug) {
+                  tab = links[i3];
+                  break;
+                }
+              }
+            }
+            if (tab) {
+              var labelSpan = tab.querySelector("span");
+              catName = labelSpan ? labelSpan.textContent : slug;
+              var cc = tab.querySelector(".archive-cat-count");
+              catCount = cc ? cc.textContent : null;
+            }
+            if (catName == null) catName = slug;
+          } else if (params.has("uncategorized")) {
+            catName = tr("page.archives.uncategorized", "Uncategorized");
+            catCount = String(rows.length);
+          }
+          var subs = document.querySelectorAll(".page-header-sub");
+          if (subs.length && catName) {
+            var displayCount =
+              catCount != null && catCount !== "" ? catCount : "0";
+            subs[0].textContent =
+              catName +
+              " · " +
+              fmt(tr("page.archives.subtitleCount", "{0} posts"), displayCount);
+          }
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", run);
+      } else {
+        run();
+      }
+      document.addEventListener("astro:page-load", run);
+    })();
+  </script>
 </MainGridLayout>

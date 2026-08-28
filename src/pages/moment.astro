@@ -192,7 +192,8 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/upvote.js?v=${ASSET_VERSION}`}
-  defer></script>
+  defer
+  is:inline></script>
 
 <script>
   // 统一处理 #comment 锚点定位（兼容 Halo 评论组件异步渲染）

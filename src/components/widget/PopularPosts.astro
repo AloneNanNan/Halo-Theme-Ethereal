@@ -40,7 +40,7 @@ const MAX_POSTS = 5;
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
       window.__etherealI18n ||
-      function (key, fb) {
+      function (_key, fb) {
         return fb;
       };
 
@@ -152,15 +152,14 @@ const MAX_POSTS = 5;
     }
 
     // 统一的列表请求：失败时渲染空列表并返回 null（由后续 .then 兜底跳过）
-    function fetchPosts(url, signal) {
-      return fetch(url, { signal: signal }).then(function (res) {
-        if (!res.ok) {
-          console.warn("[PopularPosts] API error:", res.status);
-          renderList([]);
-          return null;
-        }
-        return res.json();
-      });
+    async function fetchPosts(url, signal) {
+      var res = await fetch(url, { signal: signal });
+      if (!res.ok) {
+        console.warn("[PopularPosts] API error:", res.status);
+        renderList([]);
+        return null;
+      }
+      return res.json();
     }
 
     function loadPopularPosts() {

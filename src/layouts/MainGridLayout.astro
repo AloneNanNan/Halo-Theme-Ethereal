@@ -497,27 +497,33 @@ const rightSidebarHasContentExpr = [
     <div th:with={bannerThWith()} th:remove="tag">
       <script
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
       <script
         th:if="${mode == 'carousel' or (mobileActive and mobileMode == 'carousel')}"
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
       <script
         th:if="${(mode == 'single' and isVideo) or (mobileActive and mobileIsVideo)}"
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
       <script
         th:if="${mobileActive}"
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
       <script
         th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect == 'typewriter'}"
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
       <script
         th:if="${theme.config?.style?.bannerText != null and theme.config?.style?.bannerText?.subtitleEffect == 'drop'}"
         src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
-        defer></script>
+        defer
+        is:inline></script>
     </div>
 
     <script is:inline>

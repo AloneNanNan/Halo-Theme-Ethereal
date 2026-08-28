@@ -106,6 +106,10 @@ const i18nInlineScript = `<script th:inline="javascript">
     "welcome.close": \`[(#{welcome.close})]\`,
     "common.close": \`[(#{common.close})]\`,
     "fragment.layout.toToc": \`[(#{fragment.layout.toToc})]\`,
+    "page.archives.count": \`[(#{page.archives.count})]\`,
+    "page.archives.subtitleCount": \`[(#{page.archives.subtitleCount})]\`,
+    "page.archives.filterTab": \`[(#{page.archives.filterTab})]\`,
+    "page.archives.uncategorized": \`[(#{page.archives.uncategorized})]\`,
     "post.sharePoster": \`[(#{post.sharePoster})]\`,
     "post.previewAlt": \`[(#{post.previewAlt})]\`,
     "post.copyLink": \`[(#{post.copyLink})]\`,
@@ -188,6 +192,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <Fragment set:html={themeSettingScript} />
     <Fragment set:html={i18nInlineScript} />
     <script is:inline>
+      // @ts-nocheck 本脚本组多处使用 define:vars 注入常量，检查器无法感知（构建期注入）
       // 全局 i18n 助手（单一来源）：供各页面内联脚本与 Svelte 组件共用，
       // 避免多处重复实现（历史各脚本自带的 t() 已陆续收敛到此）。
       (function () {
@@ -219,13 +224,13 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         };
       })();
     </script>
-    <script th:inline="javascript">
+    <script th:inline="javascript" is:inline>
       // Thymeleaf 运行时注入后台配色配置（Elvis 操作符同时覆盖两种可能的路径）
       var __ecs =
         /*[[${theme.config?.style?.colorScheme?.color_scheme}]]*/ "auto";
       var __eecs = /*[[${theme.config?.layout?.mobileMenu?.enable_change_color_scheme ?: theme.config?.style?.colorScheme?.enable_change_color_scheme}]]*/ true;
     </script>
-    <script th:inline="javascript">
+    <script th:inline="javascript" is:inline>
       // 默认语言引导：后台「样式设置 → 主题语言 → 默认语言」非跟随系统时，
       // 首次访问（访客未手动切换过语言）且服务端渲染语言与默认不一致时写入 cookie 并刷新一次，
       // 由 Thymeleaf 服务端用默认语言重渲染；当前语言已匹配时无需刷新。
@@ -342,6 +347,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <script
       th:if="${theme.config?.style?.externalFont?.enable and not #strings.isEmpty(theme.config?.style?.externalFont?.fontFile)}"
       th:inline="javascript"
+      is:inline
     >
       (function () {
         var url = /*[[${theme.config.style.externalFont.fontFile}]]*/ "";

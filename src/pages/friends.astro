@@ -226,6 +226,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     <script
       th:if="${not #lists.isEmpty(allItems.items)}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends.bundle.js?v=${ASSET_VERSION}`}
-      defer></script>
+      defer
+      is:inline></script>
   </div>
 </MainGridLayout>

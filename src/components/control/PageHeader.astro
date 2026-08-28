@@ -58,7 +58,11 @@ const {
       <span th:if={sepShowIfExpr} class="text-30">·</span>
       {
         subExpr && (
-          <span th:if={subShowIfExpr} class="text-50" th:text={subExpr}>
+          <span
+            th:if={subShowIfExpr}
+            class="text-50 page-header-sub"
+            th:text={subExpr}
+          >
             {sub}
           </span>
         )

@@ -43,13 +43,17 @@ function readBaselineVersion(explicit) {
 function parseVersion(raw) {
   const m = String(raw).match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/);
   if (!m) return null;
-  if ([m[1], m[2], m[3]].some((part) => part.length > 1 && part.startsWith("0"))) {
+  if (
+    [m[1], m[2], m[3]].some((part) => part.length > 1 && part.startsWith("0"))
+  ) {
     return null;
   }
   if (
-    m[4]?.split(".").some(
-      (part) => /^\d+$/.test(part) && part.length > 1 && part.startsWith("0"),
-    )
+    m[4]
+      ?.split(".")
+      .some(
+        (part) => /^\d+$/.test(part) && part.length > 1 && part.startsWith("0"),
+      )
   ) {
     return null;
   }

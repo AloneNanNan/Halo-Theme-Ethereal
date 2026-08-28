@@ -58,7 +58,7 @@ const className = Astro.props.class;
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
       window.__etherealI18n ||
-      function (key, fb) {
+      function (_key, fb) {
         return fb;
       };
 
@@ -382,13 +382,12 @@ const className = Astro.props.class;
     // 天气为低优先级数据，限流时直接走错误提示（配合缓存展示）即可。
     // 注：不改为 fetch——腾讯位置服务 API 无 CORS 头，
     // 浏览器 fetch 会被跨域拦截，JSONP 是纯前端方案下唯一可用通道。
-    function jsonpOnce(url) {
-      return jsonp(url).then(function (data) {
-        if (isRateLimited(data.status)) {
-          throw new Error("weather rate-limited");
-        }
-        return data;
-      });
+    async function jsonpOnce(url) {
+      var data = await jsonp(url);
+      if (isRateLimited(data.status)) {
+        throw new Error("weather rate-limited");
+      }
+      return data;
     }
 
     function loadWeather() {
@@ -422,20 +421,19 @@ const className = Astro.props.class;
       }
 
       // 请求天气：给定 adcode（限流不重试，见 jsonpOnce）
-      function fetchWeather(adcode) {
-        return jsonpOnce(
+      async function fetchWeather(adcode) {
+        var wxData = await jsonpOnce(
           API_BASE +
             "/weather/v1/?key=" +
             key +
             "&adcode=" +
             adcode +
             "&type=now&output=jsonp",
-        ).then(function (wxData) {
-          if (wxData.status === 0 && wxData.result) {
-            return wxData.result;
-          }
-          throw new Error(wxData.message || "天气查询失败");
-        });
+        );
+        if (wxData.status === 0 && wxData.result) {
+          return wxData.result;
+        }
+        throw new Error(wxData.message || "天气查询失败");
       }
 
       // 优先使用 IP 缓存；没有则先请求 IP 定位（限流也自动重试）
@@ -466,10 +464,9 @@ const className = Astro.props.class;
       }
 
       adcodePromise
-        .then(function (adcode) {
-          return delay(REQUEST_GAP).then(function () {
-            return fetchWeather(adcode);
-          });
+        .then(async function (adcode) {
+          await delay(REQUEST_GAP);
+          return fetchWeather(adcode);
         })
         .then(function (result) {
           result._updated = Date.now();

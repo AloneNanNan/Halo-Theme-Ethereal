@@ -12,6 +12,9 @@
 // 滑块是滚动区的兄弟而非子级（需横跨首页/归档/更多），不受 overflow 裁剪或 mask
 // 渐隐约束，故 moveLiquid 会与滚动区可见窗口求交集：半露时只铺可见段、
 // 完全滚出时隐藏，避免高亮底色溢出到相邻 pill/分隔线（issue #52）。
+//
+// 归档页筛选：由归档页内的分类选择器（FilterTabs）承担，导航栏在
+// 归档页始终高亮"归档"按钮（不随 URL 筛选参数切换分类高亮）。
 ---
 
 <div
@@ -95,7 +98,8 @@
     border-radius: 0.75rem;
     transition:
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease;
     z-index: 0;
     pointer-events: none;
     opacity: 1;
@@ -316,9 +320,6 @@
       var isHome = path === "/" || path === "";
       var isArchives = path.startsWith("/archives");
       var isCategories = path === "/categories";
-      var activeCategory = params.get("category") || "";
-      var hasTag = params.has("tag");
-      var hasUncategorized = params.has("uncategorized");
 
       var targetName = null;
 
@@ -326,8 +327,10 @@
         targetName = "";
       } else if (isCategories) {
         targetName = "__categories__";
-      } else if (activeCategory) {
-        targetName = activeCategory;
+      } else if (isArchives) {
+        // 归档页始终高亮"归档"按钮，无论 URL 带何种筛选参数
+        // （分类筛选由页面内 FilterTabs 承担，不反映到导航栏）
+        targetName = "__archive__";
       } else {
         var pills = bar.querySelectorAll(".category-pill");
         for (var i = 0; i < pills.length; i++) {
@@ -346,9 +349,6 @@
               }
             } catch (e) {}
           }
-        }
-        if (!targetName && isArchives && !hasTag && !hasUncategorized) {
-          targetName = "__archive__";
         }
       }
 
@@ -372,7 +372,7 @@
         currentActiveName === targetName &&
         currentSoftName === targetSoftName
       )
-        return;
+        return false;
 
       var allPills = bar.querySelectorAll(".category-pill");
       allPills.forEach(function (pill) {
@@ -391,6 +391,7 @@
           pill.removeAttribute("data-soft-active");
         }
       });
+      return true;
     }
 
     function scrollPillIntoView(smooth) {
@@ -453,7 +454,7 @@
 
     function init() {
       initScrollFeatures();
-      updateCategoryBar();
+      updateCategoryBar(false);
 
       bar.addEventListener("click", function (e) {
         var pill = e.target.closest(".category-pill");
@@ -480,6 +481,16 @@
         if (pathOf(href) === location.pathname) return;
         if (window.swup) window.swup.navigate(href);
         else location.href = href;
+      });
+
+      var resizeRaf = 0;
+      window.addEventListener("resize", function () {
+        if (resizeRaf) return;
+        resizeRaf = requestAnimationFrame(function () {
+          resizeRaf = 0;
+          moveToActive(false);
+          updateScrollMask();
+        });
       });
 
       function onSwupPageView() {

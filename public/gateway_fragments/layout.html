@@ -87,8 +87,8 @@
         }
         body {
           font-family:
-            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
-            "Microsoft YaHei", sans-serif;
+            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "PingFang SC", "Microsoft YaHei", sans-serif;
           background: var(--page-bg);
           min-height: 100vh;
           display: flex;
@@ -313,16 +313,37 @@
           opacity: 1;
         }
         @keyframes shakeHead {
-          0%, 100% { translate: 0 0; }
-          10% { translate: -9px 0; }
-          20% { translate: 7px 0; }
-          30% { translate: -6px 0; }
-          40% { translate: 5px 0; }
-          50% { translate: -4px 0; }
-          60% { translate: 3px 0; }
-          70% { translate: -2px 0; }
-          80% { translate: 1px 0; }
-          90% { translate: -0.5px 0; }
+          0%,
+          100% {
+            translate: 0 0;
+          }
+          10% {
+            translate: -9px 0;
+          }
+          20% {
+            translate: 7px 0;
+          }
+          30% {
+            translate: -6px 0;
+          }
+          40% {
+            translate: 5px 0;
+          }
+          50% {
+            translate: -4px 0;
+          }
+          60% {
+            translate: 3px 0;
+          }
+          70% {
+            translate: -2px 0;
+          }
+          80% {
+            translate: 1px 0;
+          }
+          90% {
+            translate: -0.5px 0;
+          }
         }
         .eyes.shake-head,
         .yellow-mouth.shake-head,
@@ -575,7 +596,6 @@
           text-decoration: underline;
         }
 
-
         /* ===== 第三方登录（Halo 注入的 OAuth 按钮） ===== */
         .divider-wrapper {
           display: flex;
@@ -685,7 +705,9 @@
               try {
                 var c = JSON.parse(tc.textContent);
                 ds =
-                  (c.style && c.style.colorScheme && c.style.colorScheme.color_scheme) ||
+                  (c.style &&
+                    c.style.colorScheme &&
+                    c.style.colorScheme.color_scheme) ||
                   "auto";
                 ac =
                   (c.layout &&
@@ -700,7 +722,8 @@
                 matchMedia("(prefers-color-scheme:dark)").matches)
             )
               document.documentElement.classList.add("dark");
-            if (sch === "light") document.documentElement.classList.add("light");
+            if (sch === "light")
+              document.documentElement.classList.add("light");
             document.documentElement.style.setProperty("--hue", h);
           } catch (e) {}
         })();
@@ -711,19 +734,22 @@
     <th:block
       th:if="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
     >
-      <th:block th:replace="~{gateway_fragments/common::basicStaticResources}"></th:block>
+      <th:block
+        th:replace="~{gateway_fragments/common::basicStaticResources}"
+      ></th:block>
     </th:block>
     <!-- 主题模式：只加载 JS，样式由上方 <style> 提供 -->
     <th:block
       th:unless="${theme.config?.auth?.loginPage != null && theme.config?.auth?.loginPage == 'halo'}"
     >
-      <th:block th:replace="~{gateway_fragments/common::basicScriptResources}"></th:block>
+      <th:block
+        th:replace="~{gateway_fragments/common::basicScriptResources}"
+      ></th:block>
     </th:block>
 
     <th:block th:if="${head != null}"
       ><th:block th:replace="${head}"
     /></th:block>
-
   </head>
 
   <body>
@@ -748,41 +774,97 @@
             <div class="characters-scene" id="characters-scene">
               <!-- 紫色矩形角色 -->
               <div class="character char-purple" id="char-purple">
-                <div class="eyes" id="purple-eyes" style="left: 45px; top: 40px; gap: 28px">
-                  <div class="eyeball" id="purple-eye-l" style="width: 18px; height: 18px">
-                    <div class="pupil" id="purple-pupil-l" style="width: 7px; height: 7px"></div>
+                <div
+                  class="eyes"
+                  id="purple-eyes"
+                  style="left: 45px; top: 40px; gap: 28px"
+                >
+                  <div
+                    class="eyeball"
+                    id="purple-eye-l"
+                    style="width: 18px; height: 18px"
+                  >
+                    <div
+                      class="pupil"
+                      id="purple-pupil-l"
+                      style="width: 7px; height: 7px"
+                    ></div>
                   </div>
-                  <div class="eyeball" id="purple-eye-r" style="width: 18px; height: 18px">
-                    <div class="pupil" id="purple-pupil-r" style="width: 7px; height: 7px"></div>
+                  <div
+                    class="eyeball"
+                    id="purple-eye-r"
+                    style="width: 18px; height: 18px"
+                  >
+                    <div
+                      class="pupil"
+                      id="purple-pupil-r"
+                      style="width: 7px; height: 7px"
+                    ></div>
                   </div>
                 </div>
               </div>
               <!-- 黑色矩形角色 -->
               <div class="character char-black" id="char-black">
-                <div class="eyes" id="black-eyes" style="left: 26px; top: 32px; gap: 20px">
-                  <div class="eyeball" id="black-eye-l" style="width: 16px; height: 16px">
-                    <div class="pupil" id="black-pupil-l" style="width: 6px; height: 6px"></div>
+                <div
+                  class="eyes"
+                  id="black-eyes"
+                  style="left: 26px; top: 32px; gap: 20px"
+                >
+                  <div
+                    class="eyeball"
+                    id="black-eye-l"
+                    style="width: 16px; height: 16px"
+                  >
+                    <div
+                      class="pupil"
+                      id="black-pupil-l"
+                      style="width: 6px; height: 6px"
+                    ></div>
                   </div>
-                  <div class="eyeball" id="black-eye-r" style="width: 16px; height: 16px">
-                    <div class="pupil" id="black-pupil-r" style="width: 6px; height: 6px"></div>
+                  <div
+                    class="eyeball"
+                    id="black-eye-r"
+                    style="width: 16px; height: 16px"
+                  >
+                    <div
+                      class="pupil"
+                      id="black-pupil-r"
+                      style="width: 6px; height: 6px"
+                    ></div>
                   </div>
                 </div>
               </div>
               <!-- 橙色半圆角色 -->
               <div class="character char-orange" id="char-orange">
-                <div class="eyes" id="orange-eyes" style="left: 82px; top: 90px; gap: 28px">
+                <div
+                  class="eyes"
+                  id="orange-eyes"
+                  style="left: 82px; top: 90px; gap: 28px"
+                >
                   <div class="bare-pupil" id="orange-pupil-l"></div>
                   <div class="bare-pupil" id="orange-pupil-r"></div>
                 </div>
-                <div class="orange-mouth" id="orange-mouth" style="left: 90px; top: 120px"></div>
+                <div
+                  class="orange-mouth"
+                  id="orange-mouth"
+                  style="left: 90px; top: 120px"
+                ></div>
               </div>
               <!-- 黄色圆角角色 -->
               <div class="character char-yellow" id="char-yellow">
-                <div class="eyes" id="yellow-eyes" style="left: 52px; top: 40px; gap: 20px">
+                <div
+                  class="eyes"
+                  id="yellow-eyes"
+                  style="left: 52px; top: 40px; gap: 20px"
+                >
                   <div class="bare-pupil" id="yellow-pupil-l"></div>
                   <div class="bare-pupil" id="yellow-pupil-r"></div>
                 </div>
-                <div class="yellow-mouth" id="yellow-mouth" style="left: 40px; top: 88px"></div>
+                <div
+                  class="yellow-mouth"
+                  id="yellow-mouth"
+                  style="left: 40px; top: 88px"
+                ></div>
               </div>
             </div>
           </div>
@@ -831,7 +913,7 @@
 
           // 监听 Halo 注入的输入框：聚焦用户名时角色对视，聚焦密码时转头回避
           var haloInputs = document.querySelectorAll(
-            '.form-inner input[type="text"], .form-inner input[type="email"], .form-inner input[type="password"]'
+            '.form-inner input[type="text"], .form-inner input[type="email"], .form-inner input[type="password"]',
           );
           for (var i = 0; i < haloInputs.length; i++) {
             (function (inp) {
@@ -867,15 +949,18 @@
 
           // 随机眨眼（紫色 / 黑色角色）
           function scheduleBlink(setter) {
-            setTimeout(function () {
-              setter(true);
-              updateCharacters();
-              setTimeout(function () {
-                setter(false);
+            setTimeout(
+              function () {
+                setter(true);
                 updateCharacters();
-                scheduleBlink(setter);
-              }, 150);
-            }, Math.random() * 4000 + 3000);
+                setTimeout(function () {
+                  setter(false);
+                  updateCharacters();
+                  scheduleBlink(setter);
+                }, 150);
+              },
+              Math.random() * 4000 + 3000,
+            );
           }
           scheduleBlink(function (v) {
             isPurpleBlinking = v;
@@ -945,7 +1030,8 @@
             } else if (isLookingAway) {
               pEyes.style.left = "20px";
               pEyes.style.top = "25px";
-              pPL.style.transform = pPR.style.transform = "translate(-5px,-5px)";
+              pPL.style.transform = pPR.style.transform =
+                "translate(-5px,-5px)";
             } else if (isLookingAtEachOther) {
               pEyes.style.left = "55px";
               pEyes.style.top = "65px";
@@ -983,7 +1069,8 @@
             } else if (isLookingAway) {
               bEyes.style.left = "10px";
               bEyes.style.top = "20px";
-              bPL.style.transform = bPR.style.transform = "translate(-4px,-5px)";
+              bPL.style.transform = bPR.style.transform =
+                "translate(-4px,-5px)";
             } else if (isLookingAtEachOther) {
               bEyes.style.left = "32px";
               bEyes.style.top = "12px";
@@ -1008,7 +1095,8 @@
             } else if (isLookingAway) {
               oEyes.style.left = "50px";
               oEyes.style.top = "75px";
-              oPL.style.transform = oPR.style.transform = "translate(-5px,-5px)";
+              oPL.style.transform = oPR.style.transform =
+                "translate(-5px,-5px)";
             } else {
               oEyes.style.left = 82 + oP.faceX + "px";
               oEyes.style.top = 90 + oP.faceY + "px";
@@ -1033,7 +1121,8 @@
             } else if (isLookingAway) {
               yEyes.style.left = "20px";
               yEyes.style.top = "30px";
-              yPL.style.transform = yPR.style.transform = "translate(-5px,-5px)";
+              yPL.style.transform = yPR.style.transform =
+                "translate(-5px,-5px)";
               yMouth.style.left = "15px";
               yMouth.style.top = "78px";
               yMouth.style.transform = "rotate(0deg)";
@@ -1094,7 +1183,7 @@
           // Halo 登录失败会重定向回登录页并渲染错误提示：初始检测 + MutationObserver 兜底
           function hasErrorNode() {
             return !!document.querySelector(
-              '.form-inner .alert-danger, .form-inner [class*="error"]'
+              '.form-inner .alert-danger, .form-inner [class*="error"]',
             );
           }
           if (hasErrorNode()) {
@@ -1125,7 +1214,7 @@
 
           // ---- 提交按钮增强：包装 hover 滑出结构（渐进增强，失败不影响提交） ----
           var submitBtn = document.querySelector(
-            '.form-inner button[type="submit"]'
+            '.form-inner button[type="submit"]',
           );
           if (submitBtn && !submitBtn.querySelector(".btn-text")) {
             try {
@@ -1140,7 +1229,7 @@
               hoverSpan.appendChild(hoverText);
               hoverSpan.insertAdjacentHTML(
                 "beforeend",
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
               );
               submitBtn.textContent = "";
               submitBtn.appendChild(textSpan);
@@ -1163,7 +1252,8 @@
             // 注册页密码+确认密码 同行：用独立 wrapper，不动父级
             var fits = fi.querySelectorAll(".form-item");
             for (var fi_i = 0; fi_i < fits.length - 1; fi_i++) {
-              var fa = fits[fi_i], fb = fits[fi_i + 1];
+              var fa = fits[fi_i],
+                fb = fits[fi_i + 1];
               if (
                 fa.parentNode === fb.parentNode &&
                 fa.querySelector('input[type="password"]') &&
