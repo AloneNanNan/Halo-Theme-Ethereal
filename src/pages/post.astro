@@ -393,15 +393,18 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   <script
     th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.like != false}"
     src={`${basePath}/assets/post-like.js?v=${ASSET_VERSION}`}
-    defer></script>
+    defer
+    is:inline></script>
   <script
     th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.share != false}"
     src={`${basePath}/assets/post-share.js?v=${ASSET_VERSION}`}
-    defer></script>
+    defer
+    is:inline></script>
   <script
     th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.reward != false}"
     src={`${basePath}/assets/post-reward.js?v=${ASSET_VERSION}`}
-    defer></script>
+    defer
+    is:inline></script>
   <script
     is:inline
     th:if="${theme.config?.post?.summary == null or theme.config?.post?.summary?.summaryEffect == null or theme.config?.post?.summary?.summaryEffect == 'typewriter'}"

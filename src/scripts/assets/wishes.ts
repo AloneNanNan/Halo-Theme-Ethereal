@@ -302,10 +302,9 @@
           anonymous: !nickname,
         }),
       })
-        .then(function (r) {
-          return r.json().then(function (d) {
-            return { ok: r.ok, data: d };
-          });
+        .then(async function (r) {
+          var d = await r.json();
+          return { ok: r.ok, data: d };
         })
         .then(function (res) {
           if (res.ok) {
@@ -370,10 +369,9 @@
             : t("page.wishes.anonymous", "匿名"),
         }),
       })
-        .then(function (r) {
-          return r.json().then(function (d) {
-            return { ok: r.ok, data: d };
-          });
+        .then(async function (r) {
+          var d = await r.json();
+          return { ok: r.ok, data: d };
         })
         .then(function (res) {
           if (!res.ok) {

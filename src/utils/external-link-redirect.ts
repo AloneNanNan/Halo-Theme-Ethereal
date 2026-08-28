@@ -4,7 +4,7 @@ import type { ExternalLink } from "../types/config";
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 const t =
-  window.__etherealI18n ?? ((key: string, fallback: string) => fallback);
+  window.__etherealI18n ?? ((_key: string, fallback: string) => fallback);
 /** 简单 {0} 占位符替换，与 i18n 参数格式一致 */
 function fmt(msg: string, ...args: (string | number)[]): string {
   return String(msg).replace(/\{(\d+)\}/g, (m, i) =>

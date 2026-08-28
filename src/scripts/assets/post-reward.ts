@@ -5,7 +5,7 @@ import { getThemeConfig } from "./_theme-config";
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 var t =
   window.__etherealI18n ||
-  function (k, f) {
+  function (_k, f) {
     return f;
   };
 

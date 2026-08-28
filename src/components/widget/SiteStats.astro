@@ -161,7 +161,7 @@ const style = Astro.props.style;
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
       window.__etherealI18n ||
-      function (key, fb) {
+      function (_key, fb) {
         return fb;
       };
 

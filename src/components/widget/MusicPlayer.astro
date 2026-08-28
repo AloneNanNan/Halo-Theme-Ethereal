@@ -343,6 +343,7 @@ const layoutId = `${widgetId}-layout`;
 </div>
 
 <script define:vars={{ widgetId }} is:inline>
+  // @ts-nocheck 本脚本组多处使用 define:vars 注入常量，检查器无法感知（构建期注入）
   (() => {
     const widget = document.getElementById(widgetId);
     if (!widget || widget.dataset.fireflyBound === "true") return;

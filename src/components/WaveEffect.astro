@@ -65,5 +65,6 @@
   <!-- I26：脚本移入 th:if 容器内——波浪关闭时（disabled/旧 false）不再下载 wave.js -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wave.js?v=${ASSET_VERSION}`}
-    defer></script>
+    defer
+    is:inline></script>
 </div>

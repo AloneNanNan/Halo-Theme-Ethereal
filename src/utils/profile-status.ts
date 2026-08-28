@@ -24,7 +24,7 @@ import { getThemeConfig, setThemeConfig } from "./theme-config";
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 const t =
-  window.__etherealI18n ?? ((key: string, fallback: string) => fallback);
+  window.__etherealI18n ?? ((_key: string, fallback: string) => fallback);
 
 export interface StatusOption {
   key: string;

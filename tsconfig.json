@@ -1,10 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": [
-    "dist",
-    "templates"
-  ],
+  "exclude": ["dist", "templates", "public", "src/scripts/vendor"],
   "compilerOptions": {
     "strictNullChecks": true,
     "jsx": "preserve",
