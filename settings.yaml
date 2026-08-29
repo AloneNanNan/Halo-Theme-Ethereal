@@ -1315,7 +1315,7 @@ spec:
               if: "$get(announcement_enable).value"
               label: 显示位置
               value: left
-              help: "公告仅可显示在左侧边栏或右侧边栏，两栏布局时仅显示在左侧"
+              help: "公告仅可显示在左侧边栏或右侧边栏，两栏布局时仅显示在左侧。选择右侧栏时，主题为手机端保留一份左侧兜底实例（桌面端隐藏，仅移动端显示），自定义 HTML 需按类选择器逐实例初始化，避免重复 ID 导致的脚本失效（详见「呈现为HTML」说明）"
               options:
                 - label: 左侧边栏
                   value: left
@@ -1326,6 +1326,24 @@ spec:
               if: "$get(announcement_enable).value"
               label: 公告内容
               value: "欢迎来到我的博客！这是一则示例公告。"
+            - $formkit: switch
+              name: enable_html
+              id: announcement_enable_html
+              key: announcement_enable_html
+              if: "$get(announcement_enable).value"
+              label: 内容呈现为HTML
+              value: false
+              help: "开启后公告内容按 HTML 渲染，可写入链接、图标、富文本等自定义内容；关闭时内容按纯文本显示。注意：公告控件宽度随显示位置而变——桌面端左侧栏与右侧栏宽度一致（侧栏列 17.5rem≈280px，内容区约 236px），手机视图为单栏全宽（接近整页宽度，明显更宽）。建议不要使用视口自适应宽度/高度（vw/vh、clamp、百分比宽高、aspect-ratio 等）的 HTML，否则在不同的位置或屏幕尺寸下呈现不同的效果；如需精确控制请使用固定值（px/rem）。另注意：显示位置为「右侧栏」时，桌面端页面会同时渲染一份仅供手机显示的左侧兜底公告（隐藏），因此自定义 HTML 内不要依赖全局唯一 ID（getElementById 只会命中第一份实例），应使用类选择器并逐实例初始化（如 document.querySelectorAll('.neon-wrapper').forEach(...)）"
+            - $formkit: number
+              name: content_height
+              id: announcement_content_height
+              key: announcement_content_height
+              if: "$get(announcement_enable_html).value"
+              label: 内容最大高度(px)
+              value: 640
+              min: 40
+              max: 1024
+              help: "HTML 模式下公告内容区自适应高度（由内容自身决定展示高度，最大不超过该值），超出部分内部滚动；留空使用默认 640px。设置为该上限以下以适配常见公告内容，如需完全按内容自适应可忽略此设置"
             - $formkit: switch
               name: closable
               if: "$get(announcement_enable).value"

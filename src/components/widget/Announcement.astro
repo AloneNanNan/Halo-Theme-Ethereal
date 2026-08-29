@@ -13,10 +13,26 @@ const { class: className } = Astro.props;
   nameKey="widget.announcement.title"
   class={className}
 >
-  <div class="px-3">
+  <div
+    class="px-3"
+    th:with="content = ${theme.config?.sidebar?.announcement?.content ?: '欢迎来到我的博客！这是一则示例公告。'}"
+  >
+    <!-- 内容：后台「内容支持 HTML」开启时按 HTML 渲染（th:utext），否则按纯文本转义渲染（th:text）；
+         两属性同元素互斥，故用 th:if / th:unless 双份渲染，默认关闭（纯文本） -->
+    <!-- 呈现为HTML 模式：内容区自适应内容高度（HTML 自身决定展示高度），
+         仅以「内容最大高度(px)」作上限（默认 640），超出部分内部滚动；
+         断词避免长 URL 横向溢出；纯文本模式维持原有不设限行为 -->
     <div
+      th:if="${theme.config?.sidebar?.announcement?.enable_html == true}"
+      class="mb-3 overflow-y-auto overflow-x-hidden break-words leading-relaxed text-neutral-600 dark:text-neutral-300"
+      th:style="|max-height: ${theme.config?.sidebar?.announcement?.content_height ?: 640}px|"
+      th:utext="${content}"
+    >
+    </div>
+    <div
+      th:unless="${theme.config?.sidebar?.announcement?.enable_html == true}"
       class="mb-3 leading-relaxed text-neutral-600 dark:text-neutral-300"
-      th:text="${theme.config?.sidebar?.announcement?.content ?: '欢迎来到我的博客！这是一则示例公告。'}"
+      th:text="${content}"
     >
       欢迎来到我的博客！这是一则示例公告。
     </div>

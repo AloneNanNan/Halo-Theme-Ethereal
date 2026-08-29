@@ -184,13 +184,15 @@
     <span class="icon-[material-symbols--search] pointer-events-none absolute ml-3 text-[1.25rem] text-black/50 transition dark:text-white/50"></span>
     <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label；
          id/name：表单字段可访问性（浏览器自动填充） -->
+    <!-- mobile 输入框：absolute inset-0 铺满搜索条；聚焦只需边框环提示，
+         不能套用桌面端 focus:w-60 定宽（会破坏占满宽度，即 #58） -->
     <input
       id="search-input-mobile"
       name="search"
       placeholder={t("search.placeholder", "搜索")}
       aria-label={t("search.placeholder", "搜索")}
       bind:value={keywordMobile}
-      class="absolute inset-0 bg-transparent pl-10 text-sm text-black/50 outline-0 focus:w-60 dark:text-white/50"
+      class="absolute inset-0 bg-transparent pl-10 text-sm text-black/50 outline-0 dark:text-white/50"
     />
   </div>
 
