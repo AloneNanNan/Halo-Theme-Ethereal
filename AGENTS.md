@@ -96,14 +96,6 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 - `iconClass` 只传 `icon-[...]` 名字面量，组件统一追加 `text-base text-(--primary)`；图标名必须留在页面源码，Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${name}]` 动态拼接。
 - **沉默 footgun**：若把字面量误当表达式传（或漏写 `${}`），`astro build` 不报错，只在 Halo 服务端渲染时抛 Thymeleaf 解析异常。改这些组件前先读懂对应 `.astro` 文件顶部的传参注释。
 
-## 页面布局模式与右栏空态收列
-
-三栏布局下右侧栏无组件时，整页按两栏模式渲染（收起第三列、页宽回落默认 `--page-width`）。实现与约定：
-
-- **有效布局模式变量**：`MainGridLayout.astro` 顶部用 `th:with` + `th:remove="tag"` 作用域提升包裹层定义 `layoutTwoColumnOrEmpty`（真两栏 或 右栏空态），供导航容器 `#top-row`、面板容器、`#main-grid` 列数、`SideBar` 跨行、`RightSideBar` xl 隐藏及 `#toc-container` 浮动目录门控共同消费。
-- **空态判定三条件**（frontmatter 的 `rightSidebarHasContentExpr`，与 `RightSideBar.astro` 渲染条件逐项同源）：Profile 右置 / 公告右置 / 小组件列表（`null` 视为有默认组件，仅显式清空为 `[]` 才算无组件）。**目录不计入空态**：空态文章页的目录走两栏浮动目录 `#toc-container`，侧栏内嵌目录随 aside 整体隐藏。
-- **新增依赖布局模式的样式/逻辑时**：一律消费 `layoutTwoColumnOrEmpty` 或容器类（`.layout-two-column` / `.layout-three-column` 后代选择器），禁止直接读原始 `theme.config...layoutMode`。例外是 `SideBar.astro` / `RightSideBar.astro` 内部按原始 `layoutMode` 分支的 Profile/公告双渲染兜底——它们被空态判定①②互斥保护（对应组件右置时永不收列），改动空态判定子条件时必须同步核对这些分支。
-
 ## 常见坑（务必注意）
 
 - **不要改 `dist/`**：它是 `pnpm package` 打出的发布 zip 产物，改无效。要改就改 `src/` 后重新构建（HTML 模板产物在 `templates/`）。
