@@ -2,6 +2,10 @@
 import PhotoExifMeta from "../components/photos/PhotoExifMeta.astro";
 import PhotoI18n from "../components/photos/PhotoI18n.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+
+// 判断 EXIF 是否真的有数据（exif 对象可能存在但所有字段为空，此时视为无 EXIF 提示）
+const exifHasData =
+  "${photo.exif != null and (photo.exif.dateTimeOriginal != null or not #strings.isEmpty(photo.exif.make) or not #strings.isEmpty(photo.exif.model) or not #strings.isEmpty(photo.exif.lensModel) or photo.exif.fNumber != null or not #strings.isEmpty(photo.exif.exposureTime) or photo.exif.iso != null or photo.exif.focalLength != null or photo.exif.focalLengthIn35mm != null or (photo.exif.imageWidth != null and photo.exif.imageHeight != null) or not #strings.isEmpty(photo.exif.software))}";
 ---
 
 <MainGridLayout
@@ -134,10 +138,16 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
       <div class="flex flex-col gap-4 px-6 py-6 md:px-9">
         <div
-          th:if="${photo.exif != null}"
+          th:if={exifHasData}
           class="rounded-xl bg-(--btn-regular-bg) px-4 py-4"
         >
-          <PhotoExifMeta condition="${photo.exif != null}" />
+          <PhotoExifMeta condition={exifHasData} />
+        </div>
+        <div
+          th:unless={exifHasData}
+          class="rounded-xl bg-(--btn-regular-bg) px-4 py-4 text-sm font-bold text-30"
+        >
+          <span th:text="#{page.photos.noExif}">This photo has no EXIF</span>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
@@ -173,8 +183,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </a>
           <div
             th:unless="${prev != null}"
-            class="hidden min-h-18 rounded-xl bg-(--btn-regular-bg) sm:block"
+            class="flex min-h-18 items-center justify-center rounded-xl bg-(--btn-regular-bg) px-4 text-sm font-bold text-30"
           >
+            <span th:text="#{page.photos.noPrevious}">No earlier photo</span>
           </div>
 
           <a
@@ -207,6 +218,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               class="icon-[material-symbols--chevron-right-rounded] text-2xl text-(--primary) sm:order-3"
             ></span>
           </a>
+          <div
+            th:unless="${next != null}"
+            class="flex min-h-18 items-center justify-center rounded-xl bg-(--btn-regular-bg) px-4 text-sm font-bold text-30"
+          >
+            <span th:text="#{page.photos.noNext}">No newer photo</span>
+          </div>
         </div>
 
         <div
