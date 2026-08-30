@@ -21,10 +21,17 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
 
-  const renderHighlighted = (value?: string) =>
-    escapeHtml(value || "")
-      .replaceAll("&lt;mark&gt;", "<mark>")
-      .replaceAll("&lt;/mark&gt;", "</mark>");
+  // 仅还原搜索高亮的 <mark>，其余 HTML 标签（如 <strong>）剥除为空格，
+  // 避免摘要原样显示标签文本
+  const renderHighlighted = (value?: string) => {
+    const protectedValue = (value || "")
+      .replace(/<mark>/gi, "\u0001")
+      .replace(/<\/mark>/gi, "\u0002")
+      .replace(/<[^>]*>/g, " ");
+    return escapeHtml(protectedValue)
+      .replaceAll("\u0001", "<mark>")
+      .replaceAll("\u0002", "</mark>");
+  };
 
   const excerptOf = (hit: Hit) => renderHighlighted(hit.description || hit.content || "");
 
@@ -210,9 +217,15 @@
         href={item.permalink}
         class="group block rounded-xl px-3 py-2 text-lg transition first-of-type:mt-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) lg:first-of-type:mt-0"
       >
-        <div class="inline-flex font-bold text-90 transition group-hover:text-(--primary)">
-          {@html renderHighlighted(item.title)}
-          <span class="icon-[fa6-solid--chevron-right] my-auto translate-x-1 text-[0.75rem] text-(--primary) transition"></span>
+        <!-- 标题用 flex + 内部换行：inline-flex 默认 nowrap，窄屏（移动端）长标题
+             无法换行导致溢出、箭头图标错位（#64）；min-w-0/break-words 允许词内断行 -->
+        <div
+          class="flex items-center gap-x-1 font-bold text-90 transition group-hover:text-(--primary)"
+        >
+          <span class="min-w-0 break-words">{@html renderHighlighted(item.title)}</span>
+          <span
+            class="icon-[fa6-solid--chevron-right] shrink-0 text-[0.75rem] text-(--primary) transition"></span
+          >
         </div>
         <div class="text-sm text-50 transition">
           {@html excerptOf(item)}
