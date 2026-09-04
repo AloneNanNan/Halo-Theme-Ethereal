@@ -351,6 +351,8 @@ export interface AnnouncementConfig {
   enable?: boolean;
   position?: string;
   content?: string;
+  enable_html?: boolean;
+  content_height?: number;
   closable?: boolean;
   link?: AnnouncementLink;
 }

@@ -1327,6 +1327,24 @@ spec:
               label: 公告内容
               value: "欢迎来到我的博客！这是一则示例公告。"
             - $formkit: switch
+              name: enable_html
+              id: announcement_enable_html
+              key: announcement_enable_html
+              if: "$get(announcement_enable).value"
+              label: 内容呈现为HTML
+              value: false
+              help: "开启后按 HTML 渲染（可写链接、图标、富文本），关闭时按纯文本显示。样式请用 px/rem 固定值；内容不过滤，只填可信 HTML；带脚本时用类选择器而非 id 初始化。"
+            - $formkit: number
+              name: content_height
+              id: announcement_content_height
+              key: announcement_content_height
+              if: "$get(announcement_enable_html).value"
+              label: 内容最大高度(px)
+              value: 640
+              min: 40
+              max: 1024
+              help: "内容区高度由 HTML 自身决定，超过此值则在公告内部滚动；留空使用默认 640px"
+            - $formkit: switch
               name: closable
               if: "$get(announcement_enable).value"
               label: 允许关闭

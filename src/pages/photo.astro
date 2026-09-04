@@ -2,6 +2,7 @@
 import PhotoExifMeta from "../components/photos/PhotoExifMeta.astro";
 import PhotoI18n from "../components/photos/PhotoI18n.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { exifHasDataExpr } from "../utils/photo-exif";
 ---
 
 <MainGridLayout
@@ -134,10 +135,17 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
       <div class="flex flex-col gap-4 px-6 py-6 md:px-9">
         <div
-          th:if="${photo.exif != null}"
+          th:if={exifHasDataExpr}
           class="rounded-xl bg-(--btn-regular-bg) px-4 py-4"
         >
-          <PhotoExifMeta condition="${photo.exif != null}" />
+          <!-- 是否渲染由外层 th:if 控制，组件内不再重复判定 -->
+          <PhotoExifMeta />
+        </div>
+        <div
+          th:unless={exifHasDataExpr}
+          class="rounded-xl bg-(--btn-regular-bg) px-4 py-4 text-sm font-bold text-30"
+        >
+          <span th:text="#{page.photos.noExif}">This photo has no EXIF</span>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
@@ -173,8 +181,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </a>
           <div
             th:unless="${prev != null}"
-            class="hidden min-h-18 rounded-xl bg-(--btn-regular-bg) sm:block"
+            class="flex min-h-18 items-center justify-center rounded-xl bg-(--btn-regular-bg) px-4 text-sm font-bold text-30"
           >
+            <span th:text="#{page.photos.noPrevious}">No earlier photo</span>
           </div>
 
           <a
@@ -207,6 +216,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
               class="icon-[material-symbols--chevron-right-rounded] text-2xl text-(--primary) sm:order-3"
             ></span>
           </a>
+          <div
+            th:unless="${next != null}"
+            class="flex min-h-18 items-center justify-center rounded-xl bg-(--btn-regular-bg) px-4 text-sm font-bold text-30"
+          >
+            <span th:text="#{page.photos.noNext}">No newer photo</span>
+          </div>
         </div>
 
         <div
