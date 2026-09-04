@@ -5,7 +5,14 @@ managePackageManagerVersions: true
 allowBuilds:
   esbuild: true
   sharp: true
-# 安全修复：rollup-plugin-terser（已停更）锁定的 serialize-javascript@4.x 存在
-# CVE-2024-11831（XSS），强制升级至修复版（7.x 保持 CommonJS，API 兼容）
+# 安全修复：
+# - rollup-plugin-terser（已停更）锁定的 serialize-javascript@4.x 存在
+#   CVE-2024-11831（XSS），强制升级至修复版（7.x 保持 CommonJS，API 兼容）
+# - @astrojs/check → @astrojs/language-server → yaml-language-server → ajv 锁定的
+#   fast-uri@3.1.5 存在 4 个 HIGH（SSRF / host confusion，GHSA-jqff-g426-hqxp 等）
+# - @halo-dev/api-client 锁定的 qs@6.15.3 存在 2 个 moderate
+#   （array-limit bypass / DoS，GHSA-x5fp-wj9c-mxmx 等）
 overrides:
   serialize-javascript: ^7.0.7
+  fast-uri: ^3.1.6
+  qs: ^6.16.0
