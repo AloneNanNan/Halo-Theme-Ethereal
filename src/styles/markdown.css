@@ -183,3 +183,92 @@
 .custom-md :is(blockquote, ethereal-admonition).admonition.bdm-caution::before {
   background: var(--admonitions-color-caution);
 }
+
+/* 正文表格（issue #67）：覆盖 typography 默认样式——其选择器在 :where() 内
+   （权重 0）、本文件规则 unlayered（Tailwind v4 中优先级最高），故可直接盖掉。
+   外观由 variables.css 的 --md-table-* 控制；表格 HTML 由 Halo 侧产出。 */
+.custom-md table {
+  /* 无 wrapper 元素、overflow 对 table 无效，故不做滚动容器：保持 table + 100%
+     宽，圆角交给四角单元格（见下）；多列宽表在极窄屏由页面承担溢出 */
+  display: table;
+  width: 100%;
+  margin-block: var(--md-table-margin-y);
+  border: 1px solid var(--md-table-border);
+  border-radius: var(--md-table-radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.925em;
+}
+
+/* 单元格：竖线分隔（最后一列不画），底色不透明（见下方 td 规则） */
+.custom-md :is(th, td) {
+  padding: var(--md-table-cell-padding-y) var(--md-table-cell-padding-x);
+  min-width: var(--md-table-cell-min-width);
+  /* 长串/URL 不断行会把列撑爆 */
+  word-break: break-word;
+  border-right: 1px solid var(--md-table-cell-rule);
+}
+
+.custom-md :is(th, td):last-child {
+  border-right: none;
+}
+
+/* 表头样式不能限定 thead：Halo 默认编辑器（Tiptap）输出无 thead，表头 th 会
+   落在 tbody 首行；GFM（Markdown 编辑器）才有 thead。.custom-md th 通吃 */
+.custom-md th {
+  background: var(--md-table-head-bg);
+  color: var(--md-table-head-color);
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--md-table-cell-rule);
+}
+
+/* 数据单元格铺不透明卡片色（与 Firefly 一致），表格整体呈一块实心卡片 */
+.custom-md td {
+  background: var(--md-table-cell-bg);
+}
+
+/* 四角由单元格收圆角（-1px 抵消边框宽，与外框同心）。顶/底角归属随结构变：
+   顶角优先 thead 首行、无则 tbody 首行（Tiptap）；底角优先 tfoot 末行、无则
+   tbody 末行 */
+.custom-md thead tr:first-child :is(th, td):first-child,
+.custom-md table:not(:has(thead)) tbody tr:first-child :is(th, td):first-child {
+  border-top-left-radius: calc(var(--md-table-radius) - 1px);
+}
+
+.custom-md thead tr:first-child :is(th, td):last-child,
+.custom-md table:not(:has(thead)) tbody tr:first-child :is(th, td):last-child {
+  border-top-right-radius: calc(var(--md-table-radius) - 1px);
+}
+
+.custom-md table:not(:has(tfoot)) tbody tr:last-child :is(th, td):first-child {
+  border-bottom-left-radius: calc(var(--md-table-radius) - 1px);
+}
+
+.custom-md table:not(:has(tfoot)) tbody tr:last-child :is(th, td):last-child {
+  border-bottom-right-radius: calc(var(--md-table-radius) - 1px);
+}
+
+.custom-md tfoot tr:last-child :is(th, td):first-child {
+  border-bottom-left-radius: calc(var(--md-table-radius) - 1px);
+}
+
+.custom-md tfoot tr:last-child :is(th, td):last-child {
+  border-bottom-right-radius: calc(var(--md-table-radius) - 1px);
+}
+
+/* 条纹画在 td 上（td 不透明，画在 tr 上会被盖住）。相位按结构分流：有 thead
+   （GFM）或无 th（纯数据表）→ 偶数行上色；th 在 tbody 首行（Tiptap）→ 奇数行
+   上色。旧浏览器不支持 :has 时降级为无斑马纹 */
+.custom-md table:has(thead) tbody tr:nth-child(even) td,
+.custom-md table:not(:has(th)) tbody tr:nth-child(even) td {
+  background: var(--md-table-cell-stripe);
+}
+
+.custom-md table:has(tbody th):not(:has(thead)) tbody tr:nth-child(odd) td {
+  background: var(--md-table-cell-stripe);
+}
+
+.custom-md tfoot :is(th, td) {
+  border-top: 1px solid var(--md-table-cell-rule);
+}

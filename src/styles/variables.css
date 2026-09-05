@@ -88,6 +88,25 @@
   --toc-btn-active: oklch(0.9 0.015 var(--hue));
   --toc-width: calc((100vw - var(--page-width)) / 2 - 1rem);
 
+  /* 正文表格（issue #67）：全部复用主题变量、深浅色自动适配，可被 Halo 代码
+     注入的 :root{…} 覆盖。勿用 color-mix(primary, 白) 调淡色——低饱和主色
+     混白后视觉近白 */
+  --md-table-radius: calc(var(--radius-large) - 0.25rem);
+  /* 表格上下留白（em 相对表格自身 0.925em 字号，≈ 正文 0.46em） */
+  --md-table-margin-y: 0.5em;
+  /* 外框与内部分割线同用 15% 主色（同 .summary-box），分开便于只调其一 */
+  --md-table-border: color-mix(in oklab, var(--primary) 15%, transparent);
+  --md-table-cell-bg: var(--card-bg);
+  --md-table-cell-rule: color-mix(in oklab, var(--primary) 15%, transparent);
+  --md-table-head-bg: var(--btn-regular-bg);
+  --md-table-head-color: var(--btn-content);
+  --md-table-cell-stripe: var(--btn-plain-bg-active);
+  /* 单元格内边距（em，随正文字号缩放）；列最小宽度防列过窄（本主题无滚动
+     容器包裹表格，值过大会在窄屏撑破正文） */
+  --md-table-cell-padding-y: 0.5em;
+  --md-table-cell-padding-x: 0.875em;
+  --md-table-cell-min-width: 5rem;
+
   --admonitions-color-tip: oklch(0.7 0.14 180);
   --admonitions-color-note: oklch(0.7 0.14 250);
   --admonitions-color-important: oklch(0.7 0.14 310);
