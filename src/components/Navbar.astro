@@ -31,10 +31,12 @@ const className = Astro.props.class;
       "relative z-10 mx-auto flex h-[4.5rem] max-w-(--page-width) items-center justify-between px-4 rounded-(--radius-large) !rounded-t-none",
     ]}
   >
-    <!-- 首页链接：可见文本即站点标题，作为天然可访问名；
-         不设 aria-label，避免与可见文本不一致触发 WCAG 2.5.3 Label in Name 违规 -->
+    <!-- 首页链接：可见文本即站点标题，作为天然可访问名，故不设静态 aria-label
+         （避免与可见文本不一致触发 WCAG 2.5.3 Label in Name 违规）。
+         仅当「显示网站名」关闭（标题文字隐藏、无可见文本）时才补 aria-label=site.title -->
     <a
       th:href="@{/}"
+      th:aria-label="${theme.config?.layout?.mobileMenu?.showTitle == false ? site.title : null}"
       class="btn-plain scale-animation h-[3.25rem] rounded-lg px-5 font-bold active:scale-95"
     >
       <div

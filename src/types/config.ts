@@ -125,6 +125,8 @@ export interface BannerLayout {
 export interface MobileMenuConfig {
   /** 菜单栏 Logo：自定义 Logo 图片地址，留空使用主题默认图标 */
   logo?: string;
+  /** 显示网站名：开启后在 Logo 右侧显示站点标题文字，关闭后菜单栏只显示 Logo（仅影响菜单栏处，缺省视为开启） */
+  showTitle?: boolean;
   /** 导航菜单：选择导航栏展示的 Halo 菜单，留空使用主菜单 */
   menu?: string;
   /** 移动端菜单样式：accordion（手风琴）/ drawer（抽屉） */

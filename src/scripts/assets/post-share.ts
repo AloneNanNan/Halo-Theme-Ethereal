@@ -54,7 +54,10 @@ var t =
   }
 
   function getSiteTitle() {
-    var el = document.querySelector("#navbar .site-title span:last-child");
+    // 通过 site-title-text 显式定位标题 span（不依赖“最后一个 span”的 DOM 顺序假设）：
+    // 菜单栏「显示网站名」关闭时该 span 下树 → el 为 null → 走 document.title 兜底，
+    // 避免命中无文本的图标 span 返回空字符串。类名改动需同步 SiteLogo.astro。
+    var el = document.querySelector("#navbar .site-title span.site-title-text");
     if (el) return el.textContent.trim();
     var t = document.title || "";
     var m = t.split(/\s*[-–—]\s*/);

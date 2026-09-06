@@ -27,6 +27,7 @@ import SiteLogo from "../SiteLogo.astro";
     <div class="nav-drawer-header flex items-center justify-between px-3 py-2">
       <a
         th:href="@{/}"
+        th:aria-label="${theme.config?.layout?.mobileMenu?.showTitle == false ? site.title : null}"
         class="btn-plain scale-animation h-10 rounded-lg px-3 font-bold active:scale-95"
       >
         <div class="flex flex-row items-center text-md text-(--primary)">

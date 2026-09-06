@@ -2,6 +2,12 @@
 // 菜单栏站点 Logo 内容：后台「菜单栏设置 → Logo」配置了图片则显示图片，否则回退主题默认图标，
 // 并附加站点标题文字。只输出内容、不含外层容器，布局由调用方（Navbar / 抽屉头部）用 flex 容器控制。
 // iconClass 控制默认图标的字号/对齐。
+// 站点标题文字受后台「菜单栏设置 → 显示网站名」开关控制（showTitle），关闭后只渲染 Logo。
+// 显示条件写为 showTitle != false（SpEL 下 null != false 为 true，缺省视为开启），
+// 与 Navbar / NavMenuPanel 中 aria-label 的 showTitle == false 互为补集，改动时需同步两处。
+// site-title-text 类是 post-share.ts 定位站点标题的 hook（勿改名，否则需同步该脚本）。
+// Logo 与标题的间距由标题的 ml-2 提供（勿改回 Logo 的 mr-2）：标题隐藏时该间距随之下树，
+// 否则残留空隙会使悬浮高亮区右侧留白比左侧宽。
 const { iconClass = "text-[1.75rem] mb-1" } = Astro.props;
 ---
 
@@ -9,9 +15,13 @@ const { iconClass = "text-[1.75rem] mb-1" } = Astro.props;
   th:if="${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
   th:src="${theme.config?.layout?.mobileMenu?.logo}"
   th:alt="${site.title}"
-  class="navbar-logo mr-2 h-7 w-auto shrink-0 rounded object-contain"
+  class="navbar-logo h-7 w-auto shrink-0 rounded object-contain"
 />
 <span
   th:if="${#strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
-  class:list={["icon-[tabler--smart-home] mr-2", iconClass]}></span>
-<span th:text="${site.title}">Ethereal</span>
+  class:list={["icon-[tabler--smart-home]", iconClass]}></span>
+<span
+  th:if="${theme.config?.layout?.mobileMenu?.showTitle != false}"
+  class="ml-2 site-title-text"
+  th:text="${site.title}">Ethereal</span
+>

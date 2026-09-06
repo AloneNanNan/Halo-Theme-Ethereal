@@ -174,6 +174,13 @@ spec:
               label: 菜单栏 Logo
               value: ""
               help: "自定义菜单栏左侧 Logo 图片，留空使用主题默认图标。建议上传透明背景图片（高度约 28px），会等比缩放显示"
+            - $formkit: switch
+              name: showTitle
+              id: mobileMenu_showTitle
+              key: mobileMenu_showTitle
+              label: 显示网站名
+              value: true
+              help: "开启后在 Logo 右侧显示网站名文字；关闭后菜单栏只显示 Logo（图片或默认图标），仅隐藏菜单栏处的网站名，不影响页面其它位置的站点标题"
             - $formkit: menuSelect
               id: menu
               name: menu
