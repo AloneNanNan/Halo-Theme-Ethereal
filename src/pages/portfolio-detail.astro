@@ -70,53 +70,56 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
           </div>
 
-          <!-- 外链 -->
-          <div class="flex items-center gap-4">
+          <!-- 外链：结构与文章页 PostMeta 分类/标签项一致——meta-icon 方形图标 + link-lg 文字链接
+               （悬浮时文字浮现圆角矩形背景高亮并变主题色），不带外链箭头；
+               th:if 挂在外层 div 上，避免空 URL 时只剩一个空图标框 -->
+          <div
+            th:if="${not #strings.isEmpty(project.repoUrl)}"
+            class="flex items-center"
+          >
+            <span class="meta-icon">
+              <span class="icon-[material-symbols--code-rounded] text-xl"
+              ></span>
+            </span>
             <a
-              th:if="${not #strings.isEmpty(project.repoUrl)}"
               th:href="${project.repoUrl}"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+              class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
+              >仓库</a
             >
-              <span class="icon-[material-symbols--code-rounded] text-lg"
+          </div>
+          <div
+            th:if="${not #strings.isEmpty(project.demoUrl)}"
+            class="flex items-center"
+          >
+            <span class="meta-icon">
+              <span class="icon-[material-symbols--play-circle-rounded] text-xl"
               ></span>
-              <span class="font-medium" th:text="#{page.portfolio.repo}"
-                >仓库</span
-              >
-              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
-              ></span>
-            </a>
+            </span>
             <a
-              th:if="${not #strings.isEmpty(project.demoUrl)}"
               th:href="${project.demoUrl}"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+              class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
+              >演示</a
             >
-              <span class="icon-[material-symbols--play-circle-rounded] text-lg"
+          </div>
+          <div
+            th:if="${not #strings.isEmpty(project.docsUrl)}"
+            class="flex items-center"
+          >
+            <span class="meta-icon">
+              <span class="icon-[material-symbols--description-rounded] text-xl"
               ></span>
-              <span class="font-medium" th:text="#{page.portfolio.demo}"
-                >演示</span
-              >
-              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
-              ></span>
-            </a>
+            </span>
             <a
-              th:if="${not #strings.isEmpty(project.docsUrl)}"
               th:href="${project.docsUrl}"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center gap-1.5 transition hover:text-(--primary)"
+              class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
+              >文档</a
             >
-              <span class="icon-[material-symbols--description-rounded] text-lg"
-              ></span>
-              <span class="font-medium" th:text="#{page.portfolio.docs}"
-                >文档</span
-              >
-              <span class="icon-[fa6-solid--arrow-up-right-from-square] text-xs"
-              ></span>
-            </a>
           </div>
         </div>
       </header>
