@@ -1109,6 +1109,117 @@
   display: none;
 }
 
+/* ===== 瞬间媒体区：朋友圈式布局（MomentMedia.astro，moments / moment 两页共用） =====
+   - 单图（moment-media-count-1）：等比完整展示，高度上限 18rem；
+     仅超长图裁下方、超宽图裁右侧（阈值见下方单图规则）
+   - 多图（moment-media-count-N，N>=2）：统一 1:1 方形宫格 cover 裁剪，
+     2/4 张为两列、其余为三列（朋友圈式，行尾不满自然左对齐）
+   - 非 PHOTO 媒体（视频/音频/引用链接，.moment-media-nonphoto）独占整行，不裁剪
+   mediaCount 由模板 th:classappend 注入的 moment-media-count-N 类驱动。 */
+.moment-media {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+  width: 100%;
+  max-width: min(100%, 36rem);
+}
+
+.moment-media-item {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--btn-regular-bg);
+}
+
+.moment-media-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--btn-regular-bg);
+}
+
+/* 2 张 / 4 张：两列宫格（2 张并排各半宽、4 张 2x2） */
+.moment-media-count-2,
+.moment-media-count-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* 单图：统一展示高度、宽度跟随图片比例，容器收缩包裹图片（左对齐、无留白底色） */
+.moment-media-count-1 {
+  grid-template-columns: 1fr;
+  max-width: min(100%, 30rem);
+}
+
+.moment-media-count-1 .moment-media-item {
+  aspect-ratio: auto;
+  width: fit-content;
+  justify-self: start;
+  background: transparent;
+}
+
+/* 单图：宽度撑满容器、高度受 18rem 上限约束（替换元素约束算法自动等比求解）。
+   不要用 height + max-width 组合：宽度被钳制后盒子比例会偏离图片原比例，基类
+   object-fit: cover 会裁掉两侧，导致 PhotoSwipe 过渡起点与预览不一致。
+   兜底阈值（裁切临界高宽比 = 18rem / min-width）：
+   - min-width 10rem → 高宽比 > 1.8 才裁下方并展示顶部，即 9:19 及以上的手机长截图
+     算长图；3:4 / 2:3 / 9:16 等普通竖图保持完整，不被误判为长图；
+   - min-height 10rem → 宽高比 > 3:1 的超宽图才裁右侧（16:9、21:9 不受影响）。
+   object-position: left top 保证裁切后展示的是图片起始区域（长图顶部 / 宽图左侧）。
+   坑：min-width 不能写成 min(10rem, 100%)——父级是 width: fit-content，百分比会
+   与之循环依赖而被浏览器丢弃，超长图会缩成 81px 细条且不裁切。 */
+.moment-media-count-1 .moment-media-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 18rem;
+  min-width: 10rem;
+  min-height: 10rem;
+  object-fit: cover;
+  object-position: left top;
+}
+
+/* 视频/音频/引用链接：独占整行完整展示 */
+.moment-media-nonphoto {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* 音频播放器无需占满整行宽度 */
+audio.moment-media-nonphoto {
+  max-width: 32rem;
+}
+
+/* 单图「长图 / 宽图」徽章：仅当图片被裁切显示时提示（长图裁下、宽图裁右），
+   默认由模板的 hidden 属性隐藏，由 moment-media-badge.js 判定后显示 */
+.moment-media-badge {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  border-radius: 0.375rem;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+  pointer-events: none;
+}
+
+.moment-media-badge[hidden] {
+  display: none;
+}
+
+/* PhotoSwipe 打开/关闭动画期间：缩略图复位（清除 hover 放大的 transform 与过渡），
+   保证 zoom 过渡采样到真实的缩略图矩形（由 content-photoswipe.ts 切换 body 类）。
+   !important 用于覆盖模板上的 Tailwind hover 放大工具类（位于 utilities 层） */
+body.pswp-transition .moment-media img,
+body.pswp-transition .custom-md img,
+body.pswp-transition #post-cover img,
+body.pswp-transition #photo-detail-image {
+  transform: none !important;
+  transition: none !important;
+}
+
 /* 朋友圈时间轴 - 纵向虚线布局
 .friends-timeline {
   display: flex;

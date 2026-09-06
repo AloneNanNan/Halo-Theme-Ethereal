@@ -1,4 +1,5 @@
 ---
+import MomentMedia from "../components/MomentMedia.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -65,49 +66,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           >
         </div>
 
-        <div
-          th:if="${content != null and not #lists.isEmpty(content.medium)}"
-          class="moment-media mt-4 flex max-w-full flex-wrap gap-2.5"
-        >
-          <div class="contents" th:each="momentItem : ${content.medium}">
-            <figure
-              th:if="${momentItem.type.name == 'PHOTO'}"
-              class="group relative aspect-[3/4] w-40 max-h-72 overflow-hidden rounded-xl bg-(--btn-regular-bg) sm:w-52"
-            >
-              <img
-                th:src="${momentItem.url}"
-                alt=""
-                loading="lazy"
-                class="h-full w-full cursor-zoom-in object-cover transition duration-300 group-hover:scale-105"
-              />
-              <span
-                th:if="${#lists.size(content.medium) == 1}"
-                class="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-1.5 py-0.5 text-xs font-bold text-white"
-                th:text="#{page.moments.tallImage}">长图</span
-              >
-            </figure>
-            <video
-              th:if="${momentItem.type.name == 'VIDEO'}"
-              th:src="${momentItem.url}"
-              controls
-              class="max-w-full rounded-xl bg-black md:max-w-lg"></video>
-            <audio
-              th:if="${momentItem.type.name == 'AUDIO'}"
-              th:src="${momentItem.url}"
-              controls
-              class="w-full max-w-lg"></audio>
-            <a
-              th:if="${momentItem.type.name == 'POST'}"
-              th:href="${momentItem.url != null and (momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/')) ? momentItem.url : null}"
-              class="btn-regular min-h-20 max-w-full rounded-xl px-4 font-bold md:max-w-lg"
-            >
-              <span
-                class="icon-[material-symbols--article-outline-rounded] mr-2 text-xl"
-              ></span>
-              <span class="truncate" th:text="${momentItem.url}">Post</span>
-            </a>
-          </div>
-        </div>
+        <MomentMedia />
 
         <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-50">
           <!-- 点赞按钮：原为不可聚焦的 span，改为 button 以支持键盘操作与可访问名称 -->

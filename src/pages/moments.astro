@@ -2,6 +2,7 @@
 import Pagination from "../components/control/Pagination.astro";
 import FilterTabs from "../components/control/FilterTabs.astro";
 import PageHeader from "../components/control/PageHeader.astro";
+import MomentMedia from "../components/MomentMedia.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -106,58 +107,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
             </div>
 
-            <div
-              th:if="${content != null and not #lists.isEmpty(content.medium)}"
-              th:with="mediaCount=${#lists.size(content.medium)}"
-              th:classappend="${' moment-media-count-' + mediaCount}"
-              class="moment-media mt-4 grid max-w-full gap-2.5"
-            >
-              <div
-                class="contents"
-                th:each="momentItem, mediumStat : ${content.medium}"
-              >
-                <figure
-                  th:if="${momentItem.type.name == 'PHOTO'}"
-                  th:classappend="${mediaCount == 5 and mediumStat.index < 2 ? ' moment-media-item-wide' : ''}"
-                  class="moment-media-item group relative overflow-hidden rounded-xl bg-(--btn-regular-bg)"
-                >
-                  <img
-                    th:src="${momentItem.url}"
-                    alt=""
-                    loading="lazy"
-                    class="cursor-zoom-in transition duration-300 group-hover:scale-105"
-                  />
-                  <span
-                    th:if="${#lists.size(content.medium) == 1}"
-                    class="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/55 px-1.5 py-0.5 text-xs font-bold text-white"
-                    th:text="#{page.moments.tallImage}">长图</span
-                  >
-                </figure>
-                <video
-                  th:if="${momentItem.type.name == 'VIDEO'}"
-                  th:src="${momentItem.url}"
-                  th:classappend="${mediaCount == 5 and mediumStat.index < 2 ? ' moment-media-item-wide' : ''}"
-                  controls
-                  class="moment-media-item max-w-full rounded-xl bg-black"
-                ></video>
-                <audio
-                  th:if="${momentItem.type.name == 'AUDIO'}"
-                  th:src="${momentItem.url}"
-                  controls
-                  class="moment-media-audio w-full max-w-lg"></audio>
-                <a
-                  th:if="${momentItem.type.name == 'POST'}"
-                  th:href="${momentItem.url != null and (momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/')) ? momentItem.url : null}"
-                  th:classappend="${mediaCount == 5 and mediumStat.index < 2 ? ' moment-media-item-wide' : ''}"
-                  class="moment-media-item btn-regular min-h-20 max-w-full rounded-xl px-4 font-bold"
-                >
-                  <span
-                    class="icon-[material-symbols--article-outline-rounded] mr-2 text-xl"
-                  ></span>
-                  <span class="truncate" th:text="${momentItem.url}">Post</span>
-                </a>
-              </div>
-            </div>
+            <MomentMedia />
 
             <div
               th:if="${not #lists.isEmpty(moment.spec.tags)}"
@@ -238,51 +188,6 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <span th:text="#{page.moments.empty}">暂无瞬间</span>
     </div>
   </section>
-
-  <style>
-    .moment-media {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      max-width: min(100%, 36rem);
-    }
-
-    .moment-media-item {
-      grid-column: span 2;
-      overflow: hidden;
-      border-radius: 0.75rem;
-      background: var(--btn-regular-bg);
-      aspect-ratio: 3 / 4;
-      max-height: 18rem;
-    }
-
-    .moment-media-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: var(--btn-regular-bg);
-    }
-
-    .moment-media-count-1 {
-      max-width: min(100%, 30rem);
-    }
-
-    .moment-media-count-1 .moment-media-item {
-      grid-column: 1 / -1;
-      max-height: 24rem;
-    }
-
-    .moment-media-count-2 .moment-media-item,
-    .moment-media-count-4 .moment-media-item {
-      grid-column: span 3;
-    }
-
-    .moment-media-count-5 .moment-media-item-wide {
-      grid-column: span 3;
-    }
-
-    .moment-media-audio {
-      grid-column: 1 / -1;
-    }
-  </style>
 
   <Pagination context="moments" class="mb-4 onload-animation" />
 </MainGridLayout>

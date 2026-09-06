@@ -1,0 +1,63 @@
+---
+// 瞬间媒体区（朋友圈式布局）：moments 列表页与 moment 详情页共用。
+// 依赖外层已定义的 Thymeleaf 变量 content（= moment.spec.content）；
+// 布局样式见 src/styles/components.css 的「瞬间媒体区」段。
+---
+
+<div
+  th:if="${content != null and not #lists.isEmpty(content.medium)}"
+  th:with="mediaCount=${#lists.size(content.medium)}"
+  th:classappend="${' moment-media-count-' + mediaCount}"
+  class="moment-media mt-4"
+>
+  <div class="contents" th:each="momentItem : ${content.medium}">
+    <figure
+      th:if="${momentItem.type.name == 'PHOTO'}"
+      class="moment-media-item group relative"
+    >
+      <img
+        th:src="${momentItem.url}"
+        alt=""
+        loading="lazy"
+        class="cursor-zoom-in transition duration-300 group-hover:scale-105"
+      />
+      <span
+        th:if="${mediaCount == 1}"
+        class="moment-media-badge moment-media-badge-tall"
+        th:text="#{page.moments.tallImage}"
+        hidden>长图</span
+      >
+      <span
+        th:if="${mediaCount == 1}"
+        class="moment-media-badge moment-media-badge-wide"
+        th:text="#{page.moments.wideImage}"
+        hidden>宽图</span
+      >
+    </figure>
+    <video
+      th:if="${momentItem.type.name == 'VIDEO'}"
+      th:src="${momentItem.url}"
+      controls
+      class="moment-media-nonphoto rounded-xl bg-black"></video>
+    <audio
+      th:if="${momentItem.type.name == 'AUDIO'}"
+      th:src="${momentItem.url}"
+      controls
+      class="moment-media-nonphoto"></audio>
+    <a
+      th:if="${momentItem.type.name == 'POST'}"
+      th:href="${momentItem.url != null and (momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/')) ? momentItem.url : null}"
+      class="moment-media-nonphoto btn-regular min-h-20 rounded-xl px-4 font-bold"
+    >
+      <span
+        class="icon-[material-symbols--article-outline-rounded] mr-2 text-xl"
+      ></span>
+      <span class="truncate" th:text="${momentItem.url}">Post</span>
+    </a>
+  </div>
+</div>
+
+<script
+  src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/moment-media-badge.js?v=${ASSET_VERSION}`}
+  defer
+  is:inline></script>
