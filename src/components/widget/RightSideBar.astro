@@ -2,6 +2,7 @@
 import Announcement from "./Announcement.astro";
 import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
+import PopularPosts from "./PopularPosts.astro";
 import Profile from "./Profile.astro";
 import Schedule from "./Schedule.astro";
 import SiteStats from "./SiteStats.astro";
@@ -55,6 +56,9 @@ const thClassappend = Astro.props["th:classappend"] || "";
       th:if={showToc ? "${widgetStat.index < 2}" : "true"}
     >
       <div class="contents" th:switch="${widget.value}">
+        <div class="contents" th:case="'popular-posts'">
+          <PopularPosts />
+        </div>
         <div class="contents" th:case="'categories'">
           <Categories />
         </div>

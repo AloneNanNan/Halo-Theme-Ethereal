@@ -9,17 +9,21 @@ interface Props {
 const className = Astro.props.class;
 const style = Astro.props.style;
 const MAX_POSTS = 5;
+// 实例级唯一 id：支持同一小组件在多处渲染（如左右侧边栏同放）互不冲突，
+// 参照 MusicPlayer 的随机 uid 范式，构建时每个组件实例各自生成
+const instanceId = `popular-posts-${Math.random().toString(36).slice(2, 9)}`;
+const listId = `${instanceId}-list`;
 ---
 
 <div class="contents">
   <WidgetLayout
     name="热门文章"
     nameKey="widget.popularPosts.title"
-    id="popular-posts"
+    id={instanceId}
     class={className}
     style={style}
   >
-    <div id="popular-posts-list" class="flex flex-col gap-1">
+    <div id={listId} class="flex flex-col gap-1">
       <div
         class="flex items-center justify-center py-4 text-sm text-neutral-400"
       >
@@ -32,9 +36,9 @@ const MAX_POSTS = 5;
   </WidgetLayout>
 </div>
 
-<script is:inline define:vars={{ MAX_POSTS }}>
+<script is:inline define:vars={{ MAX_POSTS, instanceId }}>
   (function () {
-    var container = document.getElementById("popular-posts-list");
+    var container = document.getElementById(instanceId + "-list");
     if (!container) return;
 
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
@@ -169,12 +173,14 @@ const MAX_POSTS = 5;
         return;
       }
 
-      // AbortController：Swup 导航会重新执行本脚本，先中止上一次未完成的请求，避免旧响应覆盖新页面
-      if (window.__popularPostsAbort) {
-        window.__popularPostsAbort.abort();
+      // AbortController：Swup 导航会重新执行本脚本，先中止该实例上一次未完成的请求，
+      // 避免旧响应覆盖新页面；按 instanceId 分组存放，多实例同放时互不 abort
+      if (!window.__popularPostsAbort) window.__popularPostsAbort = {};
+      if (window.__popularPostsAbort[instanceId]) {
+        window.__popularPostsAbort[instanceId].abort();
       }
       var controller = new AbortController();
-      window.__popularPostsAbort = controller;
+      window.__popularPostsAbort[instanceId] = controller;
       var signal = controller.signal;
 
       // 服务端排序取 Top N（sort=stats.visit,desc；客户端不再排序——
