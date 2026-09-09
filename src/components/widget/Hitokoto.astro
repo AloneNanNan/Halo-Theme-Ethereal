@@ -100,7 +100,7 @@ const className = Astro.props.class;
   <div
     class="hitokoto-card px-3"
     id="hitokotoCard"
-    th:attr="data-api=${widget.api},
+    th:attr="data-api=${widget.hitokoto_api ?: widget.api},
       data-fallback-text=${widget.fallback_text},
       data-fallback-source=${widget.fallback_source}"
   >

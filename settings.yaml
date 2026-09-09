@@ -930,17 +930,83 @@ spec:
                       value: schedule
                     - label: 自定义HTML
                       value: html
-                - $formkit: text
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_posts
+                  key: widget_site_stats_show_posts
+                  preserve: true
+                  label: 显示文章数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_categories
+                  key: widget_site_stats_show_categories
+                  preserve: true
+                  label: 显示分类数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_tags
+                  key: widget_site_stats_show_tags
+                  preserve: true
+                  label: 显示标签数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_total_words
+                  key: widget_site_stats_show_total_words
+                  preserve: true
+                  label: 显示总字数
+                  value: true
+                  help: "未安装「API 拓展包」插件时由客户端逐篇统计，文章较多会有额外请求"
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_last_activity
+                  key: widget_site_stats_show_last_activity
+                  preserve: true
+                  label: 显示最后活动
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_running_days
+                  key: widget_site_stats_show_running_days
+                  preserve: true
+                  label: 显示运行天数
+                  value: true
+                  help: "需同时在下方选择网站上线日期，未选择则不显示该项"
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_visits
+                  key: widget_site_stats_show_visits
+                  preserve: true
+                  label: 显示访问量
+                  value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_upvotes
+                  key: widget_site_stats_show_upvotes
+                  preserve: true
+                  label: 显示点赞数
+                  value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_comments
+                  key: widget_site_stats_show_comments
+                  preserve: true
+                  label: 显示评论数
+                  value: false
+                - $formkit: date
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
                   key: widget_site_stats_site_start_date
+                  preserve: true
                   label: 网站上线日期
-                  value: ""
-                  help: "用于计算运行天数，格式：YYYY-MM-DD，留空则不显示运行天数"
+                  help: "用于计算运行天数，留空则不显示运行天数"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: tencent_key
                   key: widget_weather_tencent_key
+                  preserve: true
                   label: 腾讯位置服务 Key
                   value: ""
                   help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
@@ -948,13 +1014,15 @@ spec:
                   if: "$value.value === 'weather'"
                   name: default_city
                   key: widget_weather_default_city
+                  preserve: true
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
                 - $formkit: url
                   if: "$value.value === 'hitokoto'"
-                  name: api
+                  name: hitokoto_api
                   key: widget_hitokoto_api
+                  preserve: true
                   label: 一言 API 地址
                   value: ""
                   help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
@@ -962,6 +1030,7 @@ spec:
                   if: "$value.value === 'hitokoto'"
                   name: fallback_text
                   key: widget_hitokoto_fallback_text
+                  preserve: true
                   label: 获取失败文案
                   value: "世界很大，开心第一。"
                   help: "一言获取失败时显示的句子"
@@ -969,6 +1038,7 @@ spec:
                   if: "$value.value === 'hitokoto'"
                   name: fallback_source
                   key: widget_hitokoto_fallback_source
+                  preserve: true
                   label: 获取失败来源
                   value: "楠南NanNan"
                   help: "一言获取失败时显示的作者或来源"
@@ -976,6 +1046,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: server
                   key: widget_music_server
+                  preserve: true
                   label: 平台
                   value: netease
                   options:
@@ -993,6 +1064,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: type
                   key: widget_music_type
+                  preserve: true
                   label: 类型
                   value: playlist
                   options:
@@ -1010,6 +1082,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: id
                   key: widget_music_id
+                  preserve: true
                   label: ID
                   validation: required
                   help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
@@ -1017,6 +1090,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: play_mode
                   key: widget_music_play_mode
+                  preserve: true
                   label: 播放模式
                   value: list
                   options:
@@ -1030,6 +1104,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: volume
                   key: widget_music_volume
+                  preserve: true
                   label: 默认音量
                   min: 0
                   max: 1
@@ -1037,14 +1112,16 @@ spec:
                   value: 0.7
                 - $formkit: url
                   if: "$value.value === 'music'"
-                  name: api
+                  name: music_api
                   key: widget_music_api
+                  preserve: true
                   label: 自定义 Meting API
                   help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
                 - $formkit: number
                   if: "$value.value === 'schedule'"
                   name: limit
                   key: widget_schedule_limit
+                  preserve: true
                   label: 显示条数
                   min: 1
                   max: 10
@@ -1054,6 +1131,7 @@ spec:
                   if: "$value.value === 'html'"
                   name: html
                   key: widget_html_html
+                  preserve: true
                   label: HTML
                   value: "<p>自定义HTML</p>"
             - $formkit: array
@@ -1087,17 +1165,83 @@ spec:
                       value: schedule
                     - label: 自定义HTML
                       value: html
-                - $formkit: text
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_posts
+                  key: right_widget_site_stats_show_posts
+                  preserve: true
+                  label: 显示文章数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_categories
+                  key: right_widget_site_stats_show_categories
+                  preserve: true
+                  label: 显示分类数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_tags
+                  key: right_widget_site_stats_show_tags
+                  preserve: true
+                  label: 显示标签数
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_total_words
+                  key: right_widget_site_stats_show_total_words
+                  preserve: true
+                  label: 显示总字数
+                  value: true
+                  help: "未安装「API 拓展包」插件时由客户端逐篇统计，文章较多会有额外请求"
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_last_activity
+                  key: right_widget_site_stats_show_last_activity
+                  preserve: true
+                  label: 显示最后活动
+                  value: true
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_running_days
+                  key: right_widget_site_stats_show_running_days
+                  preserve: true
+                  label: 显示运行天数
+                  value: true
+                  help: "需同时在下方选择网站上线日期，未选择则不显示该项"
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_visits
+                  key: right_widget_site_stats_show_visits
+                  preserve: true
+                  label: 显示访问量
+                  value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_upvotes
+                  key: right_widget_site_stats_show_upvotes
+                  preserve: true
+                  label: 显示点赞数
+                  value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'site-stats'"
+                  name: show_comments
+                  key: right_widget_site_stats_show_comments
+                  preserve: true
+                  label: 显示评论数
+                  value: false
+                - $formkit: date
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
                   key: right_widget_site_stats_site_start_date
+                  preserve: true
                   label: 网站上线日期
-                  value: ""
-                  help: "用于计算运行天数，格式：YYYY-MM-DD，留空则不显示运行天数"
+                  help: "用于计算运行天数，留空则不显示运行天数"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: tencent_key
                   key: right_widget_weather_tencent_key
+                  preserve: true
                   label: 腾讯位置服务 Key
                   value: ""
                   help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
@@ -1105,13 +1249,15 @@ spec:
                   if: "$value.value === 'weather'"
                   name: default_city
                   key: right_widget_weather_default_city
+                  preserve: true
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
                 - $formkit: url
                   if: "$value.value === 'hitokoto'"
-                  name: api
+                  name: hitokoto_api
                   key: right_widget_hitokoto_api
+                  preserve: true
                   label: 一言 API 地址
                   value: ""
                   help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
@@ -1119,6 +1265,7 @@ spec:
                   if: "$value.value === 'hitokoto'"
                   name: fallback_text
                   key: right_widget_hitokoto_fallback_text
+                  preserve: true
                   label: 获取失败文案
                   value: "世界很大，开心第一。"
                   help: "一言获取失败时显示的句子"
@@ -1126,6 +1273,7 @@ spec:
                   if: "$value.value === 'hitokoto'"
                   name: fallback_source
                   key: right_widget_hitokoto_fallback_source
+                  preserve: true
                   label: 获取失败来源
                   value: "楠南NanNan"
                   help: "一言获取失败时显示的作者或来源"
@@ -1133,6 +1281,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: server
                   key: right_widget_music_server
+                  preserve: true
                   label: 平台
                   value: netease
                   options:
@@ -1150,6 +1299,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: type
                   key: right_widget_music_type
+                  preserve: true
                   label: 类型
                   value: playlist
                   options:
@@ -1167,6 +1317,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: id
                   key: right_widget_music_id
+                  preserve: true
                   label: ID
                   validation: required
                   help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
@@ -1174,6 +1325,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: play_mode
                   key: right_widget_music_play_mode
+                  preserve: true
                   label: 播放模式
                   value: list
                   options:
@@ -1187,6 +1339,7 @@ spec:
                   if: "$value.value === 'music'"
                   name: volume
                   key: right_widget_music_volume
+                  preserve: true
                   label: 默认音量
                   min: 0
                   max: 1
@@ -1194,14 +1347,16 @@ spec:
                   value: 0.7
                 - $formkit: url
                   if: "$value.value === 'music'"
-                  name: api
+                  name: music_api
                   key: right_widget_music_api
+                  preserve: true
                   label: 自定义 Meting API
                   help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
                 - $formkit: number
                   if: "$value.value === 'schedule'"
                   name: limit
                   key: right_widget_schedule_limit
+                  preserve: true
                   label: 显示条数
                   min: 1
                   max: 10
@@ -1211,6 +1366,7 @@ spec:
                   if: "$value.value === 'html'"
                   name: html
                   key: right_widget_html_html
+                  preserve: true
                   label: HTML
                   value: "<p>自定义HTML</p>"
         - $formkit: group

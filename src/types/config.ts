@@ -408,7 +408,20 @@ export interface Widget {
   play_mode?: string;
   volume?: number;
   api?: string;
+  // music_api / hitokoto_api：原两者共用 api 字段，切换部件时值会互相覆盖；
+  // 拆分后旧配置仍由模板以 music_api ?: api 回退读取
+  music_api?: string;
+  hitokoto_api?: string;
   site_start_date?: string;
+  show_posts?: boolean;
+  show_categories?: boolean;
+  show_tags?: boolean;
+  show_total_words?: boolean;
+  show_last_activity?: boolean;
+  show_running_days?: boolean;
+  show_visits?: boolean;
+  show_upvotes?: boolean;
+  show_comments?: boolean;
   tencent_key?: string;
   default_city?: string;
   fallback_text?: string;

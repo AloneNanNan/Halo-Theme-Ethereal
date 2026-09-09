@@ -45,6 +45,7 @@ const layoutId = `${widgetId}-layout`;
       class="firefly-music-player relative w-full transition-all duration-300"
       role="region"
       th:aria-label="#{widget.music.title}"
+      th:with="musicApi=${widget.music_api ?: widget.api}"
       data-server="netease"
       data-type="playlist"
       data-id=""
@@ -55,7 +56,7 @@ const layoutId = `${widgetId}-layout`;
       th:attr="data-server=${#strings.isEmpty(widget.server) ? 'netease' : widget.server},
         data-type=${#strings.isEmpty(widget.type) ? 'playlist' : widget.type},
         data-id=${widget.id},
-        data-api=${#strings.isEmpty(widget.api) ? 'https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r' : widget.api},
+        data-api=${#strings.isEmpty(musicApi) ? 'https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r' : musicApi},
         data-volume=${widget.volume == null ? 0.7 : widget.volume},
         data-play-mode=${#strings.isEmpty(widget.play_mode) ? 'list' : widget.play_mode},
         data-show-lyrics=true"

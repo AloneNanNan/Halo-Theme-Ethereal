@@ -10,9 +10,13 @@ const className = Astro.props.class;
 const style = Astro.props.style;
 ---
 
+<!-- 统计项开关有两种默认值约定：原有 6 项默认开启（后台未配置时字段值为 null，
+     != false 即显示）；新增的访问量 / 点赞数 / 评论数默认关闭（== true 才显示）。
+     全部关闭时整个小组件不渲染，避免出现只有标题的空卡片 -->
 <div
   class="contents"
-  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}, serverTotalWords = ${pluginFinder.available('extra-api', '3.*') ? extraApiStatsFinder.getPostWordCount() : null}"
+  th:if="${widget.show_posts != false or widget.show_categories != false or widget.show_tags != false or widget.show_total_words != false or widget.show_last_activity != false or (widget.show_running_days != false and widget.site_start_date != null and widget.site_start_date != '') or (widget.show_visits == true and stats != null) or (widget.show_upvotes == true and stats != null) or (widget.show_comments == true and stats != null)}"
+  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}, stats = ${siteStatsFinder?.getStats()}, serverTotalWords = ${pluginFinder.available('extra-api', '3.*') ? extraApiStatsFinder.getPostWordCount() : null}"
 >
   <WidgetLayout
     name="站点统计"
@@ -24,6 +28,7 @@ const style = Astro.props.style;
     <div class="flex flex-col gap-1">
       <!-- 文章数 -->
       <a
+        th:if="${widget.show_posts != false}"
         th:href="@{/archives}"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
       >
@@ -44,6 +49,7 @@ const style = Astro.props.style;
 
       <!-- 分类数 -->
       <a
+        th:if="${widget.show_categories != false}"
         th:href="@{/categories}"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
       >
@@ -64,6 +70,7 @@ const style = Astro.props.style;
 
       <!-- 标签数 -->
       <a
+        th:if="${widget.show_tags != false}"
         th:href="@{/tags}"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
       >
@@ -82,8 +89,69 @@ const style = Astro.props.style;
         >
       </a>
 
+      <!-- 访问量（siteStatsFinder，默认关闭，需后台勾选后显示） -->
+      <div
+        th:if="${widget.show_visits == true and stats != null}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--visibility-outline-rounded] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.visits}">访问量</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${stats.visit}">0</span
+        >
+      </div>
+
+      <!-- 点赞数（siteStatsFinder，默认关闭） -->
+      <div
+        th:if="${widget.show_upvotes == true and stats != null}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[material-symbols--favorite-outline-rounded] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.upvotes}">点赞数</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${stats.upvote}">0</span
+        >
+      </div>
+
+      <!-- 评论数（siteStatsFinder，默认关闭） -->
+      <div
+        th:if="${widget.show_comments == true and stats != null}"
+        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="icon-[mdi--comment-text-outline] text-xl text-(--primary)"
+          ></span>
+          <span
+            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            th:text="#{widget.siteStats.comments}">评论数</span
+          >
+        </div>
+        <span
+          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+          th:text="${stats.comment}">0</span
+        >
+      </div>
+
       <!-- 总字数（客户端计算） -->
       <div
+        th:if="${widget.show_total_words != false}"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
       >
         <div class="flex items-center gap-2.5">
@@ -107,6 +175,7 @@ const style = Astro.props.style;
 
       <!-- 最后活动（客户端计算) -->
       <div
+        th:if="${widget.show_last_activity != false}"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
       >
         <div class="flex items-center gap-2.5">
@@ -129,7 +198,7 @@ const style = Astro.props.style;
       <div
         id="site-stats-running-days-row"
         class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-        th:if="${widget.site_start_date != null and widget.site_start_date != ''}"
+        th:if="${widget.show_running_days != false and widget.site_start_date != null and widget.site_start_date != ''}"
       >
         <div class="flex items-center gap-2.5">
           <span
@@ -277,6 +346,9 @@ const style = Astro.props.style;
       var serverHasWords = !!(
         wordsEl0 && wordsEl0.getAttribute("data-server-words")
       );
+      // 服务端已给字数、或「总字数」项被关闭时都无需逐篇抓取正文；关闭时也不缓存
+      // 字数，否则重新开启后会沿用缓存的 0 而不再统计
+      var skipWordCount = serverHasWords || !wordsEl0;
 
       // 缓存可用性判断：totalWords 为 null 说明缓存生成时依赖插件服务端值；
       // 若当前已无插件（无 data-server-words），该缓存不可用，须重新客户端统计
@@ -359,8 +431,8 @@ const style = Astro.props.style;
             : "--";
 
           window.__siteStatsCache = {
-            // 服务端已提供字数时（serverHasWords），不缓存 0，卸载插件后可自然回退到客户端统计
-            totalWords: serverHasWords ? null : totalWords,
+            // 无需统计字数时不缓存，后续开启该项会重新统计
+            totalWords: skipWordCount ? null : totalWords,
             lastActivity: formattedActivity,
           };
           setCachedStats(window.__siteStatsCache);
@@ -379,8 +451,8 @@ const style = Astro.props.style;
               latestDate = pub;
             }
 
-            // 插件已提供服务端总字数：跳过逐篇抓取正文，仅需最后活动
-            if (serverHasWords) {
+            // 无需统计字数时（服务端已提供 / 该项已关闭）仅取最后活动
+            if (skipWordCount) {
               running--;
               pending--;
               if (pending === 0) finish();
@@ -460,8 +532,10 @@ const style = Astro.props.style;
       var activityEl = document.getElementById("site-stats-last-activity");
       if (wordsEl || activityEl) {
         updateSiteStats();
-        updateRunningDays();
       }
+      // 运行天数独立于总字数 / 最后活动：这两项被关闭时也要计算，
+      // 其内部已自行判断元素存在（放在上面的 if 里会导致只开运行天数时恒为 --）
+      updateRunningDays();
     }
 
     // 初始加载
