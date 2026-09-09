@@ -164,12 +164,9 @@
     overflow: visible !important;
   }
 
+  /* 音量条收窄：沿用右栏播放器历史样式（w-16 → w-12） */
   #right-sidebar .firefly-music-player .vol-container {
     @apply w-12;
-  }
-
-  #right-sidebar .firefly-music-player .btn-lrc-toggle {
-    @apply hidden;
   }
 
   /* 双栏布局页面宽度：与 72002dd 一致，使用默认 --page-width: 75rem */

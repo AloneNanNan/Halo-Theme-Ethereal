@@ -1,10 +1,16 @@
 ---
-import { Icon } from "astro-icon/components";
 import WidgetLayout from "./WidgetLayout.astro";
 
 /*
  * 音乐播放器交互和布局参考开源社区实现。
  * MIT License
+ *
+ * 图标统一用 span + icon-[...]（与全站其余组件一致），不用 astro-icon 的
+ * <Icon>：后者默认走 sprite——同一页面内某个图标只在首次使用处输出 <symbol>，
+ * 其余位置仅输出 <use href="#ai:...">。本组件可配置在左栏或右栏，两侧分支都由
+ * Thymeleaf 运行时决定渲染与否，若首次使用处（源码中更靠前的左栏分支）未渲染，
+ * 另一栏就只剩 <use> 引用而图标全丢。span + icon-[...] 每个实例自带图标数据，
+ * 与渲染位置、渲染顺序完全无关。
  */
 
 interface Props {
@@ -19,14 +25,16 @@ const widgetId = `music-widget-${Math.random().toString(36).slice(2, 9)}`;
 const layoutId = `${widgetId}-layout`;
 ---
 
+<!-- data-widget="music"：换页时 app.ts 据此在 Swup 容器中定位并保留本节点，
+     见 app.ts「换页保留右栏音乐播放器」 -->
 <div
   class="contents"
+  data-widget="music"
   th:if="${not #strings.isEmpty(widget.id)}"
-  th:with="musicTitle=${#strings.isEmpty(widget.title) ? #messages.msg('widget.music.title') : widget.title}"
 >
   <WidgetLayout
     name="音乐"
-    nameExpression="musicTitle"
+    nameKey="widget.music.title"
     id={layoutId}
     class={className}
     style={style}
@@ -36,7 +44,7 @@ const layoutId = `${widgetId}-layout`;
       id={widgetId}
       class="firefly-music-player relative w-full transition-all duration-300"
       role="region"
-      th:aria-label="${musicTitle}"
+      th:aria-label="#{widget.music.title}"
       data-server="netease"
       data-type="playlist"
       data-id=""
@@ -57,16 +65,13 @@ const layoutId = `${widgetId}-layout`;
           <div
             class="relative z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-(--primary)/10 shadow-lg dark:border-neutral-700"
           >
-            <Icon
-              name="material-symbols:music-note-rounded"
-              class="absolute text-2xl text-(--primary) opacity-40"
-              aria-hidden="true"
-            />
+            <span
+              class="icon-[material-symbols--music-note-rounded] absolute text-2xl text-(--primary) opacity-40"
+              aria-hidden="true"></span>
             <img
-              class="music-cover animate-spin-slow relative z-10 h-full w-full object-cover opacity-0 transition-opacity duration-300"
+              class="music-cover relative z-10 h-full w-full object-cover opacity-0 transition-opacity duration-300"
               src=""
               alt=""
-              style="animation-play-state: paused;"
             />
           </div>
         </div>
@@ -76,7 +81,7 @@ const layoutId = `${widgetId}-layout`;
             <div class="relative min-w-0 flex-1 overflow-hidden">
               <h3
                 class="music-title truncate text-base font-bold leading-tight text-neutral-800 dark:text-neutral-100"
-                th:text="${musicTitle}"
+                th:text="#{widget.music.title}"
               >
                 音乐
               </h3>
@@ -86,16 +91,12 @@ const layoutId = `${widgetId}-layout`;
               type="button"
               aria-label="Lyrics"
             >
-              <Icon
-                name="material-symbols:subtitles-off-outline-rounded"
-                class="icon-lrc-off text-xl"
-                aria-hidden="true"
-              />
-              <Icon
-                name="material-symbols:subtitles-outline-rounded"
-                class="icon-lrc-on hidden text-xl"
-                aria-hidden="true"
-              />
+              <span
+                class="icon-[material-symbols--subtitles-off-outline-rounded] icon-lrc-off text-xl"
+                aria-hidden="true"></span>
+              <span
+                class="icon-[material-symbols--subtitles-outline-rounded] icon-lrc-on hidden text-xl"
+                aria-hidden="true"></span>
             </button>
           </div>
 
@@ -123,16 +124,12 @@ const layoutId = `${widgetId}-layout`;
                 type="button"
                 aria-label="Volume"
               >
-                <Icon
-                  name="material-symbols:volume-up-rounded"
-                  class="icon-vol-high text-lg"
-                  aria-hidden="true"
-                />
-                <Icon
-                  name="material-symbols:volume-off-rounded"
-                  class="icon-vol-mute hidden text-lg"
-                  aria-hidden="true"
-                />
+                <span
+                  class="icon-[material-symbols--volume-up-rounded] icon-vol-high text-lg"
+                  aria-hidden="true"></span>
+                <span
+                  class="icon-[material-symbols--volume-off-rounded] icon-vol-mute hidden text-lg"
+                  aria-hidden="true"></span>
               </button>
               <div
                 class="flex w-16 items-center transition-all duration-300 ease-out"
@@ -189,21 +186,15 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Play mode"
         >
-          <Icon
-            name="material-symbols:repeat-rounded"
-            class="icon-repeat text-xl"
-            aria-hidden="true"
-          />
-          <Icon
-            name="material-symbols:repeat-one-rounded"
-            class="icon-repeat-one hidden text-xl"
-            aria-hidden="true"
-          />
-          <Icon
-            name="material-symbols:shuffle-rounded"
-            class="icon-shuffle hidden text-xl"
-            aria-hidden="true"
-          />
+          <span
+            class="icon-[material-symbols--repeat-rounded] icon-repeat text-xl"
+            aria-hidden="true"></span>
+          <span
+            class="icon-[material-symbols--repeat-one-rounded] icon-repeat-one hidden text-xl"
+            aria-hidden="true"></span>
+          <span
+            class="icon-[material-symbols--shuffle-rounded] icon-shuffle hidden text-xl"
+            aria-hidden="true"></span>
         </button>
 
         <button
@@ -211,11 +202,9 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Previous"
         >
-          <Icon
-            name="material-symbols:skip-previous-rounded"
-            class="text-3xl"
-            aria-hidden="true"
-          />
+          <span
+            class="icon-[material-symbols--skip-previous-rounded] text-3xl"
+            aria-hidden="true"></span>
         </button>
 
         <button
@@ -223,16 +212,12 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Play"
         >
-          <Icon
-            name="material-symbols:play-arrow-rounded"
-            class="icon-play ml-0.5 text-3xl"
-            aria-hidden="true"
-          />
-          <Icon
-            name="material-symbols:pause-rounded"
-            class="icon-pause hidden text-3xl"
-            aria-hidden="true"
-          />
+          <span
+            class="icon-[material-symbols--play-arrow-rounded] icon-play ml-0.5 text-3xl"
+            aria-hidden="true"></span>
+          <span
+            class="icon-[material-symbols--pause-rounded] icon-pause hidden text-3xl"
+            aria-hidden="true"></span>
         </button>
 
         <button
@@ -240,11 +225,9 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Next"
         >
-          <Icon
-            name="material-symbols:skip-next-rounded"
-            class="text-3xl"
-            aria-hidden="true"
-          />
+          <span
+            class="icon-[material-symbols--skip-next-rounded] text-3xl"
+            aria-hidden="true"></span>
         </button>
 
         <button
@@ -252,7 +235,8 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Playlist"
         >
-          <Icon name="mdi:playlist-music" class="text-xl" aria-hidden="true" />
+          <span class="icon-[mdi--playlist-music] text-xl" aria-hidden="true"
+          ></span>
         </button>
       </div>
 
@@ -299,11 +283,9 @@ const layoutId = `${widgetId}-layout`;
         aria-hidden="true"
       >
         <div class="h-8 w-8 animate-spin text-(--primary)">
-          <Icon
-            name="material-symbols:sync-rounded"
-            class="text-3xl"
-            aria-hidden="true"
-          />
+          <span
+            class="icon-[material-symbols--sync-rounded] text-3xl"
+            aria-hidden="true"></span>
         </div>
       </div>
     </div>
@@ -324,10 +306,9 @@ const layoutId = `${widgetId}-layout`;
           <div
             class="item-active-overlay absolute inset-0 hidden items-center justify-center bg-(--primary)/20"
           >
-            <Icon
-              name="material-symbols:graphic-eq-rounded"
-              class="text-sm text-(--primary)"
-            />
+            <span
+              class="icon-[material-symbols--graphic-eq-rounded] text-sm text-(--primary)"
+            ></span>
           </div>
         </div>
         <div class="min-w-0 flex-1">
@@ -449,6 +430,18 @@ const layoutId = `${widgetId}-layout`;
       ),
     };
 
+    // 封面旋转用 WAAPI 驱动而非 CSS 动画：换页时播放器节点会被搬移（见 app.ts
+    // 「换页保留右栏音乐播放器」），CSS 动画会随之重建并从 0 重启；脚本持有的
+    // 动画跨 DOM 移动不中断。不支持 WAAPI 时降级为不旋转（不阻断播放器初始化）。
+    const coverSpin =
+      typeof ui.cover.animate === "function"
+        ? ui.cover.animate(
+            [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+            { duration: 10000, iterations: Infinity, easing: "linear" },
+          )
+        : null;
+    coverSpin?.pause();
+
     ui.artist.textContent = cfg.i18n.noPlaying;
     ui.btnPlay.title = cfg.i18n.play;
     ui.btnPlay.setAttribute("aria-label", cfg.i18n.play);
@@ -504,7 +497,8 @@ const layoutId = `${widgetId}-layout`;
       ui.btnPlay.classList.toggle("text-(--primary)", !isPlaying);
       ui.iconPlay.classList.toggle("hidden", isPlaying);
       ui.iconPause.classList.toggle("hidden", !isPlaying);
-      ui.cover.style.animationPlayState = isPlaying ? "running" : "paused";
+      if (isPlaying) coverSpin?.play();
+      else coverSpin?.pause();
       ui.btnPlay.title = isPlaying ? cfg.i18n.pause : cfg.i18n.play;
       ui.btnPlay.setAttribute("aria-label", ui.btnPlay.title);
     };
@@ -548,10 +542,11 @@ const layoutId = `${widgetId}-layout`;
       ui.cover.alt = isValidMetingUrl(track.pic)
         ? `${track.name} - ${track.artist}`
         : cfg.i18n.noCover;
-      ui.cover.classList.remove("animate-spin-slow");
-      void ui.cover.offsetWidth;
-      ui.cover.classList.add("animate-spin-slow");
-      ui.cover.style.animationPlayState = "paused";
+      // 换歌时旋转归零，与原先重启 CSS 动画的观感一致
+      if (coverSpin) {
+        coverSpin.currentTime = 0;
+        coverSpin.pause();
+      }
       ui.progressBar.style.transform = "scaleX(0)";
       ui.progressThumb.style.left = "0%";
       ui.progressContainer.setAttribute("aria-valuenow", "0");

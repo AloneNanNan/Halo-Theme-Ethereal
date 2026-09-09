@@ -280,6 +280,44 @@ function setupSwup() {
   window.swup.hooks.on("animation:in:end", () => {
     document.documentElement.classList.remove("home-switch");
   });
+  // 换页保留右栏音乐播放器：#right-sidebar 是 Swup 容器，换页会整块替换内容，
+  // 播放器随之重建（重新拉取歌单 + loading 转圈）；左栏 #sidebar 不是容器，故
+  // 无此现象。这里在替换前把播放器节点暂存到 <body>（仍留在文档内，音频不中断），
+  // 替换后再放回新容器对应位置；新页面右栏没有该小组件时（如文章页只显示前 2 个）
+  // 直接丢弃，行为与"该页不显示音乐"一致。
+  const MUSIC_WIDGET_SELECTOR = '#right-sidebar [data-widget="music"]';
+  let parkedMusicWidget: HTMLElement | null = null;
+  // 暂存期间保持元素"被渲染但不可见"：display:none 会停掉动画，visibility:hidden
+  // 不会——元素仍在渲染管线中，封面旋转（WAAPI）与音频都不中断。
+  const restoreMusicWidget = () => {
+    const widget = parkedMusicWidget;
+    parkedMusicWidget = null;
+    if (!widget) return;
+    const slot = document.querySelector(MUSIC_WIDGET_SELECTOR);
+    if (slot) {
+      slot.replaceWith(widget);
+      widget.style.removeProperty("visibility");
+      widget.style.removeProperty("position");
+      widget.style.removeProperty("top");
+    } else {
+      widget.remove();
+    }
+  };
+  window.swup.hooks.before("content:replace", () => {
+    // 上一次暂存尚未归还（如连续快速导航）时先归还，避免节点滞留在 <body>
+    // 上既不可见又继续播放
+    restoreMusicWidget();
+    const widget = document.querySelector<HTMLElement>(MUSIC_WIDGET_SELECTOR);
+    if (!widget) return;
+    widget.style.visibility = "hidden"; // 不可见但仍在渲染，动画不中断
+    widget.style.position = "absolute";
+    widget.style.top = "-9999px"; // 移出视口且不在文档流中占位
+    document.body.appendChild(widget); // 脱离待替换容器但仍在文档内
+    parkedMusicWidget = widget;
+  });
+  window.swup.hooks.on("content:replace", restoreMusicWidget);
+  // 导航中止时 content:replace 不触发，兜底还原，避免播放器卡在隐藏的游离状态
+  window.swup.hooks.on("visit:end", restoreMusicWidget);
   window.swup.hooks.on("content:replace", () => {
     const rightToc = document.querySelector(
       "#right-sidebar table-of-contents",

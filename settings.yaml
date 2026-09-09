@@ -933,47 +933,49 @@ spec:
                 - $formkit: text
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
+                  key: widget_site_stats_site_start_date
                   label: 网站上线日期
                   value: ""
                   help: "用于计算运行天数，格式：YYYY-MM-DD，留空则不显示运行天数"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: tencent_key
+                  key: widget_weather_tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
                   help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city
+                  key: widget_weather_default_city
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
                 - $formkit: url
                   if: "$value.value === 'hitokoto'"
                   name: api
+                  key: widget_hitokoto_api
                   label: 一言 API 地址
                   value: ""
                   help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
                 - $formkit: text
                   if: "$value.value === 'hitokoto'"
                   name: fallback_text
+                  key: widget_hitokoto_fallback_text
                   label: 获取失败文案
                   value: "世界很大，开心第一。"
                   help: "一言获取失败时显示的句子"
                 - $formkit: text
                   if: "$value.value === 'hitokoto'"
                   name: fallback_source
+                  key: widget_hitokoto_fallback_source
                   label: 获取失败来源
                   value: "楠南NanNan"
                   help: "一言获取失败时显示的作者或来源"
-                - $formkit: text
-                  if: "$value.value === 'music'"
-                  name: title
-                  label: 标题
-                  value: 音乐
                 - $formkit: select
                   if: "$value.value === 'music'"
                   name: server
+                  key: widget_music_server
                   label: 平台
                   value: netease
                   options:
@@ -990,6 +992,7 @@ spec:
                 - $formkit: select
                   if: "$value.value === 'music'"
                   name: type
+                  key: widget_music_type
                   label: 类型
                   value: playlist
                   options:
@@ -1006,12 +1009,14 @@ spec:
                 - $formkit: text
                   if: "$value.value === 'music'"
                   name: id
+                  key: widget_music_id
                   label: ID
                   validation: required
                   help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
                 - $formkit: select
                   if: "$value.value === 'music'"
                   name: play_mode
+                  key: widget_music_play_mode
                   label: 播放模式
                   value: list
                   options:
@@ -1024,6 +1029,7 @@ spec:
                 - $formkit: number
                   if: "$value.value === 'music'"
                   name: volume
+                  key: widget_music_volume
                   label: 默认音量
                   min: 0
                   max: 1
@@ -1032,11 +1038,13 @@ spec:
                 - $formkit: url
                   if: "$value.value === 'music'"
                   name: api
+                  key: widget_music_api
                   label: 自定义 Meting API
                   help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
                 - $formkit: number
                   if: "$value.value === 'schedule'"
                   name: limit
+                  key: widget_schedule_limit
                   label: 显示条数
                   min: 1
                   max: 10
@@ -1045,6 +1053,7 @@ spec:
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
+                  key: widget_html_html
                   label: HTML
                   value: "<p>自定义HTML</p>"
             - $formkit: array
@@ -1066,6 +1075,8 @@ spec:
                       value: categories
                     - label: 文章标签
                       value: tag
+                    - label: 音乐播放器
+                      value: music
                     - label: 一言
                       value: hitokoto
                     - label: 站点统计
@@ -1079,42 +1090,118 @@ spec:
                 - $formkit: text
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
+                  key: right_widget_site_stats_site_start_date
                   label: 网站上线日期
                   value: ""
                   help: "用于计算运行天数，格式：YYYY-MM-DD，留空则不显示运行天数"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: tencent_key
+                  key: right_widget_weather_tencent_key
                   label: 腾讯位置服务 Key
                   value: ""
                   help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
                 - $formkit: text
                   if: "$value.value === 'weather'"
                   name: default_city
+                  key: right_widget_weather_default_city
                   label: 默认城市编码
                   value: "110000"
                   help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
                 - $formkit: url
                   if: "$value.value === 'hitokoto'"
                   name: api
+                  key: right_widget_hitokoto_api
                   label: 一言 API 地址
                   value: ""
                   help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
                 - $formkit: text
                   if: "$value.value === 'hitokoto'"
                   name: fallback_text
+                  key: right_widget_hitokoto_fallback_text
                   label: 获取失败文案
                   value: "世界很大，开心第一。"
                   help: "一言获取失败时显示的句子"
                 - $formkit: text
                   if: "$value.value === 'hitokoto'"
                   name: fallback_source
+                  key: right_widget_hitokoto_fallback_source
                   label: 获取失败来源
                   value: "楠南NanNan"
                   help: "一言获取失败时显示的作者或来源"
+                - $formkit: select
+                  if: "$value.value === 'music'"
+                  name: server
+                  key: right_widget_music_server
+                  label: 平台
+                  value: netease
+                  options:
+                    - label: 网易云音乐
+                      value: netease
+                    - label: QQ 音乐
+                      value: tencent
+                    - label: 酷狗音乐
+                      value: kugou
+                    - label: 虾米音乐
+                      value: xiami
+                    - label: 百度音乐
+                      value: baidu
+                - $formkit: select
+                  if: "$value.value === 'music'"
+                  name: type
+                  key: right_widget_music_type
+                  label: 类型
+                  value: playlist
+                  options:
+                    - label: 歌曲
+                      value: song
+                    - label: 歌单
+                      value: playlist
+                    - label: 专辑
+                      value: album
+                    - label: 歌手
+                      value: artist
+                    - label: 搜索
+                      value: search
+                - $formkit: text
+                  if: "$value.value === 'music'"
+                  name: id
+                  key: right_widget_music_id
+                  label: ID
+                  validation: required
+                  help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
+                - $formkit: select
+                  if: "$value.value === 'music'"
+                  name: play_mode
+                  key: right_widget_music_play_mode
+                  label: 播放模式
+                  value: list
+                  options:
+                    - label: 列表循环
+                      value: list
+                    - label: 单曲循环
+                      value: one
+                    - label: 随机
+                      value: random
+                - $formkit: number
+                  if: "$value.value === 'music'"
+                  name: volume
+                  key: right_widget_music_volume
+                  label: 默认音量
+                  min: 0
+                  max: 1
+                  step: 0.1
+                  value: 0.7
+                - $formkit: url
+                  if: "$value.value === 'music'"
+                  name: api
+                  key: right_widget_music_api
+                  label: 自定义 Meting API
+                  help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
                 - $formkit: number
                   if: "$value.value === 'schedule'"
                   name: limit
+                  key: right_widget_schedule_limit
                   label: 显示条数
                   min: 1
                   max: 10
@@ -1123,6 +1210,7 @@ spec:
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
+                  key: right_widget_html_html
                   label: HTML
                   value: "<p>自定义HTML</p>"
         - $formkit: group

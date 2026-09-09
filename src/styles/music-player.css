@@ -1,10 +1,10 @@
+/* 封面旋转由 MusicPlayer.astro 用 Web Animations API 驱动，不在此用 CSS 动画：
+   换页时播放器节点会被搬移（见 app.ts「换页保留右栏音乐播放器」），CSS 动画会
+   随之重建并从头播放，旋转看起来会顿一下。 */
+
 .firefly-music-player {
   overflow: hidden;
   border-radius: 0.875rem;
-}
-
-.firefly-music-player .music-cover {
-  animation: firefly-music-spin 10s linear infinite;
 }
 
 .firefly-music-player .custom-scrollbar {
@@ -42,14 +42,4 @@
 .firefly-music-player .progress-container:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
-}
-
-@keyframes firefly-music-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
 }
