@@ -14,7 +14,7 @@ const statIconClass =
 <article
   class="card-base post-card relative flex w-full flex-col-reverse rounded-(--radius-large) md:flex-col card-hover-lift overflow-hidden"
   th:with="coverEmpty = ${#strings.isEmpty(post.spec.cover)}"
-  th:classappend="${coverEmpty ? ' no-cover' : ' has-cover'}"
+  th:classappend="${(coverEmpty ? ' no-cover' : ' has-cover') + (post.spec.pinned == true ? ' is-pinned' : '')}"
 >
   <div
     class="post-card-content relative flex w-full flex-col pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7"

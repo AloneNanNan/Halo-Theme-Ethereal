@@ -48,6 +48,14 @@ const { pagination = "posts" } = Astro.props;
   is:inline></script>
 
 <style is:global>
+  /* ===== 置顶卡片高亮：主色描边 + 轻微光晕（列表/网格/瀑布流通用）===== */
+  #post-list-container .post-card.is-pinned {
+    outline: 1px solid color-mix(in oklab, var(--primary) 40%, transparent);
+    outline-offset: -1px;
+    box-shadow: 0 2px 18px color-mix(in oklab, var(--primary) 14%, transparent);
+  }
+  /* 瀑布流下卡片由 JS 绝对定位，outline 随卡片一起移动，无需额外处理 */
+
   /* ===== 网格（grid）布局容器 ===== */
   #post-list-container.post-grid-mode {
     display: grid;

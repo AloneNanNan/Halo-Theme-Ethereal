@@ -111,6 +111,16 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 - **全局 i18n 助手**：`t()` 读取 `window.i18nResources` 的客户端翻译助手统一由 `Layout.astro` 注入（`window.__etherealI18n`，另含 `__etherealLangTag`/`__etherealSetLanguage`/`__etherealBigNum`）。内联脚本复用即可，不要各自复制实现。
 - **外链 CDN 封面防盗链（B 站等）**：跨域 `<img>` 加载失败显示坏图、但新窗口打开又能正常加载，多半是 CDN 检查 `Referer` 头防盗链。给 `<img>` 加 `referrerpolicy="no-referrer"` 即可，见 `src/pages/bangumis.astro` 追番封面。
 
+## 导航栏滚动显隐（固定菜单栏开关）
+
+后台开关：`settings.yaml` 的 `layout.mobileMenu.navbarFixed` → `<html data-navbar-fixed>`（`Layout.astro`）。
+
+- **固定/非固定两种模式在桌面端（≥1024px）都是 fixed**：`#navbar-wrapper` 的定位规则写在 `Layout.astro` 的 `is:global` `<style>` 块里，不再带 `html[data-navbar-fixed="true"]` 前缀。区别只在 `navbar-hidden` 是否生效——固定模式强制 `translate:none` 永不隐藏；非固定模式由 `scroll-manager.ts` 按**滚动方向**加/移除 `navbar-hidden`（上滑或仍在顶部阈值内显示，下滑且离开顶部隐藏）。**别把非固定模式退回 sticky**：sticky 的粘附范围只有 `#top-row` 高度，滚出视口后上滑回不来，方向感知就失效了。
+- **方向判定有 8px 死区**（`scroll-manager.ts` 的 `SCROLL_DIRECTION_DEADZONE_PX`）：位移未超死区不翻转状态、也不更新基准（小位移可累积）。触控板微动/惯性回弹/橡皮筋产生的 1~2px 反向 delta 会让无死区的实现高频闪烁。顶部区（`scrollY <= threshold`）恒显示，不受死区约束。
+- **状态统一在 `scrollFunction` 末尾落定**：移动端 / 固定模式 / 无导航栏时不隐藏，并清掉可能残留的 `navbar-hidden`、`body.dynamic-navbar-hidden`、`inert`，避免桌面缩窗或切模式后状态泄漏。隐藏态同步给 `#navbar-wrapper` 加 `inert`（否则键盘 Tab 会聚焦进已 translate 出视口的导航栏）。
+- 导航栏隐藏时给 `body` 加 `dynamic-navbar-hidden`，`Layout.astro` 桌面块用它把 `--navbar-sticky-offset`（默认 `--navbar-height`）归零，侧边栏吸顶 `top` 与目录 `max-height` 统一引用该变量——新增页面类型只需写一遍规则，不要再加成对的 `.dynamic-navbar-hidden` 回退块。固定模式永不隐藏，该类不会被加。
+- 移动/平板（<1024px）恒 fixed 且永不隐藏。插件契约页 `templates/layout.html` 自带外壳、不加载本样式块，不受上述规则影响。
+
 ## 访客样式切换（显示设置面板）
 
 导航栏「显示设置」面板允许访客切换样式（参考 firefly）。后台开关在 `settings.yaml` 的 `layout.mobileMenu.visitorStyle` 子组，缺省视为开启；子项开关（主题色相/文章布局/卡片样式/壁纸模式/壁纸设置/透明设置）仅在总开关 `enable` 开启时显示，瀑布流与波浪不再单独设开关（分别随卡片样式、壁纸设置区联动）。

@@ -13,8 +13,9 @@ const BASE_SPACING_PX = 16; // 基础间距（1rem = 16px）
 // 移动/平板（<1024px / lg）共用抽屉菜单，导航栏不随滚动隐藏；
 // 桌面端（≥lg）才启用导航栏滚动隐藏
 const MOBILE_BREAKPOINT = 1024;
-
-const bannerEnabled = Boolean(document.getElementById("banner-wrapper"));
+// 滚动方向感知死区（px）：小于该位移不翻转显隐。触控板微动、滚动惯性回弹、
+// 移动端橡皮筋都会产生 1~2px 的反向 delta，无死区会让导航栏高频闪烁
+const SCROLL_DIRECTION_DEADZONE_PX = 8;
 
 // 缓存 DOM 引用，避免每次 scroll 帧重复 getElementById
 // 使用 isConnected 自动检测 Swup 页面切换后的失效引用
@@ -22,6 +23,10 @@ let _backToTopBtn: HTMLElement | null = null;
 let _toc: HTMLElement | null = null;
 let _navbar: HTMLElement | null = null;
 let _grid: HTMLElement | null = null;
+// 上次滚动位置，用于导航栏滚动方向感知显隐（delta = scrollY - lastScrollY）
+let lastScrollY = window.scrollY;
+// 导航栏显隐状态缓存：避免每帧回读 DOM。导航栏在 Swup 容器之外，换页不失效
+let navbarHidden = false;
 
 function getBackToTopBtn() {
   if (!_backToTopBtn?.isConnected)
@@ -78,17 +83,49 @@ function scrollFunction() {
     );
   }
 
-  if (window.innerWidth < MOBILE_BREAKPOINT) return;
-  if (!bannerEnabled || !navbar) return;
-  // 固定导航栏模式：跳过隐藏逻辑，始终显示
-  if (document.documentElement.dataset.navbarFixed === "true") return;
-  // threshold = bannerHeightPx - navbarHeight - panelOverlap(rem→px) - baseSpacing
-  const threshold =
-    bannerHeightPx -
-    NAVBAR_HEIGHT_PX -
-    MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * BASE_SPACING_PX -
-    BASE_SPACING_PX;
-  navbar.classList.toggle("navbar-hidden", scrollY >= threshold);
+  // 导航栏滚动显隐：桌面端（≥lg）且非「固定菜单栏」模式才启用。
+  // 不再用「页面是否存在 #banner-wrapper」门控：CSS 侧桌面端导航栏已统一 fixed，
+  // 若保留门控，「有导航栏但无 banner」的页面会变成常驻且滚不走。当前使用本
+  // 布局的页面都带 #banner-wrapper，去掉门控行为不变，只是让 JS 与 CSS 口径一致
+  const navDynamic =
+    window.innerWidth >= MOBILE_BREAKPOINT &&
+    !!navbar &&
+    document.documentElement.dataset.navbarFixed !== "true";
+
+  if (navDynamic) {
+    // threshold = bannerHeightPx - navbarHeight - panelOverlap(rem→px) - baseSpacing
+    const threshold =
+      bannerHeightPx -
+      NAVBAR_HEIGHT_PX -
+      MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * BASE_SPACING_PX -
+      BASE_SPACING_PX;
+    if (scrollY <= threshold) {
+      // 顶部区恒显示（不受死区约束，回顶立即出现）
+      navbarHidden = false;
+      lastScrollY = scrollY;
+    } else {
+      const delta = scrollY - lastScrollY;
+      // 只有位移超过死区才翻转状态并更新基准，否则保持现状——
+      // 不更新基准可让连续的小位移累积到超过死区后才响应
+      if (Math.abs(delta) > SCROLL_DIRECTION_DEADZONE_PX) {
+        lastScrollY = scrollY;
+        // 下滑隐藏、上滑显示（对齐 firefly dynamic 模式）
+        navbarHidden = delta > 0;
+      }
+    }
+  } else {
+    // 移动端 / 固定模式 / 无导航栏：不隐藏，并清掉可能残留的隐藏态
+    navbarHidden = false;
+  }
+
+  if (navbar) {
+    navbar.classList.toggle("navbar-hidden", navbarHidden);
+    // 隐藏态移出可聚焦序列：导航栏只是 translate 出视口，键盘 Tab 仍会聚焦进去
+    // （老浏览器不识别 inert 时自动降级为无操作）
+    navbar.toggleAttribute("inert", navbarHidden);
+  }
+  // 导航栏隐藏时给 body 加类，供侧边栏吸顶位置回退（Layout.astro 消费）
+  document.body.classList.toggle("dynamic-navbar-hidden", navbarHidden);
 }
 
 // 全屏首页向下箭头（#scroll-down-indicator）点击目标：手算平滑滚动到内容区。
@@ -98,7 +135,8 @@ function scrollFunction() {
 // CSS 变量（rem）按根字号换算 px，不再借用 scroll-margin-top 传值（语义扭曲）。
 // 固定导航栏（html[data-navbar-fixed="true"]）常驻顶部且滚动后不隐藏，落点需
 // 再上移导航栏高度使"导航栏底边"对齐页面背景顶部边缘；高度动态测量（移动端
-// 强制固定，断点间可能不同），非固定模式为 0（导航栏滚动后自动隐藏，无需让位）
+// 强制固定，断点间可能不同），非固定模式为 0——该模式桌面端虽同为 fixed，但
+// 向下滚动即自动收起，落点无需为它让位
 export function scrollDownToContent(): void {
   const grid = getGrid();
   if (!grid) return;

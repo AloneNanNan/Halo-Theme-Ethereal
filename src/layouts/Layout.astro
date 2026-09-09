@@ -570,15 +570,13 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
-      /* 固定导航栏宽度跟随内容区：fixed 脱离文档流后若不显式收窄，
-         会占满整屏（视口 <75rem 时卡片 max-w 撑满屏幕；宽屏时缺少
-         #top-row 的 md:px-4 内边距、与内容边缘齐平）。按 #top-row
-         同款几何收窄并居中，保证与未固定时完全一致。
-         注意：宽度规则同时出现在本块（平板恒 fixed，选择器用
-         #navbar-wrapper）与下方 1024+ 块（桌面按开关 fixed，选择器带
-         html[data-navbar-fixed="true"]），两者无法合并（1024+ 非 fixed
-         时不能收窄）。改动时务必与 #top-row 的 md:px-4 / xl:w-[92vw] 同步 */
-      @media (min-width: 768px) and (max-width: 1023px) {
+      /* 导航栏宽度跟随内容区：fixed 脱离文档流后若不显式收窄，会占满整屏
+         （视口 <75rem 时卡片 max-w 撑满屏幕；宽屏时缺少 #top-row 的 md:px-4
+         内边距、与内容边缘齐平）。按 #top-row 同款几何收窄并居中。
+         768px 起统一（<768px 由上方移动端块 left/right:0 全宽），xl（80rem）
+         起 #top-row 由 w-full 换为 xl:w-[92vw]，宽度覆盖见下方 1024+ 块。
+         改动时务必与 #top-row 的 md:px-4 / xl:w-[92vw] 同步 */
+      @media (min-width: 768px) {
         #navbar-wrapper {
           margin-left: auto !important;
           margin-right: auto !important;
@@ -587,66 +585,76 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
-      /* 桌面端固定导航栏：与移动端方案一致，使用 fixed 定位强制始终可见 */
+      /* 桌面端导航栏统一 fixed 定位固定在顶部（固定/非固定模式共用）。
+         区别仅在「是否随滚动隐藏」：固定模式 navbar-hidden 强制 translate:none
+         （永不隐藏）；非固定模式由 scroll-manager 按滚动方向加/移除 navbar-hidden
+         （上滑显示、下滑隐藏）。若只让固定模式 fixed、非固定模式保持 sticky，
+         非固定模式下导航栏 sticky 范围仅 #top-row 高度（72px），滚动后随容器
+         滚出视口、上滑回不来——故必须统一 fixed。 */
       @media (min-width: 1024px) {
-        html[data-navbar-fixed="true"] #navbar-wrapper {
+        #navbar-wrapper {
           position: fixed !important;
           top: 0 !important;
           left: 0 !important;
           right: 0 !important;
-          margin-left: auto !important;
-          margin-right: auto !important;
-          width: calc(100% - 2rem) !important;
-          max-width: calc(var(--page-width) - 2rem) !important;
           z-index: 50 !important;
         }
         /* xl 起 #top-row 由 w-full 换为 xl:w-[92vw]，宽度同步跟随 */
         @media (min-width: 80rem) {
-          html[data-navbar-fixed="true"] #navbar-wrapper {
+          #navbar-wrapper {
             width: calc(92vw - 2rem) !important;
           }
         }
+        /* 吸顶让位量：导航栏可见时为导航栏高度，随滚动收起时（scroll-manager
+           给 body 加 .dynamic-navbar-hidden）归零——否则导航栏收起后侧边栏顶部
+           仍空出 72px，把内容视觉往下挤。侧边栏/目录规则统一引用该变量，
+           新增页面类型只需写一遍。固定模式永不收起，归零分支不命中。 */
+        :root {
+          --navbar-sticky-offset: var(--navbar-height);
+        }
+        body.dynamic-navbar-hidden {
+          --navbar-sticky-offset: 0rem;
+        }
+        /* 固定模式：navbar-hidden 不生效，始终可见 */
         html[data-navbar-fixed="true"] #navbar-wrapper.navbar-hidden {
           translate: none !important;
           opacity: 1 !important;
           visibility: visible !important;
         }
-        /* 防止内容被固定导航栏遮挡 */
-        html[data-navbar-fixed="true"] #top-row {
+        /* 导航栏 fixed 后脱离文档流，给 #top-row 留出行高（内容区
+           #main-panel-wrapper 是 absolute，位置不依赖本高度） */
+        #top-row {
           height: var(--navbar-height) !important;
         }
-        /* 非首页侧边栏吸顶位置下移 */
-        html[data-navbar-fixed="true"] body:not(.is-home) #sidebar-sticky,
-        html[data-navbar-fixed="true"]
-          body:not(.is-home)
-          #right-sidebar-sticky {
-          top: calc(var(--navbar-height) + 1rem) !important;
+        /* 侧边栏吸顶位置：非首页 / 首页无 banner（关闭、纯色、全屏透明）同为
+           导航栏下方 1rem */
+        body:not(.is-home) #sidebar-sticky,
+        body:not(.is-home) #right-sidebar-sticky,
+        body.is-home:not(.enable-banner) #sidebar-sticky,
+        body.is-home:not(.enable-banner) #right-sidebar-sticky {
+          top: calc(var(--navbar-sticky-offset) + 1rem) !important;
         }
-        /* 首页侧边栏吸顶位置下移（首页有banner） */
-        html[data-navbar-fixed="true"]
-          body.is-home.enable-banner
-          #sidebar-sticky,
-        html[data-navbar-fixed="true"]
-          body.is-home.enable-banner
-          #right-sidebar-sticky {
+        /* 首页有 banner：与 banner 底边重叠（--banner-height-extend） */
+        body.is-home.enable-banner #sidebar-sticky,
+        body.is-home.enable-banner #right-sidebar-sticky {
           top: calc(
-            1rem - var(--banner-height-extend) + var(--navbar-height)
+            1rem - var(--banner-height-extend) + var(--navbar-sticky-offset)
           ) !important;
         }
-        /* 首页无 banner（关闭/纯色、全屏透明）：侧边栏吸顶到固定导航栏下方 */
-        html[data-navbar-fixed="true"]
-          body.is-home:not(.enable-banner)
-          #sidebar-sticky,
-        html[data-navbar-fixed="true"]
-          body.is-home:not(.enable-banner)
-          #right-sidebar-sticky {
-          top: calc(var(--navbar-height) + 1rem) !important;
+        /* 右侧栏吸顶（含文章目录）高度：吸顶位置下移了让位量，
+           max-height 必须同步扣除，否则目录底部会溢出屏幕下方 */
+        #right-sidebar-sticky:has(#toc-inner-wrapper-right) {
+          max-height: calc(
+            100vh - var(--navbar-sticky-offset) - 2rem
+          ) !important;
         }
-        /* 右侧栏吸顶（含文章目录）高度：吸顶位置下移了导航栏高度，
-           max-height 必须同步扣除，否则目录底部会溢出屏幕下方约一个导航栏高度 */
-        html[data-navbar-fixed="true"]
-          #right-sidebar-sticky:has(#toc-inner-wrapper-right) {
-          max-height: calc(100vh - var(--navbar-height) - 2rem) !important;
+        /* 侧边栏 top 过渡：与导航栏 --dur-scroll 同步（位移顺滑跟随收起/出现），
+           否则 class 切换会让侧边栏瞬间跳位，与导航栏 700ms 滑动错位。
+           注意：必须无条件挂在元素上——若只写在 .dynamic-navbar-hidden 里，
+           移除该类时元素已失去 transition，回程会瞬跳 */
+        #sidebar-sticky,
+        #right-sidebar-sticky {
+          transition: top var(--dur-scroll, 700ms) ease !important;
         }
       }
     </style>
