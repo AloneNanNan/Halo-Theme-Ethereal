@@ -32,6 +32,7 @@ declare namespace astroHTML.JSX {
     "th:unless"?: string;
     "th:utext"?: string;
     "th:src"?: string;
+    "th:srcset"?: string;
     "th:with"?: string;
     "th:target"?: string;
     "th:content"?: string;

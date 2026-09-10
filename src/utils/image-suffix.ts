@@ -5,16 +5,53 @@
  * 1. 服务端 Thymeleaf 渲染（Halo 后台）—— 见 CDN_SUFFIX_RAW / imageSuffixThWith；
  * 2. 浏览器端运行时（文章正文图片处理，is:inline 脚本）—— 见 CDN_SUFFIX_PATTERNS。
  *
- * 两套必须同步维护：新增 CDN 服务商时，同时更新 CDN_SUFFIX_RAW 与 CDN_SUFFIX_PATTERNS。
+ * 单一数据源约定（新增/调整规则只改本文件）：
+ * - 服务端 CDN_SUFFIX_RAW 由 CDN_SUFFIX_PATTERNS 构建期生成；
+ * - 扩展名白名单 SUFFIX_ELIGIBLE_EXTENSIONS 同时供服务端 cdnSuffixEligible 与
+ *   客户端 isSuffixEligible（经 post.astro 的 define:vars 注入）使用。
  *
  * 注意：Astro 构建器对含 Thymeleaf 表达式（${...}）的属性值不做插值解析，
  * 因此 th:with 必须整体由本函数生成，再通过 `th:with={imageSuffixThWith(...)}`
  * 这类纯表达式属性输出（参考各页面调用处）。
  */
 
-/** Thymeleaf 后缀表达式主体（不含 ${} 包裹），引用局部变量 w/provider/fmt */
+/** 可追加 CDN 尺寸后缀的图片扩展名白名单（服务端 / 浏览器端共用同一来源） */
+export const SUFFIX_ELIGIBLE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
+/** 各 CDN 服务商的后缀模板（{width} 为占位符），服务端/浏览器端共用的单一数据源 */
+export const CDN_SUFFIX_PATTERNS: Record<string, string> = {
+  halo: "?width={width}",
+  aliyun_esa: "?image_process=resize,w_{width}",
+  aliyun_oss: "?x-oss-process=image/resize,w_{width}",
+  tencent_eo: "?eo-img.resize=w/{width}",
+  tencent_cos: "?imageMogr2/thumbnail/{width}x",
+  qiniu: "?imageView2/2/w/{width}",
+  upyun: "!/fw/{width}",
+};
+
+/** 把 {width} 模板转成 Thymeleaf 文本拼接表达式，如 "?width={width}" → "'?width=' + w" */
+function patternToThymeleafExpr(pattern: string): string {
+  const [prefix, suffix = ""] = pattern.split("{width}");
+  const parts: string[] = [];
+  if (prefix) parts.push(`'${prefix}'`);
+  parts.push("w");
+  if (suffix) parts.push(`'${suffix}'`);
+  return parts.join(" + ");
+}
+
+/**
+ * Thymeleaf 后缀表达式主体（不含 ${} 包裹），引用局部变量 w/provider/fmt。
+ * 由 CDN_SUFFIX_PATTERNS 构建期生成，避免手写第二份映射造成漂移。
+ */
 export const CDN_SUFFIX_RAW =
-  "w == 0 || provider == 'none' ? '' : provider == 'halo' ? '?width=' + w : provider == 'aliyun_esa' ? '?image_process=resize,w_' + w : provider == 'aliyun_oss' ? '?x-oss-process=image/resize,w_' + w : provider == 'tencent_eo' ? '?eo-img.resize=w/' + w : provider == 'tencent_cos' ? '?imageMogr2/thumbnail/' + w + 'x' : provider == 'qiniu' ? '?imageView2/2/w/' + w : provider == 'upyun' ? '!/fw/' + w : provider == 'custom' ? #strings.replace(#strings.defaultString(fmt, ''), '{width}', '' + w) : ''";
+  "w == 0 || provider == 'none' ? '' : " +
+  Object.entries(CDN_SUFFIX_PATTERNS)
+    .map(
+      ([name, pattern]) =>
+        `provider == '${name}' ? ${patternToThymeleafExpr(pattern)}`,
+    )
+    .join(" : ") +
+  " : provider == 'custom' ? #strings.replace(#strings.defaultString(fmt, ''), '{width}', '' + w) : ''";
 
 /**
  * 生成图片尺寸后缀的完整 th:with 局部变量串。
@@ -32,31 +69,6 @@ export function imageSuffixThWith(widthDefault: string): string {
     CDN_SUFFIX_RAW +
     "}"
   );
-}
-
-/** 各 CDN 服务商的后缀模板（{width} 为占位符），与 CDN_SUFFIX_RAW 保持一致 */
-export const CDN_SUFFIX_PATTERNS: Record<string, string> = {
-  halo: "?width={width}",
-  aliyun_esa: "?image_process=resize,w_{width}",
-  aliyun_oss: "?x-oss-process=image/resize,w_{width}",
-  tencent_eo: "?eo-img.resize=w/{width}",
-  tencent_cos: "?imageMogr2/thumbnail/{width}x",
-  qiniu: "?imageView2/2/w/{width}",
-  upyun: "!/fw/{width}",
-};
-
-/** 按 provider/width 生成图片处理后缀（浏览器端运行时使用） */
-export function makeImageSuffix(
-  provider: string,
-  width: number,
-  customFormat = "",
-): string {
-  if (!width || provider === "none") return "";
-  if (provider === "custom") {
-    return customFormat ? customFormat.replace("{width}", String(width)) : "";
-  }
-  const pattern = CDN_SUFFIX_PATTERNS[provider];
-  return pattern ? pattern.replace("{width}", String(width)) : "";
 }
 
 /**
@@ -77,11 +89,12 @@ export function bannerModeThWith(): string {
 
 /**
  * Banner 渲染所需的 th:with 局部变量串：在图片处理后缀变量基础上追加
- * mode（single/carousel，缺省 single）、srcX（单图 URL + 可加后缀时的
+ * mode（single/carousel，缺省 single）、rawSrc（未拼后缀的原始图 URL，
+ * 供 Banner 显式 srcset 基于原图生成档位）、srcX（rawSrc + 可加后缀时的
  * 后缀，供 th:href/th:src 静态属性引用）与 isVideo（single 模式下 src
- * 以 .mp4/.webm 结尾）。mode/srcX/isVideo 依赖前面定义的局部变量
- * （Thymeleaf th:with 支持顺序引用）。桌面容器再追加移动端独立来源
- * 相关变量（useMobileSrc/mobileMode/mobileSrc/mobileImages/mobileActive），
+ * 以 .mp4/.webm 结尾）。以上变量依赖前面定义的局部变量（Thymeleaf th:with
+ * 支持顺序引用）。桌面容器再追加移动端独立来源相关变量
+ * （useMobileSrc/mobileMode/mobileSrc/mobileImages/mobileActive），
  * 供移动端容器渲染条件与其内层 th:with 引用。
  */
 export function bannerThWith(): string {
@@ -105,16 +118,24 @@ export function bannerMobileThWith(): string {
   return bannerMediaVars("mobileSrc", "mobileMode");
 }
 
-/** 生成 Banner 媒体块共用的 mode/srcX/isVideo 局部变量串（依赖外层 suffix）。 */
+/** 生成 Banner 媒体块共用的 mode/rawSrc/rawSrcset/srcX/isVideo 局部变量串（依赖外层 suffix）。 */
 function bannerMediaVars(srcExpr: string, modeExpr: string): string {
   return (
     "mode=${" +
     modeExpr +
     "}, " +
-    "srcX=${" +
+    // rawSrc：未拼 CDN/缩略图后缀的原始图 URL。srcset 各档必须基于它生成
+    // （见 bannerSrcsetInner），不得拿带后缀的 srcX 继续追加 ?width 参数
+    "rawSrc=${" +
     srcExpr +
-    " + (" +
-    cdnSuffixEligible(srcExpr) +
+    "}, " +
+    // rawSrcset：单图 srcset 候选串，供 <img> 的 th:srcset 与首页 preload 的
+    // imagesrcset 复用同一表达式（provider 非 none/halo 时为 null，属性不输出）
+    "rawSrcset=${" +
+    bannerSrcsetInner("rawSrc") +
+    "}, " +
+    "srcX=${rawSrc + (" +
+    cdnSuffixEligible("rawSrc") +
     " ? suffix : '')}, " +
     "isVideo=${mode == 'single' and " +
     "(" +
@@ -164,6 +185,63 @@ export function carouselImgSrcExpr(): string {
 }
 
 /**
+ * 全宽 Banner 显式 srcset 的「原图兜底档」标称宽度。
+ *
+ * 渲染期无法得知原图真实像素宽，而 Halo 缩略图最高只到 xl=1600w：若不把原图
+ * 纳入 srcset，宽屏（>1600css 视口）或 HiDPI 屏上浏览器会止步于 1600w，放大后
+ * 仍发虚（issue #71）。此标称值只需 >= 常规 Banner 原图宽度，即可让浏览器在该
+ * 场景优先选原图档。真实下载的是不带 ?width 参数的原图 URL，标称值仅影响候选
+ * 挑选，不会造成图片 upscale 失真（原图不足该宽时下载的仍是原图本身）。
+ */
+const BANNER_ORIGINAL_SRCSET_WIDTH = 3840;
+
+/** Halo 官方缩略图档位（s/m/l/xl），即 ThumbnailSize 预设宽度 */
+const BANNER_THUMB_SRCSET_WIDTHS = [400, 800, 1200, 1600];
+
+/**
+ * 全宽 Banner 单张图 srcset 的 Thymeleaf 表达式主体（不含 `${...}` 包裹）。
+ *
+ * 背景：Halo 2.22+ 的 ThumbnailImgTagPostProcessor 会给「没有 srcset 属性的
+ * <img>」注入一套按内容卡模型设计的默认 srcset/sizes（桌面上限 800px），全宽
+ * Banner 被误导选 400~800w 小图后拉伸发虚。只要 <img> 自带 srcset，核心即跳过
+ * 注入。此处输出官方四档（400/800/1200/1600）+ 原图兜底，由浏览器按视口挑档。
+ *
+ * 仅当图片处理为 Halo 内部语义（provider none/halo，URL 走 Halo ?width 缩略图
+ * 链路）时输出档位；其余 CDN 场景返回 null——src 已是 CDN 处理大图，CDN URL 上
+ * 拼 ?width 无意义；Thymeleaf 对 null 会移除属性，即完全不输出 srcset，与改动前
+ * 行为一致（也不会被核心注入 ?width）。
+ *
+ * 已知局限：此处的档位 URL 统一按 Halo ?width 链路拼装，未做扩展名判断。对 Halo
+ * 不支持的格式（如 webp）?width 不生效，各档会退化为原图（不会糊，也无额外带宽）；
+ * 与 WebP 相关的一致性问题详见 SUFFIX_ELIGIBLE_EXTENSIONS 处的说明。
+ *
+ * @param urlVar 图片原始 URL（无 CDN/缩略图后缀）的 Thymeleaf 变量或表达式
+ *   token，如 "rawSrc" 或 "#strings.defaultString(img, '')"，须为外层
+ *   th:with / th:each 作用域内可引用
+ */
+function bannerSrcsetInner(urlVar: string): string {
+  return (
+    "((provider == 'none') or (provider == 'halo')) and !#strings.isEmpty(" +
+    urlVar +
+    ") ? " +
+    BANNER_THUMB_SRCSET_WIDTHS.map((w) => {
+      return `${urlVar} + '?width=${w} ${w}w, ' + `;
+    }).join("") +
+    `${urlVar} + ' ${BANNER_ORIGINAL_SRCSET_WIDTH}w' : null`
+  );
+}
+
+/** 生成全宽 Banner 单张图的 `th:srcset` 表达式文本（含 `${...}` 包裹） */
+function bannerSrcsetExpr(urlVar: string): string {
+  return "${" + bannerSrcsetInner(urlVar) + "}";
+}
+
+/** 轮播模式（th:each 循环变量 img）版本的 bannerSrcsetExpr */
+export function carouselSrcsetExpr(): string {
+  return bannerSrcsetExpr("#strings.defaultString(img, '')");
+}
+
+/**
  * 生成「URL 路径（去查询串后小写）以指定扩展名结尾」的 Thymeleaf 布尔表达式。
  *
  * 关键陷阱：Thymeleaf 的 #strings.substringBefore(url, '?') 在 URL 不含 '?'
@@ -187,7 +265,15 @@ function urlEndsWith(urlExpr: string, ext: string): string {
 
 /**
  * 生成「图片 URL 是否可追加 CDN 尺寸后缀」的 Thymeleaf 布尔表达式主体。
- * 仅静态 jpg/jpeg/png 追加，避免图片处理链路破坏 gif/webp/apng 动画。
+ *
+ * 处理 SUFFIX_ELIGIBLE_EXTENSIONS（jpg/jpeg/png/webp）：webp 虽可能为动图
+ * （animated WebP），但静态 webp 占绝大多数，排除它会让主流静态图白白损失优化
+ * （Halo 官方缩略图亦不支持 webp）；gif 是唯一能靠扩展名可靠识别的动图格式，故
+ * 排除。已知局限：APNG 扩展名同为 .png，无法靠扩展名区分，只能一并处理。
+ *
+ * 白名单来自共享常量 SUFFIX_ELIGIBLE_EXTENSIONS，与 post.astro 正文图脚本
+ * （浏览器端 isSuffixEligible）同源，避免两边规则漂移。
+ *
  * 匹配路径末尾扩展名（先去掉查询串），避免 contains 对
  * "?src=x.mp4"/"/images/jpg/" 等子串误判。
  * @param urlExpr 图片 URL 的 Thymeleaf 表达式（需自带空值兜底，如 "img ?: ''"）
@@ -195,11 +281,9 @@ function urlEndsWith(urlExpr: string, ext: string): string {
 export function cdnSuffixEligible(urlExpr: string): string {
   return (
     "(" +
-    urlEndsWith(urlExpr, ".jpg") +
-    " or " +
-    urlEndsWith(urlExpr, ".jpeg") +
-    " or " +
-    urlEndsWith(urlExpr, ".png") +
+    SUFFIX_ELIGIBLE_EXTENSIONS.map((ext) => urlEndsWith(urlExpr, ext)).join(
+      " or ",
+    ) +
     ")"
   );
 }

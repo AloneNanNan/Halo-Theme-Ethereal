@@ -7,6 +7,10 @@ interface Props {
   position?: string;
   loading?: "lazy" | "eager";
   fetchpriority?: "high" | "low" | "auto";
+  /** 可选：Thymeleaf 表达式文本（如 MainGridLayout 传入的 rawSrcset 变量引用），原样输出到 th:srcset */
+  srcset?: string;
+  /** 可选：sizes 字面量，如 "100vw"（全宽图用，见 MainGridLayout Banner） */
+  sizes?: string;
 }
 
 const {
@@ -16,6 +20,8 @@ const {
   position = "center",
   loading = "lazy",
   fetchpriority = "auto",
+  srcset,
+  sizes,
 } = Astro.props;
 const className = Astro.props.class;
 const imageStyle = `object-position: ${position}`;
@@ -28,6 +34,8 @@ const imageStyle = `object-position: ${position}`;
   </div>
   <img
     th:src={src}
+    th:srcset={srcset}
+    sizes={sizes}
     th:alt={alt}
     th:style={`|object-position: ${position}|`}
     loading={loading}

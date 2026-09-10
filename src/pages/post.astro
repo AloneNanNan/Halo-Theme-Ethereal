@@ -1,7 +1,11 @@
 ---
 import PostMeta from "../components/PostMeta.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import { imageSuffixThWith, CDN_SUFFIX_PATTERNS } from "../utils/image-suffix";
+import {
+  imageSuffixThWith,
+  CDN_SUFFIX_PATTERNS,
+  SUFFIX_ELIGIBLE_EXTENSIONS,
+} from "../utils/image-suffix";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
 // ASSET_VERSION 由 astro.config.mjs 构建期从 theme.yaml 注入（vite.define），
@@ -500,7 +504,10 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   </script>
 
   <!-- CDN 图片处理：<template> 阻止预加载 → JS 加参数后插入 DOM，避免双加载 -->
-  <script is:inline define:vars={{ CDN_SUFFIX_PATTERNS }}>
+  <script
+    is:inline
+    define:vars={{ CDN_SUFFIX_PATTERNS, SUFFIX_ELIGIBLE_EXTENSIONS }}
+  >
     (function () {
       var TEMPLATE_ID = "content-template";
       var PLACEHOLDER_ID = "content-placeholder";
@@ -544,11 +551,28 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         var contentEl = fragment.getElementById("content");
         if (!contentEl) return;
 
+        // 扩展名白名单由构建期注入（与 src/utils/image-suffix.ts 的
+        // SUFFIX_ELIGIBLE_EXTENSIONS 同源，避免服务端/客户端两边漂移）。
+        // 先剥离查询串再比结尾，使函数自身语义完整，不依赖调用方已排除含 ? 的 URL。
+        function isSuffixEligible(src) {
+          var path = src.split("?")[0].toLowerCase();
+          for (var i = 0; i < SUFFIX_ELIGIBLE_EXTENSIONS.length; i++) {
+            var ext = SUFFIX_ELIGIBLE_EXTENSIONS[i];
+            if (path.slice(-ext.length) === ext) return true;
+          }
+          return false;
+        }
+
         // 在插入 DOM 前给内容图片加上 CDN 处理参数
         if (suffix) {
           contentEl.querySelectorAll("img").forEach(function (img) {
             var src = img.getAttribute("src");
-            if (src && src.indexOf("?") === -1 && src.indexOf("!/") === -1) {
+            if (
+              src &&
+              src.indexOf("?") === -1 &&
+              src.indexOf("!/") === -1 &&
+              isSuffixEligible(src)
+            ) {
               // 仅主图加 CDN 压缩后缀（默认 1920），不加 srcset：
               // srcset 会让浏览器按 sizes+DPR 选小档位图，img.naturalWidth 变小，
               // 而灯箱（content-photoswipe）按 naturalWidth 取宽高，导致灯箱
