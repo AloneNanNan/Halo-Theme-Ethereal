@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <strong>文档：<a href="https://www.nannax.top/docs/ethereal">主题文档</a>　｜　交流群：<a href="https://qm.qq.com/q/onMpJjYvgQ">1098801176</a></strong>
+  <strong>文档：<a href="https://www.nanzhiy.cn/docs/ethereal">主题文档</a>　｜　交流群：<a href="https://qm.qq.com/q/onMpJjYvgQ">1098801176</a></strong>
 </p>
 
 ---
@@ -38,7 +38,7 @@
   <img src="./screenshot/home.png" alt="Ethereal 主题预览" width="800" />
 </p>
 
-> 完整各页面预览可前往下方 [演示站点](#演示站点) 或前往 [主题文档-页面预览](https://www.nannax.top/docs/ethereal/yulan/yulan-yemian) 查看详细预览。
+> 完整各页面预览可前往下方 [演示站点](#演示站点) 或前往 [主题文档-页面预览](https://www.nanzhiy.cn/docs/ethereal/yulan/yulan-yemian) 查看详细预览。
 
 ---
 
@@ -54,8 +54,9 @@
 
 | 站点                                                   | 说明       |
 | ------------------------------------------------------ | ---------- |
-| [楠枝小笺](https://www.nannax.top/)                    | 主题开发者 |
+| [楠枝小笺](https://www.nanzhiy.cn/)                    | 主题开发者 |
 | [Leave_Time(时泠)的幻想书屋](https://leave-time.site/) | 主题贡献者 |
+| [LQBBY](https://www.lqbby.com/)                        | 主题贡献者 |
 | [BoxCat](https://blog.lipei.online/)                   | 主题用户   |
 | [顶呱呱的快乐](https://wuw.li/)                        | 主题用户   |
 
@@ -82,7 +83,7 @@
 1. 前往 [Releases](https://github.com/AloneNanNan/halo-theme-ethereal/releases) 下载最新版本的主题包（`.zip`）
 2. 进入「**Halo 后台 → 主题 → 安装**」，上传主题包
 
-> 详细的配置说明请参阅 [主题文档](https://www.nannax.top/docs/ethereal)。
+> 详细的配置说明请参阅 [主题文档](https://www.nanzhiy.cn/docs/ethereal)。
 
 ---
 
@@ -208,11 +209,15 @@ Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整�
 
 ```
 halo-theme-ethereal/
-├── .github/                     # GitHub 工作流
-│   └── workflows/
-│       ├── ci.yaml              # 构建、版本检测与发布 Release
-│       └── cd.yaml              # 发布时同步到 Halo 应用市场
-├── .husky/                      # git 钩子（pre-commit 代码格式化）
+├── .github/                     # GitHub 配置
+│   ├── ISSUE_TEMPLATE/          # Issue 模板
+│   ├── workflows/
+│   │   ├── ci.yaml              # 构建、版本检测与发布 Release
+│   │   ├── cd.yaml              # 发布时同步到 Halo 应用市场
+│   │   └── codeql.yml           # 代码安全扫描
+│   └── dependabot.yml           # 依赖自动更新
+├── .husky/                      # git 钩子
+├── .nvmrc                       # Node 版本
 ├── i18n/                        # 国际化翻译文件
 │   ├── default.properties       # 默认语言（英文）
 │   ├── zh_CN.properties         # 简体中文
@@ -225,12 +230,12 @@ halo-theme-ethereal/
 ├── scripts/                     # 构建脚本
 ├── src/
 │   ├── components/              # 组件
-│   │   ├── *.astro              # Astro 静态组件（Footer、Navbar、PostCard 等）
-│   │   ├── *.svelte             # Svelte 交互组件（Search、LightDarkSwitch、DisplaySettings 等）
-│   │   ├── control/             # 控件组件（分页、返回顶部、按钮等）
+│   │   ├── *.astro              # Astro 静态组件
+│   │   ├── *.svelte             # Svelte 交互组件
+│   │   ├── control/             # 控件组件
 │   │   ├── misc/                # 杂项组件
 │   │   ├── photos/              # 照片相关组件
-│   │   └── widget/              # 侧边栏小部件（公告、个人简介、天气、音乐、一言、统计、目录等）
+│   │   └── widget/              # 侧边栏小部件
 │   ├── constants/               # 常量定义
 │   ├── env.d.ts                 # 环境类型声明
 │   ├── global.d.ts              # 全局类型声明
@@ -259,19 +264,27 @@ halo-theme-ethereal/
 │   │   ├── schedule-calendar-card.astro # 日程日历卡片组件
 │   │   ├── timeline.astro        # 时间轴页面
 │   │   ├── skills.astro          # 技能页面
-│   │   ├── bangumis.astro        # 追番页面（Bilibili Bangumi 插件）
+│   │   ├── bangumis.astro        # 追番页面
 │   │   ├── layout.astro          # 插件前台页面契约布局模板
 │   │   ├── error/               # 错误页面
 │   │   │   └── 404.astro        # 404 页面
 │   │   └── page.astro           # 自定义页面
-│   ├── scripts/                 # 应用入口脚本
-│   │   └── app.ts               # 初始化逻辑（主题、滚动条、灯箱等）
+│   ├── scripts/                 # 脚本源码
+│   │   ├── app.ts               # 初始化逻辑
+│   │   ├── assets/              # 经典脚本源码
+│   │   └── vendor/              # 第三方脚本
 │   ├── styles/                  # 全局样式
 │   ├── types/                   # TypeScript 类型定义
 │   │   ├── config.ts            # 主题配置类型
 │   │   └── searchResult.ts      # 搜索结果类型
 │   └── utils/                   # 工具函数
 │       └── photos/              # 相册相关工具
+├── AGENTS.md                    # AI 协作开发约定
+├── CHANGELOG.md                 # 更新日志
+├── CONTRIBUTING.md              # 贡献指南
+├── LICENSE                      # 许可证
+├── annotation-setting.yaml      # Halo 注解设置
+├── release.md                   # 发布说明
 ├── astro.config.mjs             # Astro 构建配置
 ├── nodemon.json                 # 开发热更新配置
 ├── settings.yaml                # Halo 主题设置定义

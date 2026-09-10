@@ -6,7 +6,7 @@ spec:
   displayName: Ethereal
   author:
     name: 楠南NanNan
-    website: https://www.nannax.top
+    website: https://www.nanzhiy.cn
   description: 一款基于 Fuwari 二次开发，为 Halo 打造的 Fuwari 风格增强型主题。
   logo: /themes/Ethereal/assets/images/favicon-light-192.png
   homepage: https://github.com/AloneNanNan/halo-theme-ethereal#readme
@@ -28,7 +28,7 @@ spec:
         file: "skills.html"
   settingName: "Ethereal-setting"
   configMapName: "Ethereal-configMap"
-  version: "1.2.3"
+  version: "1.2.4"
   requires: ">=2.25.0"
   license:
     - name: "MIT"
