@@ -2352,7 +2352,7 @@ spec:
               min: 0
               max: 3840
               step: 160
-              help: "Banner 图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：1920\n注：使用「Halo」处理时 Banner 会按屏幕自适应加载（自动在 400/800/1200/1600 或原图之间选择），此项主要影响外部 CDN 服务，并对预加载 / 兜底地址生效"
+              help: "Banner 图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：1920\n注：Banner 会按屏幕自适应加载——固定 400/800/1200/1600 档位；使用外部 CDN 时，本项宽度还会作为顶档参与选择（超过 1600 才生效）。本项宽度同时用作兜底地址（不支持 srcset 的浏览器）与首页预加载地址；外部 CDN 下设为 0 表示不分档，直接加载原图"
             - $formkit: number
               name: avatar_size
               if: "$get(image_processing_provider).value !== 'none'"

@@ -54,6 +54,19 @@ export const CDN_SUFFIX_RAW =
   " : provider == 'custom' ? #strings.replace(#strings.defaultString(fmt, ''), '{width}', '' + w) : ''";
 
 /**
+ * 当前 provider 的后缀模板表达式（保留 `{width}` 占位符，如 `?image_process=resize,w_{width}`）。
+ * srcset 要在同一张图上生成多档候选，逐个 `#strings.replace(pat, '{width}', '400')`
+ * 比重写一遍「provider × 档位」的候选串省得多。与 CDN_SUFFIX_RAW 同源；
+ * none/halo 映射到 `?width={width}`，未识别 provider 与 custom 未填格式时为空串。
+ */
+export const CDN_PATTERN_RAW =
+  "provider == 'none' ? '?width={width}' : " +
+  Object.entries(CDN_SUFFIX_PATTERNS)
+    .map(([name, pattern]) => `provider == '${name}' ? '${pattern}'`)
+    .join(" : ") +
+  " : provider == 'custom' ? #strings.defaultString(fmt, '') : ''";
+
+/**
  * 生成图片尺寸后缀的完整 th:with 局部变量串。
  * @param widthDefault 宽度取值表达式（Thymeleaf），如 "p?.banner_width ?: 1920"
  */
@@ -103,6 +116,14 @@ export function bannerThWith(): string {
   return (
     imageSuffixThWith("p?.banner_width ?: 1920") +
     ", " +
+    // pat：srcset 分档用的后缀模板；wn：banner_width 的数值形态——FormKit
+    // number 在配置里可能是字符串，比较前统一转 Integer（空值回退 0）
+    "pat=${" +
+    CDN_PATTERN_RAW +
+    "}, " +
+    "wn=${#strings.isEmpty('' + w) ? 0 : #conversions.convert(w, 'java.lang.Integer')}, " +
+    bannerSrcsetTokens() +
+    ", " +
     bannerMediaVars(src, "theme.config?.style?.bannerStyle?.mode ?: 'single'") +
     ", " +
     bannerMobileVars()
@@ -129,14 +150,23 @@ function bannerMediaVars(srcExpr: string, modeExpr: string): string {
     "rawSrc=${" +
     srcExpr +
     "}, " +
-    // rawSrcset：单图 srcset 候选串，供 <img> 的 th:srcset 与首页 preload 的
-    // imagesrcset 复用同一表达式（provider 非 none/halo 时为 null，属性不输出）
-    "rawSrcset=${" +
-    bannerSrcsetInner("rawSrc") +
+    // rawBase：剥掉查询串的原始 URL（拼后缀的基准）；elig：能否加后缀
+    // （两者都被 srcset 与 srcX 复用，提出来避免同一长表达式重复展开多次）
+    "rawBase=${" +
+    withoutQuery("rawSrc") +
     "}, " +
-    "srcX=${rawSrc + (" +
+    "elig=${" +
     cdnSuffixEligible("rawSrc") +
-    " ? suffix : '')}, " +
+    "}, " +
+    // rawSrcset：<img> 的 th:srcset 与首页 preload 的 imagesrcset 复用同一表达式
+    // （为 null 时不输出，条件见 bannerSrcsetInner）
+    "rawSrcset=${" +
+    bannerSrcsetInner("rawBase", "elig") +
+    "}, " +
+    // srcX：加后缀前先剥掉原 URL 自身的查询串，否则会拼出
+    // `x.webp?v=2?image_process=...` 这种坏 URL（后缀静默失效）；不加后缀时
+    // 原样保留 rawSrc，避免误删 URL 自身的参数
+    "srcX=${elig and suffix != '' ? rawBase + suffix : rawSrc}, " +
     "isVideo=${mode == 'single' and " +
     "(" +
     urlEndsWith(srcExpr, ".mp4") +
@@ -175,13 +205,29 @@ function bannerMobileVars(): string {
 }
 
 /**
- * 生成轮播模式单张图片的完整 Thymeleaf src 表达式。
- * th:each 的循环变量 img 无法提升到 th:with，因此整个表达式由本函数
- * 生成，再经 `th:src={carouselImgSrcExpr()}` 属性表达式输出。
+ * 轮播单张图的 th:with 局部变量串（引用 th:each 循环变量 img）。
+ *
+ * 每张图的 URL 相关量（去查询串基准 cbase、准入判定 celig）逐张算一次，供该图的
+ * th:src / th:srcset 引用；否则同一段长表达式要在两个属性里各展开一遍（多图时属性
+ * 体积成倍膨胀）。th:each 优先级 200 先于 th:with 的 600 执行，故 img 在此已可用。
  */
+export function carouselThWith(): string {
+  // craw 先落一次空值兜底：否则 withoutQuery / urlEndsWith 各自再包一层
+  // #strings.defaultString，同一段长表达式要重复展开多次
+  return (
+    "craw=${#strings.defaultString(img, '')}, " +
+    "cbase=${" +
+    withoutQuery("craw") +
+    "}, " +
+    "celig=${" +
+    cdnSuffixEligible("craw") +
+    "}"
+  );
+}
+
+/** 生成轮播模式单张图片的完整 Thymeleaf src 表达式（引用 carouselThWith 的 cbase/celig） */
 export function carouselImgSrcExpr(): string {
-  const img = "#strings.defaultString(img, '')";
-  return "${" + img + " + (" + cdnSuffixEligible(img) + " ? suffix : '')}";
+  return "${celig and suffix != '' ? cbase + suffix : craw}";
 }
 
 /**
@@ -198,69 +244,142 @@ const BANNER_ORIGINAL_SRCSET_WIDTH = 3840;
 /** Halo 官方缩略图档位（s/m/l/xl），即 ThumbnailSize 预设宽度 */
 const BANNER_THUMB_SRCSET_WIDTHS = [400, 800, 1200, 1600];
 
+/** 固定档位中的最大宽度；Banner 宽度超过它时才会被追加为额外顶档 */
+const BANNER_SRCSET_TOP_WIDTH =
+  BANNER_THUMB_SRCSET_WIDTHS[BANNER_THUMB_SRCSET_WIDTHS.length - 1];
+
+/**
+ * srcset 候选片段变量串：`c400`~`c1600` 是「该档后缀 + 宽度描述符」，`ctop` 是
+ * banner_width 顶档片段（同构）。它们只与 provider / banner_width 有关、与图片 URL
+ * 无关，故整页只算一次、单图与轮播共用——否则每个候选都要重复展开一次
+ * `#strings.replace(...)`，轮播多图时属性体积会成倍膨胀。
+ *
+ * 注意：片段**不含基准 URL 也不含分隔符**，拼接时由调用方补 `base + c<N>`，分隔符
+ * 写在候选之间（末尾不留悬空逗号）。
+ */
+function bannerSrcsetTokens(): string {
+  const tiers = BANNER_THUMB_SRCSET_WIDTHS.map(
+    (width) =>
+      "c" + width + "=${" + candidateBody(`'${width}'`, `'${width}'`) + "}",
+  ).join(", ");
+  return tiers + ", ctop=${" + candidateBody("'' + wn", "wn") + "}";
+}
+
+/**
+ * 单个 srcset 候选片段主体：`<该档后缀> + ' <描述符>w'`。
+ * @param widthExpr `{width}` 的替换值 token（固定档为字面量 `'400'`，顶档为 `'' + wn`）
+ * @param labelExpr 描述符里的宽度 token（固定档为 `'400'`，顶档为 `wn`）
+ */
+function candidateBody(widthExpr: string, labelExpr: string): string {
+  return (
+    "#strings.replace(pat, '{width}', " +
+    widthExpr +
+    ") + ' ' + " +
+    labelExpr +
+    " + 'w'"
+  );
+}
+
+/**
+ * 固定档位候选串：`base + c400 + ', ' + base + c800 …`。分隔符写在候选之间，
+ * 末尾不留悬空逗号（CDN 且 banner_width ≤ 1600 时会走到该分支）。
+ */
+function srcsetLadder(base: string): string {
+  return BANNER_THUMB_SRCSET_WIDTHS.map((width) => base + " + c" + width).join(
+    " + ', ' + ",
+  );
+}
+
 /**
  * 全宽 Banner 单张图 srcset 的 Thymeleaf 表达式主体（不含 `${...}` 包裹）。
  *
- * 背景：Halo 2.22+ 的 ThumbnailImgTagPostProcessor 会给「没有 srcset 属性的
- * <img>」注入一套按内容卡模型设计的默认 srcset/sizes（桌面上限 800px），全宽
- * Banner 被误导选 400~800w 小图后拉伸发虚。只要 <img> 自带 srcset，核心即跳过
- * 注入。此处输出官方四档（400/800/1200/1600）+ 原图兜底，由浏览器按视口挑档。
+ * 必须自带 srcset：Halo 2.22+ 会给「没有 srcset 的 <img>」注入按内容卡设计的默认
+ * 档位（桌面上限 800px），全宽 Banner 会被误导选小图拉伸发虚。
  *
- * 仅当图片处理为 Halo 内部语义（provider none/halo，URL 走 Halo ?width 缩略图
- * 链路）时输出档位；其余 CDN 场景返回 null——src 已是 CDN 处理大图，CDN URL 上
- * 拼 ?width 无意义；Thymeleaf 对 null 会移除属性，即完全不输出 srcset，与改动前
- * 行为一致（也不会被核心注入 ?width）。
+ * - 内部链路（provider none/halo）：固定四档 + **原图兜底档**（Halo 缩略图最高
+ *   1600w，宽屏/HiDPI 不纳入原图会放大发虚，issue #71）。与引入 CDN 档位前一致。
+ * - 外部 CDN/custom：同样四档，顶档改用 `banner_width` 而非原图（CDN 原图可能数 MB，
+ *   宽屏会挑走它，比单档大图还费流量）；仅 > 1600 时追加，避免重复描述符。
+ *   此分支在 provider 无模板、`banner_width == 0`（后台选了不压缩）、URL 扩展名不在
+ *   SUFFIX_ELIGIBLE_EXTENSIONS 时返回 null → 不输出 srcset，回退 `src` 单档。
  *
- * 已知局限：此处的档位 URL 统一按 Halo ?width 链路拼装，未做扩展名判断。对 Halo
- * 不支持的格式（如 webp）?width 不生效，各档会退化为原图（不会糊，也无额外带宽）；
- * 与 WebP 相关的一致性问题详见 SUFFIX_ELIGIBLE_EXTENSIONS 处的说明。
+ * 已知局限：内部链路未判扩展名，Halo 不支持的格式（如 webp）各档会退化为原图。
  *
- * @param urlVar 图片原始 URL（无 CDN/缩略图后缀）的 Thymeleaf 变量或表达式
- *   token，如 "rawSrc" 或 "#strings.defaultString(img, '')"，须为外层
- *   th:with / th:each 作用域内可引用
+ * @param base 已剥查询串的基准 URL token（单图传 "rawBase"，轮播传 "cbase"）
+ * @param eligToken 准入判定 token（单图传 "elig"，轮播传 "celig"）
  */
-function bannerSrcsetInner(urlVar: string): string {
+function bannerSrcsetInner(base: string, eligToken: string): string {
+  const ladder = srcsetLadder(base);
   return (
-    "((provider == 'none') or (provider == 'halo')) and !#strings.isEmpty(" +
-    urlVar +
-    ") ? " +
-    BANNER_THUMB_SRCSET_WIDTHS.map((w) => {
-      return `${urlVar} + '?width=${w} ${w}w, ' + `;
-    }).join("") +
-    `${urlVar} + ' ${BANNER_ORIGINAL_SRCSET_WIDTH}w' : null`
+    "!#strings.isEmpty(" +
+    base +
+    ") ? (" +
+    "((provider == 'none') or (provider == 'halo')) ? (" +
+    ladder +
+    " + ', ' + " +
+    base +
+    " + ' " +
+    BANNER_ORIGINAL_SRCSET_WIDTH +
+    "w') : ((pat == '' or w == 0 or !(" +
+    eligToken +
+    ")) ? null : (" +
+    ladder +
+    " + (wn > " +
+    BANNER_SRCSET_TOP_WIDTH +
+    " ? ', ' + " +
+    base +
+    " + ctop : '')" +
+    "))" +
+    ") : null"
   );
 }
 
 /** 生成全宽 Banner 单张图的 `th:srcset` 表达式文本（含 `${...}` 包裹） */
-function bannerSrcsetExpr(urlVar: string): string {
-  return "${" + bannerSrcsetInner(urlVar) + "}";
+function bannerSrcsetExpr(base: string, eligToken: string): string {
+  return "${" + bannerSrcsetInner(base, eligToken) + "}";
 }
 
-/** 轮播模式（th:each 循环变量 img）版本的 bannerSrcsetExpr */
+/** 轮播模式单张图的 th:srcset 表达式（引用 carouselThWith 的 cbase/celig） */
 export function carouselSrcsetExpr(): string {
-  return bannerSrcsetExpr("#strings.defaultString(img, '')");
+  return bannerSrcsetExpr("cbase", "celig");
+}
+
+/**
+ * 生成「去掉 URL 查询串」的 Thymeleaf 表达式：判断扩展名（urlEndsWith）与拼后缀前
+ * 清掉原 URL 参数（srcX / srcset 档位）都用它，否则会拼出
+ * `x.webp?v=2?image_process=...` 这种 CDN 解析不了的坏 URL。
+ *
+ * 陷阱：`#strings.substringBefore(url, '?')` 在 URL 不含 '?' 时返回 null（非原串），
+ * null 流入 endsWith/拼接会直接中断服务端渲染 —— 必须先 contains 再调用。
+ */
+function withoutQuery(urlExpr: string): string {
+  // 必须整体加括号：?: 优先级低于拼接的 +，调用方写作 withoutQuery(x) + suffix，
+  // 不加括号会被解析成 `cond ? a : b + suffix`（三元分支吞掉后续拼接）
+  return (
+    "(#strings.contains(" +
+    urlExpr +
+    ", '?') ? #strings.substringBefore(" +
+    urlExpr +
+    ", '?') : " +
+    urlExpr +
+    ")"
+  );
 }
 
 /**
  * 生成「URL 路径（去查询串后小写）以指定扩展名结尾」的 Thymeleaf 布尔表达式。
- *
- * 关键陷阱：Thymeleaf 的 #strings.substringBefore(url, '?') 在 URL 不含 '?'
- * 时返回 null（而非原字符串，与 Apache Commons Lang 行为不同）。一旦 null
- * 流入 endsWith 即抛 "Cannot apply endsWith on null"，服务端渲染直接中断。
- * 因此先经 #strings.contains 判断：仅当确实含查询串时才调用 substringBefore，
- * 否则沿用完整 URL。urlExpr 再以 defaultString 兜底 null（Thymeleaf Elvis
- * 操作符 ?: 对空字符串字面量 '' 存在求值为 null 的坑，故不用 ?: 而用方法调用）。
+ * urlExpr 先经 defaultString 兜底 null（?: 对空字符串字面量有求值为 null 的坑），
+ * 再交给 withoutQuery 去掉查询串。
  */
 function urlEndsWith(urlExpr: string, ext: string): string {
   const url = "#strings.defaultString(" + urlExpr + ", '')";
-  const path =
-    "#strings.contains(" +
-    url +
-    ", '?') ? #strings.substringBefore(" +
-    url +
-    ", '?') : " +
-    url;
-  return "#strings.endsWith(#strings.toLowerCase(" + path + "), '" + ext + "')";
+  return (
+    "#strings.endsWith(#strings.toLowerCase(" +
+    withoutQuery(url) +
+    "), '" +
+    ext +
+    "')"
+  );
 }
 
 /**

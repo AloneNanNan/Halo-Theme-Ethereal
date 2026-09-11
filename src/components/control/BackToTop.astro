@@ -440,9 +440,10 @@ import { Icon } from "astro-icon/components";
     var btn = getTocBtn();
     if (!btn) return;
     btn.classList.toggle("toc-active", open);
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
     var inner = btn.querySelector("button");
     if (!inner) return;
+    // aria-expanded 必须挂在 <button> 上：外层 #back-to-toc-btn 无 role，会违反 aria-allowed-attr
+    inner.setAttribute("aria-expanded", open ? "true" : "false");
     var t = window.__etherealI18n || __tocI18nFallback;
     inner.setAttribute(
       "aria-label",

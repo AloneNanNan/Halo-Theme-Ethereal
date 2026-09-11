@@ -8,11 +8,11 @@
 import SiteLogo from "../SiteLogo.astro";
 ---
 
-<!-- 抽屉模式（layout.mobileMenu.style = drawer） -->
+<!-- 抽屉模式（layout.mobileMenu.style = drawer）。#nav-menu-root 只是无 role 的
+     包裹层，不能挂 aria-label（aria-prohibited-attr）；命名由内层 #nav-menu-panel 承担 -->
 <div
   th:if="${theme.config?.layout?.mobileMenu?.style == 'drawer'}"
   id="nav-menu-root"
-  th:aria-label="#{nav.navMenu}"
 >
   <div id="nav-menu-overlay" aria-hidden="true"></div>
   <div

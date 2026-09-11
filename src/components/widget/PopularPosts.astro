@@ -106,12 +106,12 @@ const listId = `${instanceId}-list`;
             ? escapeHtml(href)
             : "";
 
+        // 不设 aria-label：可见文本（标题 + 阅读量 + 序号）即天然可访问名
+        // （加了反而不含可见文本，违反 WCAG 2.5.3，同 Categories.astro）
         html +=
           '<a href="' +
           safeHref +
-          '" class="group block" aria-label="' +
-          safeTitle +
-          '">' +
+          '" class="group block">' +
           '<div class="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all group-hover:bg-(--btn-plain-bg-hover) group-hover:pl-4 group-active:bg-(--btn-plain-bg-active)">' +
           '<span class="ml-1 flex h-6 min-w-7 shrink-0 items-center justify-center rounded-lg px-1.5 text-xs font-bold ' +
           (i < 3

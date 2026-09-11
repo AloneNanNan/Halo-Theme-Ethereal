@@ -23,14 +23,15 @@ interface Props {
     class="welcome-card card-base pointer-events-auto relative w-full max-w-80 overflow-hidden"
   >
     <div class="p-4">
-      <!-- 标题行：主色装饰竖线 + 标题 + 关闭按钮 -->
+      <!-- 标题行：主色装饰竖线 + 标题 + 关闭按钮。标题用 h2：卡片在 banner 的 h1
+           之后，h1→h3 跳级违反 heading-order；字号在 class 上，换标签不影响视觉 -->
       <div class="flex items-center gap-2.5">
-        <h3
+        <h2
           class="welcome-title relative min-w-0 flex-1 pl-3 text-base font-bold leading-snug text-(--deep-text) before:absolute before:left-0 before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary)"
           data-field="title"
         >
           欢迎来到我的博客！
-        </h3>
+        </h2>
         <button
           type="button"
           class="welcome-close-btn btn-regular group rounded-lg h-8 w-8 text-sm transition-all active:scale-95"

@@ -12,6 +12,7 @@ import {
   bannerThWith,
   carouselImgSrcExpr,
   carouselSrcsetExpr,
+  carouselThWith,
 } from "../utils/image-suffix";
 import Layout from "./Layout.astro";
 
@@ -186,18 +187,26 @@ const {
       th:if="${mode == 'carousel'}"
       class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
-      <img
+      <!-- 每张图先算一次 URL 相关量（cbase/celig）再交给 <img> 引用：th:each(200)
+           先于 th:with(600) 执行，故 img 可用；包裹层用 contents 不产生盒子，
+           .banner-slide 的绝对定位仍以 #banner 为包含块（CSS 均为后代选择器） -->
+      <div
+        class="contents"
         th:each="img, imgStat : ${theme.config?.style?.bannerStyle?.carousel?.images}"
-        th:src={carouselImgSrcExpr()}
-        th:srcset={carouselSrcsetExpr()}
-        sizes="100vw"
-        th:alt="${site.title}"
-        th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
-        th:classappend="${imgStat.index == 0 ? 'active' : ''}"
-        th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
-        decoding="async"
-        class="banner-slide absolute inset-0 h-full w-full object-cover"
-      />
+        th:with={carouselThWith()}
+      >
+        <img
+          th:src={carouselImgSrcExpr()}
+          th:srcset={carouselSrcsetExpr()}
+          sizes="100vw"
+          th:alt="${site.title}"
+          th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+          th:classappend="${imgStat.index == 0 ? 'active' : ''}"
+          th:attr="loading=${mobileActive ? 'lazy' : (imgStat.index == 0 ? 'eager' : 'lazy')},fetchpriority=${mobileActive ? 'low' : (imgStat.index == 0 ? 'high' : 'low')}"
+          decoding="async"
+          class="banner-slide absolute inset-0 h-full w-full object-cover"
+        />
+      </div>
     </div>
     <div
       id="banner-mobile"
@@ -250,19 +259,25 @@ const {
         th:if="${mode == 'carousel'}"
         class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
       >
-        <img
+        <!-- 同桌面轮播：逐张算 cbase/celig，包裹层 contents 不产生盒子 -->
+        <div
+          class="contents"
           th:each="img, imgStat : ${mobileImages}"
-          th:src={carouselImgSrcExpr()}
-          th:srcset={carouselSrcsetExpr()}
-          sizes="100vw"
-          th:alt="${site.title}"
-          th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
-          th:classappend="${imgStat.index == 0 ? 'active' : ''}"
-          loading="lazy"
-          fetchpriority="low"
-          decoding="async"
-          class="banner-slide absolute inset-0 h-full w-full object-cover"
-        />
+          th:with={carouselThWith()}
+        >
+          <img
+            th:src={carouselImgSrcExpr()}
+            th:srcset={carouselSrcsetExpr()}
+            sizes="100vw"
+            th:alt="${site.title}"
+            th:style="|object-position: ${theme.config?.style?.bannerStyle?.position ?: 'center'}|"
+            th:classappend="${imgStat.index == 0 ? 'active' : ''}"
+            loading="lazy"
+            fetchpriority="low"
+            decoding="async"
+            class="banner-slide absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
       </div>
     </div>
     <div
@@ -323,6 +338,65 @@ const {
       ></span>
     </button>
   </div>
+
+  <!-- banner 首屏揭示：媒体就绪 + 首帧已绘制后摘 opacity-0/scale-105，不等 app.ts
+       主 bundle（其 import 十余个样式表，实测把 LCP 元素渲染延迟拖到 2.7s）。必须
+       等首帧——元素若从未以透明态渲染过，transition 无起始值、缩放渐显整体丢失
+       （首图 preload+eager 常快于样式表）。逻辑封装为 window.__etherealRevealBanners
+       供 app.ts 在 Swup 换页后复用，避免两份实现漂移；本脚本须紧随 #banner-wrapper。 -->
+  <script is:inline>
+    (function () {
+      // 首帧判定用 Paint Timing 能力检测 + 逐帧等待，**不设超时放行**：超时会在首帧
+      // 被推迟（样式表慢）时再次提前摘类，把缩放渐显丢掉（已实测复现）。不支持该 API
+      // 的浏览器退化为跨一帧，尽力而为。
+      var paintSupported = !!(
+        window.PerformanceObserver &&
+        PerformanceObserver.supportedEntryTypes &&
+        PerformanceObserver.supportedEntryTypes.indexOf("paint") > -1
+      );
+      var afterPaint = function (fn) {
+        if (!paintSupported) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(fn);
+          });
+          return;
+        }
+        var run = function () {
+          if (performance.getEntriesByType("paint").length) fn();
+          else requestAnimationFrame(run);
+        };
+        run();
+      };
+
+      // 封装为函数：解析期先自己调一次，Swup 换页后由 app.ts 再调（幂等）
+      window.__etherealRevealBanners = function () {
+        var reveals = document.querySelectorAll(".banner-reveal");
+        for (var i = 0; i < reveals.length; i++) {
+          (function (el) {
+            var show = function () {
+              afterPaint(function () {
+                el.classList.remove("opacity-0", "scale-105");
+              });
+            };
+            var media = el.querySelector("video, img");
+            if (!media) return show();
+            if (media.tagName === "VIDEO") {
+              // readyState >= 2 为首帧可播；error 为确实加载失败，同样放行
+              if (media.readyState >= 2 || media.error) return show();
+              media.addEventListener("loadeddata", show, { once: true });
+              media.addEventListener("error", show, { once: true });
+              return;
+            }
+            // complete 覆盖加载成功与失败两种终态；在已终结的失败图上等 load/error 会永久隐藏
+            if (media.complete) return show();
+            media.addEventListener("load", show, { once: true });
+            media.addEventListener("error", show, { once: true });
+          })(reveals[i]);
+        }
+      };
+      window.__etherealRevealBanners();
+    })();
+  </script>
 
   <div id="main-panel-wrapper" class="pointer-events-none absolute z-30 w-full">
     <div
