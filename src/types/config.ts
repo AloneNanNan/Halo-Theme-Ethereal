@@ -494,6 +494,25 @@ export interface Footer {
   beian: Beian;
   displayLinks: FooterDisplayLinks;
   customLinks?: FooterCustomLinks;
+  friendLinks?: FooterFriendLinks;
+}
+
+/** 页脚友情链接卡片墙（数据来自 Links 插件，插件未安装时不渲染） */
+export interface FooterFriendLinks {
+  /** 总开关，默认关闭 */
+  enable_friend_links?: boolean;
+  /** 标题文字，留空则不显示标题 */
+  title?: string;
+  /** 「申请」按钮文字，留空则不显示该按钮 */
+  apply_text?: string;
+  /** 「申请」按钮跳转地址 */
+  apply_url?: string;
+  /** 是否显示友链总数徽标 */
+  show_count?: boolean;
+  /** 最多显示条数，0 表示全部显示 */
+  max_items?: number;
+  /** 「更多」箭头跳转地址 */
+  more_url?: string;
 }
 
 export interface FooterCustomLinks {

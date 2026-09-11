@@ -2109,6 +2109,61 @@ spec:
                   name: html
                   label: 自定义HTML
                   help: "填写后优先渲染HTML，覆盖名称和链接"
+        - $formkit: group
+          name: friendLinks
+          label: 页脚友情链接
+          value:
+            enable_friend_links: false
+            title: "友情链接"
+            apply_text: ""
+            apply_url: "/links"
+            show_count: false
+            max_items: 0
+            more_url: "/links"
+          children:
+            - $formkit: switch
+              name: enable_friend_links
+              id: friend_links_enable
+              value: false
+              label: 显示页脚好友链接
+              help: "在页脚显示好友链接卡片墙。数据来自「链接管理」插件，插件里的增删改会随页面刷新自动同步；主题的友链页面固定为 /links，页脚开启此开关即可显示"
+            - $formkit: text
+              name: title
+              if: "$get(friend_links_enable).value"
+              label: 标题
+              value: "友情链接"
+              help: "卡片墙上方的标题文字，留空则不显示标题"
+            - $formkit: text
+              name: apply_text
+              if: "$get(friend_links_enable).value"
+              label: 申请按钮文字
+              value: ""
+              help: "显示在标题右侧的胶囊按钮文字（如「申请友链」），留空则不显示该按钮"
+            - $formkit: text
+              name: apply_url
+              if: "$get(friend_links_enable).value"
+              label: 申请按钮地址
+              value: /links
+              help: "申请按钮的跳转地址，可填相对地址（如 /links）或完整地址"
+            - $formkit: switch
+              name: show_count
+              if: "$get(friend_links_enable).value"
+              value: false
+              label: 显示数量徽标
+              help: "在标题行右侧显示好友链接总数"
+            - $formkit: number
+              name: max_items
+              if: "$get(friend_links_enable).value"
+              value: 0
+              min: 0
+              label: 最多显示条数
+              help: "超出条数时在卡片下方显示下拉箭头，点击跳转到完整友链页；填 0 表示全部显示"
+            - $formkit: text
+              name: more_url
+              if: "$get(friend_links_enable).value"
+              label: 更多箭头跳转地址
+              value: /links
+              help: "点「更多」箭头时跳转的地址，仅在「最多显示条数」大于 0 时生效"
     - group: links
       label: 友情链接
       formSchema:

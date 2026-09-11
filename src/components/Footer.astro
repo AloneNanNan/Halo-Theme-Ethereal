@@ -75,6 +75,106 @@ const currentYear = new Date().getFullYear();
       </span>
     </span>
   </div>
+  <!-- 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），插件未安装或未开启时整块跳过 -->
+  <div
+    th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
+    class="hbf-root w-full"
+    th:with="
+      hbfGroups = ${linkFinder.groupBy()},
+      hbfTotal = ${#aggregates.sum(hbfGroups.![links.size()])},
+      hbfTitle = ${theme.config?.footer?.friendLinks?.title},
+      hbfApplyText = ${theme.config?.footer?.friendLinks?.apply_text},
+      hbfApplyUrl = ${theme.config?.footer?.friendLinks?.apply_url != null ? theme.config?.footer?.friendLinks?.apply_url : '/links'},
+      hbfShowCount = ${theme.config?.footer?.friendLinks?.show_count == true},
+      hbfMaxItems = ${theme.config?.footer?.friendLinks?.max_items != null ? theme.config?.footer?.friendLinks?.max_items : 0},
+      hbfMoreUrl = ${theme.config?.footer?.friendLinks?.more_url != null ? theme.config?.footer?.friendLinks?.more_url : '/links'}"
+  >
+    <div class="hbf-head">
+      <span
+        class="hbf-title"
+        th:if="${not #strings.isEmpty(hbfTitle)}"
+        th:text="${hbfTitle}">友情链接</span
+      >
+      <a
+        class="hbf-apply"
+        th:if="${not #strings.isEmpty(hbfApplyText)}"
+        th:href="${hbfApplyUrl}"
+        th:title="${hbfApplyText}"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        <span th:text="${hbfApplyText}">申请友链</span>
+      </a>
+      <span class="hbf-count" th:if="${hbfShowCount}" th:text="${hbfTotal}"
+        >0</span
+      >
+    </div>
+    <div class="hbf-list" th:if="${hbfTotal > 0}">
+      <span
+        th:each="hbfGroup, hbfGroupStat : ${hbfGroups}"
+        th:remove="tag"
+        th:with="hbfOffset = ${hbfGroupStat.index == 0 ? 0 : #aggregates.sum(hbfGroups[0..(hbfGroupStat.index - 1)].![links.size()])}"
+      >
+        <a
+          th:each="hbfLink, hbfStat : ${hbfGroup.links}"
+          th:if="${(hbfMaxItems == 0 or (hbfOffset + hbfStat.index) < hbfMaxItems) and hbfLink.spec.url != null and (hbfLink.spec.url.startsWith('http') or hbfLink.spec.url.startsWith('//') or hbfLink.spec.url.startsWith('/'))}"
+          th:href="${hbfLink.spec.url}"
+          target="_blank"
+          rel="noopener noreferrer"
+          th:title="${not #strings.isEmpty(hbfLink.spec.description) ? hbfLink.spec.description : hbfLink.spec.displayName}"
+          class="hbf-item"
+        >
+          <img
+            th:if="${hbfLink.spec.logo != null and (hbfLink.spec.logo.startsWith('http') or hbfLink.spec.logo.startsWith('//') or hbfLink.spec.logo.startsWith('/'))}"
+            th:src="${hbfLink.spec.logo}"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            class="hbf-logo"
+          />
+          <span
+            th:unless="${hbfLink.spec.logo != null and (hbfLink.spec.logo.startsWith('http') or hbfLink.spec.logo.startsWith('//') or hbfLink.spec.logo.startsWith('/'))}"
+            class="hbf-logo-ph"
+          >
+            <span class="icon-[material-symbols--link-rounded] text-xs"></span>
+          </span>
+          <span class="hbf-name" th:text="${hbfLink.spec.displayName}"
+            >Link</span
+          >
+        </a>
+      </span>
+    </div>
+    <div class="hbf-more" th:if="${hbfMaxItems > 0 and hbfTotal > hbfMaxItems}">
+      <a
+        class="hbf-more-btn"
+        th:href="${hbfMoreUrl}"
+        th:title="${'查看全部 ' + hbfTotal + ' 个友链'}"
+        aria-label="查看全部友链"
+      >
+        <span class="hbf-more-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </span>
+      </a>
+    </div>
+  </div>
   <div
     class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
     th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text) or not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
@@ -127,3 +227,181 @@ const currentYear = new Date().getFullYear();
     >
   </div>
 </footer>
+
+<style is:global>
+  /* ===== 页脚友情链接卡片墙（.hbf- 前缀，全部复用主题变量，深浅色自动适配） ===== */
+  .hbf-root {
+    display: block;
+    width: 100%;
+    /* flex: 0 0 100% 独占一行：不参与父容器的伸张/压缩，对相邻节点零影响 */
+    flex: 0 0 100%;
+    min-width: 0;
+    margin-top: 1.25rem;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .hbf-root[hidden] {
+    display: none;
+  }
+
+  /* ---- 标题行 ---- */
+  .hbf-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .hbf-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--deep-text);
+  }
+  .hbf-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    height: 1.375rem;
+    padding: 0 0.5rem;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--primary) 14%, transparent);
+    color: var(--primary);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .hbf-apply:hover {
+    background: color-mix(in oklab, var(--primary) 24%, transparent);
+  }
+  .hbf-apply:active {
+    transform: scale(0.96);
+  }
+  .hbf-apply svg {
+    width: 0.6875rem;
+    height: 0.6875rem;
+  }
+  .hbf-count {
+    padding: 0.05rem 0.4rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    background: var(--btn-regular-bg);
+    color: var(--btn-content);
+  }
+
+  /* ---- 卡片列表 ---- */
+  .hbf-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+    width: 100%;
+  }
+  .hbf-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 14rem;
+    height: 2rem;
+    padding: 0 0.625rem;
+    border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+    border-radius: 0.625rem;
+    background: var(--card-bg);
+    color: var(--deep-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .hbf-item:hover {
+    background: var(--btn-card-bg-hover);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+    color: var(--primary);
+  }
+  @media (min-width: 768px) {
+    .hbf-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px
+        color-mix(in oklab, var(--primary) 18%, transparent);
+    }
+  }
+  .hbf-logo,
+  .hbf-logo-ph {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 0.375rem;
+    background: var(--btn-regular-bg);
+  }
+  .hbf-logo {
+    display: block;
+    object-fit: cover;
+  }
+  .hbf-logo-ph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .hbf-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---- 「更多」：被 max_items 截断时显示在卡片下方，跳转完整友链页 ---- */
+  .hbf-more {
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+  .hbf-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.5rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px dashed color-mix(in oklab, var(--primary) 32%, transparent);
+    border-radius: 9999px;
+    background: transparent;
+    color: color-mix(in oklab, var(--primary) 80%, var(--deep-text));
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .hbf-more-btn:hover {
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+    color: var(--primary);
+  }
+  .hbf-more-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+  }
+  .hbf-more-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+</style>
