@@ -2114,6 +2114,7 @@ spec:
           label: 页脚友情链接
           value:
             enable_friend_links: false
+            is_home_only: true
             title: "友情链接"
             apply_text: ""
             apply_url: "/links"
@@ -2127,6 +2128,12 @@ spec:
               value: false
               label: 显示页脚好友链接
               help: "在页脚显示好友链接卡片墙。数据来自「链接管理」插件，插件里的增删改会随页面刷新自动同步；主题的友链页面固定为 /links，页脚开启此开关即可显示"
+            - $formkit: switch
+              name: is_home_only
+              if: "$get(friend_links_enable).value"
+              value: true
+              label: 仅在首页显示
+              help: "开启后卡片墙只出现在首页页脚，文章页、独立页面等其它页面页脚不显示；关闭则在所有页面的页脚都显示。默认开启"
             - $formkit: text
               name: title
               if: "$get(friend_links_enable).value"

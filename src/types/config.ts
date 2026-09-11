@@ -501,6 +501,13 @@ export interface Footer {
 export interface FooterFriendLinks {
   /** 总开关，默认关闭 */
   enable_friend_links?: boolean;
+  /**
+   * 是否仅在首页页脚显示（默认开启）。
+   * 判定依据是 `<body class="is-home">`：该 class 服务端（Astro 的 isHomePage）
+   * 输出首帧初值，运行期由 utils/banner-sync.ts 的 syncHomeClass 在每次
+   * Swup page:view / 首屏初始化时按路径重算，因此 Swup 无刷新换页也准确。
+   */
+  is_home_only?: boolean;
   /** 标题文字，留空则不显示标题 */
   title?: string;
   /** 「申请」按钮文字，留空则不显示该按钮 */

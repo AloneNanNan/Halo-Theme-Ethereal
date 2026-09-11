@@ -75,10 +75,15 @@ const currentYear = new Date().getFullYear();
       </span>
     </span>
   </div>
-  <!-- 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），插件未安装或未开启时整块跳过 -->
+  <!-- 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），插件未安装或未开启时整块跳过。
+       「仅在首页显示」（is_home_only，默认开启）不用 SSR 变量判定，而是挂 is-home-only
+       class 交给下面的 CSS 按 body.is-home 控制显隐——body.is-home 服务端有首帧初值、
+       运行期由 syncHomeClass 在每次 Swup page:view 重算，所以无刷新换页也准确，
+       且不会出现"服务端判成首页、客户端已切到文章页"的首帧闪错。 -->
   <div
     th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
     class="hbf-root w-full"
+    th:classappend="${theme.config?.footer?.friendLinks?.is_home_only == null or theme.config?.footer?.friendLinks?.is_home_only ? ' hbf-home-only' : ''}"
     th:with="
       hbfGroups = ${linkFinder.groupBy()},
       hbfTotal = ${#aggregates.sum(hbfGroups.![links.size()])},
@@ -242,6 +247,14 @@ const currentYear = new Date().getFullYear();
     line-height: 1.6;
   }
   .hbf-root[hidden] {
+    display: none;
+  }
+
+  /* ---- 「仅在首页显示」：由 body.is-home 单一控制 ----
+     body.is-home 由服务端输出首帧初值（Astro isHomePage），运行期每个 Swup
+     page:view 由 syncHomeClass 按路径重算（见 utils/banner-sync.ts），
+     因此首帧与无刷新换页都准确。非首页时卡片墙整块不显示。 */
+  body:not(.is-home) .hbf-root.hbf-home-only {
     display: none;
   }
 
