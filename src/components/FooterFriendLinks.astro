@@ -2,20 +2,29 @@
 // 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），服务端渲染。
 // 由 Footer.astro 渲染在页脚分隔线之下、版权信息之上。
 // 整块是 <nav> 地标（aria-label 复用标题词条），样式见文件末尾的 is:global 块。
+//
+// 改动前必读的三点（放在 frontmatter 而非 HTML 注释里：后者会被构建剥离，
+// 且 prettier 会把相邻 HTML 注释合并到同一行）：
+//
+// 1) 插件未安装 / 未开启时整块跳过。th:if（优先级 300）先于同元素 th:with（400）执行，
+//    所以开关关闭时 hbfGroupedLinks 不会求值，也就不会触发一次链接查询。
+//
+// 2) 两个已经踩过的 SpEL 坑：
+//    - SpEL 不支持范围下标（方括号里写起止索引那种切片写法），下标只接受单个 Integer，
+//      写错在「解析期」就抛 SpelParseException，与三元分支实际是否走到无关；
+//      列表切片一律用 List.subList(from, to)（含头不含尾）。
+//    - #aggregates.sum(...) 返回 BigDecimal，且集合为空时返回 null（不是 0），
+//      所以 hbfTotal 必须自己做空集合兜底；它对 null 容器 / 含 null 元素的集合
+//      还会直接抛 IllegalArgumentException。本处不必额外判空——插件保证每个分组的
+//      links 恒为非 null（LinkFinderImpl 以 getOrDefault(..., List.of()) 兜底）。
+//
+// 3) 变量口径：
+//    - hbfGroupedLinks：url 过滤条件只在这里写一遍（网址为空 / 非 http、//、/ 开头的
+//      整条剔除），后面的总数、截断偏移、卡片渲染全部基于它，口径天然一致。
+//      它是投影后的「按分组切好的链接列表」List<List<LinkVo>>，已不含分组对象。
+//    - hbfMaxItems：#strings.isEmpty 对 null / 空串都成立，避免清空输入框后拿 "" 去转数字。
 ---
 
-<!-- 插件未安装 / 未开启时整块跳过：th:if（优先级 300）先于同元素 th:with（400）执行，
-     开关关闭时 hbfGroupedLinks 不会求值，也就不会触发一次链接查询。 --><!-- 两个已经踩过的 SpEL 坑，改动这里时请一并留意：
-     1. SpEL 不支持范围下标（方括号里写起止索引那种切片写法），下标只接受单个 Integer，
-        写错在「解析期」就抛 SpelParseException，与三元分支实际是否走到无关；
-        列表切片一律用 List.subList(from, to)（含头不含尾）。
-     2. #aggregates.sum(...) 返回 BigDecimal，且集合为空时返回 null（不是 0），
-        所以 hbfTotal 必须自己做空集合兜底；它对 null 容器 / 含 null 元素的集合
-        还会直接抛 IllegalArgumentException。本处不必额外判空——插件保证每个分组的
-        links 恒为非 null（LinkFinderImpl 以 getOrDefault(..., List.of()) 兜底）。 --><!-- hbfGroupedLinks：url 过滤条件只在这里写一遍（网址为空 / 非 http、//、/ 开头的整条剔除），
-     后面的总数、截断偏移、卡片渲染全部基于它，口径天然一致。
-     它是投影后的「按分组切好的链接列表」List<List<LinkVo>>，已不含分组对象。
-     hbfMaxItems：#strings.isEmpty 对 null / 空串都成立，避免清空输入框后拿 "" 去转数字。 -->
 <nav
   th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
   class="hbf-root w-full"
@@ -85,7 +94,7 @@
   </div>
   <div class="hbf-list" th:if="${hbfTotal > 0}">
     <!-- hbfOffset：前面所有分组的有效链接数之和，把 max_items 当成跨分组的全局上限；
-         切片只能用 subList(from, to)，原因见上方「SpEL 两个坑」注释。 -->
+         切片只能用 subList(from, to)，原因见文件顶部注释第 2 条。 -->
     <span
       th:each="hbfValidLinks, hbfGroupStat : ${hbfGroupedLinks}"
       th:remove="tag"
