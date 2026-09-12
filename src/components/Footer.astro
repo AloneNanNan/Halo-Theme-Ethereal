@@ -79,7 +79,17 @@ const currentYear = new Date().getFullYear();
        「仅在首页显示」（is_home_only，默认开启）不用 SSR 变量判定，而是挂 is-home-only
        class 交给下面的 CSS 按 body.is-home 控制显隐——body.is-home 服务端有首帧初值、
        运行期由 syncHomeClass 在每次 Swup page:view 重算，所以无刷新换页也准确，
-       且不会出现"服务端判成首页、客户端已切到文章页"的首帧闪错。 -->
+       且不会出现"服务端判成首页、客户端已切到文章页"的首帧闪错。
+
+       排序：直接沿用插件 linkFinder.groupBy() 的结果，不在主题侧重新排序。
+       插件服务端已经按它自己的规则排好了，口径为——
+         · 组内链接（LinkFinderImpl.defaultLinkSort）：
+             spec.priority 升序（字段缺失排最前）→ metadata.creationTimestamp 升序 → metadata.name
+         · 分组顺序（LinkPublicQueryServiceImpl.groupComparator）：
+             spec.priority（字段缺失按 0 处理）→ metadata.creationTimestamp 升序 → metadata.name
+       因此后台「链接管理」里拖动调整的先后，在前台页脚会一一对应；
+       这也是「以插件的用户排序为准」最省事、最不容易跑偏的做法：
+       排序规则只存在于插件一处，主题不复制一份，插件升级也不会与主题失配。 -->
   <div
     th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
     class="hbf-root w-full"
