@@ -510,6 +510,12 @@ export interface FooterFriendLinks {
   is_home_only?: boolean;
   /** 标题文字，留空则不显示标题 */
   title?: string;
+  /**
+   * 是否在标题前显示图标（默认开启）。图标为内联 SVG，样式与侧边栏
+   * 「作者信息 → 社交媒体」按钮一致（同用 --btn-regular-bg / --btn-content）。
+   * 标题留空时图标一同隐藏。
+   */
+  show_title_icon?: boolean;
   /** 「申请」按钮文字，留空则不显示该按钮 */
   apply_text?: string;
   /** 「申请」按钮跳转地址 */

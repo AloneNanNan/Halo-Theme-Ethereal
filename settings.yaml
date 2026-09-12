@@ -2116,6 +2116,7 @@ spec:
             enable_friend_links: false
             is_home_only: true
             title: "友情链接"
+            show_title_icon: true
             apply_text: ""
             apply_url: "/links"
             show_count: false
@@ -2140,6 +2141,12 @@ spec:
               label: 标题
               value: "友情链接"
               help: "卡片墙上方的标题文字，留空则不显示标题"
+            - $formkit: switch
+              name: show_title_icon
+              if: "$get(friend_links_enable).value"
+              value: true
+              label: 标题图标
+              help: "在标题文字前显示一个圆角方形图标，风格与侧边栏「作者信息 → 社交媒体」按钮一致；标题留空时图标一同隐藏"
             - $formkit: text
               name: apply_text
               if: "$get(friend_links_enable).value"
