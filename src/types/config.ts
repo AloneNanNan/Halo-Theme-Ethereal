@@ -494,6 +494,29 @@ export interface Footer {
   beian: Beian;
   displayLinks: FooterDisplayLinks;
   customLinks?: FooterCustomLinks;
+  friendLinks?: FooterFriendLinks;
+}
+
+/** 页脚友情链接卡片墙（数据来自 Links 插件，插件未安装时不渲染） */
+export interface FooterFriendLinks {
+  /** 总开关，默认关闭 */
+  enable_friend_links?: boolean;
+  /**
+   * 是否仅在首页页脚显示（默认关闭，即所有页面显示）。
+   * 判定依据是 `<body class="is-home">`：该 class 服务端（Astro 的 isHomePage）
+   * 输出首帧初值，运行期由 utils/banner-sync.ts 的 syncHomeClass 在每次
+   * Swup page:view / 首屏初始化时按路径重算，因此 Swup 无刷新换页也准确。
+   */
+  is_home_only?: boolean;
+  /** 是否显示「申请友链」按钮（默认开启），固定跳转 /links */
+  show_apply_btn?: boolean;
+  /**
+   * 最多显示条数，0 表示全部显示。
+   * 注意：Halo FormKit 的 number 字段实际存出来的可能是字符串，模板侧必须
+   * 先做类型转换（见 FooterFriendLinks.astro 的 hbfMaxItems）再参与比较，
+   * 所以这里放宽为 number | string，避免写出看似安全的数值比较。
+   */
+  max_items?: number | string;
 }
 
 export interface FooterCustomLinks {

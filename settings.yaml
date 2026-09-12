@@ -2109,6 +2109,46 @@ spec:
                   name: html
                   label: 自定义HTML
                   help: "填写后优先渲染HTML，覆盖名称和链接"
+        - $formkit: group
+          name: friendLinks
+          label: 页脚友情链接
+          value:
+            enable_friend_links: false
+            is_home_only: false
+            show_apply_btn: true
+            max_items: 0
+          children:
+            - $formkit: switch
+              name: enable_friend_links
+              id: friend_links_enable
+              value: false
+              label: 显示友情链接
+              help: "在页脚显示友情链接卡片墙，数据来自「链接管理」插件。"
+            - $formkit: switch
+              name: is_home_only
+              if: "$get(friend_links_enable).value"
+              key: friend_links_is_home_only
+              preserve: true
+              value: false
+              label: 仅在首页显示
+              help: "开启后卡片墙只出现在首页页脚"
+            - $formkit: switch
+              name: show_apply_btn
+              if: "$get(friend_links_enable).value"
+              key: friend_links_show_apply_btn
+              preserve: true
+              value: true
+              label: 显示申请友链按钮
+              help: "在标题右侧显示「申请友链」按钮，点击跳转到友情链接 /links 页面"
+            - $formkit: number
+              name: max_items
+              if: "$get(friend_links_enable).value"
+              key: friend_links_max_items
+              preserve: true
+              value: 0
+              min: 0
+              label: 最多显示条数
+              help: "超出条数时在卡片下方显示下拉箭头，点击跳转到完整友链页；填 0 表示全部显示"
     - group: links
       label: 友情链接
       formSchema:

@@ -1,4 +1,6 @@
 ---
+import FooterFriendLinks from "./FooterFriendLinks.astro";
+
 const currentYear = new Date().getFullYear();
 ---
 
@@ -6,13 +8,18 @@ const currentYear = new Date().getFullYear();
   class="mx-8 my-10 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 md:mx-32"
 >
 </div>
+
+<!-- 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），插件未安装 / 未开启时整块跳过。
+     组件内部为 <nav> 地标，样式随组件（is:global，Astro 会提升到 head 且只输出一次）。 -->
+<FooterFriendLinks />
 <footer
   class="mb-12 flex flex-col items-center justify-center rounded-2xl px-6 text-center text-sm text-50 transition"
 >
   <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+    <!-- Astro 编译会剥掉元素间的空白，行内空隙必须用 {" "} 显式补回（见下方 Powered by 行） -->
     <span
-      >&copy; <span id="copyright-year">{currentYear}</span>
-      <span th:text="${site.title}">Ethereal</span>.
+      >&copy; <span id="copyright-year">{currentYear}</span>{" "}
+      <span th:text="${site.title}">Ethereal</span>.{" "}
       <span th:text="#{footer.rights}">All Rights Reserved.</span></span
     >
     <span class="whitespace-nowrap">
