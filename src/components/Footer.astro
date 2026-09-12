@@ -90,13 +90,24 @@ const currentYear = new Date().getFullYear();
        因此后台「链接管理」里拖动调整的先后，在前台页脚会一一对应；
        这也是「以插件的用户排序为准」最省事、最不容易跑偏的做法：
        排序规则只存在于插件一处，主题不复制一份，插件升级也不会与主题失配。 -->
+
+  <!--
+    两个已经踩过的 SpEL 坑，改动这里时请一并留意：
+    1. SpEL 不支持范围下标（不要试图在方括号里写起止索引那种切片写法），
+       它只接受单个 Integer，写错会在「解析期」抛 SpelParseException。
+       列表切片一律用 List.subList(from, to)。详见下面 hbfOffset 处的注释。
+    2. #aggregates.sum(...) 的返回值是 BigDecimal，且「集合为空时返回 null」
+       （AggregateUtils.sum 里 size == 0 就 return null），不是返回 0。
+       所以 hbfTotal 必须自己做空集合兜底，否则 ${hbfTotal > 0} 会拿 null 去比较。
+       另外它还会对 null 容器 / 含 null 元素的集合直接抛 IllegalArgumentException。
+  -->
   <div
     th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
     class="hbf-root w-full"
     th:classappend="${theme.config?.footer?.friendLinks?.is_home_only == null or theme.config?.footer?.friendLinks?.is_home_only ? ' hbf-home-only' : ''}"
     th:with="
       hbfGroups = ${linkFinder.groupBy()},
-      hbfTotal = ${#aggregates.sum(hbfGroups.![links.size()])},
+      hbfTotal = ${#lists.isEmpty(hbfGroups) ? 0 : #aggregates.sum(hbfGroups.![links.size()])},
       hbfTitle = ${theme.config?.footer?.friendLinks?.title},
       hbfApplyText = ${theme.config?.footer?.friendLinks?.apply_text},
       hbfApplyUrl = ${theme.config?.footer?.friendLinks?.apply_url != null ? theme.config?.footer?.friendLinks?.apply_url : '/links'},
@@ -104,7 +115,9 @@ const currentYear = new Date().getFullYear();
       hbfMaxItems = ${theme.config?.footer?.friendLinks?.max_items != null ? theme.config?.footer?.friendLinks?.max_items : 0},
       hbfMoreUrl = ${theme.config?.footer?.friendLinks?.more_url != null ? theme.config?.footer?.friendLinks?.more_url : '/links'}"
   >
-    <div class="hbf-head">
+    <!-- 空数据时整块不显示（与客户端组件版行为一致）：hbfTotal 在 th:with 里已做空集合兜底，
+         这里按「有链接才渲染」处理，避免出现只有标题、没有任何卡片的空壳。 -->
+    <div class="hbf-head" th:if="${hbfTotal > 0}">
       <!-- 标题图标：与侧边栏「作者信息 → 社交媒体」按钮同款风格。
            社交按钮是 .btn-regular size-10 rounded-lg（淡色底 + 主题色图标），
            这里复用同两个变量 --btn-regular-bg / --btn-content，
@@ -116,7 +129,12 @@ const currentYear = new Date().getFullYear();
         aria-hidden="true"
         th:if="${not #strings.isEmpty(hbfTitle) and (theme.config?.footer?.friendLinks?.show_title_icon == null or theme.config?.footer?.friendLinks?.show_title_icon)}"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+        >
           <path
             fill="currentColor"
             d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
@@ -152,10 +170,16 @@ const currentYear = new Date().getFullYear();
       >
     </div>
     <div class="hbf-list" th:if="${hbfTotal > 0}">
+      <!-- hbfOffset：本分组之前所有分组的链接数之和，用来把 max_items 当成跨分组的「全局上限」。
+           ⚠️ 切片只能用 List.subList(from, to)（含头不含尾）。不要试图用「方括号里写起止索引」
+           的范围下标写法：SpEL 的下标只接受单个 Integer（Indexer 内部走 convertIndexToInt，
+           IndexedType 里没有 RANGE / SLICE 这一类），任何范围下标都是「解析期」就抛
+           SpelParseException 的语法错误，与三元分支实际是否走到无关——
+           只要这个 th:each 子树被处理就会炸，不是「大概率没事」。 -->
       <span
         th:each="hbfGroup, hbfGroupStat : ${hbfGroups}"
         th:remove="tag"
-        th:with="hbfOffset = ${hbfGroupStat.index == 0 ? 0 : #aggregates.sum(hbfGroups[0..(hbfGroupStat.index - 1)].![links.size()])}"
+        th:with="hbfOffset = ${hbfGroupStat.index == 0 ? 0 : #aggregates.sum(hbfGroups.subList(0, hbfGroupStat.index).![links.size()])}"
       >
         <a
           th:each="hbfLink, hbfStat : ${hbfGroup.links}"
