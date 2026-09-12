@@ -502,30 +502,16 @@ export interface FooterFriendLinks {
   /** 总开关，默认关闭 */
   enable_friend_links?: boolean;
   /**
-   * 是否仅在首页页脚显示（默认开启）。
+   * 是否仅在首页页脚显示（默认关闭，即所有页面显示）。
    * 判定依据是 `<body class="is-home">`：该 class 服务端（Astro 的 isHomePage）
    * 输出首帧初值，运行期由 utils/banner-sync.ts 的 syncHomeClass 在每次
    * Swup page:view / 首屏初始化时按路径重算，因此 Swup 无刷新换页也准确。
    */
   is_home_only?: boolean;
-  /** 标题文字，留空则不显示标题 */
-  title?: string;
-  /**
-   * 是否在标题前显示图标（默认开启）。图标为内联 SVG，样式与侧边栏
-   * 「作者信息 → 社交媒体」按钮一致（同用 --btn-regular-bg / --btn-content）。
-   * 标题留空时图标一同隐藏。
-   */
-  show_title_icon?: boolean;
-  /** 「申请」按钮文字，留空则不显示该按钮 */
-  apply_text?: string;
-  /** 「申请」按钮跳转地址 */
-  apply_url?: string;
-  /** 是否显示友链总数徽标 */
-  show_count?: boolean;
+  /** 是否显示「申请友链」按钮（默认开启），固定跳转 /links */
+  show_apply_btn?: boolean;
   /** 最多显示条数，0 表示全部显示 */
   max_items?: number;
-  /** 「更多」箭头跳转地址 */
-  more_url?: string;
 }
 
 export interface FooterCustomLinks {
