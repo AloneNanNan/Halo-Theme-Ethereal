@@ -1,0 +1,354 @@
+---
+// 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），服务端渲染。
+// 由 Footer.astro 渲染在页脚分隔线之下、版权信息之上。
+// 整块是 <nav> 地标（aria-label 复用标题词条），样式见文件末尾的 is:global 块。
+---
+
+<!-- 插件未安装 / 未开启时整块跳过：th:if（优先级 300）先于同元素 th:with（400）执行，
+     开关关闭时 hbfGroupedLinks 不会求值，也就不会触发一次链接查询。 --><!-- 两个已经踩过的 SpEL 坑，改动这里时请一并留意：
+     1. SpEL 不支持范围下标（方括号里写起止索引那种切片写法），下标只接受单个 Integer，
+        写错在「解析期」就抛 SpelParseException，与三元分支实际是否走到无关；
+        列表切片一律用 List.subList(from, to)（含头不含尾）。
+     2. #aggregates.sum(...) 返回 BigDecimal，且集合为空时返回 null（不是 0），
+        所以 hbfTotal 必须自己做空集合兜底；它对 null 容器 / 含 null 元素的集合
+        还会直接抛 IllegalArgumentException。本处不必额外判空——插件保证每个分组的
+        links 恒为非 null（LinkFinderImpl 以 getOrDefault(..., List.of()) 兜底）。 --><!-- hbfGroupedLinks：url 过滤条件只在这里写一遍（网址为空 / 非 http、//、/ 开头的整条剔除），
+     后面的总数、截断偏移、卡片渲染全部基于它，口径天然一致。
+     它是投影后的「按分组切好的链接列表」List<List<LinkVo>>，已不含分组对象。
+     hbfMaxItems：#strings.isEmpty 对 null / 空串都成立，避免清空输入框后拿 "" 去转数字。 -->
+<nav
+  th:if="${pluginFinder.available('PluginLinks') && (theme.config?.footer?.friendLinks?.enable_friend_links == true)}"
+  class="hbf-root w-full"
+  th:aria-label="#{footer.friendLinks.title}"
+  aria-label="友情链接"
+  th:classappend="${theme.config?.footer?.friendLinks?.is_home_only == true ? ' hbf-home-only' : ''}"
+  th:with="
+    hbfGroupedLinks = ${linkFinder.groupBy().![links.?[spec.url != null and (spec.url.startsWith('http') or spec.url.startsWith('//') or spec.url.startsWith('/'))]]},
+    hbfTotal = ${#lists.isEmpty(hbfGroupedLinks) ? 0 : #aggregates.sum(hbfGroupedLinks.![size()])},
+    hbfMaxItems = ${#strings.isEmpty(theme.config?.footer?.friendLinks?.max_items) ? 0 : #conversions.convert(theme.config?.footer?.friendLinks?.max_items, 'java.lang.Integer')}"
+>
+  <div class="hbf-head">
+    <!-- 标题图标：与侧边栏「作者信息 → 社交媒体」按钮同款风格。
+         社交按钮是 .btn-regular size-10 rounded-lg（淡色底 + 主题色图标），
+         这里复用同两个变量 --btn-regular-bg / --btn-content，
+         因此颜色与侧边栏天然一致，且深色模式由 :root.dark 自动切换。
+         用内联 SVG + fill="currentColor"：Ethereal 不加载图标字体，
+         <i class="fa ..."> 之类的写法在本主题永远不会显示。 -->
+    <span class="hbf-head-icon" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+      >
+        <path
+          fill="currentColor"
+          d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
+        ></path>
+      </svg>
+    </span>
+    <span class="hbf-title" th:text="#{footer.friendLinks.title}">友情链接</span
+    >
+    <!-- 申请按钮：固定跳转官方 Links 插件的 /links 路由，文案复用友链页的 i18n 词条。
+         show_apply_btn 缺省视为开启（与主题其它可选开关的 != false 口径一致）；
+         总开关 enable_friend_links 则用 == true 严格比较——它必须显式开启，
+         避免「设置里存了 friendLinks 组但没存该字段」的老配置被误判为已开启。
+         按钮文字已可见，不再加与之重复的 title。 -->
+    <a
+      class="hbf-apply"
+      th:if="${theme.config?.footer?.friendLinks?.show_apply_btn != false}"
+      th:href="@{/links}"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M12 5v14"></path>
+        <path d="M5 12h14"></path>
+      </svg>
+      <span th:text="#{page.links.applyTitle}">申请友链</span>
+    </a>
+    <!-- 数量徽标：视觉上仍是原来的纯数字，数字对屏幕阅读器隐藏，
+         改由 sr-only 文本念出完整口径（总数，而非本页显示条数）。 -->
+    <span class="hbf-count">
+      <span aria-hidden="true" th:text="${hbfTotal}">0</span>
+      <span
+        class="sr-only"
+        th:text="#{footer.friendLinks.countLabel(${hbfTotal})}"
+        >共 0 个友情链接</span
+      >
+    </span>
+  </div>
+  <div class="hbf-list" th:if="${hbfTotal > 0}">
+    <!-- hbfOffset：前面所有分组的有效链接数之和，把 max_items 当成跨分组的全局上限；
+         切片只能用 subList(from, to)，原因见上方「SpEL 两个坑」注释。 -->
+    <span
+      th:each="hbfValidLinks, hbfGroupStat : ${hbfGroupedLinks}"
+      th:remove="tag"
+      th:with="hbfOffset = ${hbfGroupStat.index == 0 ? 0 : #aggregates.sum(hbfGroupedLinks.subList(0, hbfGroupStat.index).![size()])}"
+    >
+      <!-- hbfLogoOk 只算一次，供下面 img / 占位块共用，避免同一段 4 条件判据写成镜像两份。
+           th:with（400）晚于同元素的 th:each（200）与 th:if（300）执行，且对子元素可见。 -->
+      <a
+        th:each="hbfLink, hbfStat : ${hbfValidLinks}"
+        th:if="${hbfMaxItems == 0 or (hbfOffset + hbfStat.index) < hbfMaxItems}"
+        th:with="hbfLogoOk = ${hbfLink.spec.logo != null and (hbfLink.spec.logo.startsWith('http') or hbfLink.spec.logo.startsWith('//') or hbfLink.spec.logo.startsWith('/'))}"
+        th:href="${hbfLink.spec.url}"
+        target="_blank"
+        rel="noopener noreferrer"
+        th:title="${not #strings.isEmpty(hbfLink.spec.description) ? hbfLink.spec.description : hbfLink.spec.displayName}"
+        class="hbf-item"
+      >
+        <img
+          th:if="${hbfLogoOk}"
+          th:src="${hbfLink.spec.logo}"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="hbf-logo"
+        />
+        <span th:unless="${hbfLogoOk}" class="hbf-logo-ph">
+          <span class="icon-[material-symbols--link-rounded] text-xs"></span>
+        </span>
+        <span class="hbf-name" th:text="${hbfLink.spec.displayName}">Link</span>
+      </a>
+    </span>
+  </div>
+  <div class="hbf-more" th:if="${hbfMaxItems > 0 and hbfTotal > hbfMaxItems}">
+    <a
+      class="hbf-more-btn"
+      th:href="@{/links}"
+      th:title="#{footer.friendLinks.moreTitle(${hbfTotal})}"
+      th:aria-label="#{footer.friendLinks.moreAria}"
+    >
+      <span class="hbf-more-icon" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 9l6 6 6-6"></path>
+        </svg>
+      </span>
+    </a>
+  </div>
+</nav>
+
+<style is:global>
+  /* ===== 页脚友情链接卡片墙（.hbf- 前缀，全部复用主题变量，深浅色自动适配） ===== */
+  .hbf-root {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    /* 上方间距由页脚分隔线的 margin-bottom（my-10 = 2.5rem）提供：
+       分隔线与本块是相邻块级兄弟，垂直 margin 会折叠，这里再写 margin-top 不生效，
+       故不再声明。下方 0.5rem 与页脚内部行距对齐，让卡片墙融入页脚的行节奏。 */
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  /* ---- 「仅在首页显示」：由 body.is-home 单一控制 ----
+     body.is-home 由服务端输出首帧初值（Astro isHomePage），运行期每个 Swup
+     page:view 由 syncHomeClass 按路径重算（见 utils/banner-sync.ts），
+     因此首帧与无刷新换页都准确。非首页时卡片墙整块不显示。 */
+  body:not(.is-home) .hbf-root.hbf-home-only {
+    display: none;
+  }
+
+  /* ---- 标题行 ---- */
+  .hbf-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .hbf-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--deep-text);
+  }
+  /* 标题图标：复用 --btn-regular-bg / --btn-content，与侧边栏社交按钮同款
+     （同为淡色圆角方块 + 主题色图标），深色模式由 :root.dark 自动切换。 */
+  .hbf-head-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.375rem;
+    background: var(--btn-regular-bg);
+    color: var(--btn-content);
+  }
+  .hbf-head-icon svg {
+    display: block;
+    width: 1rem;
+    height: 1rem;
+  }
+  .hbf-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    height: 1.375rem;
+    padding: 0 0.5rem;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--primary) 14%, transparent);
+    color: var(--primary);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .hbf-apply:hover {
+    background: color-mix(in oklab, var(--primary) 24%, transparent);
+  }
+  .hbf-apply:active {
+    transform: scale(0.96);
+  }
+  .hbf-apply svg {
+    width: 0.6875rem;
+    height: 0.6875rem;
+  }
+  .hbf-count {
+    padding: 0.05rem 0.4rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    background: var(--btn-regular-bg);
+    color: var(--btn-content);
+  }
+
+  /* ---- 卡片列表 ---- */
+  .hbf-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+    width: 100%;
+  }
+  .hbf-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 14rem;
+    height: 2rem;
+    padding: 0 0.625rem;
+    border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+    border-radius: 0.625rem;
+    background: var(--card-bg);
+    color: var(--deep-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .hbf-item:hover {
+    background: var(--btn-card-bg-hover);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+    color: var(--primary);
+  }
+  /* 悬浮位移接入主题 card-hover-lift 开关（后台「样式开关」+ 访客面板），
+     颜色/描边反馈保留恒定，不受该开关影响 */
+  @media (min-width: 768px) {
+    body.card-hover-lift-enabled .hbf-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px
+        color-mix(in oklab, var(--primary) 18%, transparent);
+    }
+  }
+  .hbf-logo,
+  .hbf-logo-ph {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 0.375rem;
+    background: var(--btn-regular-bg);
+  }
+  .hbf-logo {
+    display: block;
+    object-fit: cover;
+  }
+  .hbf-logo-ph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .hbf-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---- 「更多」：被 max_items 截断时显示在卡片下方，跳转完整友链页 ---- */
+  .hbf-more {
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+  .hbf-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.5rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px dashed color-mix(in oklab, var(--primary) 32%, transparent);
+    border-radius: 9999px;
+    background: transparent;
+    color: color-mix(in oklab, var(--primary) 80%, var(--deep-text));
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .hbf-more-btn:hover {
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+    color: var(--primary);
+  }
+  .hbf-more-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+  }
+  .hbf-more-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---- 键盘焦点可见性：与主题其它交互元素一致（photos 页同款 outline） ---- */
+  .hbf-item:focus-visible,
+  .hbf-apply:focus-visible,
+  .hbf-more-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+</style>

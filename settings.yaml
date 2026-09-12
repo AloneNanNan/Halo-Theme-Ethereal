@@ -2115,6 +2115,7 @@ spec:
           value:
             enable_friend_links: false
             is_home_only: false
+            show_apply_btn: true
             max_items: 0
           children:
             - $formkit: switch

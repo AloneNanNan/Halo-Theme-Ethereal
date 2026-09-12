@@ -510,8 +510,13 @@ export interface FooterFriendLinks {
   is_home_only?: boolean;
   /** 是否显示「申请友链」按钮（默认开启），固定跳转 /links */
   show_apply_btn?: boolean;
-  /** 最多显示条数，0 表示全部显示 */
-  max_items?: number;
+  /**
+   * 最多显示条数，0 表示全部显示。
+   * 注意：Halo FormKit 的 number 字段实际存出来的可能是字符串，模板侧必须
+   * 先做类型转换（见 FooterFriendLinks.astro 的 hbfMaxItems）再参与比较，
+   * 所以这里放宽为 number | string，避免写出看似安全的数值比较。
+   */
+  max_items?: number | string;
 }
 
 export interface FooterCustomLinks {
