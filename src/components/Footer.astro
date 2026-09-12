@@ -144,9 +144,10 @@ const currentYear = new Date().getFullYear();
   class="mb-12 flex flex-col items-center justify-center rounded-2xl px-6 text-center text-sm text-50 transition"
 >
   <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+    <!-- Astro 编译会剥掉元素间的空白，行内空隙必须用 {" "} 显式补回（见下方 Powered by 行） -->
     <span
-      >&copy; <span id="copyright-year">{currentYear}</span>
-      <span th:text="${site.title}">Ethereal</span>.
+      >&copy; <span id="copyright-year">{currentYear}</span>{" "}
+      <span th:text="${site.title}">Ethereal</span>.{" "}
       <span th:text="#{footer.rights}">All Rights Reserved.</span></span
     >
     <span class="whitespace-nowrap">
