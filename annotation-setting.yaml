@@ -13,3 +13,21 @@ spec:
       format: svg
       value-only: true
       help: "菜单项左侧显示的图标，留空则不显示。图标颜色与尺寸自动跟随菜单文字，无需手动设置。"
+---
+apiVersion: v1alpha1
+kind: AnnotationSetting
+metadata:
+  name: ethereal-post-series-7k2m4
+spec:
+  targetRef:
+    group: content.halo.run
+    kind: Post
+  formSchema:
+    - $formkit: text
+      name: series
+      label: 系列名称
+      help: "文章所属系列的标识（如「Halo 教程」）。同一系列名称的文章会自动聚合到系列列表页 /series/，并在文章页显示系列导航。留空则不归入任何系列。"
+    - $formkit: text
+      name: seriesOrder
+      label: 系列序号
+      help: "文章在系列内的排序序号，建议填整数（1、2、3…），越小越靠前；留空则排在系列末尾。"
