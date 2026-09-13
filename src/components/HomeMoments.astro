@@ -1,0 +1,389 @@
+---
+/**
+ * 首页瞬间栏：顶部横向滚动跑马灯 + 底部标签筛选。
+ *
+ * 结构：
+ *  ┌──────────────────────────────────────────────┐
+ *  │ [✨瞬间]  滚动内容……   滚动内容……   [更多›]  │  跑马灯行
+ *  │  #标签·n  #标签·n  #标签·n  …                │  标签筛选行
+ *  └──────────────────────────────────────────────┘
+ *
+ * 数据流：
+ * - 跑马灯 SSR 渲染最近瞬间，content.raw 为富文本（可能含 HTML），
+ *   由前端 JS 解析提取纯文本后回填（隐藏 span 传值，避免 HTML 转义外露）。
+ * - 标签同样用隐藏 span 传入，JS 去重 + 计数后渲染为胶囊链接。
+ * - 无缝滚动：把内容补足一屏后整体复制一份，轨道在 0 ↔ -50% 之间平移即无缝；
+ *   hover / 键盘聚焦暂停；两端渐隐。
+ * - 开关：theme.config.layout.postList.showHomeMoments
+ * - 数量：theme.config.layout.postList.homeMomentsCount
+ *
+ * 依赖：瞬间插件（提供 momentFinder）。插件未安装时 th:with 短路为 null，
+ * 只渲染空态，绝不崩页。
+ */
+---
+
+<section
+  id="home-moments"
+  class="card-base onload-animation relative mb-4 overflow-hidden px-4 py-4"
+  th:if="${theme.config?.layout?.postList?.showHomeMoments == null or theme.config?.layout?.postList?.showHomeMoments}"
+  th:with="homeMoments = ${momentFinder?.list({size: theme.config?.layout?.postList?.homeMomentsCount ?: 10})}"
+>
+  <!-- 整条可点击覆盖层：空白区域点击跳 /moments（z-1，内容在 z-10 之上） -->
+  <a
+    th:href="@{/moments}"
+    class="home-moments-overlay"
+    aria-label="查看我的瞬间"></a>
+
+  <!-- ===== 顶部：跑马灯行 ===== -->
+  <div class="relative z-10 flex flex-nowrap items-center gap-3">
+    <!-- "瞬间" 标签 -->
+    <a
+      th:href="@{/moments}"
+      class="home-moments-badge group flex shrink-0 items-center gap-1.5 rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 transition hover:bg-(--btn-regular-bg-hover) active:scale-95"
+    >
+      <span
+        class="icon-[material-symbols--auto-awesome-outline-rounded] text-base text-(--primary)"
+      ></span>
+      <span
+        class="text-sm font-bold text-(--btn-content)"
+        th:text="#{page.moments.title}">瞬间</span
+      >
+    </a>
+
+    <!-- 滚动区 -->
+    <div
+      id="home-moments-marquee"
+      class="home-moments-marquee relative min-w-0 flex-1 overflow-hidden rounded-lg bg-(--btn-regular-bg) py-1.5"
+    >
+      <div
+        id="home-moments-track"
+        class="home-moments-track flex w-max items-center"
+        th:if="${homeMoments != null and not #lists.isEmpty(homeMoments.items)}"
+      >
+        <div class="home-moments-group flex items-center">
+          <a
+            th:each="moment : ${homeMoments.items}"
+            th:if="${moment.spec.content != null and not #strings.isEmpty(moment.spec.content.raw)}"
+            th:href="@{/moments/{name}(name=${moment.metadata.name})}"
+            class="home-moment-link group flex items-center whitespace-nowrap"
+          >
+            <span
+              class="home-moment-owner text-sm font-bold text-(--primary)"
+              th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.displayName)}"
+              th:text="${moment.owner.displayName}">作者</span
+            >
+            <span
+              class="text-sm text-(--primary)"
+              th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.displayName)}"
+              >：</span
+            >
+            <!-- 原始内容（可能是富文本 HTML）：先以文本承载，JS 解析为纯文本后回填 -->
+            <span
+              class="home-moment-text text-sm text-50"
+              th:text="${moment.spec.content.raw}">内容</span
+            >
+            <span
+              class="home-moment-dot mx-3 inline-block h-1 w-1 shrink-0 rounded-full bg-(--primary)/40"
+              aria-hidden="true"></span>
+            <!-- 标签隐藏数据：供 JS 提取 -->
+            <span
+              class="home-moment-tag-data"
+              style="display:none"
+              th:each="tagName : ${moment.spec.tags}"
+              th:text="${tagName}"></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div
+        th:if="${homeMoments == null or #lists.isEmpty(homeMoments.items)}"
+        class="px-3 text-sm text-30"
+        th:text="#{page.moments.empty}"
+      >
+        暂无瞬间
+      </div>
+    </div>
+
+    <!-- 更多 -->
+    <a
+      th:href="@{/moments}"
+      class="btn-regular group flex h-8 shrink-0 items-center gap-0.5 rounded-lg px-3 text-sm font-bold active:scale-95"
+    >
+      <span th:text="#{common.more}">更多</span>
+      <span
+        class="icon-[material-symbols--chevron-right-rounded] text-base transition-transform group-hover:translate-x-0.5"
+      ></span>
+    </a>
+  </div>
+
+  <!-- ===== 底部：标签筛选 ===== -->
+  <div
+    id="home-moments-tags"
+    class="relative z-10 mt-3 flex flex-wrap items-center gap-2"
+  >
+  </div>
+</section>
+
+<style is:global>
+  /* ===== 整条可点击覆盖层 ===== */
+  .home-moments-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    text-decoration: none;
+  }
+
+  /* ===== 跑马灯 ===== */
+  .home-moments-marquee {
+    /* 两端渐隐遮罩：中间透明，两侧淡入卡片底色 */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 2rem,
+      black calc(100% - 2rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 2rem,
+      black calc(100% - 2rem),
+      transparent
+    );
+  }
+
+  /* 轨道：内容宽度自适应；滚动时长由 JS 按内容宽度动态注入。
+     will-change 提前把轨道提升为独立合成层，动画用 GPU 合成，避免每帧重排 */
+  .home-moments-track--animate {
+    animation: home-moments-scroll var(--home-moments-duration, 40s) linear
+      infinite;
+    will-change: transform;
+  }
+
+  @keyframes home-moments-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* 暂停滚动：hover（鼠标）+ focus-within（键盘）。
+     WCAG 2.2.2「暂停、停止、隐藏」要求自动运动 >5s 且与其它内容并行的内容提供
+     暂停机制；只有 :hover 对键盘用户不算机制。这条带子里的瞬间条目本身就是
+     可聚焦链接，Tab 进去即暂停。 */
+  .home-moments-marquee:hover .home-moments-track--animate,
+  .home-moments-marquee:focus-within .home-moments-track--animate {
+    animation-play-state: paused;
+  }
+
+  /* 单条瞬间：保持自然宽度、不换行（跑马灯靠滚动展示完整内容，无需截断）。
+     inline-block 是关键：默认 span 是 inline，white-space 不生效。
+     !important 防止被任何更高优先级的样式覆盖 */
+  .home-moment-text {
+    display: inline-block !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    transition: color 0.2s ease;
+  }
+  .home-moment-link:hover .home-moment-text {
+    color: var(--primary);
+  }
+
+  /* 标签胶囊 */
+  #home-moments-tags .home-moment-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.75rem;
+    padding: 0 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--btn-content);
+    background: var(--btn-regular-bg);
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.15s ease;
+  }
+  #home-moments-tags .home-moment-tag:hover {
+    background: var(--btn-regular-bg-hover);
+    color: var(--primary);
+  }
+  #home-moments-tags .home-moment-tag:active {
+    transform: scale(0.95);
+  }
+  #home-moments-tags .home-moment-tag .home-moment-tag-count {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--primary);
+    opacity: 0.7;
+  }
+
+  /* 移动端性能降级：关闭跑马灯无限滚动动画（改为原生横向滑动），
+     同时关闭两端渐隐遮罩——无限 transform 动画与 mask 在低端机持续
+     触发合成层重绘，是移动端卡顿主因 */
+  @media (max-width: 767px) {
+    .home-moments-track--animate {
+      animation: none !important;
+      /* 释放合成层：桌面端动画时提升的 GPU 合成层，移动端不再需要，
+         避免占用安卓低端机紧张的显存 */
+      will-change: auto !important;
+    }
+    .home-moments-marquee {
+      overflow-x: auto;
+      -webkit-mask-image: none;
+      mask-image: none;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .home-moments-marquee::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* 减少动态偏好：关闭滚动 */
+  @media (prefers-reduced-motion: reduce) {
+    .home-moments-track--animate {
+      animation: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // 富文本 → 纯文本：剥离标签，保留全部文本（跑马灯靠滚动展示完整内容）
+    function stripHtml(html) {
+      var div = document.createElement("div");
+      div.innerHTML = html;
+      return (div.textContent || div.innerText || "").trim();
+    }
+
+    // 装饰性副本：对读屏隐藏，并把其中的链接移出 tab 序
+    // （aria-hidden 容器内若有可聚焦元素会被 aria-hidden-focus 审计判为违规）
+    function markDecorative(node) {
+      node.setAttribute("aria-hidden", "true");
+      node.querySelectorAll("a").forEach(function (a) {
+        a.setAttribute("tabindex", "-1");
+      });
+      return node;
+    }
+
+    function initHomeMoments() {
+      var marquee = document.getElementById("home-moments-marquee");
+      var track = document.getElementById("home-moments-track");
+      var tagsBox = document.getElementById("home-moments-tags");
+      if (!marquee || !track) return;
+
+      // ===== 1. 富文本 → 纯文本回填，过滤空文本条目 =====
+      track.querySelectorAll(".home-moment-text").forEach(function (el) {
+        var raw = el.textContent || "";
+        var text = stripHtml(raw);
+        el.textContent = text;
+        if (!text) {
+          var link = el.closest(".home-moment-link");
+          if (link) link.style.display = "none";
+        }
+      });
+
+      var group = track.querySelector(".home-moments-group");
+      if (!group) return;
+
+      // ===== 2. 无缝滚动 =====
+      // ⚠️ 不能只在「内容超出一屏」时才克隆：内容不足一屏时整条带子静止不动。
+      // 改为先把内容重复 k 份凑够一屏，再整体复制一份 → 轨道两半完全相同，
+      // 0 ↔ -50% 之间平移即无缝（两份首尾相接，接缝处内容一致）。
+      // 延迟到字体加载 + 布局稳定后再测量宽度：字体未就绪时 scrollWidth 偏小，
+      // 会把「一屏」判少（全屏模式下首屏 banner 占满、字体加载更晚，更明显）。
+      if (track.getAttribute("data-cloned") !== "1") {
+        track.setAttribute("data-cloned", "1");
+        var setupMarquee = function () {
+          var setWidth = group.scrollWidth;
+          var boxWidth = marquee.clientWidth;
+          // 移动端不启用无缝滚动动画（CSS 已降级为原生横向滑动），
+          // 也不克隆内容，避免 DOM 翻倍加重低端机负担
+          var isMobile = window.matchMedia("(max-width: 767px)").matches;
+          if (!setWidth || !boxWidth || isMobile) return;
+
+          // ① 补足「一屏」：半幅至少要和跑道一样宽，滚动过程中视窗才不露空
+          var k = Math.max(1, Math.ceil(boxWidth / setWidth));
+          for (var i = 1; i < k; i++) {
+            track.appendChild(markDecorative(group.cloneNode(true)));
+          }
+          // ② 整体再复制一份 → 两半完全相同
+          var half = Array.prototype.slice.call(
+            track.querySelectorAll(".home-moments-group"),
+          );
+          half.forEach(function (g) {
+            track.appendChild(markDecorative(g.cloneNode(true)));
+          });
+
+          track.classList.add("home-moments-track--animate");
+          // 速度 ~48px/s，最小 20s，避免内容少时转太快
+          var duration = Math.max(20, Math.round((k * setWidth) / 48));
+          track.style.setProperty("--home-moments-duration", duration + "s");
+        };
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(function () {
+            requestAnimationFrame(setupMarquee);
+          });
+        } else {
+          setTimeout(setupMarquee, 200);
+        }
+      }
+
+      // ===== 3. 标签提取去重 + 计数，渲染胶囊 =====
+      // 必须在补屏/复制之后读、且**只看第一个 group**：从整条 track 数会把每个
+      // 标签算成 k×2 遍（历史上踩过「标签计数翻倍」这个坑）。
+      // 用 createElement 而非 innerHTML 拼接：标签名来自用户数据，拼 HTML 会引入
+      // DOM 型 XSS（历史缺陷）。
+      if (tagsBox && tagsBox.getAttribute("data-rendered") !== "1") {
+        tagsBox.setAttribute("data-rendered", "1");
+        var firstGroup = track.querySelector(".home-moments-group");
+        var tagMap = new Map();
+        if (firstGroup) {
+          firstGroup
+            .querySelectorAll(".home-moment-link .home-moment-tag-data")
+            .forEach(function (el) {
+              var t = (el.textContent || "").trim();
+              if (t) tagMap.set(t, (tagMap.get(t) || 0) + 1);
+            });
+        }
+
+        if (tagMap.size === 0) {
+          tagsBox.style.display = "none";
+          return;
+        }
+
+        var i = 0;
+        var MAX_TAGS = 10;
+        tagMap.forEach(function (count, tag) {
+          if (i >= MAX_TAGS) return;
+          i++;
+          var a = document.createElement("a");
+          a.href = "/moments?tag=" + encodeURIComponent(tag);
+          a.className = "home-moment-tag";
+          a.textContent = "#" + tag;
+          var c = document.createElement("span");
+          c.className = "home-moment-tag-count";
+          c.textContent = String(count);
+          a.appendChild(c);
+          tagsBox.appendChild(a);
+        });
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initHomeMoments);
+    } else {
+      initHomeMoments();
+    }
+    // 瞬间条位于 #swup-container 之外，Swup 换页不替换该 DOM、也不重执行本脚本，
+    // 因此全站仅首屏初始化一次；data-cloned/data-rendered 标记保证幂等，
+    // 避免重复克隆与重复渲染。
+  })();
+</script>

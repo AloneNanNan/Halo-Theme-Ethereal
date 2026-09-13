@@ -2,6 +2,7 @@
 import BackToTop from "../components/control/BackToTop.astro";
 import CategoryBar from "../components/control/CategoryBar.astro";
 import Footer from "../components/Footer.astro";
+import HomeMoments from "../components/HomeMoments.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import Navbar from "../components/Navbar.astro";
 import RightSideBar from "../components/widget/RightSideBar.astro";
@@ -77,6 +78,14 @@ const {
     .banner-mobile-enabled #banner-mobile {
       display: block;
     }
+  }
+
+  /* 首页瞬间条仅在首页可见：渲染常驻（见上方 #home-moments-wrap 注释），
+     显隐交给 body.is-home —— 首帧初值由服务端按 isHomePage 输出，
+     运行期由 Swup 每次换页更新，故直刷与站内换页表现一致。
+     与 #scroll-down-indicator 使用同一套规则。 */
+  body:not(.is-home) #home-moments-wrap {
+    display: none;
   }
 </style>
 
@@ -403,6 +412,18 @@ const {
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
       th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
     >
+      <!-- 首页瞬间条：置于 #main-grid 之上、#swup-container 之外，站内换页不掉、
+           直刷任意页也在（元素不随 Swup 替换）。是否渲染由 HomeMoments.astro 内部的
+           showHomeMoments 开关决定；「仅首页可见」由下方样式块的 body:not(.is-home)
+           规则承担 —— 与 #scroll-down-indicator 同一套惯例（渲染常驻 + CSS 控显隐），
+           避免「按 isHomePage 构建期门控」导致的直刷/换页表现不一致。 -->
+      <div
+        id="home-moments-wrap"
+        class="pointer-events-auto px-0 md:px-4 transition duration-[var(--dur-banner,700ms)]"
+      >
+        <HomeMoments />
+      </div>
+
       <div
         id="main-grid"
         class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"

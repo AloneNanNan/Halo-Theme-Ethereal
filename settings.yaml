@@ -96,6 +96,8 @@ spec:
             defaultMode: list
             coverPosition: right
             descriptionLines: 2
+            showHomeMoments: true
+            homeMomentsCount: 10
             grid:
               masonry: false
               coverFullWidth: false
@@ -133,6 +135,23 @@ spec:
               max: 6
               step: 1
               help: "文章简介显示行数，设为 0 则不截断"
+            - $formkit: switch
+              name: showHomeMoments
+              id: postList_showHomeMoments
+              key: postList_showHomeMoments
+              label: 首页显示瞬间预览条
+              value: true
+              help: "开启后首页顶部显示「瞬间」横向滚动预览条（含底部标签筛选）。需安装瞬间插件，未安装时只显示空态"
+            - $formkit: number
+              name: homeMomentsCount
+              id: postList_homeMomentsCount
+              key: postList_homeMomentsCount
+              label: 瞬间预览条数量
+              value: 10
+              min: 1
+              max: 50
+              step: 1
+              help: "瞬间预览条最多展示的瞬间条数（1~50，默认 10）"
             - $formkit: group
               name: grid
               id: postList_grid
@@ -2027,6 +2046,372 @@ spec:
                       label: 主题色
                       value: ""
                       help: "图标底色与进度条颜色，留空使用主题色"
+        - $formkit: group
+          name: about
+          label: 关于我页面
+          help: "配置项按页面卡片顺序排列：身份卡 / 顶部导航 / 本人项目 / 更新摘要 / 最近的提交 / 我的朋友 / 页脚。首次使用请先在「页面 → 自定义页面」新建一个页面，并把「自定义模板」选为「关于我」，然后回到这里配置内容"
+          value:
+            identity:
+              avatar: ""
+              name: ""
+              roles: Halo 主题 / 插件开发者
+              tagline: 成功是失败者的通行证，失败是成功者的墓志铭
+              status: 在折腾 Halo 主题与插件
+              actionPrimaryLabel: 查看 GitHub
+              actionPrimaryUrl: ""
+              actionSecondaryLabel: 查看心愿墙
+              actionSecondaryUrl: ""
+              quote: ""
+              intro: |-
+                这里记录我在自建博客、主题定制与插件开发上的折腾。
+                博客跑在 Halo 上，前台是基于 Fuwari 二次开发的 Ethereal 主题 —— 配色、布局到小组件都可以自己改。
+                平时写点工具类网站的推荐和使用记录，顺手把踩过的坑整理成主题补丁或插件。
+              introSubtitle: 公开 · 持续更新
+              trajectory: |-
+                自建 Halo 博客
+                Fuwari 主题二次开发
+                Halo 插件开发
+                自托管与反向代理
+                CDN 与边缘缓存调优
+            nav:
+              profileLabel: 个人资料
+              changelogLabel: 博客日志
+              changelogUrl: ""
+              linksLabel: 友情链接
+              linksUrl: /links
+              linksCount: true
+              friendsLabel: 朋友圈
+              friendsUrl: /friends
+            projects:
+              moreLabel: 全部项目 →
+              moreUrl: ""
+            highlights:
+              moreLabel: 按日查看 →
+              moreUrl: ""
+            activity:
+              enable: true
+              subtitle: 写下来的，才会留下
+              count: 5
+            friends:
+              enable: true
+              shuffle: true
+              count: 6
+              note: 各自折腾，互相串门。
+              contactEnable: true
+            footer:
+              eyebrow: OPEN SOURCE, OPEN CHANNEL
+              motto: 保持热爱，持续折腾
+          children:
+            # ─────────── ① 身份卡 · 简介 · 技术轨迹 ───────────
+            - $formkit: group
+              name: identity
+              label: 身份卡与个人简介
+              help: "身份卡（头像 / 名称 / 身份行 / 状态 / 两个按钮）+ README 式简介（引语 / 正文 / 右上小字）+ 技术轨迹"
+              children:
+                - $formkit: attachment
+                  name: avatar
+                  label: 头像
+                  accepts:
+                    - "image/*"
+                  aspectRatio: "1/1"
+                  value: ""
+                  help: "建议 1:1 正方形；留空则用站点图标"
+                - $formkit: text
+                  name: name
+                  label: 名称
+                  value: ""
+                  help: "页面大标题，留空则使用站点标题"
+                - $formkit: text
+                  name: roles
+                  label: 身份行
+                  value: "Halo 主题 / 插件开发者"
+                  help: "如：独立开发者 / 博客作者"
+                - $formkit: textarea
+                  name: tagline
+                  label: 一句话简介
+                  value: "成功是失败者的通行证，失败是成功者的墓志铭"
+                  help: "显示在身份行下方的大字简介"
+                - $formkit: text
+                  name: status
+                  label: 状态行
+                  value: "在折腾 Halo 主题与插件"
+                  help: "如：正在构建效率工具，也在持续写作。⚠️ 启用「侧边栏 → 个人资料 → 在线状态」后，身份卡这里会被状态胶囊取代（图标与文案都取自在线状态），本字段退为兜底显示"
+                - $formkit: text
+                  name: actionPrimaryLabel
+                  label: 主按钮文字
+                  value: "查看 GitHub"
+                  help: "留空则不显示主按钮"
+                - $formkit: text
+                  name: actionPrimaryUrl
+                  label: 主按钮链接
+                  help: "支持站内路径（如 /links）或完整网址；与「主按钮文字」同时填写才显示"
+                  value: ""
+                - $formkit: text
+                  name: actionSecondaryLabel
+                  label: 次按钮文字
+                  value: "查看心愿墙"
+                  help: "留空则不显示次按钮"
+                - $formkit: text
+                  name: actionSecondaryUrl
+                  label: 次按钮链接
+                  value: ""
+                  help: "支持站内路径（如 /wishes）或完整网址；与「次按钮文字」同时填写才显示"
+                - $formkit: textarea
+                  name: quote
+                  label: 引语
+                  value: ""
+                  help: "「关于我」卡片开头的引用，留空则不显示"
+                - $formkit: textarea
+                  name: intro
+                  label: 关于我正文
+                  value: "这里记录我在自建博客、主题定制与插件开发上的折腾。\n博客跑在 Halo 上，前台是基于 Fuwari 二次开发的 Ethereal 主题 —— 配色、布局到小组件都可以自己改。\n平时写点工具类网站的推荐和使用记录，顺手把踩过的坑整理成主题补丁或插件。"
+                  help: "每行一段"
+                - $formkit: text
+                  name: introSubtitle
+                  label: 关于我右上小字
+                  value: "公开 · 持续更新"
+                  help: "显示在「关于我」卡片右上角的小字，留空则不显示"
+                - $formkit: textarea
+                  name: trajectory
+                  label: 技术轨迹
+                  value: "自建 Halo 博客\nFuwari 主题二次开发\nHalo 插件开发\n自托管与反向代理\nCDN 与边缘缓存调优"
+                  help: "每行一个，如 React"
+
+            # ─────────── ② 顶部导航 ───────────
+            - $formkit: group
+              name: nav
+              label: 顶部导航
+              help: "身份卡下方的导航胶囊；「个人资料」固定指向当前页面，其余项的链接留空即隐藏该项"
+              children:
+                - $formkit: text
+                  name: profileLabel
+                  label: 导航①文字
+                  value: "个人资料"
+                  help: "指向当前页面，不可改链接"
+                - $formkit: text
+                  name: changelogLabel
+                  label: 导航②文字
+                  value: "博客日志"
+                  help: "导航②的文字，如「博客日志」；「导航②链接」留空则整项隐藏"
+                - $formkit: text
+                  name: changelogUrl
+                  label: 导航②链接
+                  value: ""
+                  help: "留空则不显示该项"
+                - $formkit: text
+                  name: linksLabel
+                  label: 导航③文字
+                  value: "友情链接"
+                  help: "导航③的文字；「导航③链接」留空则整项隐藏"
+                - $formkit: text
+                  name: linksUrl
+                  label: 导航③链接
+                  value: "/links"
+                  help: "留空则不显示该项"
+                - $formkit: switch
+                  name: linksCount
+                  label: 导航③显示友链数量
+                  value: true
+                  help: "读取本站友情链接总数，显示为小圆标"
+                - $formkit: text
+                  name: friendsLabel
+                  label: 导航④文字
+                  value: "朋友圈"
+                  help: "导航④的文字；「导航④链接」留空则整项隐藏"
+                - $formkit: text
+                  name: friendsUrl
+                  label: 导航④链接
+                  value: "/friends"
+                  help: "留空则不显示该项"
+
+            # ─────────── ③ 本人项目 ───────────
+            - $formkit: group
+              name: projects
+              label: 本人项目
+              children:
+                - $formkit: text
+                  name: moreLabel
+                  label: 右上角链接文字
+                  value: "全部项目 →"
+                  help: "留空则不显示"
+                - $formkit: text
+                  name: moreUrl
+                  label: 右上角链接地址
+                  value: ""
+                - $formkit: array
+                  name: items
+                  label: 项目列表
+                  help: "按顺序展示，建议 3~6 个"
+                  children:
+                    - $formkit: text
+                      name: title
+                      label: 名称
+                    - $formkit: text
+                      name: icon
+                      label: 图标（可留空）
+                      help: "留空即可 —— 卡片会按顺序自动分配互不相同的图标，不会重复。想固定某一个时再填，可选：icon-[material-symbols--terminal-rounded] icon-[material-symbols--database] icon-[material-symbols--menu-book-rounded] icon-[material-symbols--widgets-outline-rounded] icon-[material-symbols--bolt-rounded]"
+                    - $formkit: select
+                      name: tone
+                      label: 图标配色
+                      value: ""
+                      options:
+                        - label: 跟随主题色
+                          value: ""
+                        - label: 金色
+                          value: gold
+                        - label: 薄荷
+                          value: mint
+                        - label: 紫色
+                          value: violet
+                    - $formkit: textarea
+                      name: description
+                      label: 说明
+                    - $formkit: textarea
+                      name: tags
+                      label: 标签
+                      help: "每行一个"
+                    - $formkit: text
+                      name: link
+                      label: 链接
+                      help: "留空则卡片不可点击"
+
+            # ─────────── ④ 更新摘要 ───────────
+            - $formkit: group
+              name: highlights
+              label: 更新摘要
+              children:
+                - $formkit: text
+                  name: moreLabel
+                  label: 右上角链接文字
+                  value: "按日查看 →"
+                  help: "留空则不显示"
+                - $formkit: text
+                  name: moreUrl
+                  label: 右上角链接地址
+                  value: ""
+                - $formkit: array
+                  name: items
+                  label: 摘要条目
+                  help: "对应更新日志里的重要节点，建议 3~4 条"
+                  children:
+                    - $formkit: text
+                      name: title
+                      label: 标题
+                    - $formkit: text
+                      name: icon
+                      label: 图标（可留空）
+                      help: "留空即可 —— 卡片会按顺序自动分配互不相同的图标，不会重复。想固定某一个时再填，可选：icon-[material-symbols--history-rounded] icon-[material-symbols--update-rounded] icon-[material-symbols--edit-note-rounded] icon-[material-symbols--auto-awesome-rounded]"
+                    - $formkit: select
+                      name: tone
+                      label: 图标配色
+                      value: ""
+                      options:
+                        - label: 跟随主题色
+                          value: ""
+                        - label: 金色
+                          value: gold
+                        - label: 薄荷
+                          value: mint
+                        - label: 紫色
+                          value: violet
+                    - $formkit: textarea
+                      name: description
+                      label: 说明
+                    - $formkit: text
+                      name: version
+                      label: 版本号
+                      help: "如 Aemeath V3.3.0，可留空"
+                    - $formkit: textarea
+                      name: tags
+                      label: 标签
+                      help: "每行一个"
+                    - $formkit: text
+                      name: link
+                      label: 链接
+                      help: "一般指向更新日志页面"
+
+            # ─────────── ⑤ 最近的提交 ───────────
+            - $formkit: group
+              name: activity
+              label: 最近的提交
+              help: "数据自动取自本站最新文章 + 最新瞬间，无需手填；客户端按发布时间归并成一条时间线"
+              children:
+                - $formkit: switch
+                  name: enable
+                  label: 显示「最近的提交」
+                  value: true
+                - $formkit: text
+                  name: subtitle
+                  label: 标题下小字
+                  value: "写下来的，才会留下"
+                  help: "留空则不显示"
+                - $formkit: number
+                  name: count
+                  label: 各取几条
+                  value: 5
+                  min: 2
+                  max: 10
+                  step: 1
+                  help: "文章、瞬间各取这么多条后合并排序。取多了卡片会变长"
+
+            # ─────────── ⑥ 我的朋友 / 保持联系 ───────────
+            - $formkit: group
+              name: friends
+              label: 我的朋友 / 保持联系
+              help: "「我的朋友」数据取自本站友情链接；「保持联系」数据取自「侧边栏 → 个人简介小组件 → 社交媒体」，在那边增删即可，这里不用重复维护"
+              children:
+                - $formkit: switch
+                  name: enable
+                  label: 显示「我的朋友」
+                  value: true
+                  help: "需已安装友链插件且有审核通过的链接，否则卡片自动隐藏"
+                - $formkit: switch
+                  name: shuffle
+                  label: 每次刷新随机排序
+                  value: true
+                - $formkit: number
+                  name: count
+                  label: 展示数量
+                  value: 6
+                  min: 3
+                  max: 12
+                  step: 1
+                - $formkit: text
+                  name: note
+                  label: 卡片底部小字
+                  value: "各自折腾，互相串门。"
+                  help: "留空则不显示"
+                - $formkit: switch
+                  name: contactEnable
+                  label: 显示「保持联系」
+                  value: true
+
+            # ─────────── ⑦ 页脚 ───────────
+            - $formkit: group
+              name: footer
+              label: 页脚
+              children:
+                - $formkit: text
+                  name: eyebrow
+                  label: 页脚小标题
+                  help: "页脚上方的小字，一般用英文短句，留空则不显示"
+                  value: "OPEN SOURCE, OPEN CHANNEL"
+                - $formkit: textarea
+                  name: motto
+                  label: 页脚一句话
+                  help: "页脚主文案，留空则不显示"
+                  value: "保持热爱，持续折腾"
+                - $formkit: array
+                  name: linkItems
+                  label: 页脚链接
+                  help: "建议 2 条；名称与链接分开填，不用再写「名称|链接」"
+                  children:
+                    - $formkit: text
+                      name: label
+                      label: 名称
+                    - $formkit: text
+                      name: url
+                      label: 链接
     - group: footer
       label: 页脚
       formSchema:
