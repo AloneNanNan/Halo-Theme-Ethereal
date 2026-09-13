@@ -2049,7 +2049,7 @@ spec:
         - $formkit: group
           name: about
           label: 关于我页面
-          help: "配置项按页面卡片顺序排列：身份卡 / 顶部导航 / 本人项目 / 更新摘要 / 最近的提交 / 我的朋友 / 页脚。首次使用请先在「页面 → 自定义页面」新建一个页面，并把「自定义模板」选为「关于我」，然后回到这里配置内容"
+          help: "配置项按页面卡片顺序排列：身份卡 / 顶部导航 / 本人项目 / 更新系列 / 最近的提交 / 我的朋友 / 页脚。首次使用请先在「页面 → 自定义页面」新建一个页面，并把「自定义模板」选为「关于我」，然后回到这里配置内容"
           value:
             identity:
               avatar: ""
@@ -2075,8 +2075,8 @@ spec:
                 CDN 与边缘缓存调优
             nav:
               profileLabel: 个人资料
-              changelogLabel: 博客日志
-              changelogUrl: ""
+              seriesLabel: 系列
+              seriesUrl: /series
               linksLabel: 友情链接
               linksUrl: /links
               linksCount: true
@@ -2085,9 +2085,10 @@ spec:
             projects:
               moreLabel: 全部项目 →
               moreUrl: ""
-            highlights:
-              moreLabel: 按日查看 →
-              moreUrl: ""
+            series:
+              count: 4
+              moreLabel: 查看全部 →
+              moreUrl: /series
             activity:
               enable: true
               subtitle: 写下来的，才会留下
@@ -2189,15 +2190,15 @@ spec:
                   value: "个人资料"
                   help: "指向当前页面，不可改链接"
                 - $formkit: text
-                  name: changelogLabel
+                  name: seriesLabel
                   label: 导航②文字
-                  value: "博客日志"
-                  help: "导航②的文字，如「博客日志」；「导航②链接」留空则整项隐藏"
+                  value: "系列"
+                  help: "导航②的文字，如「系列」；「导航②链接」留空则整项隐藏"
                 - $formkit: text
-                  name: changelogUrl
+                  name: seriesUrl
                   label: 导航②链接
-                  value: ""
-                  help: "留空则不显示该项"
+                  value: "/series"
+                  help: "一般指向「系列」页面；留空则不显示该项"
                 - $formkit: text
                   name: linksLabel
                   label: 导航③文字
@@ -2275,60 +2276,30 @@ spec:
                       label: 链接
                       help: "留空则卡片不可点击"
 
-            # ─────────── ④ 更新摘要 ───────────
+            # ─────────── ④ 更新系列 ───────────
             - $formkit: group
-              name: highlights
-              label: 更新摘要
+              name: series
+              label: 更新系列
+              help: "自动读取文章的「系列」注解（文章编辑页填「系列名称」/「系列序号」，需安装 ethereal-companion 插件），无需手填；插件未安装或一条系列都没有时整张卡片隐藏"
               children:
+                - $formkit: number
+                  name: count
+                  label: 显示系列数
+                  value: 4
+                  min: 1
+                  max: 12
+                  step: 1
+                  help: "最多显示几个系列，其余进右上角「查看全部」"
                 - $formkit: text
                   name: moreLabel
                   label: 右上角链接文字
-                  value: "按日查看 →"
+                  value: "查看全部 →"
                   help: "留空则不显示"
                 - $formkit: text
                   name: moreUrl
                   label: 右上角链接地址
-                  value: ""
-                - $formkit: array
-                  name: items
-                  label: 摘要条目
-                  help: "对应更新日志里的重要节点，建议 3~4 条"
-                  children:
-                    - $formkit: text
-                      name: title
-                      label: 标题
-                    - $formkit: text
-                      name: icon
-                      label: 图标（可留空）
-                      help: "留空即可 —— 卡片会按顺序自动分配互不相同的图标，不会重复。想固定某一个时再填，可选：icon-[material-symbols--history-rounded] icon-[material-symbols--update-rounded] icon-[material-symbols--edit-note-rounded] icon-[material-symbols--auto-awesome-rounded]"
-                    - $formkit: select
-                      name: tone
-                      label: 图标配色
-                      value: ""
-                      options:
-                        - label: 跟随主题色
-                          value: ""
-                        - label: 金色
-                          value: gold
-                        - label: 薄荷
-                          value: mint
-                        - label: 紫色
-                          value: violet
-                    - $formkit: textarea
-                      name: description
-                      label: 说明
-                    - $formkit: text
-                      name: version
-                      label: 版本号
-                      help: "如 Aemeath V3.3.0，可留空"
-                    - $formkit: textarea
-                      name: tags
-                      label: 标签
-                      help: "每行一个"
-                    - $formkit: text
-                      name: link
-                      label: 链接
-                      help: "一般指向更新日志页面"
+                  value: "/series"
+                  help: "一般指向「系列」页面；留空则不显示该链接"
 
             # ─────────── ⑤ 最近的提交 ───────────
             - $formkit: group

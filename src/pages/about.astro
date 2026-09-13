@@ -3,7 +3,7 @@
 // 数据来自主题设置「扩展页面 → 关于我页面」→ theme.config.extendPages.about。
 //
 // 布局：身份卡（横跨）→ 顶部导航（横跨）→ 两栏
-//   主列：关于我 / 本人项目 / 更新摘要 / 最近的提交
+//   主列：关于我 / 本人项目 / 更新系列 / 最近的提交
 //   侧列：技术轨迹 / 我的朋友 / 保持联系
 //   （「我的朋友」位于技术轨迹下方，带头像卡片墙）
 // 两栏按**容器宽度**分档（≥880px 才分栏），不跟视口走 —— 见 .about-cols-wrap。
@@ -409,7 +409,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         margin-top: 0;
       }
 
-      /* ================= ⑨ 内嵌卡片：项目 / 更新摘要 = 参考站 .project-card ================= */
+      /* ================= ⑨ 内嵌卡片：项目 / 更新系列 = 参考站 .project-card ================= */
       .about-proj-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -540,7 +540,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         transform: translate(0.1rem, -0.1rem);
       }
 
-      /* ================= ⑩ 更新摘要里的动作标签 = 参考站 .project-card__tags em ================= */
+      /* ================= ⑩ 系列卡里的篇数标签 = 参考站 .project-card__tags em ================= */
       .about-chip-list {
         display: flex;
         flex-wrap: wrap;
@@ -1016,6 +1016,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       aboutMomentCount=${aboutMoments != null ? #lists.size(aboutMoments) : 0},
       groups=${(pluginFinder == null or !pluginFinder.available('PluginLinks') or linkFinder == null) ? null : linkFinder.groupBy()},
       linksTotal=${groups != null and !#lists.isEmpty(groups) ? #aggregates.sum(groups.![links.size()]) : 0},
+      seriesList=${pluginFinder != null and pluginFinder.available('ethereal-companion') ? recentCommentsSeriesFinder.listAll() : null},
       socials=${theme.config?.sidebar?.profile?.social_media}"
     th:remove="tag"
   >
@@ -1219,15 +1220,14 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       </a>
       <a
         class="about-subnav-item"
-        th:if="${!#strings.isEmpty(cfg?.nav?.changelogUrl)}"
-        th:href="${cfg?.nav?.changelogUrl}"
+        th:if="${!#strings.isEmpty(cfg?.nav?.seriesUrl)}"
+        th:href="${cfg?.nav?.seriesUrl}"
       >
         <span
-          class="icon-[material-symbols--history-rounded] about-ico"
+          class="icon-[material-symbols--layers] about-ico"
           aria-hidden="true"></span>
-        <span
-          th:text="${#strings.defaultString(cfg?.nav?.changelogLabel, '博客日志')}"
-          >博客日志</span
+        <span th:text="${#strings.defaultString(cfg?.nav?.seriesLabel, '系列')}"
+          >系列</span
         >
       </a>
       <a
@@ -1370,77 +1370,84 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             </div>
           </section>
 
-          <!-- 更新摘要 -->
+          <!-- 更新系列：数据 = 插件聚合的文章系列（文章填 series / seriesOrder 注解）。
+               每张卡指向该系列「最新发布的一篇」（文章页顶部有系列导航），
+               右上「查看全部 →」进 /series 聚合页。
+               插件未安装、或一条系列都没有时整卡隐藏（seriesList 为 null / 空），
+               绝不崩页。 -->
           <section
             class="card-base onload-animation"
-            th:if="${cfg?.highlights?.items != null and !#lists.isEmpty(cfg?.highlights?.items)}"
+            th:if="${seriesList != null and !#lists.isEmpty(seriesList)}"
           >
             <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p class="about-section-label">
                   <span
-                    class="icon-[material-symbols--update-rounded]"
+                    class="icon-[material-symbols--layers]"
                     aria-hidden="true"></span>
-                  <span>LATEST CHANGES</span>
+                  <span>LATEST SERIES</span>
                 </p>
-                <h2 class="about-card-title mt-1 text-90">更新摘要</h2>
+                <h2 class="about-card-title mt-1 text-90">更新系列</h2>
               </div>
               <a
                 class="about-section-link"
-                th:if="${!#strings.isEmpty(cfg?.highlights?.moreUrl)}"
-                th:href="${cfg?.highlights?.moreUrl}"
+                th:if="${!#strings.isEmpty(cfg?.series?.moreUrl)}"
+                th:href="${cfg?.series?.moreUrl}"
               >
                 <span
-                  th:text="${#strings.defaultString(cfg?.highlights?.moreLabel, '按日查看 →')}"
-                  >按日查看 →</span
+                  th:text="${#strings.defaultString(cfg?.series?.moreLabel, '查看全部 →')}"
+                  >查看全部 →</span
                 >
               </a>
             </div>
             <div class="about-tile-list">
-              <!-- 同「本人项目」：留空按序号轮换，和左边那张卡的图标序列不重叠 -->
-              <a
-                class="about-tile"
-                th:each="h, hst : ${cfg?.highlights?.items}"
-                th:with="hIcon=${!#strings.isEmpty(h?.icon)
-                  ? h?.icon
-                  : (hst.index == 0 ? 'icon-[material-symbols--history-rounded]'
-                    : (hst.index == 1 ? 'icon-[material-symbols--update-rounded]'
-                      : (hst.index == 2 ? 'icon-[material-symbols--edit-note-rounded]'
-                        : 'icon-[material-symbols--auto-awesome-rounded]')))}"
-                th:classappend="${!#strings.isEmpty(h?.tone) ? ' is-' + h?.tone : ''}"
-                th:href="${!#strings.isEmpty(h?.link) ? h?.link : null}"
-                th:target="${!#strings.isEmpty(h?.link) ? '_blank' : null}"
-                rel="noopener noreferrer"
+              <!-- 外层 div 只负责「一个系列一个作用域」，内层 a 才是卡片本体。
+                   先算该系列最新一篇的发布时间，再按发布时间命中那一篇 ——
+                   Thymeleaf 的 #lists 只有 sort（没有 sortBy）、#aggregates 只有
+                   sum（没有 max），所以「取最新」只能升序排序后取末位。
+                   图标留空按序号轮换，和「本人项目」那张卡的图标序列不重叠。 -->
+              <div
+                th:each="s, sst : ${seriesList}"
+                th:if="${sst.index < #conversions.convert(cfg?.series?.count ?: 4, 'java.lang.Integer')}"
+                th:with="times=${s.posts.![publishTime].?[#this != null]},
+                  latestTime=${#lists.isEmpty(times) ? null : #lists.sort(times)[#lists.size(times) - 1]},
+                  sIcon=${sst.index == 0
+                    ? 'icon-[material-symbols--layers]'
+                    : (sst.index == 1
+                      ? 'icon-[material-symbols--menu-book-rounded]'
+                      : (sst.index == 2
+                        ? 'icon-[material-symbols--auto-stories-rounded]'
+                        : 'icon-[material-symbols--library-books-rounded]'))}"
               >
-                <span class="about-tile__icon">
-                  <span th:class="${hIcon}" aria-hidden="true"></span>
-                </span>
-                <span class="about-tile__body">
-                  <strong class="about-tile__title" th:text="${h?.title}"
-                    >标题</strong
-                  >
-                  <span
-                    class="about-tile__desc"
-                    th:if="${!#strings.isEmpty(h?.description)}"
-                    th:text="${h?.description}">说明</span
-                  >
-                  <span
-                    class="about-chip-list"
-                    th:if="${(!#strings.isEmpty(h?.version)) or (!#strings.isEmpty(h?.tags))}"
-                    th:data-lines="${h?.tags}"
-                    data-lines-render="chips"
-                  >
-                    <span
-                      class="about-chip"
-                      th:if="${!#strings.isEmpty(h?.version)}"
-                      th:text="${h?.version}">v0.0.0</span
-                    >
+                <a
+                  class="about-tile"
+                  th:each="p : ${s.posts}"
+                  th:if="${latestTime != null and p.publishTime == latestTime}"
+                  th:href="@{${p.permalink}}"
+                >
+                  <span class="about-tile__icon">
+                    <span th:class="${sIcon}" aria-hidden="true"></span>
                   </span>
-                </span>
-                <span
-                  class="about-tile__arrow icon-[material-symbols--arrow-outward-rounded]"
-                  aria-hidden="true"></span>
-              </a>
+                  <span class="about-tile__body">
+                    <strong class="about-tile__title" th:text="${s.name}"
+                      >系列名</strong
+                    >
+                    <span class="about-tile__desc" th:text="${p.title}"
+                      >最新一篇</span
+                    >
+                    <span class="about-chip-list">
+                      <span
+                        class="about-chip"
+                        th:text="#{page.series.count(${#lists.size(s.posts)})}"
+                        >共 0 篇</span
+                      >
+                    </span>
+                  </span>
+                  <span
+                    class="about-tile__arrow icon-[material-symbols--arrow-outward-rounded]"
+                    aria-hidden="true"></span>
+                </a>
+              </div>
             </div>
           </section>
 
