@@ -30,6 +30,10 @@
   --post-card-cover-width: 28%;
 
   --primary: oklch(0.7 0.14 var(--hue));
+  /* 主色实心块（分类栏液态滑块、徽章等）之上的前景色：--primary 亮度恒为
+     0.7/0.75（中亮色），白字对比仅 ~2.3:1 不达 WCAG AA，须用深色前景。
+     亮暗两套 --primary 亮度接近，深色前景在两者上均达标，故同值。 */
+  --on-primary: oklch(0.25 0.07 var(--hue));
   --page-bg: oklch(0.95 0.01 var(--hue));
   --card-bg: white;
   --btn-content: oklch(0.55 0.12 var(--hue));
@@ -119,6 +123,8 @@
 
 :root.dark {
   --primary: oklch(0.75 0.14 var(--hue));
+  /* 与亮色同值：暗色 --primary 亮度 .75，深色前景对比同样达标 */
+  --on-primary: oklch(0.25 0.07 var(--hue));
   --page-bg: oklch(0.16 0.014 var(--hue));
   --card-bg: oklch(0.23 0.015 var(--hue));
   --btn-content: oklch(0.75 0.1 var(--hue));
