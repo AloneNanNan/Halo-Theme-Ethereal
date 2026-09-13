@@ -139,9 +139,9 @@ spec:
               name: showHomeMoments
               id: postList_showHomeMoments
               key: postList_showHomeMoments
-              label: 首页显示瞬间预览条
+              label: 显示瞬间预览条
               value: true
-              help: "开启后首页顶部显示「瞬间」横向滚动预览条（含底部标签筛选）。需安装瞬间插件，未安装时只显示空态"
+              help: "开启后所有页面内容区顶部显示「瞬间」横向滚动预览条（含底部标签筛选）。需安装瞬间插件，未安装时只显示空态"
             - $formkit: number
               name: homeMomentsCount
               id: postList_homeMomentsCount

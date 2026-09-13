@@ -17,6 +17,15 @@
     @apply translate-y-(--banner-height-extend);
   }
 
+  /* 瞬间条：与 #main-grid 同条件随 banner 下推。
+     否则横幅/全屏模式下 #main-grid 被下推、瞬间条没跟着走，瞬间条会贴在
+     banner 底边上、与下方文章卡片之间留出整段空白（观感即「位置偏上」）。
+     本规则在 @utility is-home 作用域内 —— 下推补偿只在首页需要（见本块其余
+     规则），非首页 #main-grid 本就没有位移，无需补偿。 */
+  &.enable-banner #home-moments-wrap {
+    @apply translate-y-(--banner-height-extend);
+  }
+
   &.enable-banner #sidebar-sticky {
     @apply top-[calc(1rem-var(--banner-height-extend))];
   }

@@ -1,6 +1,9 @@
 ---
 /**
- * 首页瞬间栏：顶部横向滚动跑马灯 + 底部标签筛选。
+ * 全站瞬间栏：顶部横向滚动跑马灯 + 底部标签筛选。
+ *
+ * 挂载在 #main-panel-wrapper 内、#main-grid 之上且位于 #swup-container 之外，
+ * 因此全站每页都渲染、站内换页不掉、直刷任意页也在。
  *
  * 结构：
  *  ┌──────────────────────────────────────────────┐
@@ -14,7 +17,7 @@
  * - 标签同样用隐藏 span 传入，JS 去重 + 计数后渲染为胶囊链接。
  * - 无缝滚动：把内容补足一屏后整体复制一份，轨道在 0 ↔ -50% 之间平移即无缝；
  *   hover / 键盘聚焦暂停；两端渐隐。
- * - 开关：theme.config.layout.postList.showHomeMoments
+ * - 开关：theme.config.layout.postList.showHomeMoments（全站生效）
  * - 数量：theme.config.layout.postList.homeMomentsCount
  *
  * 依赖：瞬间插件（提供 momentFinder）。插件未安装时 th:with 短路为 null，
