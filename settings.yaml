@@ -2225,7 +2225,7 @@ spec:
                   preserve: true
                   label: 引语
                   value: ""
-                  help: "「关于我」卡片开头的引用，留空则不显示"
+                  help: "个人简介卡片开头的引用，留空则不显示"
                 - $formkit: textarea
                   name: intro
                   if: "$get(about_intro_enable).value"
@@ -2284,7 +2284,7 @@ spec:
                   max: 20
                   step: 1
                   validation: "min:2|max:20"
-                  help: "文章与瞬间合并排序后，卡片上总共显示几条的文章、瞬间数量；最多20条"
+                  help: "文章与瞬间合并排序后，卡片上总共显示的条目数；最多 20 条"
 
             # ─────────── ⑥ 我的技能卡片 ───────────
             - $formkit: group
