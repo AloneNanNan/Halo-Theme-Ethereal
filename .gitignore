@@ -34,6 +34,9 @@ pnpm-debug.log*
 # codebuddy
 .codebuddy/
 
+# workbuddy AI
+.workbuddy-ai/
+
 templates/
 
 # opencode 工具配置

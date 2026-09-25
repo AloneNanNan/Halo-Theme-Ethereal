@@ -18,25 +18,32 @@
  * - 标签同样用隐藏 span 传入，JS 去重 + 计数后渲染为胶囊链接。
  * - 无缝滚动：把内容补足一屏后整体复制一份，轨道在 0 ↔ -50% 之间平移即无缝；
  *   hover / 键盘聚焦暂停；两端渐隐。
- * - 开关：theme.config.layout.postList.showHomeMoments（全站生效）
- * - 数量：theme.config.layout.postList.homeMomentsCount
+ * - 开关：theme.config.layout.pageLayout.momentsBar.enable
+ *   （主题设置 → 页面布局 → 瞬间预览条，全站生效，默认关闭）
+ * - 数量：theme.config.layout.pageLayout.momentsBar.count
  *
- * 依赖：瞬间插件（提供 momentFinder）。插件未安装时 th:with 短路为 null，
- * 只渲染空态，绝不崩页。
+ * 依赖：瞬间插件（提供 momentFinder）。插件未安装时整条不渲染（不再退化为
+ * 空态常驻，否则未装插件的站点每页顶部都会多一条空卡片 + 死链）；
+ * 插件已装但一条瞬间都没有时仍渲染卡片并显示空态。
  */
 ---
 
 <section
   id="home-moments"
   class="card-base onload-animation relative mb-4 overflow-hidden px-4 py-4"
-  th:if="${theme.config?.layout?.postList?.showHomeMoments == null or theme.config?.layout?.postList?.showHomeMoments}"
-  th:with="homeMoments = ${momentFinder?.list({size: theme.config?.layout?.postList?.homeMomentsCount ?: 10})}"
+  th:if="${theme.config?.layout?.pageLayout?.momentsBar?.enable == true and momentFinder != null}"
+  th:with="homeMoments = ${momentFinder?.list({size: theme.config?.layout?.pageLayout?.momentsBar?.count ?: 10})}"
 >
+  <!-- 门槛 = 开关显式开启（默认关闭，故用 == true 而不是 != false）且插件已装
+       （momentFinder 存在）：插件缺失时整条不渲染，而不是退化成「空态常驻 +
+       指向不存在的 /moments 的死链」。
+       注意 th:if 只引用**外部变量** momentFinder，不引用同元素 th:with 定义的
+       homeMoments —— th:if(300) 先于 th:with(400) 求值，引用后者会恒为假。 -->
   <!-- 整条可点击覆盖层：空白区域点击跳 /moments（z-1，内容在 z-10 之上） -->
   <a
     th:href="@{/moments}"
     class="home-moments-overlay"
-    aria-label="查看我的瞬间"></a>
+    th:aria-label="#{page.moments.viewAll}"></a>
 
   <!-- ===== 顶部：跑马灯行 ===== -->
   <div class="relative z-10 flex flex-nowrap items-center gap-3">
@@ -121,10 +128,13 @@
     </a>
   </div>
 
-  <!-- ===== 底部：标签筛选 ===== -->
+  <!-- ===== 底部：标签筛选 =====
+       data-moments-url：站内链接前缀由服务端下发（@{/moments} 自带上下文路径），
+       供下方内联脚本拼标签链接；硬编码 "/moments" 在子路径部署时会 404。 -->
   <div
     id="home-moments-tags"
     class="relative z-10 mt-3 flex flex-wrap items-center gap-2"
+    th:data-moments-url="@{/moments}"
   >
   </div>
 </section>
@@ -299,7 +309,12 @@
       var marquee = document.getElementById("home-moments-marquee");
       var track = document.getElementById("home-moments-track");
       var tagsBox = document.getElementById("home-moments-tags");
-      if (!marquee || !track) return;
+      if (!marquee || !track) {
+        // 没有瞬间数据时 #home-moments-track 整块不渲染（th:if），走到这里就结束了。
+        // 提前 return 前先把空的标签容器隐藏，否则卡片底部会留一段空白。
+        if (tagsBox) tagsBox.style.display = "none";
+        return;
+      }
 
       // ===== 1. 富文本 → 首行纯文本回填，过滤空文本条目 =====
       track.querySelectorAll(".home-moment-text").forEach(function (el) {
@@ -365,6 +380,9 @@
       // DOM 型 XSS（历史缺陷）。
       if (tagsBox && tagsBox.getAttribute("data-rendered") !== "1") {
         tagsBox.setAttribute("data-rendered", "1");
+        // 站内链接前缀由服务端下发（@{/moments} 带上下文路径）：不硬编码 "/moments"，
+        // 否则站点部署在子路径下时标签胶囊会 404。
+        var momentsUrl = tagsBox.getAttribute("data-moments-url") || "/moments";
         var firstGroup = track.querySelector(".home-moments-group");
         var tagMap = new Map();
         if (firstGroup) {
@@ -387,7 +405,7 @@
           if (i >= MAX_TAGS) return;
           i++;
           var a = document.createElement("a");
-          a.href = "/moments?tag=" + encodeURIComponent(tag);
+          a.href = momentsUrl + "?tag=" + encodeURIComponent(tag);
           a.className = "home-moment-tag";
           a.textContent = "#" + tag;
           var c = document.createElement("span");

@@ -404,24 +404,26 @@ const {
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
       th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
     >
-      <!-- 全站瞬间条：置于 #main-grid 之上、#swup-container 之外，站内换页不掉、
-           直刷任意页也在（元素不随 Swup 替换）。是否渲染由 HomeMoments.astro 内部的
-           showHomeMoments 开关决定。
+      <!-- 面板顶部区：全站瞬间条 + banner 署名。
+           瞬间条置于 #main-grid 之上、#swup-container 之外，站内换页不掉、直刷任意页
+           也在（元素不随 Swup 替换）。是否渲染由 HomeMoments.astro 内部的
+           momentsBar.enable 开关（主题设置 → 页面布局 → 瞬间预览条）决定。
            banner 模式下的下推位移由 global.css 的 `.is-home.enable-banner
            #home-moments-wrap` 规则承担（与 #main-grid 同条件下推），否则 #main-grid
-           被下推而瞬间条不动，整条会相对下方内容向上偏移、贴在 banner 上。 -->
+           被下推而瞬间条不动，整条会相对下方内容向上偏移、贴在 banner 上。
+
+           ⚠️ banner 署名（#banner-credit）刻意放在本容器内、而不是 #main-grid 里：
+           横幅模式下 #main-grid 与 #home-moments-wrap 都会带 translate 下推，而
+           「transform/translate 生效的元素会成为内部绝对定位元素的包含块」—— 署名若留在
+           #main-grid 中，它的 `-top-13` 就从**网格顶边**（已被瞬间条顶下去）起算，署名会
+           落进瞬间条里把跑马灯文字盖住。放在本容器内与瞬间条同处一个 transform 子树：
+           无论瞬间条在不在、开不开横幅，署名都稳定地贴在容器顶边之上 3.25rem。 -->
       <div
         id="home-moments-wrap"
         class="pointer-events-auto px-0 md:px-4 transition duration-[var(--dur-banner,700ms)]"
       >
         <HomeMoments />
-      </div>
 
-      <div
-        id="main-grid"
-        class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
-        th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
-      >
         <!-- banner 署名链接：可见文本（credit.text）即天然可访问名，不设 aria-label
            （原硬编码 "Visit image source" 与可见文本不一致，触发 WCAG 2.5.3 违规）；
            url 未配置时（href 为空）整个链接不渲染，避免产生无效空链接 -->
@@ -443,7 +445,13 @@ const {
             class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"
           ></span>
         </a>
+      </div>
 
+      <div
+        id="main-grid"
+        class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
+        th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
+      >
         <!-- 主内容区 - 移动端第一项 -->
         <div
           class="col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2 flex flex-col gap-4"

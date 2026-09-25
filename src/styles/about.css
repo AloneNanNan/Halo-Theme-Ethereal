@@ -1,0 +1,1082 @@
+/* ==========================================================================
+   「关于我」页面（about.html）的卡片体系样式。
+   原先是 about.astro 里 <Fragment slot="head"> 内的 <style is:global> —— Astro 会把它
+   打成页面级 CSS 文件，与独立样式文件完全等价；抽出来的目的只是可维护性：
+   1700 行的页面模板里藏 970 行 CSS，改任何一处卡片样式都要跨千行滚动。
+
+   选择器全部以 .about-* 前缀命名，只作用于「关于我」页；由 about.astro 在
+   frontmatter 里 import（与 photos.astro 引入 photos-gallery-lightbox.css 同款）。
+   ========================================================================== */
+
+/* ==========================================================================
+   「关于我」卡片体系 —— 逐条对齐参考站 rainzt.cn/about/
+   参考站把卡级规则写在该页自己的样式表里（不在主题 .card-base）：
+     · 外壳   1px 细边（主色 14% 混分隔线）+ 大范围极淡投影
+     · 卡头   图标 1.08rem 主色 / 标题 1rem·780·-.015em / 尾标 .68rem
+     · 内嵌项 1px 分隔线边 + 半径 .78rem + 底 = 95% card-bg 混 5% 主色
+     · 可点内嵌项 hover：边 48% 主色 + 底 7% 主色 + 投影 + 上浮 2px
+   本主题与参考站同名同值（--radius-large / --line-divider / --card-bg / --primary），
+   数值可直接照搬；只补一个参考站有、本主题没有的 --content-meta。
+   ========================================================================== */
+
+/* 卡片作用域内补齐参考站的「次要文字色」（rgba .7 / .6 的等价物） */
+.about-hero-card,
+.about-subnav,
+.about-col-main > section,
+.about-col-side > section,
+.about-footer-card {
+  --content-meta: color-mix(in srgb, var(--deep-text) 68%, transparent);
+}
+
+/* ================= ① 卡级外壳 =================
+   ⚠️ 这里刻意**不加边框、不加阴影**（2026-09-12 LQ 明确要求）：
+   早前一度照参考站给这几张卡加了 1px 主色描边 + `box-shadow: 0 .7rem 1.8rem`，
+   但 LQ 认为「外面包一圈」不符合本主题的设计语言 —— 卡片应当直接融进页面背景，
+   只靠间距分隔，不加壳。改动前勿擅自补回（参考站有 ≠ 本主题要跟）。 */
+.about-hero-card,
+.about-col-main > section,
+.about-col-side > section,
+.about-footer-card {
+  border: none;
+  box-shadow: none;
+}
+
+/* ================= ② 页头：身份卡 =================
+   卡面保持纯净：不加顶部柔光（早前的 ::after 渐隐高光已于 2026-09-12 移除）。 */
+.about-hero-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.1rem, 2.5vw, 1.65rem);
+}
+/* 头像 = 主色描边相框 + 内层留白 + 圆角图（对齐参考站 .profile-avatar） */
+.about-avatar {
+  display: block;
+  flex: none;
+  width: 6.25rem;
+  height: 6.25rem;
+  padding: 0.22rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--line-divider));
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--primary) 8%, var(--card-bg));
+  box-shadow: 0 0.55rem 1.2rem
+    color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.about-avatar__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.95rem;
+  background: var(--card-bg);
+  object-fit: cover;
+}
+/* 姓名 / 身份 / 简介 / 状态：字号阶梯对齐参考站 */
+.about-name {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.2vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+.about-roles {
+  margin: 0.3rem 0 0;
+  color: var(--content-meta);
+  font-size: 0.9rem;
+}
+.about-tagline {
+  max-width: 42rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.97rem;
+  line-height: 1.7;
+}
+.about-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  margin-top: 0.85rem;
+  color: var(--content-meta);
+  font-size: 0.76rem;
+  font-family: inherit;
+  line-height: 1.2;
+}
+.about-status .about-ico {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--primary);
+}
+/* 绑定主题「在线状态」statusSettings 的胶囊形态（1.4.90）：
+   与侧栏头像卡的状态徽章同源，点击同样弹出切换模态框（profile-status.ts）。
+   胶囊描边/底色走 var(--primary) ⇒ 跟随主题色相与访客色相面板。 */
+.about-status-pill {
+  gap: 0.5rem;
+  padding: 0.34rem 0.85rem;
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line-divider));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  cursor: pointer;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background-color 0.18s,
+    box-shadow 0.18s;
+}
+.about-status-pill:hover {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line-divider));
+  background: color-mix(in srgb, var(--primary) 11%, transparent);
+  box-shadow: 0 0 0.6rem color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.about-status-pill:active {
+  transform: scale(0.97);
+}
+.about-status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.about-status-ico {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+.about-status-text {
+  color: var(--content-meta);
+  white-space: nowrap;
+}
+
+/* ================= ③ 页头按钮 =================
+   刻意保持与「心愿墙」页 .wish-bar-btn 逐属性一致（早前明确要求），
+   不跟参考站的 .profile-action 走。 */
+/* 2026-09-13：移动端改为**并排等宽两个**（原先纵向堆叠，LQ 要求对齐参考站）；
+   ≥640px 仍回到纵向堆叠、与身份卡并排。
+   只动容器布局 —— .about-btn 自身与「心愿墙」页 .wish-bar-btn 的逐属性一致保持不变。 */
+/* 按钮列：条目竖排（数量上限由设置项的 max: 3 管）。
+   它是身份卡行（.about-hero-card 的首个 div）的第三个 flex item，与头像、文字列并列：
+   ≥640px 行容器为 sm:items-center ⇒ 整列相对头像 / 文字列**垂直居中**；
+   <640px 行容器转纵向 flex，本列被拉伸为整宽 ⇒ 按钮自动变成整宽竖排。
+   第 1 个按钮带 .about-btn--primary（主题色高亮），其余 .about-btn--ghost。 */
+.about-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .about-hero-actions {
+    /* 统一最小宽度：避免文字很短时按钮缩成小胶囊，与右列观感不齐 */
+    min-width: 9.2rem;
+    align-items: stretch;
+  }
+}
+.about-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+.about-ico {
+  width: 1.05em;
+  height: 1.05em;
+  flex-shrink: 0;
+}
+/* iconify(format: svg) 注入的是内联 <svg>，自带 width/height="24" 这类绝对像素，
+   必须按 em 重设尺寸，否则 24px 会撑破所在行高。fill 已是 currentColor，跟随文字色。
+   顶部导航条目 / 身份卡按钮 / 技能胶囊三处共用本规则（与 .about-connect-icon > svg 同款处理）。 */
+.about-ico--svg > svg {
+  display: block;
+  width: 1.12em;
+  height: 1.12em;
+}
+.about-btn--primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--primary) 40%, transparent);
+}
+:root.dark .about-btn--primary {
+  color: rgb(0 0 0 / 0.7);
+}
+.about-btn--primary:hover {
+  background: color-mix(in oklab, var(--primary) 85%, #000);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 50%, transparent);
+}
+:root.dark .about-btn--primary:hover {
+  background: color-mix(in oklab, var(--primary) 85%, #fff);
+}
+.about-btn--ghost {
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  border: 1px solid var(--line-color);
+}
+.about-btn--ghost:hover {
+  background: var(--btn-regular-bg-hover);
+  color: var(--primary);
+  border-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  transform: translateY(-1px);
+}
+
+/* ================= ④ 顶部导航（长条菜单） =================
+   视觉对齐「导航栏 → 显示设置」面板里的「外观 / 壁纸」Tab（DisplaySettings.svelte）：
+   条目 = 图标 + 文字；未选中走次级文字色、选中的文字回到正文色，选中态在条目下方
+   居中显示一小段主题色胶囊短横线（.panel-tab-on::after 同款），而不是整条底边描边。 */
+.about-subnav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.25rem;
+  /* 左右留出内边距，左对齐时首个条目不会贴到卡片边缘（面板 Tab 栏同款做法） */
+  padding: 0 1rem;
+  overflow-x: auto;
+  /* 与卡片一致：不加边框 / 阴影，只靠底色与下方主色短横线区分（2026-09-12 去壳） */
+  border: none;
+  border-radius: var(--radius-large);
+  background: color-mix(in srgb, var(--card-bg) 94%, transparent);
+  box-shadow: none;
+  scrollbar-width: none;
+}
+.about-subnav::-webkit-scrollbar {
+  display: none;
+}
+.about-subnav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-width: max-content;
+  /* 关键：让**文字字形**在卡片里视觉垂直居中。
+     中文没有下伸部，行框（line-height 1.5）在字形下方留的空白比上方少约 0.2rem，
+     所以下内边距要比上边大这么多才能"看起来"居中（上方 0.8rem+行距 ≈ 下方 1rem）。
+     ⚠️ 不要为了把横线往下推而加大下内边距：那会把三条标签整体顶高，
+     底部拖出一条空白，整条导航看着就"怪"（这一版之前踩过）。
+     下内边距同时给 ::after 留了位置：1rem = 横线定位 0.6rem + 横线高 0.25rem + 文字到横线间隙。 */
+  padding: 0.8rem 0.5rem 1rem;
+  color: var(--content-meta);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+/* 选中短横线：未选中宽度 0（不占位），选中展开为 1.25rem。
+   bottom 取 0.6rem：横线紧贴标签下方（约 5px），离卡片底边约 10px，不贴边也不游离；
+   卡片加高时这个值要跟着下内边距一起加，才能保持「文字 ↔ 横线」的间距不变 */
+.about-subnav-item::after {
+  content: "";
+  position: absolute;
+  bottom: 0.6rem;
+  left: 50%;
+  width: 0;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  transform: translateX(-50%);
+  transition: width 0.15s ease-in-out;
+}
+.about-subnav-item .about-ico {
+  width: 1.12em;
+  height: 1.12em;
+  opacity: 0.9;
+}
+.about-subnav-item:hover,
+.about-subnav-item:focus-visible {
+  color: var(--deep-text);
+  outline: none;
+}
+/* 选中：文字回到正文色 + 主题色短横线（同面板 Tab 的选中态） */
+.about-subnav-item.is-active {
+  color: var(--deep-text);
+}
+.about-subnav-item.is-active::after {
+  width: 1.25rem;
+}
+.about-subnav-item.is-active .about-ico {
+  opacity: 1;
+}
+
+/* ================= ⑤ 两栏布局（按容器宽度分档） ================= */
+.about-cols-wrap {
+  container-type: inline-size;
+}
+.about-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+/* 内容列自身够宽（≥880px）才分两栏 */
+@container (min-width: 880px) {
+  .about-cols {
+    grid-template-columns: minmax(0, 1fr) 288px;
+  }
+}
+/* 卡片内边距：主列与侧列统一取同一个值。
+   原先侧列写死 1rem、主列是 clamp(1rem,2.5vw,1.45rem)，同一容器内两列卡片的
+   水平内边距差了 0.45rem（宽屏）⇒ 标题到卡片左右边缘的留白不一致，侧列看着"贴边"。
+   现两列共用一套值；窄屏档（≤640px）两者仍然都是 0.9rem。
+   1.4.x：整体再收一档（宽屏 1.45rem → 1.15rem）—— 带主题色竖线的卡片标题，
+   上方与右侧都是纯空白，原来是卡片里最"空"的两处；四边同比收窄后标题不再悬在
+   右上角一大片留白里，同时避免只收上/右造成的内容偏心。 */
+.about-col-main > section,
+.about-col-side > section {
+  padding: clamp(0.9rem, 2.2vw, 1.15rem);
+}
+.about-col-main,
+.about-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+/* 卡头与其下正文的间距。
+   卡头下原先还有一条 1px 分隔线（等价于参考站 .profile-readme__body 的 border-top），
+   现按「标题下不加横线」去掉，只用留白区分卡头与正文；若要恢复，加回
+   border-bottom: 1px solid var(--line-divider)。
+   主列卡头行（.about-card-head-row）与侧列卡头（.about-card-head）共用同一套规则。
+   用语义类选中，**不依赖 Tailwind 工具类**（原写法 .mb-5:first-child 在有人把
+   间距改成 mb-4 或给卡头加一层 wrapper 时会静默失效）。 */
+.about-card-head-row,
+.about-card-head {
+  padding-bottom: 0.5rem;
+}
+/* 主列卡头行是 <section> 的首个子元素，再给一个下外边距拉开与正文的距离 */
+.about-col-main > section > .about-card-head-row {
+  margin-bottom: 0.75rem;
+}
+
+/* ================= ⑥ 小区块标签 kicker = 参考站 .profile-section-kicker ================= */
+.about-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin: 0;
+  color: var(--primary);
+  font-size: 0.6rem;
+  font-weight: 780;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+/* 卡头右侧的「更多 →」= 参考站 .profile-section-link */
+.about-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--content-meta);
+  font-size: 0.72rem;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.about-section-link:hover,
+.about-section-link:focus-visible {
+  color: var(--primary);
+  outline: none;
+}
+/* ================= ⑦ 引语 = 重点信息块（参考侧栏公告的 .hl 块） =================
+   左侧 3px 主题色竖条 + 浅主题色底（10%）+ 右侧圆角、左端直角；
+   文字深色加粗、字号大一号，作为身份卡的开篇锚点。
+   （原来是「1px 主题色描边包围 + 7% 底」，与公告那套重点块不统一。） */
+.about-quote {
+  margin: 0 0 1.15rem;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 0.7rem 0.7rem 0;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--deep-text);
+  font-size: clamp(1rem, 1.8vw, 1.18rem);
+  font-weight: 700;
+  line-height: 1.7;
+  font-style: normal;
+  /* 引语在设置里是 textarea（本来就能敲换行），但 th:text 直出时默认的
+     white-space: normal 会把换行折叠成空格 ⇒ 看着像「不支持换行」。
+     用 pre-line：保留换行、其余空白照常折叠。 */
+  white-space: pre-line;
+}
+
+/* ================= ⑧ 正文段落 = 参考站 .profile-markdown p ================= */
+.about-paragraphs > p {
+  max-width: 72ch;
+  margin: 0.85rem 0 0;
+  color: var(--content-meta);
+  font-size: 0.92rem;
+  line-height: 1.9;
+}
+.about-paragraphs > p:first-child {
+  margin-top: 0;
+}
+
+/* ================= ⑨ 内嵌卡片：项目 = 参考站 .project-card ================= */
+.about-proj-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+/* 横向网格：正文 | 右上箭头（无封面图、无图标：插件没有图标字段，见模板注释） */
+.about-proj {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.82rem;
+  /* 描边取主题色：与友链页面 /links 的链接卡片（.btn-card-outline）同款 */
+  border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  border-radius: 0.78rem;
+  background: color-mix(in srgb, var(--card-bg) 95%, var(--primary) 5%);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.18s,
+    border-color 0.18s,
+    background-color 0.18s,
+    box-shadow 0.18s;
+}
+/* 悬停反馈分两层：
+   ① 颜色层（描边 + 底 + 标题转主题色）恒定，不受开关影响，保证「可点」永远看得出来；
+   ② 位移 + 阴影层接入主题「样式开关 → 卡片悬浮效果」（body.card-hover-lift-enabled），
+      与 .card-hover-lift 共用同一套判定，桌面端（≥768px）生效。 */
+.about-proj:hover,
+.about-proj:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--line-divider));
+  background: color-mix(in srgb, var(--primary) 7%, var(--card-bg));
+  outline: none;
+}
+@media (min-width: 768px) {
+  body.card-hover-lift-enabled .about-proj:hover,
+  body.card-hover-lift-enabled .about-proj:focus-visible {
+    box-shadow: 0 0.55rem 1.25rem
+      color-mix(in srgb, var(--primary) 10%, transparent);
+    transform: translateY(-2px);
+  }
+}
+.about-proj__body {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.about-proj__title {
+  overflow: hidden;
+  color: var(--deep-text);
+  /* 没有图标方块后标题成了卡片视觉锚点，字号上调一档并给悬停反馈 */
+  font-size: 0.92rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.18s;
+}
+.about-proj:hover .about-proj__title,
+.about-proj:focus-visible .about-proj__title {
+  color: var(--primary);
+}
+.about-proj__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--content-meta);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.about-proj__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+/* 项目卡底部技术标签 = 参考站 .project-card__tags em */
+.about-proj__tech i {
+  font-style: normal;
+  padding: 0.18rem 0.34rem;
+  border-radius: 0.35rem;
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  font-size: 0.6rem;
+  line-height: 1.2;
+}
+/* 外链箭头 = 参考站 .project-card__arrow / .activity-arrow */
+.about-proj__arrow,
+.about-activity-arrow {
+  color: var(--content-meta);
+  font-size: 0.95rem;
+  transition:
+    color 0.18s,
+    transform 0.18s;
+}
+.about-proj:hover .about-proj__arrow,
+.about-proj:focus-visible .about-proj__arrow,
+.about-activity:hover .about-activity-arrow {
+  color: var(--primary);
+  transform: translate(0.1rem, -0.1rem);
+}
+
+/* ================= ⑪ 卡头 = 参考站 .profile-panel__header / .profile-side-heading =================
+   卡头与正文的间距由 ⑤ 的共用规则提供（.about-card-head 与 .about-card-head-row），
+   不再有下方分隔线。 */
+.about-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.8rem;
+}
+/* 卡头 = 装饰竖线 + 标题（不再有主题色小标题）：竖线沿用文章卡标题的同款装饰条
+   （0.25rem 宽、0.375rem 圆角、--primary），但在卡片内改为随标题流式排布 ——
+   .post-card-title 那套绝对定位左移 18px 在卡片内边距里会溢出卡片。
+   竖线高度取 1.125rem：主题里竖线一贯比标题字号矮一档（小组件 text-lg 配 1rem 竖线、
+   文章卡 text-3xl 配 1.25rem 竖线），这里跟着标题同样矮一档。 */
+.about-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  /* 比侧栏小组件标题（WidgetLayout 的 text-lg = 1.125rem）大一号 = text-xl */
+  font-size: 1.25rem;
+  font-weight: 780;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+.about-card-title::before {
+  content: "";
+  flex: none;
+  width: 0.25rem;
+  height: 1.125rem;
+  border-radius: 0.375rem;
+  background: var(--primary);
+}
+
+/* ================= ⑫ 我的朋友（带头像卡片墙）/ 我的技能（标签胶囊） =================
+   2026-09-13 改版：两个卡片原本共用 .about-friend / .about-tag-chip 一套胶囊样式，
+   现在「我的朋友」升级为带头像卡片墙 ⇒ **必须解耦**，否则我的技能会被一起改掉。
+   · .about-friends / .about-friend*  → 卡片墙（圆形 logo + 名称 + 描述，2 列）
+   · .about-tag-list / .about-tag-chip → 仍是胶囊（保持参考站 .stack-list 青色系） */
+.about-friends {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+/* 我的技能分组：组名 + 一组胶囊。组间纵向排列，组内胶囊自动换行。
+   外边距统一由 .about-skill-groups 控制，所以 .about-tag-list 自身不再带上边距。 */
+.about-skill-groups {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+.about-skill-group-title {
+  margin: 0 0 0.4rem;
+  color: var(--content-meta);
+  font-size: 0.7rem;
+  font-weight: 720;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+.about-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* ---- 友链卡片：圆形头像 + 名称 / 描述两行 ----
+   视觉目标：像「一排名片」而不是「一排按钮」。
+   · 圆形 logo 弱化轮廓，让名称成为主角
+   · 描述行降一级颜色、单行省略，避免长短不一撑破网格
+   · 悬停：描边提亮 + 淡主色底（恒定），上浮 1px 受「卡片悬浮效果」开关控制 */
+.about-friend {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  /* 描边取主题色：与友链页面 /links 的链接卡片（.btn-card-outline）同款 */
+  border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
+  color: var(--btn-content);
+  text-decoration: none;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background-color 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s;
+}
+.about-friend:hover,
+.about-friend:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 48%, transparent);
+  background: color-mix(in srgb, var(--primary) 9%, var(--card-bg));
+  color: var(--primary);
+  outline: none;
+}
+/* 上浮只在桌面端（触屏没有 hover，位移反而造成「点了没反应」的错觉），
+   并接入主题「样式开关 → 卡片悬浮效果」（body.card-hover-lift-enabled）：
+   开关关闭时只保留上方的描边 / 底色 / 文字色反馈，不再上浮 */
+@media (hover: hover) and (pointer: fine) {
+  body.card-hover-lift-enabled .about-friend:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 14%, transparent);
+  }
+}
+.about-friend-logo,
+.about-friend-logo-ph {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--btn-regular-bg);
+}
+.about-friend-logo {
+  display: block;
+  object-fit: cover;
+}
+.about-friend-logo-ph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 0.75rem;
+}
+.about-friend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.about-friend-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 描述：降一级颜色（复用本页 --content-meta）+ 单行省略 */
+.about-friend-desc {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--content-meta);
+  font-size: 0.6rem;
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 胶囊本体（我的技能专用，服务端 th:each 渲染，不再是 JS 生成）。
+   ⚠️ 2026-09-13 起「我的朋友」已是卡片墙，**不要加入本规则** ——
+   原来两者共用一套胶囊样式，改版时必须解耦，否则卡片被当胶囊渲染。
+   胶囊结构 = iconify 图标（可选，技能自己的图标）+ 技能名，纯展示、不可点
+   （曾试过点击跳技能页分类，已按需求砍掉）；图标走 currentColor，跟随胶囊文字色。 */
+.about-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--line-divider));
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--primary) 6%, var(--card-bg));
+  color: var(--btn-content);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background-color 0.18s;
+}
+/* 名称过长时省略：inline-flex 容器自身出不了省略号，交给末位文字节点 */
+.about-tag-chip > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.about-tag-chip:hover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
+  color: var(--primary);
+}
+/* 1.4.90：删掉参考站 .stack-list 的硬编码青色（#42c7b0 / #159b8b）覆写，
+   回归上方基础规则的 var(--primary) ⇒ 胶囊效果跟随主题色相
+   （含后台主题色与访客面板色相），符合本主题视觉语言。 */
+
+/* ================= ⑬ 保持联系 = 参考站 .profile-connect-list ================= */
+.about-connect-list {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.about-connect {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.47rem 0.45rem;
+  border-radius: 0.45rem;
+  color: var(--content-meta);
+  font-size: 0.74rem;
+  text-decoration: none;
+  transition:
+    background-color 0.18s,
+    color 0.18s,
+    padding-left 0.18s;
+}
+/* 悬停：浅主题色底 + 内容整体向右位移 0.25rem（同「最近提交」的 .about-activity-body：
+   左内边距 0.45rem → 0.7rem，其余内边距不变，位移的是图标 / 文字 / 箭头整行） */
+.about-connect:hover,
+.about-connect:focus-visible {
+  background: color-mix(in srgb, var(--primary) 8%, var(--card-bg));
+  color: var(--primary);
+  padding-left: 0.7rem;
+  outline: none;
+}
+.about-connect > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.about-connect-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+/* 个人简介小组件的社交图标是 iconify 的 svg 形态（format: svg），
+   输出自带 width/height="24" 这类**绝对像素**，必须按 em 重设尺寸，
+   否则 24px 会撑破 1.1rem 的图标列。fill 已是 currentColor，跟着上面的
+   color 走（默认次要灰、hover 主色）。 */
+.about-connect-icon > svg {
+  display: block;
+  width: 1.05em;
+  height: 1.05em;
+}
+/* 右上角箭头：与「最近提交」的 .about-activity-arrow 同一套动效 ——
+   hover / focus 时变主题色并向右上飘 0.1rem。
+   这里显式声明 color（原先靠继承 .about-connect 的颜色）只是为了让颜色过渡
+   由箭头自己控制，跟 .about-activity-arrow 的写法保持一致。 */
+.about-connect-arrow {
+  color: var(--content-meta);
+  font-size: 0.82rem;
+  transition:
+    color 0.18s,
+    transform 0.18s;
+}
+.about-connect:hover .about-connect-arrow,
+.about-connect:focus-visible .about-connect-arrow {
+  color: var(--primary);
+  transform: translate(0.1rem, -0.1rem);
+}
+
+/* ================= ⑭ 最近的提交：时间轴 = 参考 时间轴页 .timeline-list/.timeline-node
+   ＋ 朋友圈 .friends-timeline ＋ 归档页 .dash-line =================
+   三套的取法：轴线用「朋友圈 / 归档页」的 2px 虚线基调；节点用「时间轴页」的实心圆点
+   ＋ hover 放大与主题色光环；日期前置单列在标题上方，沿用朋友圈「日期在上、内容在下」。 */
+.about-activity-list {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* 纵向轴线：从首个节点起到末个节点止，两端不收口更像一条完整时间线 */
+.about-activity-list::before {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  width: 2px;
+  border-left: 2px dashed var(--line-color);
+  pointer-events: none;
+}
+.about-activity {
+  position: relative;
+  min-width: 0;
+  /* 让开轴线与节点：节点中心落在 0.5rem 处 */
+  padding-left: 1.75rem;
+}
+/* 节点圆点：主题色实心 + 卡片底色描边（描边把背后的虚线挡掉，视觉上「穿」在轴线上） */
+.about-activity-dot {
+  position: absolute;
+  left: 0.28rem;
+  top: 0.62rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--primary);
+  outline: 0.14rem solid var(--card-bg);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+/* 最新一条（DOM 首位）的节点高亮：更大的实心点 + 常亮主题色光环（静态，不做动效）。
+   为什么选 :first-child —— 客户端按 data-time 归并后 DOM 首位就是最新项，
+   纯 CSS 即可命中，无需 JS 额外打标记；无 JS 时首位是第一篇文章，也说得通。 */
+.about-activity-list > .about-activity:first-child .about-activity-dot {
+  left: 0.23rem;
+  top: 0.57rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--primary) 20%, transparent);
+}
+/* 行内容整体可点（含右上角箭头，悬停高亮胶囊要把箭头一起包住）：
+   左列 = 日期 + 类型胶囊 → 标题，右列 = 箭头（顶对齐，钉在右上角） */
+.about-activity-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.42rem 0.5rem;
+  border-radius: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background-color 0.18s,
+    padding-left 0.18s;
+}
+/* 悬停：浅主题色底 + 内容整体向右位移 0.25rem（同侧栏小组件 px-3 → pl-4 的写法） */
+.about-activity-body:hover,
+.about-activity-body:focus-visible {
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  padding-left: 0.75rem;
+  outline: none;
+}
+/* 左列两行：日期 + 类型胶囊 → 标题 */
+.about-activity-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.26rem;
+  min-width: 0;
+}
+.about-activity-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.about-activity-date {
+  color: var(--primary);
+  font-size: 0.66rem;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+/* 类型胶囊：文章 / 瞬间 */
+.about-activity-kind {
+  padding: 0.08rem 0.38rem;
+  border-radius: 9999px;
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.about-activity-title {
+  overflow: hidden;
+  color: var(--deep-text);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.18s;
+}
+.about-activity-body:hover .about-activity-title,
+.about-activity-body:focus-visible .about-activity-title {
+  color: var(--primary);
+}
+/* 悬停：节点放大 + 主题色光环（借时间轴页 .timeline-node:hover 的 scale(1.15)） */
+.about-activity:hover .about-activity-dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--primary) 16%, transparent);
+}
+/* 右上角箭头：行高归 1，免得继承 1.45 把盒子撑高、视觉上沉到日期行之下 */
+.about-activity-arrow {
+  line-height: 1;
+}
+
+/* ================= ⑰ 页脚卡 = 参考站 .profile-footer ================= */
+/* ⚠️ margin-top 不能省：外层 th:with 容器带 th:remove="tag"，渲染后页脚卡是
+   .about-cols-wrap 的**直接兄弟**，而 .about-cols-wrap 没有下外边距 ⇒
+   不加这条时页脚卡与两栏区块的间距是 0，和全页 1rem 的节奏对不上。
+   用「上外边距」而不是给 .about-cols-wrap 补下外边距：页脚卡被隐藏时不留空档。 */
+section.about-footer-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
+}
+.about-footer-motto {
+  margin: 0.38rem 0 0;
+  color: var(--deep-text);
+  font-size: 0.86rem;
+  font-weight: 680;
+  line-height: 1.4;
+}
+.about-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+.about-footer-links > a {
+  display: inline-flex;
+  align-items: center;
+  /* 0.3rem：与「我的技能」胶囊的图标间距对齐（两边都是 0.7rem 字号 + 可选内联图标） */
+  gap: 0.3rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line-divider));
+  border-radius: 0.5rem;
+  color: var(--primary);
+  font-size: 0.7rem;
+  text-decoration: none;
+  transition:
+    background-color 0.18s,
+    border-color 0.18s;
+}
+.about-footer-links > a:hover,
+.about-footer-links > a:focus-visible {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
+  outline: none;
+}
+
+/* ================= ⑱ 窄屏档 = 参考站 ≤640px 那一组 ================= */
+@media (max-width: 640px) {
+  .about-cols {
+    gap: 0.75rem;
+  }
+  .about-hero-card {
+    padding: 1rem;
+  }
+  .about-col-main > section,
+  .about-col-side > section {
+    padding: 0.9rem;
+    border-radius: 0.95rem;
+  }
+  .about-col-main,
+  .about-col-side {
+    gap: 0.75rem;
+  }
+  .about-avatar {
+    width: 4.75rem;
+    height: 4.75rem;
+    border-radius: 1rem;
+  }
+  .about-avatar__image {
+    border-radius: 0.8rem;
+  }
+  .about-name {
+    font-size: 1.55rem;
+  }
+  .about-roles {
+    font-size: 0.78rem;
+  }
+  .about-tagline {
+    margin-top: 0.6rem;
+    font-size: 0.84rem;
+    line-height: 1.65;
+  }
+  .about-status {
+    margin-top: 0.6rem;
+    font-size: 0.68rem;
+  }
+  .about-subnav {
+    gap: 0.9rem;
+    padding: 0 0.75rem;
+    border-radius: 0.85rem;
+  }
+  .about-subnav-item {
+    /* 只收窄左右内边距与字号：上下内边距沿用基础值，
+       免得「文字到顶边 = 横线到底边」的配比在窄屏被打破 */
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+    font-size: 0.8rem;
+  }
+  .about-section-link {
+    font-size: 0.62rem;
+  }
+  .about-proj-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* 友链卡片墙：窄屏两列会挤成「名称只剩两个字」⇒ 降为单列 */
+  .about-friends {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* 参考站 ≤640px：内嵌卡整体缩一档（图标已去掉，只留正文列 + 箭头列） */
+  .about-proj {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    padding: 0.72rem;
+  }
+  .about-proj__title {
+    font-size: 0.87rem;
+  }
+  .about-proj__desc {
+    font-size: 0.7rem;
+  }
+  /* 时间轴窄屏：轴线与节点整体左移收窄，标题缩一档 */
+  .about-activity {
+    padding-left: 1.5rem;
+  }
+  .about-activity-list::before {
+    left: 0.42rem;
+  }
+  .about-activity-dot {
+    left: 0.2rem;
+  }
+  /* 首位高亮点比常规点大一圈，左值同步左挪，圆心仍落在轴线上 */
+  .about-activity-list > .about-activity:first-child .about-activity-dot {
+    left: 0.15rem;
+  }
+  .about-activity-title {
+    font-size: 0.74rem;
+  }
+  section.about-footer-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 0.9rem;
+  }
+  .about-footer-links {
+    justify-content: flex-start;
+  }
+}
+
+/* ================= ⑲ 尊重「减少动态效果」 ================= */
+@media (prefers-reduced-motion: reduce) {
+  .about-friend,
+  .about-connect,
+  .about-proj,
+  .about-activity-body,
+  .about-activity-dot,
+  .about-activity-title,
+  .about-proj__arrow,
+  .about-activity-arrow,
+  .about-connect-arrow,
+  .about-subnav-item,
+  .about-subnav-item::after,
+  .about-footer-links > a {
+    transition: none;
+  }
+  .about-proj:hover,
+  .about-proj:focus-visible,
+  .about-activity:hover .about-activity-dot {
+    transform: none;
+  }
+}

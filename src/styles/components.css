@@ -1217,7 +1217,7 @@ body.pswp-transition #photo-detail-image {
   transition: none !important;
 }
 
-/* 朋友圈时间轴 - 纵向虚线布局
+/* 朋友圈时间轴 - 纵向虚线布局 */
 .friends-timeline {
   display: flex;
   flex-direction: column;

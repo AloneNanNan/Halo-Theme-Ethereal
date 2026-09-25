@@ -3,1002 +3,29 @@
 // 数据来自主题设置「扩展页面 → 关于我页面」→ theme.config.extendPages.about。
 //
 // 布局：身份卡（横跨）→ 顶部导航（横跨）→ 两栏
-//   主列：关于我 / 本人项目 / 更新系列 / 最近的提交
-//   侧列：技术轨迹 / 我的朋友 / 保持联系
-//   （「我的朋友」位于技术轨迹下方，带头像卡片墙）
+//   主列：关于我 / 本人项目 / 最近的提交
+//   侧列：我的技能 / 我的朋友 / 保持联系
+//   （「我的朋友」位于我的技能下方，带头像卡片墙）
 // 两栏按**容器宽度**分档（≥880px 才分栏），不跟视口走 —— 见 .about-cols-wrap。
-// 多行字段（正文/标签/联系方式）由 extend-pages.js 在客户端渲染。
-// 友链取自 Halo 友链插件的 groups（按需随机展示 N 个）。
+// 「关于我正文」由 extend-pages.js 在客户端按段落渲染；其余字段都已服务端直出。
+// 「本人项目」取自「项目集」插件的项目、「我的技能」取自技能页面配置。
+// 友链取自 Halo 友链插件的 linkFinder.random(N)（每次请求随机取 N 条，N 可在主题设置里调）。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import "../styles/about.css";
 ---
 
 <MainGridLayout
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.about.description(${site.title})}"
 >
-  <Fragment slot="head">
-    <style is:global>
-      /* ==========================================================================
-         「关于我」卡片体系 —— 逐条对齐参考站 rainzt.cn/about/
-         参考站把卡级规则写在该页自己的样式表里（不在主题 .card-base）：
-           · 外壳   1px 细边（主色 14% 混分隔线）+ 大范围极淡投影
-           · 卡头   图标 1.08rem 主色 / 标题 1rem·780·-.015em / 尾标 .68rem
-           · 内嵌项 1px 分隔线边 + 半径 .78rem + 底 = 95% card-bg 混 5% 主色
-           · 可点内嵌项 hover：边 48% 主色 + 底 7% 主色 + 投影 + 上浮 2px
-         本主题与参考站同名同值（--radius-large / --line-divider / --card-bg / --primary），
-         数值可直接照搬；只补一个参考站有、本主题没有的 --content-meta。
-         ========================================================================== */
-
-      /* 卡片作用域内补齐参考站的「次要文字色」（rgba .7 / .6 的等价物） */
-      .about-hero-card,
-      .about-subnav,
-      .about-col-main > section,
-      .about-col-side > section,
-      .about-footer-card {
-        --content-meta: color-mix(in srgb, var(--deep-text) 68%, transparent);
-      }
-
-      /* ================= ① 卡级外壳 =================
-         ⚠️ 这里刻意**不加边框、不加阴影**（2026-09-12 LQ 明确要求）：
-         早前一度照参考站给这几张卡加了 1px 主色描边 + `box-shadow: 0 .7rem 1.8rem`，
-         但 LQ 认为「外面包一圈」不符合本主题的设计语言 —— 卡片应当直接融进页面背景，
-         只靠间距分隔，不加壳。改动前勿擅自补回（参考站有 ≠ 本主题要跟）。 */
-      .about-hero-card,
-      .about-col-main > section,
-      .about-col-side > section,
-      .about-footer-card {
-        border: none;
-        box-shadow: none;
-      }
-
-      /* ================= ② 页头：身份卡 =================
-         卡面保持纯净：不加顶部柔光（早前的 ::after 渐隐高光已于 2026-09-12 移除）。 */
-      .about-hero-card {
-        position: relative;
-        overflow: hidden;
-        padding: clamp(1.1rem, 2.5vw, 1.65rem);
-      }
-      /* 头像 = 主色描边相框 + 内层留白 + 圆角图（对齐参考站 .profile-avatar） */
-      .about-avatar {
-        display: block;
-        flex: none;
-        width: 6.25rem;
-        height: 6.25rem;
-        padding: 0.22rem;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 32%, var(--line-divider));
-        border-radius: 1.2rem;
-        background: color-mix(in srgb, var(--primary) 8%, var(--card-bg));
-        box-shadow: 0 0.55rem 1.2rem
-          color-mix(in srgb, var(--primary) 12%, transparent);
-      }
-      .about-avatar__image {
-        display: block;
-        width: 100%;
-        height: 100%;
-        border-radius: 0.95rem;
-        background: var(--card-bg);
-        object-fit: cover;
-      }
-      /* 姓名 / 身份 / 简介 / 状态：字号阶梯对齐参考站 */
-      .about-name {
-        margin: 0;
-        font-size: clamp(1.7rem, 3.2vw, 2.35rem);
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-      }
-      .about-roles {
-        margin: 0.3rem 0 0;
-        color: var(--content-meta);
-        font-size: 0.9rem;
-      }
-      .about-tagline {
-        max-width: 42rem;
-        margin: 0.75rem 0 0;
-        font-size: 0.97rem;
-        line-height: 1.7;
-      }
-      .about-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.48rem;
-        margin-top: 0.85rem;
-        color: var(--content-meta);
-        font-size: 0.76rem;
-        font-family: inherit;
-        line-height: 1.2;
-      }
-      .about-status .about-ico {
-        width: 0.95rem;
-        height: 0.95rem;
-        color: var(--primary);
-      }
-      /* 绑定主题「在线状态」statusSettings 的胶囊形态（1.4.90）：
-         与侧栏头像卡的状态徽章同源，点击同样弹出切换模态框（profile-status.ts）。
-         胶囊描边/底色走 var(--primary) ⇒ 跟随主题色相与访客色相面板。 */
-      .about-status-pill {
-        gap: 0.5rem;
-        padding: 0.34rem 0.85rem;
-        appearance: none;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 22%, var(--line-divider));
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--primary) 7%, transparent);
-        cursor: pointer;
-        transition:
-          color 0.18s,
-          border-color 0.18s,
-          background-color 0.18s,
-          box-shadow 0.18s;
-      }
-      .about-status-pill:hover {
-        border-color: color-mix(
-          in srgb,
-          var(--primary) 55%,
-          var(--line-divider)
-        );
-        background: color-mix(in srgb, var(--primary) 11%, transparent);
-        box-shadow: 0 0 0.6rem
-          color-mix(in srgb, var(--primary) 16%, transparent);
-      }
-      .about-status-pill:active {
-        transform: scale(0.97);
-      }
-      .about-status-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 0;
-      }
-      .about-status-ico {
-        display: inline-block;
-        width: 1rem;
-        height: 1rem;
-        flex: none;
-      }
-      .about-status-text {
-        color: var(--content-meta);
-        white-space: nowrap;
-      }
-
-      /* ================= ③ 页头按钮 =================
-         刻意保持与「心愿墙」页 .wish-bar-btn 逐属性一致（早前明确要求），
-         不跟参考站的 .profile-action 走。 */
-      /* 2026-09-13：移动端改为**并排等宽两个**（原先纵向堆叠，LQ 要求对齐参考站）；
-         ≥640px 仍回到纵向堆叠、与身份卡并排。
-         只动容器布局 —— .about-btn 自身与「心愿墙」页 .wish-bar-btn 的逐属性一致保持不变。 */
-      .about-hero-actions {
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        width: 100%;
-      }
-      .about-hero-actions > .about-btn {
-        flex: 1 1 0;
-        min-width: 0;
-      }
-      @media (min-width: 640px) {
-        .about-hero-actions {
-          flex-direction: column;
-          width: auto;
-          min-width: 9.2rem;
-          align-items: stretch;
-        }
-        .about-hero-actions > .about-btn {
-          flex: 0 0 auto;
-        }
-      }
-      .about-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 9px 18px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1;
-        white-space: nowrap;
-        text-decoration: none;
-        transition: all 0.25s ease;
-      }
-      .about-ico {
-        width: 1.05em;
-        height: 1.05em;
-        flex-shrink: 0;
-      }
-      .about-ico--xs {
-        width: 0.85em;
-        height: 0.85em;
-        opacity: 0.75;
-      }
-      .about-btn--primary {
-        background: var(--primary);
-        color: #fff;
-        border: none;
-        box-shadow: 0 2px 8px
-          color-mix(in oklab, var(--primary) 40%, transparent);
-      }
-      :root.dark .about-btn--primary {
-        color: rgb(0 0 0 / 0.7);
-      }
-      .about-btn--primary:hover {
-        background: color-mix(in oklab, var(--primary) 85%, #000);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px
-          color-mix(in oklab, var(--primary) 50%, transparent);
-      }
-      :root.dark .about-btn--primary:hover {
-        background: color-mix(in oklab, var(--primary) 85%, #fff);
-      }
-      .about-btn--ghost {
-        background: var(--btn-regular-bg);
-        color: var(--btn-content);
-        border: 1px solid var(--line-color);
-      }
-      .about-btn--ghost:hover {
-        background: var(--btn-regular-bg-hover);
-        color: var(--primary);
-        border-color: color-mix(in oklab, var(--primary) 45%, transparent);
-        transform: translateY(-1px);
-      }
-
-      /* ================= ④ 顶部导航（长条菜单）= 参考站 .profile-tabs ================= */
-      .about-subnav {
-        display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        gap: 0.25rem;
-        min-height: 3rem;
-        overflow-x: auto;
-        /* 与卡片一致：不加边框 / 阴影，只靠底色与下方 2px 主色下划线区分（2026-09-12 去壳） */
-        border: none;
-        border-radius: var(--radius-large);
-        background: color-mix(in srgb, var(--card-bg) 94%, transparent);
-        box-shadow: none;
-        scrollbar-width: none;
-      }
-      .about-subnav::-webkit-scrollbar {
-        display: none;
-      }
-      .about-subnav-item {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.42rem;
-        min-width: max-content;
-        padding: 0.78rem 0.9rem 0.68rem;
-        border-bottom: 2px solid transparent;
-        border-radius: 0.72rem 0.72rem 0 0;
-        color: var(--content-meta);
-        font-size: 0.8rem;
-        font-weight: 680;
-        line-height: 1.5;
-        white-space: nowrap;
-        text-decoration: none;
-        transition:
-          color 0.18s,
-          border-color 0.18s,
-          background-color 0.18s;
-      }
-      .about-subnav-item .about-ico {
-        width: 1.12em;
-        height: 1.12em;
-        opacity: 0.9;
-      }
-      .about-subnav-item em {
-        font-style: normal;
-        min-width: 1.25rem;
-        padding: 0.1rem 0.32rem;
-        border-radius: 999px;
-        background: var(--btn-regular-bg);
-        color: var(--btn-content);
-        font-size: 0.65rem;
-        font-weight: 700;
-        line-height: 1.25;
-        text-align: center;
-      }
-      .about-subnav-item:hover,
-      .about-subnav-item:focus-visible,
-      .about-subnav-item.is-active {
-        border-bottom-color: var(--primary);
-        color: var(--primary);
-        outline: none;
-      }
-      .about-subnav-item.is-active .about-ico {
-        opacity: 1;
-      }
-
-      /* ================= ⑤ 两栏布局（按容器宽度分档） ================= */
-      .about-cols-wrap {
-        container-type: inline-size;
-      }
-      .about-cols {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-        align-items: start;
-      }
-      /* 内容列自身够宽（≥880px）才分两栏 */
-      @container (min-width: 880px) {
-        .about-cols {
-          grid-template-columns: minmax(0, 1fr) 288px;
-        }
-      }
-      /* 卡片内边距 = 参考站：主列 clamp(1rem,2.5vw,1.45rem) / 侧列 1rem */
-      .about-col-main > section {
-        padding: clamp(1rem, 2.5vw, 1.45rem);
-      }
-      .about-col-side > section {
-        padding: 1rem;
-      }
-      .about-col-main,
-      .about-col-side {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        min-width: 0;
-      }
-      /* 主列卡头下的分隔线（等价于参考站 .profile-readme__body 的 border-top） */
-      .about-col-main > section > .mb-5:first-child {
-        padding-bottom: 0.75rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid var(--line-divider);
-      }
-
-      /* ================= ⑥ 小区块标签 kicker = 参考站 .profile-section-kicker ================= */
-      .about-section-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.42rem;
-        margin: 0;
-        color: var(--primary);
-        font-size: 0.6rem;
-        font-weight: 780;
-        letter-spacing: 0.12em;
-        line-height: 1.3;
-        text-transform: uppercase;
-      }
-      /* 卡头右侧的「更多 →」= 参考站 .profile-section-link */
-      .about-section-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        color: var(--content-meta);
-        font-size: 0.72rem;
-        text-decoration: none;
-        transition: color 0.18s;
-      }
-      .about-section-link:hover,
-      .about-section-link:focus-visible {
-        color: var(--primary);
-        outline: none;
-      }
-      /* 卡头右侧的次要说明 = 参考站 .profile-panel__meta */
-      .about-card-meta {
-        color: var(--content-meta);
-        font-size: 0.68rem;
-        font-weight: 400;
-        white-space: nowrap;
-      }
-
-      /* ================= ⑦ 引语 = 参考站 .profile-readme__quote ================= */
-      .about-quote {
-        margin: 0 0 1.15rem;
-        padding: 0.8rem 1rem;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 18%, var(--line-divider));
-        border-radius: 0 0.7rem 0.7rem 0;
-        background: color-mix(in srgb, var(--primary) 7%, var(--card-bg));
-        font-size: clamp(1rem, 1.8vw, 1.18rem);
-        font-weight: 700;
-        line-height: 1.7;
-        font-style: normal;
-      }
-
-      /* ================= ⑧ 正文段落 = 参考站 .profile-markdown p ================= */
-      .about-paragraphs > p {
-        max-width: 72ch;
-        margin: 0.85rem 0 0;
-        color: var(--content-meta);
-        font-size: 0.92rem;
-        line-height: 1.9;
-      }
-      .about-paragraphs > p:first-child {
-        margin-top: 0;
-      }
-
-      /* ================= ⑨ 内嵌卡片：项目 / 更新系列 = 参考站 .project-card ================= */
-      .about-proj-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.7rem;
-      }
-      .about-tile-list {
-        display: grid;
-        gap: 0.55rem;
-      }
-      /* 横向网格：图标方块 | 正文 | 箭头（参考站无封面图） */
-      .about-proj,
-      .about-tile {
-        display: grid;
-        grid-template-columns: 2rem minmax(0, 1fr) auto;
-        align-items: start;
-        gap: 0.7rem;
-        min-width: 0;
-        padding: 0.82rem;
-        border: 1px solid var(--line-divider);
-        border-radius: 0.78rem;
-        background: color-mix(in srgb, var(--card-bg) 95%, var(--primary) 5%);
-        color: inherit;
-        text-decoration: none;
-        transition:
-          transform 0.18s,
-          border-color 0.18s,
-          background-color 0.18s,
-          box-shadow 0.18s;
-      }
-      .about-proj:hover,
-      .about-proj:focus-visible,
-      .about-tile:hover,
-      .about-tile:focus-visible {
-        border-color: color-mix(
-          in srgb,
-          var(--primary) 48%,
-          var(--line-divider)
-        );
-        background: color-mix(in srgb, var(--primary) 7%, var(--card-bg));
-        box-shadow: 0 0.55rem 1.25rem
-          color-mix(in srgb, var(--primary) 10%, transparent);
-        transform: translateY(-2px);
-        outline: none;
-      }
-      .about-proj__icon,
-      .about-tile__icon {
-        display: grid;
-        place-items: center;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.6rem;
-        background: color-mix(in srgb, var(--primary) 12%, transparent);
-        color: var(--primary);
-        font-size: 1.1rem;
-      }
-      /* 参考站的三色图标变体（.project-card--gold / --mint / --violet） */
-      .is-gold .about-proj__icon,
-      .is-gold .about-tile__icon {
-        background: #f0b93333;
-        color: #c48a08;
-      }
-      .is-mint .about-proj__icon,
-      .is-mint .about-tile__icon {
-        background: #42c7b02e;
-        color: #159b8b;
-      }
-      .is-violet .about-proj__icon,
-      .is-violet .about-tile__icon {
-        background: #8b78db2b;
-        color: #7361c8;
-      }
-      .about-proj__body,
-      .about-tile__body {
-        display: grid;
-        gap: 0.35rem;
-        min-width: 0;
-      }
-      .about-proj__title,
-      .about-tile__title {
-        overflow: hidden;
-        color: var(--deep-text);
-        font-size: 0.88rem;
-        font-weight: 760;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .about-proj__desc,
-      .about-tile__desc {
-        display: -webkit-box;
-        overflow: hidden;
-        color: var(--content-meta);
-        font-size: 0.74rem;
-        line-height: 1.55;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-      }
-      .about-proj__tech {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-      /* 项目卡底部技术标签 = 参考站 .project-card__tags em */
-      .about-proj__tech i {
-        font-style: normal;
-        padding: 0.18rem 0.34rem;
-        border-radius: 0.35rem;
-        background: var(--btn-regular-bg);
-        color: var(--btn-content);
-        font-size: 0.6rem;
-        line-height: 1.2;
-      }
-      /* 外链箭头 = 参考站 .project-card__arrow / .activity-arrow */
-      .about-proj__arrow,
-      .about-tile__arrow,
-      .about-activity-arrow {
-        color: var(--content-meta);
-        font-size: 0.95rem;
-        transition:
-          color 0.18s,
-          transform 0.18s;
-      }
-      .about-proj:hover .about-proj__arrow,
-      .about-proj:focus-visible .about-proj__arrow,
-      .about-tile:hover .about-tile__arrow,
-      .about-tile:focus-visible .about-tile__arrow,
-      .about-activity:hover .about-activity-arrow {
-        color: var(--primary);
-        transform: translate(0.1rem, -0.1rem);
-      }
-
-      /* ================= ⑩ 系列卡里的篇数标签 = 参考站 .project-card__tags em ================= */
-      .about-chip-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-      .about-chip {
-        display: inline-block;
-        padding: 0.18rem 0.34rem;
-        border-radius: 0.35rem;
-        background: var(--btn-regular-bg);
-        color: var(--btn-content);
-        font-size: 0.6rem;
-        font-weight: 400;
-        line-height: 1.2;
-        white-space: nowrap;
-      }
-
-      /* ================= ⑪ 卡头 = 参考站 .profile-panel__header / .profile-side-heading ================= */
-      .about-card-head {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 0.8rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--line-divider);
-      }
-      .about-head-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        color: var(--primary);
-        font-size: 1.08rem;
-        line-height: 1;
-      }
-      .about-card-title {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 780;
-        letter-spacing: -0.015em;
-        line-height: 1.3;
-      }
-
-      /* ================= ⑫ 我的朋友（带头像卡片墙）/ 技术轨迹（标签胶囊） =================
-         2026-09-13 改版：两个卡片原本共用 .about-friend / .about-tag-chip 一套胶囊样式，
-         现在「我的朋友」升级为带头像卡片墙 ⇒ **必须解耦**，否则技术轨迹会被一起改掉。
-         · .about-friends / .about-friend*  → 卡片墙（圆形 logo + 名称 + 描述，2 列）
-         · .about-tag-list / .about-tag-chip → 仍是胶囊（保持参考站 .stack-list 青色系） */
-      .about-friends {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.4rem;
-        margin-top: 0.8rem;
-      }
-      .about-tag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-top: 0.8rem;
-      }
-
-      /* ---- 友链卡片：圆形头像 + 名称 / 描述两行 ----
-         视觉目标：像「一排名片」而不是「一排按钮」。
-         · 圆形 logo 弱化轮廓，让名称成为主角
-         · 描述行降一级颜色、单行省略，避免长短不一撑破网格
-         · 悬停：描边提亮 + 淡主色底 + 上浮 1px（与卡片体系其它可点项一致） */
-      .about-friend {
-        display: grid;
-        grid-template-columns: 1.5rem minmax(0, 1fr);
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 0;
-        padding: 0.45rem 0.55rem;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 16%, var(--line-divider));
-        border-radius: 0.55rem;
-        background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
-        color: var(--btn-content);
-        text-decoration: none;
-        transition:
-          color 0.18s,
-          border-color 0.18s,
-          background-color 0.18s,
-          box-shadow 0.18s,
-          transform 0.18s;
-      }
-      .about-friend:hover,
-      .about-friend:focus-visible {
-        border-color: color-mix(in srgb, var(--primary) 48%, transparent);
-        background: color-mix(in srgb, var(--primary) 9%, var(--card-bg));
-        color: var(--primary);
-        outline: none;
-      }
-      /* 上浮只在桌面端（触屏没有 hover，位移反而造成「点了没反应」的错觉） */
-      @media (hover: hover) and (pointer: fine) {
-        .about-friend:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 3px 10px
-            color-mix(in srgb, var(--primary) 14%, transparent);
-        }
-      }
-      .about-friend-logo,
-      .about-friend-logo-ph {
-        flex: none;
-        width: 1.5rem;
-        height: 1.5rem;
-        border-radius: 9999px;
-        background: var(--btn-regular-bg);
-      }
-      .about-friend-logo {
-        display: block;
-        object-fit: cover;
-      }
-      .about-friend-logo-ph {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        font-size: 0.75rem;
-      }
-      .about-friend-body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.05rem;
-        min-width: 0;
-      }
-      .about-friend-name {
-        min-width: 0;
-        overflow: hidden;
-        font-size: 0.7rem;
-        font-weight: 400;
-        letter-spacing: -0.01em;
-        line-height: 1.25;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      /* 描述：降一级颜色（复用本页 --content-meta）+ 单行省略 */
-      .about-friend-desc {
-        min-width: 0;
-        overflow: hidden;
-        color: var(--content-meta);
-        font-size: 0.6rem;
-        letter-spacing: -0.005em;
-        line-height: 1.25;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      /* 胶囊本体（仅技术轨迹用，由 JS 生成 .about-tag-chip）。
-         ⚠️ 2026-09-13 起「我的朋友」已是卡片墙，**不再加入本规则** —— 
-         原来两者共用一套胶囊样式，改版时必须解耦，否则卡片被当胶囊渲染。 */
-      .about-tag-chip {
-        display: block;
-        max-width: 100%;
-        padding: 0.28rem 0.5rem;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 16%, var(--line-divider));
-        border-radius: 0.45rem;
-        background: color-mix(in srgb, var(--primary) 6%, var(--card-bg));
-        color: var(--btn-content);
-        font-size: 0.65rem;
-        font-weight: 400;
-        letter-spacing: -0.01em;
-        line-height: 1.2;
-        text-align: center;
-        text-decoration: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition:
-          color 0.18s,
-          border-color 0.18s,
-          background-color 0.18s;
-      }
-      .about-tag-chip:hover {
-        border-color: var(--primary);
-        background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
-        color: var(--primary);
-        outline: none;
-      }
-      /* 1.4.90：删掉参考站 .stack-list 的硬编码青色（#42c7b0 / #159b8b）覆写，
-         回归上方基础规则的 var(--primary) ⇒ 胶囊效果跟随主题色相
-         （含后台主题色与访客面板色相），符合本主题视觉语言。 */
-
-      /* ================= ⑬ 保持联系 = 参考站 .profile-connect-list ================= */
-      .about-connect-list {
-        display: grid;
-        gap: 0.4rem;
-        margin-top: 0.8rem;
-      }
-      .about-connect {
-        display: grid;
-        grid-template-columns: 1.1rem minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 0.45rem;
-        min-width: 0;
-        padding: 0.47rem 0.45rem;
-        border-radius: 0.45rem;
-        color: var(--content-meta);
-        font-size: 0.74rem;
-        text-decoration: none;
-        transition:
-          background-color 0.18s,
-          color 0.18s;
-      }
-      .about-connect:hover,
-      .about-connect:focus-visible {
-        background: color-mix(in srgb, var(--primary) 8%, var(--card-bg));
-        color: var(--primary);
-        outline: none;
-      }
-      .about-connect > span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .about-connect-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
-        line-height: 1;
-      }
-      /* 个人简介小组件的社交图标是 iconify 的 svg 形态（format: svg），
-         输出自带 width/height="24" 这类**绝对像素**，必须按 em 重设尺寸，
-         否则 24px 会撑破 1.1rem 的图标列。fill 已是 currentColor，跟着上面的
-         color 走（默认次要灰、hover 主色）。 */
-      .about-connect-icon > svg {
-        display: block;
-        width: 1.05em;
-        height: 1.05em;
-      }
-      .about-connect-arrow {
-        font-size: 0.82rem;
-      }
-
-      /* ================= ⑭ 最近的提交 = 参考站 .activity-list ================= */
-      .about-activity-list {
-        display: grid;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-      .about-activity {
-        display: grid;
-        grid-template-columns: 0.5rem 2.3rem minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 0.6rem;
-        min-width: 0;
-        padding: 0.72rem 0;
-        border-top: 1px solid var(--line-divider);
-      }
-      .about-activity-marker {
-        width: 0.42rem;
-        height: 0.42rem;
-        border-radius: 50%;
-        background: var(--primary);
-        box-shadow: 0 0 0 0.18rem
-          color-mix(in srgb, var(--primary) 13%, transparent);
-      }
-      .about-activity-kind {
-        color: var(--content-meta);
-        font-size: 0.68rem;
-        font-weight: 720;
-      }
-      .about-activity-link {
-        overflow: hidden;
-        color: var(--deep-text);
-        font-size: 0.8rem;
-        text-decoration: none;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .about-activity-link:hover,
-      .about-activity-link:focus-visible {
-        color: var(--primary);
-        outline: none;
-      }
-
-      /* ================= ⑮ 卡片脚注 ================= */
-      .about-card-foot {
-        margin: 0.7rem 0 0;
-        color: var(--content-meta);
-        font-size: 0.62rem;
-        line-height: 1.5;
-      }
-      /* ================= ⑰ 页脚卡 = 参考站 .profile-footer ================= */
-      /* ⚠️ margin-top 不能省：外层 th:with 容器带 th:remove="tag"，渲染后页脚卡是
-         .about-cols-wrap 的**直接兄弟**，而 .about-cols-wrap 没有下外边距 ⇒
-         不加这条时页脚卡与两栏区块的间距是 0，和全页 1rem 的节奏对不上。
-         用「上外边距」而不是给 .about-cols-wrap 补下外边距：页脚卡被隐藏时不留空档。 */
-      section.about-footer-card {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-top: 1rem;
-        padding: 1rem 1.2rem;
-        background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
-      }
-      .about-footer-motto {
-        margin: 0.38rem 0 0;
-        color: var(--deep-text);
-        font-size: 0.86rem;
-        font-weight: 680;
-        line-height: 1.4;
-      }
-      .about-footer-links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 0.45rem;
-      }
-      .about-footer-links > a {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.45rem 0.6rem;
-        border: 1px solid
-          color-mix(in srgb, var(--primary) 20%, var(--line-divider));
-        border-radius: 0.5rem;
-        color: var(--primary);
-        font-size: 0.7rem;
-        text-decoration: none;
-        transition:
-          background-color 0.18s,
-          border-color 0.18s;
-      }
-      .about-footer-links > a:hover,
-      .about-footer-links > a:focus-visible {
-        border-color: var(--primary);
-        background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
-        outline: none;
-      }
-
-      /* ================= ⑱ 窄屏档 = 参考站 ≤640px 那一组 ================= */
-      @media (max-width: 640px) {
-        .about-cols {
-          gap: 0.75rem;
-        }
-        .about-hero-card {
-          padding: 1rem;
-        }
-        .about-col-main > section,
-        .about-col-side > section {
-          padding: 0.9rem;
-          border-radius: 0.95rem;
-        }
-        .about-col-main,
-        .about-col-side {
-          gap: 0.75rem;
-        }
-        .about-avatar {
-          width: 4.75rem;
-          height: 4.75rem;
-          border-radius: 1rem;
-        }
-        .about-avatar__image {
-          border-radius: 0.8rem;
-        }
-        .about-name {
-          font-size: 1.55rem;
-        }
-        .about-roles {
-          font-size: 0.78rem;
-        }
-        .about-tagline {
-          margin-top: 0.6rem;
-          font-size: 0.84rem;
-          line-height: 1.65;
-        }
-        .about-status {
-          margin-top: 0.6rem;
-          font-size: 0.68rem;
-        }
-        .about-subnav {
-          min-height: 2.8rem;
-          border-radius: 0.85rem;
-        }
-        .about-subnav-item {
-          padding: 0.7rem 0.65rem 0.58rem;
-          font-size: 0.72rem;
-        }
-        .about-card-meta,
-        .about-section-link {
-          font-size: 0.62rem;
-        }
-        .about-proj-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        /* 友链卡片墙：窄屏两列会挤成「名称只剩两个字」⇒ 降为单列 */
-        .about-friends {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        /* 参考站 ≤640px：内嵌卡与活动行整体缩一档 */
-        .about-proj,
-        .about-tile {
-          grid-template-columns: 1.85rem minmax(0, 1fr) auto;
-          gap: 0.58rem;
-          padding: 0.72rem;
-        }
-        .about-proj__icon,
-        .about-tile__icon {
-          width: 1.85rem;
-          height: 1.85rem;
-          font-size: 1rem;
-        }
-        .about-proj__title,
-        .about-tile__title {
-          font-size: 0.83rem;
-        }
-        .about-proj__desc,
-        .about-tile__desc {
-          font-size: 0.7rem;
-        }
-        .about-activity {
-          grid-template-columns: 0.45rem 2rem minmax(0, 1fr) auto;
-          gap: 0.45rem;
-        }
-        .about-activity-link {
-          font-size: 0.74rem;
-        }
-        section.about-footer-card {
-          align-items: flex-start;
-          flex-direction: column;
-          padding: 0.9rem;
-        }
-        .about-footer-links {
-          justify-content: flex-start;
-        }
-      }
-
-      /* ================= ⑲ 尊重「减少动态效果」 ================= */
-      @media (prefers-reduced-motion: reduce) {
-        .about-friend,
-        .about-connect,
-        .about-proj,
-        .about-tile,
-        .about-subnav-item,
-        .about-footer-links > a {
-          transition: none;
-        }
-        .about-proj:hover,
-        .about-proj:focus-visible,
-        .about-tile:hover,
-        .about-tile:focus-visible {
-          transform: none;
-        }
-      }
-    </style>
-  </Fragment>
-
   <!-- 数据通道：
        · cfg          = 本页配置（主题设置 → 关于我）
        · aboutPosts   = 最新已发布文章（Finder 变量，用 ?. 空安全）
        · aboutMoments = 最新瞬间（瞬间插件注入 momentFinder；未装插件时短路为 null）
        两组一起供「最近的提交」卡片用，客户端按 data-time 归并成一条时间线。
-       · groups       = 友情链接分组（linkFinder.groupBy()，过滤掉空/非法 url），
-       供「我的朋友」卡片 + subnav 友链计数用。
+       · friendLinks  = 「我的朋友」的友链（linkFinder.random(friendCount)，服务端随机取 N 条；
+       url / logo 的合法性在卡片里逐条判断）。
+       · friendCount  = 「我的朋友」显示条数（已转 Integer 并夹到 [1, 12]）。
 
        🔴🔴 1.4.84 修正（推翻 1.4.83 的错误结论）：这条 th:with 的变量
        **能被下方所有卡片正常读到**（cfg / aboutPosts 一直在被「关于我」
@@ -1010,13 +37,25 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
        卡片/subnav 直接用，勿再在消费点上叠 th:with + th:if。 -->
   <div
     th:with="cfg=${theme.config?.extendPages?.about},
-      aboutPosts=${postFinder?.list({page: 1, size: cfg?.activity?.count ?: 5})?.items},
-      aboutMoments=${momentFinder?.list({size: cfg?.activity?.count ?: 5})?.items},
+      rawActivityCount=${cfg?.activity?.count != null ? #conversions.convert(cfg?.activity?.count, 'java.lang.Integer') : 5},
+      activityCount=${rawActivityCount > 20 ? 20 : (rawActivityCount < 2 ? 2 : rawActivityCount)},
+      aboutPosts=${postFinder?.list({page: 1, size: activityCount})?.items},
+      aboutMoments=${momentFinder?.list({size: activityCount})?.items},
       aboutPostCount=${aboutPosts != null ? #lists.size(aboutPosts) : 0},
       aboutMomentCount=${aboutMoments != null ? #lists.size(aboutMoments) : 0},
-      groups=${(pluginFinder == null or !pluginFinder.available('PluginLinks') or linkFinder == null) ? null : linkFinder.groupBy()},
-      linksTotal=${groups != null and !#lists.isEmpty(groups) ? #aggregates.sum(groups.![links.size()]) : 0},
-      seriesList=${pluginFinder != null and pluginFinder.available('ethereal-companion') ? recentCommentsSeriesFinder.listAll() : null},
+      rawFriendCount=${cfg?.friends?.count != null ? #conversions.convert(cfg?.friends?.count, 'java.lang.Integer') : 6},
+      friendCount=${rawFriendCount > 12 ? 12 : (rawFriendCount < 1 ? 1 : rawFriendCount)},
+      friendLinks=${(pluginFinder == null or !pluginFinder.available('PluginLinks') or linkFinder == null) ? null : linkFinder.random(friendCount)},
+      skillsUrl=${cfg?.skills?.url},
+      skillsShowMore=${cfg?.skills?.showMore != false},
+      skillItems=${theme.config?.extendPages?.skills?.entries?.items},
+      skillFrontend=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'frontend']},
+      skillBackend=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'backend']},
+      skillDatabase=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'database']},
+      skillTools=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'tools']},
+      skillOther=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'other']},
+      projectCount=${cfg?.projects?.count != null ? #conversions.convert(cfg?.projects?.count, 'java.lang.Integer') : 4},
+      projects=${pluginFinder != null and pluginFinder.available('portfolio') ? projectFinder?.list(1, projectCount) : null},
       socials=${theme.config?.sidebar?.profile?.social_media}"
     th:remove="tag"
   >
@@ -1027,16 +66,25 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
          theme.config?.sidebar?.profile?.statusSettings（同 socials 的写法）。 -->
     <section
       class="card-base about-hero-card onload-animation mb-4"
+      th:if="${cfg?.identity?.enable != false}"
       th:with="ident=${cfg?.identity},
         sts=${theme.config?.sidebar?.profile?.statusSettings},
-        hasPrimary=${!#strings.isEmpty(ident?.actionPrimaryLabel) and !#strings.isEmpty(ident?.actionPrimaryUrl)},
-        hasSecondary=${!#strings.isEmpty(ident?.actionSecondaryLabel) and !#strings.isEmpty(ident?.actionSecondaryUrl)}"
+        avatarSrc=${!#strings.isEmpty(ident?.avatar)
+          ? ident?.avatar
+          : (#strings.isEmpty(theme.config?.sidebar?.profile?.avatar)
+            ? '/themes/Ethereal/assets/images/demo-avatar.png'
+            : theme.config?.sidebar?.profile?.avatar)},
+        actions=${ident?.actions == null
+          ? null
+          : ident?.actions.?[#this.label != null and #this.label != '' and #this.url != null and #this.url != '']}"
     >
       <div class="relative z-1 flex flex-col gap-5 sm:flex-row sm:items-center">
-        <span class="about-avatar" th:if="${!#strings.isEmpty(ident?.avatar)}">
+        <!-- 头像：本卡单独设置优先；留空回落到侧栏「个人简介小组件」的头像
+             （该字段默认值就是主题内置头像，两者都空时也用它兜底，不留破图） -->
+        <span class="about-avatar">
           <img
             class="about-avatar__image"
-            th:src="${ident?.avatar}"
+            th:src="${avatarSrc}"
             th:alt="${ident?.name ?: site.title}"
             src=""
             alt="avatar"
@@ -1068,13 +116,16 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                未启用 / 未配置时回退 ident.status 静态文案（闪电图标行）。
                图标/动效/配色类与 Profile.astro 的 th:case 分支逐字面量一致
                （Tailwind 只认完整字面量 + 空白分隔，别运行时拼类名）。 -->
+          <!-- 无障碍名 = 可见状态文案 + 视觉隐藏的「切换当前状态」提示。
+               ⚠️ 不写死 aria-label="切换当前状态"：本胶囊**有可见文案**，
+               可访问名不含可见文本会违反 WCAG 2.5.3（Label in Name）；
+               而同主题的 Categories.astro 里也因为这条 2.5.3 删过同类 aria-label。 -->
           <button
             type="button"
             class="about-status about-status-pill"
             th:if="${sts != null and sts?.enable != false}"
             th:attr="data-status=${sts?.status ?: 'online'}"
             th:switch="${sts?.status ?: 'online'}"
-            aria-label="切换当前状态"
           >
             <span th:case="energetic" class="about-status-item">
               <span
@@ -1157,6 +208,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                 >在线中</span
               >
             </span>
+            <span class="sr-only" th:text="#{profile.switchStatus}"
+              >切换当前状态</span
+            >
           </button>
           <p
             class="about-status"
@@ -1169,95 +223,66 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           </p>
         </div>
 
-        <div class="about-hero-actions" th:if="${hasPrimary or hasSecondary}">
+        <!-- 卡片按钮：条目完全自定义（文字 / 图标 / 链接，字段结构同顶部导航），
+             数量上限由设置项自身的 max: 3 限制（后台加不了第 4 条），模板不再重复截断。
+             第 1 个为主按钮（主题色高亮），其余为次按钮。
+             「名称 + 链接」都填了才算有效条目（只填其一视为未配置），一条都没有时整块不渲染。
+             图标：$formkit: iconify + format: svg ⇒ 值是一整段内联 SVG（fill 为 currentColor），
+             必须 th:utext 注入、留空则完全不渲染图标元素 —— 同顶部导航的写法。 -->
+        <div
+          class="about-hero-actions"
+          th:if="${actions != null and not #lists.isEmpty(actions)}"
+        >
           <a
-            class="about-btn about-btn--primary"
-            th:if="${hasPrimary}"
-            th:href="${ident?.actionPrimaryUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span class="icon-[mdi--github] about-ico" aria-hidden="true"
-            ></span>
-            <span th:text="${ident?.actionPrimaryLabel}">查看 GitHub</span>
-            <span
-              class="icon-[material-symbols--open-in-new-rounded] about-ico about-ico--xs"
-              aria-hidden="true"></span>
-          </a>
-          <a
-            class="about-btn about-btn--ghost"
-            th:if="${hasSecondary}"
-            th:href="${ident?.actionSecondaryUrl}"
+            th:each="act, ast : ${actions}"
+            class="about-btn"
+            th:classappend="${ast.index == 0
+              ? 'about-btn--primary'
+              : 'about-btn--ghost'}"
+            th:href="${act?.url}"
             target="_blank"
             rel="noopener noreferrer"
           >
             <span
-              class="icon-[material-symbols--star-rounded] about-ico"
-              aria-hidden="true"></span>
-            <span th:text="${ident?.actionSecondaryLabel}">查看心愿墙</span>
+              th:if="${act?.icon != null and !#strings.isEmpty(act?.icon?.value)}"
+              class="about-ico about-ico--svg"
+              aria-hidden="true"
+              th:utext="${act?.icon?.value}"></span>
+            <span th:text="${act?.label}">查看 GitHub</span>
           </a>
         </div>
       </div>
     </section>
 
-    <!-- ================= ② 顶部导航（长条菜单） ================= -->
+    <!-- ================= ② 顶部导航（长条菜单） =================
+         条目完全自定义（主题设置 → 关于我 → 顶部导航 → 导航条目：图标 / 文字 / 链接），
+         一条都没配时整块导航不渲染。
+         th:if 引用的是页面顶层 th:with 定义的 cfg（**外层变量**），不是同元素 th:with，
+         所以不存在「th:if(300) 先于 th:with(400) 求值」的坑。
+         链接留空 = 指向当前页面（用于「个人资料」这类表示当前所在页的条目），
+         这类条目自动带 is-active + aria-current="page"，与改动前的行为一致。 -->
     <nav
       class="card-base about-subnav onload-animation mb-4"
-      aria-label="关于我相关页面"
+      th:if="${cfg?.nav?.enable != false and cfg?.nav?.items != null and not #lists.isEmpty(cfg?.nav?.items)}"
+      th:aria-label="#{page.about.navLabel}"
     >
       <a
-        class="about-subnav-item is-active"
-        th:href="${singlePage.status.permalink}"
-        aria-current="page"
-      >
-        <span
-          class="icon-[material-symbols--person-rounded] about-ico"
-          aria-hidden="true"></span>
-        <span
-          th:text="${#strings.defaultString(cfg?.nav?.profileLabel, '个人资料')}"
-          >个人资料</span
-        >
-      </a>
-      <a
+        th:each="navItem : ${cfg?.nav?.items}"
         class="about-subnav-item"
-        th:if="${!#strings.isEmpty(cfg?.nav?.seriesUrl)}"
-        th:href="${cfg?.nav?.seriesUrl}"
+        th:classappend="${#strings.isEmpty(navItem?.url) ? ' is-active' : ''}"
+        th:href="${#strings.isEmpty(navItem?.url) ? singlePage.status.permalink : navItem?.url}"
+        th:aria-current="${#strings.isEmpty(navItem?.url) ? 'page' : null}"
       >
+        <!-- 图标：$formkit: iconify + format: svg ⇒ 值是一整段内联 SVG（fill 为
+             currentColor，跟随条目文字色）。必须用 th:utext 注入、不能走 th:class
+             —— 同 links.astro 折叠面板、Profile.astro 社交图标。
+             图标由用户自选（后台不预置默认值）：留空时不渲染任何图标元素，只显示文字。 -->
         <span
-          class="icon-[material-symbols--layers] about-ico"
-          aria-hidden="true"></span>
-        <span th:text="${#strings.defaultString(cfg?.nav?.seriesLabel, '系列')}"
-          >系列</span
-        >
-      </a>
-      <a
-        class="about-subnav-item"
-        th:if="${!#strings.isEmpty(cfg?.nav?.linksUrl)}"
-        th:href="${cfg?.nav?.linksUrl}"
-      >
-        <span
-          class="icon-[material-symbols--link-rounded] about-ico"
-          aria-hidden="true"></span>
-        <span th:text="${#strings.defaultString(cfg?.nav?.linksLabel, '友链')}"
-          >友链</span
-        >
-        <em
-          th:if="${cfg?.nav?.linksCount != false and linksTotal > 0}"
-          th:text="${linksTotal}">0</em
-        >
-      </a>
-      <a
-        class="about-subnav-item"
-        th:if="${!#strings.isEmpty(cfg?.nav?.friendsUrl)}"
-        th:href="${cfg?.nav?.friendsUrl}"
-      >
-        <span
-          class="icon-[material-symbols--rss-feed-rounded] about-ico"
-          aria-hidden="true"></span>
-        <span
-          th:text="${#strings.defaultString(cfg?.nav?.friendsLabel, '朋友圈')}"
-          >朋友圈</span
-        >
+          th:if="${navItem?.icon != null and !#strings.isEmpty(navItem?.icon?.value)}"
+          class="about-ico about-ico--svg"
+          aria-hidden="true"
+          th:utext="${navItem?.icon?.value}"></span>
+        <span th:text="${navItem?.label}">个人资料</span>
       </a>
     </nav>
 
@@ -1266,102 +291,89 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
       <div class="about-cols">
         <!-- ---------- 主列 ---------- -->
         <div class="about-col-main">
-          <!-- 关于我 -->
-          <section class="card-base onload-animation">
-            <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p class="about-section-label">
-                  <span
-                    class="icon-[material-symbols--menu-book-rounded]"
-                    aria-hidden="true"></span>
-                  <span>ABOUT ME</span>
-                </p>
-                <h2 class="about-card-title mt-1 text-90">关于我</h2>
-              </div>
-              <span
-                class="about-card-meta"
-                th:if="${!#strings.isEmpty(cfg?.identity?.introSubtitle)}"
-                th:text="${cfg?.identity?.introSubtitle}">公开 · 持续更新</span
+          <!-- 关于我（个人简介卡片） -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.intro?.enable != false}"
+          >
+            <div class="about-card-head-row mb-5">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.introTitle}"
               >
+                关于我
+              </h2>
             </div>
             <blockquote
-              class="about-quote text-75"
-              th:if="${!#strings.isEmpty(cfg?.identity?.quote)}"
-              th:text="${cfg?.identity?.quote}"
+              class="about-quote"
+              th:if="${!#strings.isEmpty(cfg?.intro?.quote)}"
+              th:text="${cfg?.intro?.quote}"
             >
               引语
             </blockquote>
             <div
               class="about-paragraphs"
-              th:if="${!#strings.isEmpty(cfg?.identity?.intro)}"
-              th:data-lines="${cfg?.identity?.intro}"
+              th:if="${!#strings.isEmpty(cfg?.intro?.intro)}"
+              th:data-lines="${cfg?.intro?.intro}"
               data-lines-render="paragraphs"
             >
             </div>
           </section>
 
-          <!-- 本人项目 -->
+          <!-- 本人项目：数据 = 「项目集」插件的项目（plugin metadata.name = portfolio）。
+               取前 4 个（插件默认排序：priority desc → 创建时间 desc），点击进项目详情页。
+               ⚠️ 插件未安装时整卡隐藏：直接调 Finder 会抛异常、容器被跳过（同「瞬间预览条」的处理）。
+               项目模型里没有图标字段，左侧小图标按序号轮换内置图标（纯装饰，不代表项目语义）；
+               techStacks 是插件给的字符串数组，直接服务端 th:each 渲染为标签。 -->
           <section
             class="card-base onload-animation"
-            th:if="${cfg?.projects?.items != null and !#lists.isEmpty(cfg?.projects?.items)}"
+            th:if="${cfg?.projects?.enable != false and projects != null and projects.items != null and not #lists.isEmpty(projects.items)}"
           >
-            <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p class="about-section-label">
-                  <span
-                    class="icon-[material-symbols--widgets-outline-rounded]"
-                    aria-hidden="true"></span>
-                  <span>MY PROJECTS</span>
-                </p>
-                <h2 class="about-card-title mt-1 text-90">本人项目</h2>
-              </div>
+            <div
+              class="about-card-head-row mb-5 flex flex-wrap items-center justify-between gap-3"
+            >
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.projectsTitle}"
+              >
+                本人项目
+              </h2>
+              <!-- 链接文字与地址都固定，只留「显示 / 隐藏」开关：
+                   文字走 i18n；地址是「项目集」插件的列表路由 /portfolio（不支持自定义），
+                   用 @{} 包一层以兼容部署上下文路径。 -->
               <a
                 class="about-section-link"
-                th:if="${!#strings.isEmpty(cfg?.projects?.moreUrl)}"
-                th:href="${cfg?.projects?.moreUrl}"
+                th:if="${cfg?.projects?.showMore != false}"
+                th:href="@{/portfolio}"
               >
-                <span
-                  th:text="${#strings.defaultString(cfg?.projects?.moreLabel, '全部项目 →')}"
-                  >全部项目 →</span
-                >
+                <span th:text="#{page.about.projectsMore}">全部项目 →</span>
               </a>
             </div>
             <div class="about-proj-grid">
-              <!-- 图标留空时按序号轮换，避免整列卡片图标雷同；填了 icon 则以填的为准。
-                   ⚠️ 这里刻意不用内联列表 / 拼接类名：Thymeleaf 的 ${} 里放 {} 会截断表达式，
-                   Tailwind 也不会为拼出来的类名生成 CSS。就写死几个字面量三元。 -->
+              <!-- 卡片不放图标：项目集插件的项目模型里没有图标字段，按下标编一套图标
+                   属于「假信息」（同一个项目换个排序就换图标），不如不要，版式也更干净。
+                   正文列直接铺满首列，右上角保留外链箭头。 -->
               <a
                 class="about-proj"
-                th:each="p, pst : ${cfg?.projects?.items}"
-                th:with="pIcon=${!#strings.isEmpty(p?.icon)
-                  ? p?.icon
-                  : (pst.index == 0 ? 'icon-[material-symbols--terminal-rounded]'
-                    : (pst.index == 1 ? 'icon-[material-symbols--database]'
-                      : (pst.index == 2 ? 'icon-[material-symbols--menu-book-rounded]'
-                        : (pst.index == 3 ? 'icon-[material-symbols--widgets-outline-rounded]'
-                          : 'icon-[material-symbols--bolt-rounded]'))))}"
-                th:classappend="${!#strings.isEmpty(p?.tone) ? ' is-' + p?.tone : ''}"
-                th:href="${!#strings.isEmpty(p?.link) ? p?.link : null}"
-                th:target="${!#strings.isEmpty(p?.link) ? '_blank' : null}"
-                rel="noopener noreferrer"
+                th:each="project : ${projects.items}"
+                th:href="@{/portfolio/{slug}(slug=${project?.slug})}"
               >
-                <span class="about-proj__icon">
-                  <span th:class="${pIcon}" aria-hidden="true"></span>
-                </span>
                 <span class="about-proj__body">
-                  <strong class="about-proj__title" th:text="${p?.title}"
+                  <strong class="about-proj__title" th:text="${project?.title}"
                     >项目名</strong
                   >
                   <span
                     class="about-proj__desc"
-                    th:if="${!#strings.isEmpty(p?.description)}"
-                    th:text="${p?.description}">说明</span
+                    th:if="${!#strings.isEmpty(project?.summary)}"
+                    th:text="${project?.summary}">说明</span
                   >
                   <span
                     class="about-proj__tech"
-                    th:if="${!#strings.isEmpty(p?.tags)}"
-                    th:data-lines="${p?.tags}"
-                    data-lines-render="projTech"></span>
+                    th:if="${project?.techStacks != null and not #lists.isEmpty(project?.techStacks)}"
+                  >
+                    <i th:each="tech : ${project?.techStacks}" th:text="${tech}"
+                    ></i>
+                  </span>
                 </span>
                 <span
                   class="about-proj__arrow icon-[material-symbols--arrow-outward-rounded]"
@@ -1370,127 +382,66 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             </div>
           </section>
 
-          <!-- 更新系列：数据 = 插件聚合的文章系列（文章填 series / seriesOrder 注解）。
-               每张卡指向该系列「最新发布的一篇」（文章页顶部有系列导航），
-               右上「查看全部 →」进 /series 聚合页。
-               插件未安装、或一条系列都没有时整卡隐藏（seriesList 为 null / 空），
-               绝不崩页。 -->
-          <section
-            class="card-base onload-animation"
-            th:if="${seriesList != null and !#lists.isEmpty(seriesList)}"
-          >
-            <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p class="about-section-label">
-                  <span
-                    class="icon-[material-symbols--layers]"
-                    aria-hidden="true"></span>
-                  <span>LATEST SERIES</span>
-                </p>
-                <h2 class="about-card-title mt-1 text-90">更新系列</h2>
-              </div>
-              <a
-                class="about-section-link"
-                th:if="${!#strings.isEmpty(cfg?.series?.moreUrl)}"
-                th:href="${cfg?.series?.moreUrl}"
-              >
-                <span
-                  th:text="${#strings.defaultString(cfg?.series?.moreLabel, '查看全部 →')}"
-                  >查看全部 →</span
-                >
-              </a>
-            </div>
-            <div class="about-tile-list">
-              <!-- 外层 div 只负责「一个系列一个作用域」，内层 a 才是卡片本体。
-                   先算该系列最新一篇的发布时间，再按发布时间命中那一篇 ——
-                   Thymeleaf 的 #lists 只有 sort（没有 sortBy）、#aggregates 只有
-                   sum（没有 max），所以「取最新」只能升序排序后取末位。
-                   图标留空按序号轮换，和「本人项目」那张卡的图标序列不重叠。 -->
-              <div
-                th:each="s, sst : ${seriesList}"
-                th:if="${sst.index < #conversions.convert(cfg?.series?.count ?: 4, 'java.lang.Integer')}"
-                th:with="times=${s.posts.![publishTime].?[#this != null]},
-                  latestTime=${#lists.isEmpty(times) ? null : #lists.sort(times)[#lists.size(times) - 1]},
-                  sIcon=${sst.index == 0
-                    ? 'icon-[material-symbols--layers]'
-                    : (sst.index == 1
-                      ? 'icon-[material-symbols--menu-book-rounded]'
-                      : (sst.index == 2
-                        ? 'icon-[material-symbols--auto-stories-rounded]'
-                        : 'icon-[material-symbols--library-books-rounded]'))}"
-              >
-                <a
-                  class="about-tile"
-                  th:each="p : ${s.posts}"
-                  th:if="${latestTime != null and p.publishTime == latestTime}"
-                  th:href="@{${p.permalink}}"
-                >
-                  <span class="about-tile__icon">
-                    <span th:class="${sIcon}" aria-hidden="true"></span>
-                  </span>
-                  <span class="about-tile__body">
-                    <strong class="about-tile__title" th:text="${s.name}"
-                      >系列名</strong
-                    >
-                    <span class="about-tile__desc" th:text="${p.title}"
-                      >最新一篇</span
-                    >
-                    <span class="about-chip-list">
-                      <span
-                        class="about-chip"
-                        th:text="#{page.series.count(${#lists.size(s.posts)})}"
-                        >共 0 篇</span
-                      >
-                    </span>
-                  </span>
-                  <span
-                    class="about-tile__arrow icon-[material-symbols--arrow-outward-rounded]"
-                    aria-hidden="true"></span>
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <!-- 最近的提交：数据 = 最新文章 + 最新瞬间（服务端直出，无 JS 也完整可见）
+          <!-- 最近的提交：数据 = 最新文章 + 最新瞬间（服务端直出，无 JS 也完整可见）。
+               样式 = 时间轴：竖虚线 + 节点圆点 + 「日期 / 类型 / 标题」三段式行，
+               取主题已有三套时间轴的组合写法 —— 时间轴页 .timeline-node 的节点缩放光环、
+               朋友圈 .friends-timeline 的虚线列 + 日期在前、归档页 .dash-line 的虚线基调。
                瞬间的 spec.content.raw 是富文本 HTML，先剥标签再当纯文本用；
-               超长交给 .about-activity-link 的单行省略号收尾，不做裁剪。
-               行上的 data-time 供客户端把两组归并成一条时间线。 -->
+               超长交给 .about-activity-title 的单行省略号收尾，不做裁剪。
+               行上的 data-time（ISO-8601）供客户端把两组归并成一条时间线，
+               归并后按 data-count（= 设置里的「显示数量」）截断到总共 N 条。
+               无 JS 时不做归并与截断，两组按服务端顺序完整展示（渐进增强）。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.activity?.enable != false and (aboutPostCount + aboutMomentCount) > 0}"
           >
-            <div class="mb-5">
-              <p class="about-section-label">
-                <span
-                  class="icon-[material-symbols--history-rounded]"
-                  aria-hidden="true"></span>
-                <span>RECENT ACTIVITY</span>
-              </p>
-              <h2 class="about-card-title mt-1 text-90">最近的提交</h2>
-              <p
-                class="about-card-meta mt-1"
-                th:if="${!#strings.isEmpty(cfg?.activity?.subtitle)}"
-                th:text="${cfg?.activity?.subtitle}"
+            <div class="about-card-head-row mb-5">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.activityTitle}"
               >
-                写下来的，才会留下
-              </p>
+                最近提交
+              </h2>
             </div>
-            <ul class="about-activity-list" data-activity-timeline>
+            <ul
+              class="about-activity-list"
+              data-activity-timeline
+              th:data-count="${activityCount}"
+            >
               <li
                 class="about-activity"
                 th:each="p : ${aboutPosts}"
                 th:data-time="${p?.spec?.publishTime}"
               >
-                <span class="about-activity-marker" aria-hidden="true"></span>
-                <span class="about-activity-kind">文章</span>
+                <span class="about-activity-dot" aria-hidden="true"></span>
                 <a
-                  class="about-activity-link"
+                  class="about-activity-body"
                   th:href="@{${p?.status?.permalink}}"
-                  th:text="${p?.spec?.title}">标题</a
                 >
-                <span
-                  class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
-                  aria-hidden="true"></span>
+                  <span class="about-activity-main">
+                    <span class="about-activity-head">
+                      <span
+                        class="about-activity-date"
+                        th:text="${p?.spec?.publishTime != null
+                          ? #dates.format(p?.spec?.publishTime, 'MM-dd')
+                          : ''}"
+                        >09-18</span
+                      >
+                      <span
+                        class="about-activity-kind"
+                        th:text="#{page.about.activityPost}">文章</span
+                      >
+                    </span>
+                    <span
+                      class="about-activity-title"
+                      th:text="${p?.spec?.title}">标题</span
+                    >
+                  </span>
+                  <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
+                  <span
+                    class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
+                    aria-hidden="true"></span>
+                </a>
               </li>
               <li
                 class="about-activity"
@@ -1501,16 +452,34 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   momentLabel=${#strings.defaultString(momentText, '分享了一条瞬间')}"
                 th:data-time="${m?.spec?.releaseTime}"
               >
-                <span class="about-activity-marker" aria-hidden="true"></span>
-                <span class="about-activity-kind">瞬间</span>
+                <span class="about-activity-dot" aria-hidden="true"></span>
                 <a
-                  class="about-activity-link"
+                  class="about-activity-body"
                   th:href="@{/moments/{name}(name=${m?.metadata?.name})}"
-                  th:text="${momentLabel}">内容</a
                 >
-                <span
-                  class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
-                  aria-hidden="true"></span>
+                  <span class="about-activity-main">
+                    <span class="about-activity-head">
+                      <span
+                        class="about-activity-date"
+                        th:text="${m?.spec?.releaseTime != null
+                          ? #dates.format(m?.spec?.releaseTime, 'MM-dd')
+                          : ''}"
+                        >09-18</span
+                      >
+                      <span
+                        class="about-activity-kind"
+                        th:text="#{page.about.activityMoment}">瞬间</span
+                      >
+                    </span>
+                    <span class="about-activity-title" th:text="${momentLabel}"
+                      >内容</span
+                    >
+                  </span>
+                  <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
+                  <span
+                    class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
+                    aria-hidden="true"></span>
+                </a>
               </li>
             </ul>
           </section>
@@ -1518,106 +487,217 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 
         <!-- ---------- 侧列 ---------- -->
         <div class="about-col-side">
-          <!-- 技术轨迹 -->
+          <!-- 我的技能：数据 = 「技能页面」设置里的技能（theme.config.extendPages.skills.entries.items）。
+               按设置的 category（前端 / 后端 / 数据库 / 工具 / 其他）分组展示，每组「组名 + 胶囊行」；
+               分组写死 5 块而不是按 category 动态归并：分类本身是固定枚举，写死才能直接对上 i18n key、
+               分组顺序也稳定（与技能页筛选条同序）；分组为空则整组不渲染，全空则整卡隐藏。
+               胶囊 = 技能自己的 iconify 图标（可选，留空只显示文字）+ 技能名，纯展示、不可点。
+               右上角「全部技能 →」走「技能页面 → 技能页面地址 / 显示」两个设置项（同本人项目的开关思路）。
+               每组过滤「名称非空」的条目（skillXxx 在页面顶层 th:with 里已过滤，避免出现空壳分组）。 -->
           <section
             class="card-base onload-animation"
-            th:if="${!#strings.isEmpty(cfg?.identity?.trajectory)}"
+            th:if="${cfg?.skills?.enable != false and skillItems != null and not #lists.isEmpty(skillItems)}"
           >
-            <div class="about-card-head">
-              <span class="about-head-icon">
-                <span
-                  class="icon-[material-symbols--terminal-rounded]"
-                  aria-hidden="true"></span>
-              </span>
-              <h2 class="about-card-title text-90">技术轨迹</h2>
+            <div class="about-card-head flex-wrap">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.skillsTitle}"
+              >
+                我的技能
+              </h2>
+              <!-- 右上角「全部技能 →」：与「本人项目」同一套写法（文字走 i18n、地址来自设置）。
+                   ml-auto 把它推到行尾；本卡用 .about-card-head（flex 卡头）而非
+                   .about-card-head-row，因为要留出 ml-auto 推到行尾的空间。 -->
+              <a
+                class="about-section-link ml-auto"
+                th:if="${skillsShowMore and !#strings.isEmpty(skillsUrl)}"
+                th:href="${skillsUrl}"
+              >
+                <span th:text="#{page.about.skillsMore}">全部技能 →</span>
+              </a>
             </div>
-            <div
-              class="about-tag-list"
-              th:data-lines="${cfg?.identity?.trajectory}"
-              data-lines-render="stackTags"
-            >
+            <div class="about-skill-groups">
+              <div
+                class="about-skill-group"
+                th:if="${skillFrontend != null and not #lists.isEmpty(skillFrontend)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.frontend}"
+                >
+                  前端开发
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillFrontend}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                class="about-skill-group"
+                th:if="${skillBackend != null and not #lists.isEmpty(skillBackend)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.backend}"
+                >
+                  后端开发
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillBackend}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                class="about-skill-group"
+                th:if="${skillDatabase != null and not #lists.isEmpty(skillDatabase)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.database}"
+                >
+                  数据库
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillDatabase}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                class="about-skill-group"
+                th:if="${skillTools != null and not #lists.isEmpty(skillTools)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.tools}"
+                >
+                  开发工具
+                </p>
+                <div class="about-tag-list">
+                  <span th:each="skill : ${skillTools}" class="about-tag-chip">
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                class="about-skill-group"
+                th:if="${skillOther != null and not #lists.isEmpty(skillOther)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.other}"
+                >
+                  其他技能
+                </p>
+                <div class="about-tag-list">
+                  <span th:each="skill : ${skillOther}" class="about-tag-chip">
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
             </div>
-            <p class="mt-3 text-xs text-50">
-              工具会变化，解决问题的方式会留下。
-            </p>
           </section>
 
-          <!-- 我的朋友（数据取自本站友情链接，可随机）
+          <!-- 我的朋友（数据取自本站友情链接）
                2026-09-13：由「文字胶囊网格」改版为「带头像的卡片墙」，
-               并从「技术轨迹」上方移到下方（LQ 要求：技术轨迹卡片下面）。
+               并从「我的技能」上方移到下方（LQ 要求：我的技能卡片下面）。
                形态：圆形 logo + 名称 + 单行描述，两列网格。
-               数据源：Links 插件的 linkFinder.groupBy()（服务端全量渲染，
-               客户端洗牌后截前 N）。
+               数据源：Links 插件的 linkFinder.random(N) —— 服务端每次请求随机取 N 条
+               （N = 设置里的「显示数量」），所以「每次刷新换一批」是零 JS 的：客户端洗牌
+               那套已从 extend-pages.js 移除，超量条目也不会下发到前台。
+               ⚠️ 依赖插件的 random(maxSize)（插件 README 有列，但主题里此前没用过）：
+               若插件版本不支持，本页渲染会抛错 —— 届时把顶层 th:with 的 friendLinks 换回
+               linkFinder.groupBy()，本段按分组两轮遍历即可（改动只有这两处）。
 
-               🔴🔴 1.4.84 修正：groups 已在上方页面顶层 th:with 里定义
-               （linkFinder.groupBy() + url 过滤），这里直接用即可。
-               **不要**在本 section 上再叠 th:with + th:if —— th:if(3)
+               🔴🔴 1.4.84 修正：变量都在上方页面顶层 th:with 里（friendLinks /
+               friendCount）。**不要**在本 section 上再叠 th:with + th:if：th:if(3)
                先于 th:with(4) 执行，同元素上 th:if 读不到 th:with 的变量
                （1.4.83 正是这样修坏的）。 -->
           <section
             class="card-base onload-animation"
-            th:if="${cfg?.friends?.enable != false and groups != null and !#lists.isEmpty(groups)}"
+            th:if="${cfg?.friends?.enable != false and friendLinks != null and !#lists.isEmpty(friendLinks)}"
           >
             <div class="about-card-head">
-              <span class="about-head-icon">
-                <span
-                  class="icon-[material-symbols--group-rounded]"
-                  aria-hidden="true"></span>
-              </span>
-              <h2 class="about-card-title text-90">我的朋友</h2>
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.friendsTitle}"
+              >
+                我的朋友
+              </h2>
             </div>
-            <!-- 友链卡片：服务端全量渲染本站友情链接，客户端按「每次刷新随机排序」
-                 洗牌后截前 N（extend-pages.js 的 shuffleFriends）。无 JS 时按服务端
-                 顺序完整展示，功能不缺失。 -->
-            <div
-              class="about-friends"
-              th:data-shuffle="${cfg?.friends?.shuffle != false ? 'true' : null}"
-              th:data-count="${cfg?.friends?.count != null ? cfg?.friends?.count : 6}"
-            >
-              <div th:each="g : ${groups}" th:remove="tag">
-                <!-- aboutLogoOk 口径与页脚友链一致：logo 非空且是 http / // / / 开头 -->
-                <a
-                  class="about-friend"
-                  th:each="l : ${g?.links}"
-                  th:with="aboutLogoOk = ${l?.spec?.logo != null and (l?.spec?.logo.startsWith('http') or l?.spec?.logo.startsWith('//') or l?.spec?.logo.startsWith('/'))}"
-                  th:href="${l?.spec?.url != null and (l?.spec?.url.startsWith('http') or l?.spec?.url.startsWith('//') or l?.spec?.url.startsWith('/')) ? l?.spec?.url : null}"
-                  th:title="${#strings.defaultString(l?.spec?.description, l?.spec?.displayName)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    th:if="${aboutLogoOk}"
-                    th:src="${l?.spec?.logo}"
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    class="about-friend-logo"
-                  />
-                  <span th:unless="${aboutLogoOk}" class="about-friend-logo-ph">
-                    <span
-                      class="icon-[material-symbols--link-rounded]"
-                      aria-hidden="true"></span>
-                  </span>
-                  <span class="about-friend-body">
-                    <span
-                      class="about-friend-name"
-                      th:text="${l?.spec?.displayName}">链接</span
-                    >
-                    <span
-                      class="about-friend-desc"
-                      th:if="${!#strings.isEmpty(l?.spec?.description)}"
-                      th:text="${l?.spec?.description}"></span>
-                  </span>
-                </a>
-              </div>
+            <!-- aboutLogoOk 口径与页脚友链一致：logo 非空且是 http / // / / 开头；
+                 url 非法时只渲染卡片、不生成 href（沿用原有行为）。 -->
+            <div class="about-friends">
+              <a
+                class="about-friend"
+                th:each="l : ${friendLinks}"
+                th:with="aboutLogoOk = ${l?.spec?.logo != null and (l?.spec?.logo.startsWith('http') or l?.spec?.logo.startsWith('//') or l?.spec?.logo.startsWith('/'))}"
+                th:href="${l?.spec?.url != null and (l?.spec?.url.startsWith('http') or l?.spec?.url.startsWith('//') or l?.spec?.url.startsWith('/')) ? l?.spec?.url : null}"
+                th:title="${#strings.defaultString(l?.spec?.description, l?.spec?.displayName)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  th:if="${aboutLogoOk}"
+                  th:src="${l?.spec?.logo}"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  class="about-friend-logo"
+                />
+                <span th:unless="${aboutLogoOk}" class="about-friend-logo-ph">
+                  <span
+                    class="icon-[material-symbols--link-rounded]"
+                    aria-hidden="true"></span>
+                </span>
+                <span class="about-friend-body">
+                  <span
+                    class="about-friend-name"
+                    th:text="${l?.spec?.displayName}">链接</span
+                  >
+                  <span
+                    class="about-friend-desc"
+                    th:if="${!#strings.isEmpty(l?.spec?.description)}"
+                    th:text="${l?.spec?.description}"></span>
+                </span>
+              </a>
             </div>
-            <p
-              class="mt-3 text-xs text-50"
-              th:if="${!#strings.isEmpty(cfg?.friends?.note)}"
-              th:text="${cfg?.friends?.note}"
-            >
-              各自折腾，互相串门。
-            </p>
           </section>
 
           <!-- 保持联系：数据 = 侧栏「个人简介小组件 → 社交媒体」
@@ -1625,15 +705,15 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                必须用 th:utext 注入，不能走 th:class —— 见 Profile.astro / Footer.astro） -->
           <section
             class="card-base onload-animation"
-            th:if="${cfg?.friends?.contactEnable != false and socials != null and !#lists.isEmpty(socials)}"
+            th:if="${cfg?.contact?.enable != false and socials != null and !#lists.isEmpty(socials)}"
           >
             <div class="about-card-head">
-              <span class="about-head-icon">
-                <span
-                  class="icon-[material-symbols--alternate-email-rounded]"
-                  aria-hidden="true"></span>
-              </span>
-              <h2 class="about-card-title text-90">保持联系</h2>
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.contactTitle}"
+              >
+                保持联系
+              </h2>
             </div>
             <div class="about-connect-list">
               <a
@@ -1654,18 +734,20 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
                   aria-hidden="true"></span>
               </a>
             </div>
-            <p class="about-card-foot">欢迎来串门，一起交流。</p>
           </section>
         </div>
       </div>
     </div>
 
     <!-- ================= ④ 页脚卡 ================= -->
-    <!-- 页脚链接走结构化设置（主题设置 → 关于我 → 页脚 → 页脚链接，名称 + 链接两栏），
-         不再用「名称|链接」的多行文本 —— 名称位置填成 URL 那种误用就此消失。 -->
+    <!-- 页脚链接走结构化设置（主题设置 → 关于我 → 页脚 → 页脚链接：名称 + 图标（可选）+ 链接，
+         最多 5 条由设置项自身的 max 限制），不再用「名称|链接」的多行文本 ——
+         名称位置填成 URL 那种误用就此消失。
+         图标与「我的技能」胶囊 / 身份卡按钮同一套：iconify(format: svg) 值是一整段内联 SVG，
+         必须 th:utext 注入、留空则完全不渲染图标元素。 -->
     <section
       class="card-base about-footer-card onload-animation mb-4"
-      th:if="${(!#strings.isEmpty(cfg?.footer?.motto)) or (cfg?.footer?.linkItems != null and !#lists.isEmpty(cfg?.footer?.linkItems))}"
+      th:if="${cfg?.footer?.enable != false and ((!#strings.isEmpty(cfg?.footer?.motto)) or (cfg?.footer?.linkItems != null and !#lists.isEmpty(cfg?.footer?.linkItems)))}"
     >
       <div class="min-w-0">
         <p
@@ -1692,8 +774,16 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           th:href="${!#strings.isEmpty(fl?.url) ? fl?.url : null}"
           th:target="${!#strings.isEmpty(fl?.url) ? '_blank' : null}"
           rel="noopener noreferrer"
-          th:text="${#strings.defaultString(fl?.label, fl?.url)}">链接</a
         >
+          <span
+            th:if="${fl?.icon != null and !#strings.isEmpty(fl?.icon?.value)}"
+            class="about-ico about-ico--svg"
+            aria-hidden="true"
+            th:utext="${fl?.icon?.value}"></span>
+          <span th:text="${#strings.defaultString(fl?.label, fl?.url)}"
+            >链接</span
+          >
+        </a>
       </div>
     </section>
   </div>
