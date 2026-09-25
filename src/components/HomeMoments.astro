@@ -1,19 +1,17 @@
 ---
 /**
- * 全站瞬间栏：横向滚动跑马灯 + 底部标签筛选，挂在 #main-panel-wrapper 内、
+ * 全站瞬间栏：横向滚动跑马灯，挂在 #main-panel-wrapper 内、
  * #main-grid 之上、#swup-container 之外 ⇒ 全站每页都有、站内换页不重载。
  *
  * 结构：
  *  ┌──────────────────────────────────────────────┐
- *  │ [✨瞬间]  滚动内容……   滚动内容……   [更多›]  │  跑马灯行
- *  │  #标签·n  #标签·n  #标签·n  …                │  标签筛选行
+ *  │ [✨瞬间]  滚动内容……   滚动内容……   [更多›]  │
  *  └──────────────────────────────────────────────┘
  *
  * 要点：
  * - 瞬间正文由服务端先剥标签（无 JS 也不露标签原文），端上 JS 再取首个逻辑行、
  *   隐藏正文为空的条目，内容单行限宽省略（40ch）。
- * - 标签用隐藏 span 传入，JS 去重计数后渲染为胶囊；无缝滚动靠复制一屏实现，
- *   hover / 键盘聚焦暂停。
+ * - 无缝滚动靠复制一屏实现，hover / 键盘聚焦暂停。
  * - 开关与数量：layout.pageLayout.momentsBar.enable / .count（默认关闭）。
  * - 依赖「瞬间」插件：未安装时整条不渲染（避免空卡片 + 死链常驻）。
  */
@@ -88,12 +86,6 @@
             <span
               class="home-moment-dot mx-3 inline-block h-1 w-1 shrink-0 rounded-full bg-(--primary)/40"
               aria-hidden="true"></span>
-            <!-- 标签隐藏数据：供 JS 提取 -->
-            <span
-              class="home-moment-tag-data"
-              style="display:none"
-              th:each="tagName : ${moment.spec.tags}"
-              th:text="${tagName}"></span>
           </a>
         </div>
       </div>
@@ -118,15 +110,6 @@
         class="icon-[material-symbols--chevron-right-rounded] text-base transition-transform group-hover:translate-x-0.5"
       ></span>
     </a>
-  </div>
-
-  <!-- ===== 底部：标签筛选 =====
-       data-moments-url = 站内链接前缀（@{/moments} 自带上下文路径），供脚本拼标签链接 -->
-  <div
-    id="home-moments-tags"
-    class="relative z-10 mt-3 flex flex-wrap items-center gap-2"
-    th:data-moments-url="@{/moments}"
-  >
   </div>
 </section>
 
@@ -200,37 +183,6 @@
     color: var(--primary);
   }
 
-  /* 标签胶囊 */
-  #home-moments-tags .home-moment-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    height: 1.75rem;
-    padding: 0 0.625rem;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--btn-content);
-    background: var(--btn-regular-bg);
-    transition:
-      background 0.2s ease,
-      color 0.2s ease,
-      transform 0.15s ease;
-  }
-  #home-moments-tags .home-moment-tag:hover {
-    background: var(--btn-regular-bg-hover);
-    color: var(--primary);
-  }
-  #home-moments-tags .home-moment-tag:active {
-    transform: scale(0.95);
-  }
-  #home-moments-tags .home-moment-tag .home-moment-tag-count {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    color: var(--primary);
-    opacity: 0.7;
-  }
-
   /* 移动端性能降级：关闭跑马灯无限滚动动画（改为原生横向滑动），
      同时关闭两端渐隐遮罩——无限 transform 动画与 mask 在低端机持续
      触发合成层重绘，是移动端卡顿主因 */
@@ -297,11 +249,8 @@
     function initHomeMoments() {
       var marquee = document.getElementById("home-moments-marquee");
       var track = document.getElementById("home-moments-track");
-      var tagsBox = document.getElementById("home-moments-tags");
       if (!marquee || !track) {
         // 没有瞬间数据时 #home-moments-track 整块不渲染（th:if），走到这里就结束了。
-        // 提前 return 前先把空的标签容器隐藏，否则卡片底部会留一段空白。
-        if (tagsBox) tagsBox.style.display = "none";
         return;
       }
 
@@ -361,46 +310,6 @@
           setTimeout(setupMarquee, 200);
         }
       }
-
-      // ===== 3. 标签提取去重 + 计数，渲染胶囊 =====
-      // ⚠️ 必须在补屏/复制之后读、且只看第一个 group（从整条 track 数会算成 k×2 遍）；
-      // 用 createElement 而非 innerHTML：标签名来自用户数据，拼 HTML 有 XSS 风险。
-      if (tagsBox && tagsBox.getAttribute("data-rendered") !== "1") {
-        tagsBox.setAttribute("data-rendered", "1");
-        // 站内链接前缀由服务端下发（子路径部署时硬编码 "/moments" 会 404）
-        var momentsUrl = tagsBox.getAttribute("data-moments-url") || "/moments";
-        var firstGroup = track.querySelector(".home-moments-group");
-        var tagMap = new Map();
-        if (firstGroup) {
-          firstGroup
-            .querySelectorAll(".home-moment-link .home-moment-tag-data")
-            .forEach(function (el) {
-              var t = (el.textContent || "").trim();
-              if (t) tagMap.set(t, (tagMap.get(t) || 0) + 1);
-            });
-        }
-
-        if (tagMap.size === 0) {
-          tagsBox.style.display = "none";
-          return;
-        }
-
-        var i = 0;
-        var MAX_TAGS = 10;
-        tagMap.forEach(function (count, tag) {
-          if (i >= MAX_TAGS) return;
-          i++;
-          var a = document.createElement("a");
-          a.href = momentsUrl + "?tag=" + encodeURIComponent(tag);
-          a.className = "home-moment-tag";
-          a.textContent = "#" + tag;
-          var c = document.createElement("span");
-          c.className = "home-moment-tag-count";
-          c.textContent = String(count);
-          a.appendChild(c);
-          tagsBox.appendChild(a);
-        });
-      }
     }
 
     if (document.readyState === "loading") {
@@ -409,7 +318,6 @@
       initHomeMoments();
     }
     // 瞬间条位于 #swup-container 之外，Swup 换页不替换该 DOM、也不重执行本脚本，
-    // 因此全站仅首屏初始化一次；data-cloned/data-rendered 标记保证幂等，
-    // 避免重复克隆与重复渲染。
+    // 因此全站仅首屏初始化一次；data-cloned 标记保证幂等，避免重复克隆。
   })();
 </script>

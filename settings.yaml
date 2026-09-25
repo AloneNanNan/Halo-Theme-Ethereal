@@ -34,7 +34,7 @@ spec:
               id: pageLayout_momentsBar
               key: pageLayout_momentsBar
               label: 瞬间预览条
-              help: "内容区顶部的「瞬间」横向滚动预览条（含底部标签筛选），全站生效"
+              help: "内容区顶部的「瞬间」横向滚动预览条，全站生效"
               value:
                 enable: false
                 count: 10
@@ -45,7 +45,7 @@ spec:
                   key: momentsBar_enable
                   value: false
                   label: 启用瞬间预览条
-                  help: "开启后所有页面内容区顶部显示「瞬间」横向滚动预览条（含底部标签筛选）。需安装瞬间插件"
+                  help: "开启后所有页面内容区顶部显示「瞬间」横向滚动预览条。需安装瞬间插件"
                 - $formkit: number
                   name: count
                   id: momentsBar_count
