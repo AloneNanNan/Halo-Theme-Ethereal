@@ -2065,18 +2065,18 @@ spec:
               enable: true
               avatar: ""
               name: ""
-              roles: Halo 主题 / 插件开发者
-              tagline: 成功是失败者的通行证，失败是成功者的墓志铭
-              status: 在折腾 Halo 主题与插件
+              roles: 独立开发者 / 博客作者
+              tagline: 保持好奇，持续记录
+              status: 在写代码，也在生活
             nav:
               enable: true
             intro:
               enable: true
               quote: ""
               intro: |-
-                这里记录我在自建博客、主题定制与插件开发上的折腾。
-                博客跑在 Halo 上，前台是基于 Fuwari 二次开发的 Ethereal 主题 —— 配色、布局到小组件都可以自己改。
-                平时写点工具类网站的推荐和使用记录，顺手把踩过的坑整理成主题补丁或插件。
+                这里记录我的日常、想法，以及一些还在摸索中的尝试。
+                主要写生活随笔、读书笔记和技术心得，偶尔也分享些好用的工具。
+                愿这些文字能给你带来一点帮助或启发。
             projects:
               enable: true
               count: 4
@@ -2124,17 +2124,17 @@ spec:
                 - $formkit: text
                   name: roles
                   label: 身份行
-                  value: "Halo 主题 / 插件开发者"
+                  value: "独立开发者 / 博客作者"
                   help: "如：独立开发者 / 博客作者"
                 - $formkit: textarea
                   name: tagline
                   label: 一句话简介
-                  value: "成功是失败者的通行证，失败是成功者的墓志铭"
+                  value: "保持好奇，持续记录"
                   help: "显示在身份行下方的大字简介"
                 - $formkit: text
                   name: status
                   label: 状态行
-                  value: "在折腾 Halo 主题与插件"
+                  value: "在写代码，也在生活"
                   help: "如：正在构建效率工具，也在持续写作；启用「侧边栏 → 个人简介小组件 → 在线状态」后，身份卡这里会被状态胶囊取代"
                 - $formkit: array
                   name: actions
@@ -2210,7 +2210,7 @@ spec:
                 - $formkit: textarea
                   name: intro
                   label: 关于我正文
-                  value: "这里记录我在自建博客、主题定制与插件开发上的折腾。\n博客跑在 Halo 上，前台是基于 Fuwari 二次开发的 Ethereal 主题 —— 配色、布局到小组件都可以自己改。\n平时写点工具类网站的推荐和使用记录，顺手把踩过的坑整理成主题补丁或插件。"
+                  value: "这里记录我的日常、想法，以及一些还在摸索中的尝试。\n主要写生活随笔、读书笔记和技术心得，偶尔也分享些好用的工具。\n愿这些文字能给你带来一点帮助或启发。"
                   help: "每行一段"
 
             # ─────────── ④ 本人项目卡片 ───────────
