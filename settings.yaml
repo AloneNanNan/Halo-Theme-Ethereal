@@ -2105,11 +2105,14 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_identity_enable
                   label: 显示身份卡片
                   value: true
                   help: "关闭后不显示身份卡片"
                 - $formkit: attachment
                   name: avatar
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 头像
                   accepts:
                     - "image/*"
@@ -2118,26 +2121,36 @@ spec:
                   help: "建议 1:1 正方形；留空则使用侧边栏「个人简介小组件」里已设置的头像"
                 - $formkit: text
                   name: name
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 昵称
                   value: ""
                   help: "留空则使用站点标题"
                 - $formkit: text
                   name: roles
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 身份行
                   value: "独立开发者 / 博客作者"
                   help: "如：独立开发者 / 博客作者"
                 - $formkit: textarea
                   name: tagline
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 一句话简介
                   value: "保持好奇，持续记录"
                   help: "显示在身份行下方的大字简介"
                 - $formkit: text
                   name: status
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 状态行
                   value: "在写代码，也在生活"
                   help: "如：正在构建效率工具，也在持续写作；启用「侧边栏 → 个人简介小组件 → 在线状态」后，身份卡这里会被状态胶囊取代"
                 - $formkit: array
                   name: actions
+                  if: "$get(about_identity_enable).value"
+                  preserve: true
                   label: 卡片按钮
                   help: "最多 3 个；第 1 个为主按钮（主题色高亮），后两个为次按钮"
                   max: 3
@@ -2164,11 +2177,14 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_nav_enable
                   label: 显示顶部导航卡片
                   value: true
                   help: "关闭后不显示顶部导航卡片"
                 - $formkit: array
                   name: items
+                  if: "$get(about_nav_enable).value"
+                  preserve: true
                   label: 导航条目
                   value:
                     - label: 个人资料
@@ -2199,16 +2215,21 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_intro_enable
                   label: 显示个人简介卡片
                   value: true
                   help: "关闭后不显示个人简介卡片"
                 - $formkit: textarea
                   name: quote
+                  if: "$get(about_intro_enable).value"
+                  preserve: true
                   label: 引语
                   value: ""
                   help: "「关于我」卡片开头的引用，留空则不显示"
                 - $formkit: textarea
                   name: intro
+                  if: "$get(about_intro_enable).value"
+                  preserve: true
                   label: 关于我正文
                   value: "这里记录我的日常、想法，以及一些还在摸索中的尝试。\n主要写生活随笔、读书笔记和技术心得，偶尔也分享些好用的工具。\n愿这些文字能给你带来一点帮助或启发。"
                   help: "每行一段"
@@ -2220,11 +2241,14 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_projects_enable
                   label: 显示本人项目卡片
                   value: true
                   help: "关闭后不显示本人项目卡片；数据来自「项目集」插件"
                 - $formkit: number
                   name: count
+                  if: "$get(about_projects_enable).value"
+                  preserve: true
                   label: 显示数量
                   value: 4
                   min: 1
@@ -2233,6 +2257,8 @@ spec:
                   help: "显示几个项目，建议填写偶数"
                 - $formkit: switch
                   name: showMore
+                  if: "$get(about_projects_enable).value"
+                  preserve: true
                   label: 显示「全部项目」按钮
                   value: true
                   help: "本人项目卡片右上角显示全部项目按钮"
@@ -2244,11 +2270,14 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_activity_enable
                   label: 显示最近提交卡片
                   value: true
                   help: "关闭后不显示最近提交卡片"
                 - $formkit: number
                   name: count
+                  if: "$get(about_activity_enable).value"
+                  preserve: true
                   label: 显示数量
                   value: 5
                   min: 2
@@ -2264,16 +2293,22 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_skills_enable
                   label: 显示我的技能卡片
                   value: true
                   help: "关闭后不显示我的技能卡片；数据来自「技能页面」设置"
                 - $formkit: switch
                   name: showMore
+                  id: about_skills_showMore
+                  if: "$get(about_skills_enable).value"
+                  preserve: true
                   label: 显示「全部技能」按钮
                   value: true
                   help: "我的技能卡片右上角显示全部技能按钮"
                 - $formkit: text
                   name: url
+                  if: "$get(about_skills_enable).value && $get(about_skills_showMore).value"
+                  preserve: true
                   label: 技能页面地址
                   help: "「全部技能」按钮的跳转地址。技能页是非固定路由的自定义页面，请填你在「页面 → 自定义页面」里给它设置的实际路径（如 /skills）"
                   value: "/skills"
@@ -2285,11 +2320,14 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_friends_enable
                   label: 显示我的朋友卡片
                   value: true
                   help: "关闭后不显示我的朋友卡片；卡片数据取自本站友情链接（需安装并启用「链接管理」插件）"
                 - $formkit: number
                   name: count
+                  if: "$get(about_friends_enable).value"
+                  preserve: true
                   label: 显示数量
                   value: 6
                   min: 3
@@ -2305,6 +2343,7 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_contact_enable
                   label: 显示保持联系卡片
                   value: true
                   help: "关闭后不显示保持联系卡片；卡片数据取自「侧边栏 → 个人简介小组件 → 社交媒体」已设置的内容"
@@ -2316,21 +2355,28 @@ spec:
               children:
                 - $formkit: switch
                   name: enable
+                  id: about_footer_enable
                   label: 显示页脚卡片
                   value: true
                   help: "关闭后不显示页脚卡片"
                 - $formkit: text
                   name: eyebrow
+                  if: "$get(about_footer_enable).value"
+                  preserve: true
                   label: 页脚卡片小标题
                   help: "页脚上方的小字，一般用英文短句，留空则不显示"
                   value: "OPEN SOURCE, OPEN CHANNEL"
                 - $formkit: textarea
                   name: motto
+                  if: "$get(about_footer_enable).value"
+                  preserve: true
                   label: 页脚卡片文案
                   help: "页脚主文案，留空则不显示"
                   value: "保持热爱，持续折腾"
                 - $formkit: array
                   name: linkItems
+                  if: "$get(about_footer_enable).value"
+                  preserve: true
                   label: 页脚卡片按钮
                   help: "最多5条"
                   max: 5
