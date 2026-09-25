@@ -1,0 +1,754 @@
+---
+// 关于页面模板（Halo 自定义页面，自定义模板选 about），配置来自 extendPages.about。
+// 结构：身份卡 → 顶部导航 → 两栏（主列：个人简介 / 本人项目 / 最近提交；
+// 侧列：我的技能 / 我的朋友 / 保持联系）→ 页脚卡。
+// 数据源：本人项目 =「项目集」插件；我的技能 = 技能页面设置；
+// 我的朋友 = 友链插件 linkFinder.random(N)；最近提交 = 本站文章 + 瞬间。
+// 两栏按容器宽度分档（.about-cols-wrap）：阈值 880px 大于默认内容列宽（恒 872px），
+// 故分栏目前不会触发，属已知预期，待内容区加宽后自动生效。
+// 「个人简介」正文由服务端直出纯文本（无 JS 也可见），extend-pages.js 再重建成段落。
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import "../styles/about.css";
+---
+
+<MainGridLayout
+  title="${singlePage.spec.title + ' - ' + site.title}"
+  description="#{page.about.description(${site.title})}"
+>
+  <!-- 变量统一在本条（页面顶层）th:with 定义，下方卡片直接读：
+       cfg / aboutPosts / aboutMoments / friendLinks / friendCount / skill* / projects / socials。
+       ⚠️ 不要在消费点上再叠 th:with + th:if：Thymeleaf 的 th:if(优先级 3) 早于
+       th:with(优先级 4)，同一元素上 th:if 读不到该元素 th:with 的变量，会恒为假。 -->
+  <div
+    th:with="cfg=${theme.config?.extendPages?.about},
+      rawActivityCount=${cfg?.activity?.count != null ? #conversions.convert(cfg?.activity?.count, 'java.lang.Integer') : 5},
+      activityCount=${rawActivityCount > 20 ? 20 : (rawActivityCount < 2 ? 2 : rawActivityCount)},
+      aboutPosts=${postFinder?.list({page: 1, size: activityCount})?.items},
+      aboutMoments=${momentFinder?.list({size: activityCount})?.items},
+      aboutPostCount=${aboutPosts != null ? #lists.size(aboutPosts) : 0},
+      aboutMomentCount=${aboutMoments != null ? #lists.size(aboutMoments) : 0},
+      rawFriendCount=${cfg?.friends?.count != null ? #conversions.convert(cfg?.friends?.count, 'java.lang.Integer') : 6},
+      friendCount=${rawFriendCount > 12 ? 12 : (rawFriendCount < 1 ? 1 : rawFriendCount)},
+      friendLinks=${(pluginFinder == null or !pluginFinder.available('PluginLinks') or linkFinder == null) ? null : linkFinder.random(friendCount)},
+      skillsUrl=${cfg?.skills?.url},
+      skillsShowMore=${cfg?.skills?.showMore != false},
+      skillItems=${theme.config?.extendPages?.skills?.entries?.items},
+      skillFrontend=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'frontend']},
+      skillBackend=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'backend']},
+      skillDatabase=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'database']},
+      skillTools=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'tools']},
+      skillOther=${skillItems == null ? null : skillItems.?[#this.name != null and #this.name != '' and #this.category == 'other']},
+      projectCount=${cfg?.projects?.count != null ? #conversions.convert(cfg?.projects?.count, 'java.lang.Integer') : 4},
+      projects=${pluginFinder != null and pluginFinder.available('portfolio') ? projectFinder?.list(1, projectCount) : null},
+      socials=${theme.config?.sidebar?.profile?.social_media}"
+    th:remove="tag"
+  >
+    <!-- ================= ① 身份卡 =================
+         ⚠️ cfg 是本页配置，取侧栏项必须写完整路径
+         theme.config?.sidebar?.profile?.…（写成 cfg?.sidebar?.… 恒为 null）。 -->
+    <section
+      class="card-base about-hero-card onload-animation mb-4"
+      th:if="${cfg?.identity?.enable != false}"
+      th:with="ident=${cfg?.identity},
+        sts=${theme.config?.sidebar?.profile?.statusSettings},
+        avatarSrc=${!#strings.isEmpty(ident?.avatar)
+          ? ident?.avatar
+          : (#strings.isEmpty(theme.config?.sidebar?.profile?.avatar)
+            ? '/themes/Ethereal/assets/images/demo-avatar.png'
+            : theme.config?.sidebar?.profile?.avatar)},
+        actions=${ident?.actions == null
+          ? null
+          : ident?.actions.?[#this.label != null and #this.label != '' and #this.url != null and #this.url != '']}"
+    >
+      <div class="relative z-1 flex flex-col gap-5 sm:flex-row sm:items-center">
+        <!-- 头像：本卡单独设置优先；留空回落到侧栏「个人简介小组件」的头像
+             （该字段默认值就是主题内置头像，两者都空时也用它兜底，不留破图） -->
+        <span class="about-avatar">
+          <!-- 头像与右侧 h1 是同一身份，语义上属装饰（空 alt），
+               避免读屏把名字播报两遍 -->
+          <img
+            class="about-avatar__image"
+            th:src="${avatarSrc}"
+            th:alt="''"
+            src=""
+            alt=""
+          />
+        </span>
+        <div class="min-w-0 flex-1">
+          <h1
+            class="about-name text-90"
+            th:text="${#strings.defaultString(ident?.name, site.title)}"
+          >
+            关于我
+          </h1>
+          <p
+            class="about-roles"
+            th:if="${!#strings.isEmpty(ident?.roles)}"
+            th:text="${ident?.roles}"
+          >
+            身份
+          </p>
+          <p
+            class="about-tagline text-75"
+            th:if="${!#strings.isEmpty(ident?.tagline)}"
+            th:text="${ident?.tagline}"
+          >
+            一句话简介
+          </p>
+          <!-- 状态：启用侧栏「在线状态」时用可点击的胶囊（与侧栏头像卡同源，
+               由 profile-status.ts 委托切换），否则回退 ident.status 静态文案。
+               图标/动效类名与 Profile.astro 的 th:case 分支逐字面量一致
+               （Tailwind 只认完整字面量，别运行时拼类名）。 -->
+          <!-- 无障碍名 = 可见文案 + sr-only 的「切换当前状态」：胶囊有可见文本，
+               写死 aria-label 会违反 WCAG 2.5.3（Label in Name）。 -->
+          <button
+            type="button"
+            class="about-status about-status-pill"
+            th:if="${sts != null and sts?.enable != false}"
+            th:attr="data-status=${sts?.status ?: 'online'}"
+            th:switch="${sts?.status ?: 'online'}"
+          >
+            <span th:case="energetic" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--sun-fill] text-amber-500 status-spin"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.energetic) ? sts?.energetic : '元气满满'}"
+                >元气满满</span
+              >
+            </span>
+            <span th:case="emo" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--sad-fill] text-violet-400 status-float"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.emo) ? sts?.emo : 'emo中'}"
+                >emo中</span
+              >
+            </span>
+            <span th:case="study" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--book-2-fill] text-sky-500 status-drift"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.study) ? sts?.study : '学习中'}"
+                >学习中</span
+              >
+            </span>
+            <span th:case="busy" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--fire-fill] text-orange-500 status-wiggle"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.busy) ? sts?.busy : '忙碌中'}"
+                >忙碌中</span
+              >
+            </span>
+            <span th:case="dnd" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--moon-fill] text-indigo-400 status-float"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.dnd) ? sts?.dnd : '请勿打扰'}"
+                >请勿打扰</span
+              >
+            </span>
+            <span th:case="sleep" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--moon-stars-fill] text-blue-500 status-pulse"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.sleep) ? sts?.sleep : '睡觉中'}"
+                >睡觉中</span
+              >
+            </span>
+            <span th:case="away" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--cloud-fill] text-neutral-400 status-drift"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.away) ? sts?.away : '暂时离开'}"
+                >暂时离开</span
+              >
+            </span>
+            <!-- 在线（默认分支） -->
+            <span th:case="*" class="about-status-item">
+              <span
+                class="about-status-ico icon-[mingcute--leaf-fill] text-green-500 status-pulse"
+              ></span>
+              <span
+                class="about-status-text"
+                th:text="${!#strings.isEmpty(sts?.online) ? sts?.online : '在线中'}"
+                >在线中</span
+              >
+            </span>
+            <span class="sr-only" th:text="#{profile.switchStatus}"
+              >切换当前状态</span
+            >
+          </button>
+          <p
+            class="about-status"
+            th:if="${(sts == null or sts?.enable == false) and !#strings.isEmpty(ident?.status)}"
+          >
+            <span
+              class="icon-[material-symbols--bolt-rounded] about-ico"
+              aria-hidden="true"></span>
+            <span th:text="${ident?.status}">状态</span>
+          </p>
+        </div>
+
+        <!-- 卡片按钮：数量上限由设置项 max: 3 限制，第 1 个是主按钮、其余为次按钮；
+             「文字 + 链接」都填才算有效条目，一条都没有时整块不渲染。
+             图标（iconify svg）必须 th:utext 注入，留空不渲染图标元素（同顶部导航）。
+             只有外链新开标签，站内路径在当前页跳转（同顶部导航、项目卡片口径）。 -->
+        <div
+          class="about-hero-actions"
+          th:if="${actions != null and not #lists.isEmpty(actions)}"
+        >
+          <a
+            th:each="act, ast : ${actions}"
+            class="about-btn"
+            th:classappend="${ast.index == 0
+              ? 'about-btn--primary'
+              : 'about-btn--ghost'}"
+            th:href="${act?.url}"
+            th:target="${act?.url != null and (act?.url.startsWith('http') or act?.url.startsWith('//')) ? '_blank' : null}"
+            rel="noopener noreferrer"
+          >
+            <span
+              th:if="${act?.icon != null and !#strings.isEmpty(act?.icon?.value)}"
+              class="about-ico about-ico--svg"
+              aria-hidden="true"
+              th:utext="${act?.icon?.value}"></span>
+            <span th:text="${act?.label}">查看 GitHub</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ② 顶部导航（长条菜单） =================
+        条目完全自定义（主题设置 → 关于页面 → 顶部导航卡片 → 导航条目）；
+        一条都没配时整块不渲染。链接留空 = 指向当前页（自动带 is-active +
+        aria-current="page"，用于「个人资料」这类条目）。 -->
+    <nav
+      class="card-base about-subnav onload-animation mb-4"
+      th:if="${cfg?.nav?.enable != false and cfg?.nav?.items != null and not #lists.isEmpty(cfg?.nav?.items)}"
+      th:aria-label="#{page.about.navLabel}"
+    >
+      <a
+        th:each="navItem : ${cfg?.nav?.items}"
+        class="about-subnav-item"
+        th:classappend="${#strings.isEmpty(navItem?.url) ? ' is-active' : ''}"
+        th:href="${#strings.isEmpty(navItem?.url) ? singlePage.status.permalink : navItem?.url}"
+        th:aria-current="${#strings.isEmpty(navItem?.url) ? 'page' : null}"
+      >
+        <!-- 图标：$formkit: iconify + format: svg ⇒ 值是一整段内联 SVG（fill 为
+             currentColor，跟随条目文字色）。必须用 th:utext 注入、不能走 th:class
+             —— 同 links.astro 折叠面板、Profile.astro 社交图标。
+             图标由用户自选（后台不预置默认值）：留空时不渲染任何图标元素，只显示文字。 -->
+        <span
+          th:if="${navItem?.icon != null and !#strings.isEmpty(navItem?.icon?.value)}"
+          class="about-ico about-ico--svg"
+          aria-hidden="true"
+          th:utext="${navItem?.icon?.value}"></span>
+        <span th:text="${navItem?.label}">个人资料</span>
+      </a>
+    </nav>
+
+    <!-- ================= ③ 两栏正文 ================= -->
+    <div class="about-cols-wrap">
+      <div class="about-cols">
+        <!-- ---------- 主列 ---------- -->
+        <div class="about-col-main">
+          <!-- 关于我（个人简介卡片）：显隐与内容都取自 cfg.intro。
+               引语与正文都为空时整卡不渲染，避免留一张只有标题的空卡（同其它内容卡口径）。 -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.intro?.enable != false and (!#strings.isEmpty(cfg?.intro?.quote) or !#strings.isEmpty(cfg?.intro?.intro))}"
+          >
+            <div class="about-card-head-row">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.introTitle}"
+              >
+                关于我
+              </h2>
+            </div>
+            <blockquote
+              class="about-quote"
+              th:if="${!#strings.isEmpty(cfg?.intro?.quote)}"
+              th:text="${cfg?.intro?.quote}"
+            >
+              引语
+            </blockquote>
+            <!-- 正文先由服务端直出纯文本（.about-paragraphs 的 pre-line 让换行可见），
+                 extend-pages.js 再清空本容器、按同一份 th:data-lines 重建成 <p> 段落 ——
+                 保证有 / 无 JS 都读得到正文，且文本同源不额外增加体积。 -->
+            <div
+              class="about-paragraphs"
+              data-lines-render="paragraphs"
+              th:data-lines="${cfg?.intro?.intro}"
+              th:text="${#strings.trim(cfg?.intro?.intro)}"
+              th:if="${!#strings.isEmpty(cfg?.intro?.intro)}"
+            >
+            </div>
+          </section>
+
+          <!-- 本人项目：数据 = 「项目集」插件（plugin metadata.name = portfolio），
+               按其默认排序取前 N 个，点击进项目详情页；插件未安装时整卡隐藏
+               （直接调 Finder 会抛异常）。techStacks 是字符串数组，直接 th:each 渲染。 -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.projects?.enable != false and projects != null and projects.items != null and not #lists.isEmpty(projects.items)}"
+          >
+            <div
+              class="about-card-head-row flex flex-wrap items-center justify-between gap-3"
+            >
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.projectsTitle}"
+              >
+                本人项目
+              </h2>
+              <!-- 文字走 i18n、地址是插件固定路由 /portfolio；@{} 兼容部署上下文路径 -->
+              <a
+                class="about-section-link"
+                th:if="${cfg?.projects?.showMore != false}"
+                th:href="@{/portfolio}"
+              >
+                <span th:text="#{page.about.projectsMore}">全部项目 →</span>
+              </a>
+            </div>
+            <div class="about-proj-grid">
+              <!-- 不放图标：项目模型没有图标字段，按下标编一套等于假信息；右上角保留外链箭头 -->
+              <a
+                class="about-proj"
+                th:each="project : ${projects.items}"
+                th:href="@{/portfolio/{slug}(slug=${project?.slug})}"
+              >
+                <span class="about-proj__body">
+                  <h3 class="about-proj__title" th:text="${project?.title}">
+                    项目名
+                  </h3>
+                  <span
+                    class="about-proj__desc"
+                    th:if="${!#strings.isEmpty(project?.summary)}"
+                    th:text="${project?.summary}">说明</span
+                  >
+                  <span
+                    class="about-proj__tech"
+                    th:if="${project?.techStacks != null and not #lists.isEmpty(project?.techStacks)}"
+                  >
+                    <span
+                      th:each="tech : ${project?.techStacks}"
+                      th:text="${tech}"></span>
+                  </span>
+                </span>
+                <span
+                  class="about-proj__arrow icon-[material-symbols--arrow-outward-rounded]"
+                  aria-hidden="true"></span>
+              </a>
+            </div>
+          </section>
+
+          <!-- 最近提交：数据 = 最新文章 + 最新瞬间，服务端直出（无 JS 也完整可见）；
+               样式为时间轴（竖虚线 + 节点圆点 + 日期/类型/标题三段式）。
+               瞬间的 content.raw 是富文本，先剥标签当纯文本用，超长由单行省略号收尾。
+               行上 data-time 供客户端把两组归并、并按 data-count 截断到 N 条；
+               无 JS 时按服务端顺序完整展示（渐进增强）。 -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.activity?.enable != false and (aboutPostCount + aboutMomentCount) > 0}"
+          >
+            <div class="about-card-head-row">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.activityTitle}"
+              >
+                最近提交
+              </h2>
+            </div>
+            <ul
+              class="about-activity-list"
+              data-activity-timeline
+              th:data-count="${activityCount}"
+            >
+              <li
+                class="about-activity"
+                th:each="p : ${aboutPosts}"
+                th:data-time="${p?.spec?.publishTime}"
+              >
+                <span class="about-activity-dot" aria-hidden="true"></span>
+                <a
+                  class="about-activity-body"
+                  th:href="@{${p?.status?.permalink}}"
+                >
+                  <span class="about-activity-main">
+                    <span class="about-activity-head">
+                      <span
+                        class="about-activity-date"
+                        th:text="${p?.spec?.publishTime != null
+                          ? #dates.format(p?.spec?.publishTime, 'MM-dd')
+                          : ''}"
+                        >09-18</span
+                      >
+                      <span
+                        class="about-activity-kind"
+                        th:text="#{page.about.activityPost}">文章</span
+                      >
+                    </span>
+                    <span
+                      class="about-activity-title"
+                      th:text="${p?.spec?.title}">标题</span
+                    >
+                  </span>
+                  <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
+                  <span
+                    class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
+                    aria-hidden="true"></span>
+                </a>
+              </li>
+              <li
+                class="about-activity"
+                th:each="m : ${aboutMoments}"
+                th:with="momentText=${m?.spec?.content?.raw != null
+                    ? m?.spec?.content?.raw.replaceAll('<[^>]*>', ' ').trim()
+                    : ''}"
+                th:data-time="${m?.spec?.releaseTime}"
+              >
+                <span class="about-activity-dot" aria-hidden="true"></span>
+                <a
+                  class="about-activity-body"
+                  th:href="@{/moments/{name}(name=${m?.metadata?.name})}"
+                >
+                  <span class="about-activity-main">
+                    <span class="about-activity-head">
+                      <span
+                        class="about-activity-date"
+                        th:text="${m?.spec?.releaseTime != null
+                          ? #dates.format(m?.spec?.releaseTime, 'MM-dd')
+                          : ''}"
+                        >09-18</span
+                      >
+                      <span
+                        class="about-activity-kind"
+                        th:text="#{page.about.activityMoment}">瞬间</span
+                      >
+                    </span>
+                    <span
+                      class="about-activity-title"
+                      th:if="${!#strings.isEmpty(momentText)}"
+                      th:text="${momentText}">内容</span
+                    >
+                    <!-- 无正文的瞬间（例如只发了一张图）没有可展示文本，退回 i18n 通用文案 -->
+                    <span
+                      class="about-activity-title"
+                      th:unless="${!#strings.isEmpty(momentText)}"
+                      th:text="#{page.about.momentFallback}"
+                      >分享了一条瞬间</span
+                    >
+                  </span>
+                  <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
+                  <span
+                    class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
+                    aria-hidden="true"></span>
+                </a>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- ---------- 侧列 ---------- -->
+        <div class="about-col-side">
+          <!-- 我的技能：数据 = 「技能页面」设置里的技能，按 category 分 5 组展示
+               （写死分组而非动态归并：分类是固定枚举，写死才能直接对上 i18n key 且顺序稳定）。
+               分组为空则不渲染该组，全空则整卡隐藏；分组数据已在顶层 th:with 过滤「名称非空」。
+               胶囊纯展示不可点；右上角「全部技能」按钮由设置里的开关 + 地址控制。 -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.skills?.enable != false and skillItems != null and not #lists.isEmpty(skillItems)}"
+          >
+            <div class="about-card-head flex-wrap">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.skillsTitle}"
+              >
+                我的技能
+              </h2>
+              <!-- 右上角「全部技能 →」：与「本人项目」同一套写法（文字走 i18n、地址来自设置）。
+                   ml-auto 把它推到行尾；本卡用 .about-card-head（flex 卡头）而非
+                   .about-card-head-row，因为要留出 ml-auto 推到行尾的空间。 -->
+              <a
+                class="about-section-link ml-auto"
+                th:if="${skillsShowMore and !#strings.isEmpty(skillsUrl)}"
+                th:href="${skillsUrl}"
+              >
+                <span th:text="#{page.about.skillsMore}">全部技能 →</span>
+              </a>
+            </div>
+            <div class="about-skill-groups">
+              <div
+                th:if="${skillFrontend != null and not #lists.isEmpty(skillFrontend)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.frontend}"
+                >
+                  前端开发
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillFrontend}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                th:if="${skillBackend != null and not #lists.isEmpty(skillBackend)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.backend}"
+                >
+                  后端开发
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillBackend}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                th:if="${skillDatabase != null and not #lists.isEmpty(skillDatabase)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.database}"
+                >
+                  数据库
+                </p>
+                <div class="about-tag-list">
+                  <span
+                    th:each="skill : ${skillDatabase}"
+                    class="about-tag-chip"
+                  >
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                th:if="${skillTools != null and not #lists.isEmpty(skillTools)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.tools}"
+                >
+                  开发工具
+                </p>
+                <div class="about-tag-list">
+                  <span th:each="skill : ${skillTools}" class="about-tag-chip">
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+              <div
+                th:if="${skillOther != null and not #lists.isEmpty(skillOther)}"
+              >
+                <p
+                  class="about-skill-group-title"
+                  th:text="#{page.skills.other}"
+                >
+                  其他技能
+                </p>
+                <div class="about-tag-list">
+                  <span th:each="skill : ${skillOther}" class="about-tag-chip">
+                    <span
+                      th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
+                      class="about-ico about-ico--svg"
+                      aria-hidden="true"
+                      th:utext="${skill?.icon?.value}"></span>
+                    <span th:text="${skill?.name}">技能</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 我的朋友：卡片墙（圆形 logo + 名称 + 单行描述，两列网格）。
+               数据源 = 友链插件 linkFinder.random(N)（N = 设置里的「显示数量」），
+               服务端每次请求随机取 N 条 ⇒「刷新换一批」零 JS，超量条目也不下发到前台。
+               ⚠️ 依赖插件的 random(maxSize)：若插件版本不支持会渲染抛错，届时把顶层
+               th:with 的 friendLinks 换回 linkFinder.groupBy()，本段按分组两轮遍历即可。 -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.friends?.enable != false and friendLinks != null and !#lists.isEmpty(friendLinks)}"
+          >
+            <div class="about-card-head">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.friendsTitle}"
+              >
+                我的朋友
+              </h2>
+            </div>
+            <!-- logo / url 只接受 http、//、/ 开头；url 非法时只渲染卡片不生成 href -->
+            <div class="about-friends">
+              <a
+                class="about-friend"
+                th:each="l : ${friendLinks}"
+                th:with="aboutLogoOk = ${l?.spec?.logo != null and (l?.spec?.logo.startsWith('http') or l?.spec?.logo.startsWith('//') or l?.spec?.logo.startsWith('/'))}"
+                th:href="${l?.spec?.url != null and (l?.spec?.url.startsWith('http') or l?.spec?.url.startsWith('//') or l?.spec?.url.startsWith('/')) ? l?.spec?.url : null}"
+                th:title="${#strings.defaultString(l?.spec?.description, l?.spec?.displayName)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  th:if="${aboutLogoOk}"
+                  th:src="${l?.spec?.logo}"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  class="about-friend-logo"
+                />
+                <span th:unless="${aboutLogoOk}" class="about-friend-logo-ph">
+                  <span
+                    class="icon-[material-symbols--link-rounded]"
+                    aria-hidden="true"></span>
+                </span>
+                <span class="about-friend-body">
+                  <span
+                    class="about-friend-name"
+                    th:text="${l?.spec?.displayName}">链接</span
+                  >
+                  <span
+                    class="about-friend-desc"
+                    th:if="${!#strings.isEmpty(l?.spec?.description)}"
+                    th:text="${l?.spec?.description}"></span>
+                </span>
+              </a>
+            </div>
+          </section>
+
+          <!-- 保持联系：数据 = 侧栏「个人简介小组件 → 社交媒体」。
+               social_icon 是 iconify 内联 SVG，必须 th:utext 注入（同 Profile.astro） -->
+          <section
+            class="card-base onload-animation"
+            th:if="${cfg?.contact?.enable != false and socials != null and !#lists.isEmpty(socials)}"
+          >
+            <div class="about-card-head">
+              <h2
+                class="about-card-title text-90"
+                th:text="#{page.about.contactTitle}"
+              >
+                保持联系
+              </h2>
+            </div>
+            <div class="about-connect-list">
+              <a
+                class="about-connect"
+                th:each="social : ${socials}"
+                th:href="${social.url}"
+                th:title="${social.name}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span
+                  class="about-connect-icon"
+                  th:utext="${social.social_icon?.value}"
+                  aria-hidden="true"></span>
+                <span th:text="${social.name}">名称</span>
+                <span
+                  class="about-connect-arrow icon-[material-symbols--arrow-outward-rounded]"
+                  aria-hidden="true"></span>
+              </a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ④ 页脚卡 ================= -->
+    <!-- 页脚卡：小标题 + 文案 + 链接按钮（结构化设置，最多 5 条由设置项 max 限制）。
+         图标与技能胶囊 / 身份卡按钮同一套：iconify 内联 SVG 走 th:utext，留空不渲染。 -->
+    <section
+      class="card-base about-footer-card onload-animation mb-4"
+      th:if="${cfg?.footer?.enable != false and ((!#strings.isEmpty(cfg?.footer?.motto)) or (cfg?.footer?.linkItems != null and !#lists.isEmpty(cfg?.footer?.linkItems)))}"
+    >
+      <div class="min-w-0">
+        <p
+          class="about-section-label"
+          th:if="${!#strings.isEmpty(cfg?.footer?.eyebrow)}"
+          th:text="${cfg?.footer?.eyebrow}"
+        >
+          OPEN SOURCE, OPEN CHANNEL
+        </p>
+        <p
+          class="about-footer-motto"
+          th:if="${!#strings.isEmpty(cfg?.footer?.motto)}"
+          th:text="${cfg?.footer?.motto}"
+        >
+          页脚一句话
+        </p>
+      </div>
+      <div
+        class="about-footer-links"
+        th:if="${cfg?.footer?.linkItems != null and !#lists.isEmpty(cfg?.footer?.linkItems)}"
+      >
+        <a
+          th:each="fl : ${cfg?.footer?.linkItems}"
+          th:href="${!#strings.isEmpty(fl?.url) ? fl?.url : null}"
+          th:target="${!#strings.isEmpty(fl?.url) ? '_blank' : null}"
+          rel="noopener noreferrer"
+        >
+          <span
+            th:if="${fl?.icon != null and !#strings.isEmpty(fl?.icon?.value)}"
+            class="about-ico about-ico--svg"
+            aria-hidden="true"
+            th:utext="${fl?.icon?.value}"></span>
+          <span th:text="${#strings.defaultString(fl?.label, fl?.url)}"
+            >链接</span
+          >
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- extend-pages.js：个人简介正文的段落重建（服务端已直出同一份纯文本兜底）
+       + 「最近提交」两组数据按 data-time 归并排序 -->
+  <script
+    is:inline
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/extend-pages.js?v=${ASSET_VERSION}`}
+    defer></script>
+</MainGridLayout>

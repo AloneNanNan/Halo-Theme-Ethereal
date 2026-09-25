@@ -3,12 +3,15 @@
    模态框设计语言与 external-link / link-apply / 打赏模态框保持一致
    ───────────────────────────────────────────── */
 
-/* ── 悬浮气泡（hover 状态表情显示状态文案）── */
-#profile-status-badge {
+/* ── 悬浮气泡（hover 状态表情显示状态文案）──
+   选择器同时覆盖侧栏头像卡徽章与关于页面英雄区的状态胶囊（两者同源绑定） */
+#profile-status-badge,
+.about-status-pill {
   position: relative;
 }
 
-#profile-status-badge::after {
+#profile-status-badge::after,
+.about-status-pill::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 0.5rem);
@@ -33,7 +36,8 @@
 }
 
 /* 气泡小箭头（与气泡同色，压住气泡底边） */
-#profile-status-badge::before {
+#profile-status-badge::before,
+.about-status-pill::before {
   content: "";
   position: absolute;
   bottom: calc(100% + 0.25rem);
@@ -50,12 +54,15 @@
 }
 
 #profile-status-badge:hover::after,
-#profile-status-badge:hover::before {
+.about-status-pill:hover::after,
+#profile-status-badge:hover::before,
+.about-status-pill:hover::before {
   opacity: 1;
   visibility: visible;
 }
 
-#profile-status-badge:hover::after {
+#profile-status-badge:hover::after,
+.about-status-pill:hover::after {
   transform: translateX(-50%) translateY(0);
 }
 
@@ -63,7 +70,11 @@
 #profile-status-badge[data-tooltip=""]::after,
 #profile-status-badge[data-tooltip=""]::before,
 #profile-status-badge:not([data-tooltip])::after,
-#profile-status-badge:not([data-tooltip])::before {
+#profile-status-badge:not([data-tooltip])::before,
+.about-status-pill[data-tooltip=""]::after,
+.about-status-pill[data-tooltip=""]::before,
+.about-status-pill:not([data-tooltip])::after,
+.about-status-pill:not([data-tooltip])::before {
   content: none;
 }
 

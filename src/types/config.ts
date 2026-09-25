@@ -12,11 +12,12 @@ export interface ThemeConfig {
   external_link: ExternalLink;
 }
 
-/** 扩展页面设置：朋友圈 / 时间轴 / 技能（后台未配置的子组可能缺失，均视为可选） */
+/** 扩展页面设置：朋友圈 / 时间轴 / 技能 / 关于页面（后台未配置的子组可能缺失，均视为可选） */
 export interface ExtendPages {
   friends?: Friends;
   timeline?: Timeline;
   skills?: Skills;
+  about?: About;
 }
 
 /** 欢迎弹窗配置 */
@@ -164,6 +165,16 @@ export interface PageLayout {
   layoutMode: string;
   /** 分类导航栏 */
   categoryBar?: boolean;
+  /** 瞬间预览条（全站内容区顶部） */
+  momentsBar?: MomentsBar;
+}
+
+/** 瞬间预览条：内容区顶部的「瞬间」横向滚动预览条（需安装瞬间插件） */
+export interface MomentsBar {
+  /** 总开关，默认关闭 */
+  enable?: boolean;
+  /** 最多展示条数（1~50，默认 10） */
+  count?: number;
 }
 
 /** 文章卡片布局 */
@@ -335,6 +346,170 @@ export interface SkillItem {
   years?: number;
   months?: number;
   color?: string;
+}
+
+// ========== 「关于页面」设置 ==========
+/** 「关于页面」设置（对应 settings.yaml 的 extendPages.about 组，未配置的子组均视为可选） */
+export interface About {
+  /** 身份卡片 */
+  identity?: AboutIdentity;
+  /** 顶部导航胶囊 */
+  nav?: AboutNav;
+  /** 个人简介卡片（引语 + 正文） */
+  intro?: AboutIntro;
+  /** 本人项目 */
+  projects?: AboutProjects;
+  /** 最近的提交 */
+  activity?: AboutActivity;
+  /** 我的技能（卡片数据来自技能页面设置，此处只管右上角「全部技能 →」） */
+  skills?: AboutSkills;
+  /** 我的朋友 */
+  friends?: AboutFriends;
+  /** 保持联系 */
+  contact?: AboutContact;
+  /** 页脚卡 */
+  footer?: AboutFooter;
+}
+
+/** 身份卡片 */
+export interface AboutIdentity {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  /** 头像；留空回落到侧栏「个人简介小组件」的头像（该字段默认即内置头像） */
+  avatar?: string;
+  /** 页面大标题，留空用站点标题 */
+  name?: string;
+  /** 身份行，如「独立开发者 / 博客作者」 */
+  roles?: string;
+  /** 一句话简介 */
+  tagline?: string;
+  /** 状态行（启用侧栏「在线状态」后由状态胶囊取代，本字段退为兜底） */
+  status?: string;
+  /**
+   * 卡片按钮（字段结构同 AboutNavItem）：模板最多渲染 3 个，
+   * 第 1 个为主按钮（主题色高亮），其余为次按钮；文字与链接都填了才算有效条目。
+   */
+  actions?: AboutIdentityAction[];
+}
+
+/** 个人简介卡片（引语 + 正文；正文每行一段，由 extend-pages.js 按段落渲染） */
+export interface AboutIntro {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  /** 卡片开头的引语，留空则不显示 */
+  quote?: string;
+  /** 正文（textarea，每行一段） */
+  intro?: string;
+}
+
+/**
+ * 身份卡按钮条目（字段结构同 AboutNavItem）：后台「文字 + 链接」均为必填、图标可选；
+ * 模板侧仍按「文字与链接都非空」过滤，兼容历史配置里链接留空的条目。
+ */
+export interface AboutIdentityAction {
+  /** 按钮文字（后台必填）；与 url 都非空才渲染 */
+  label?: string;
+  /** 图标：iconify + format: svg ⇒ 值形如 { value: '<svg …>' }；留空则只显示文字 */
+  icon?: { value?: string };
+  /** 按钮链接（后台必填）：支持站内路径与完整网址；留空视为未配置，整个按钮不渲染 */
+  url?: string;
+}
+
+/** 顶部导航胶囊（条目完全自定义；未配置条目时整个导航不渲染） */
+export interface AboutNav {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  items?: AboutNavItem[];
+}
+
+export interface AboutNavItem {
+  /** 导航文字（后台标了 required；为空则该条目不显示文字） */
+  label?: string;
+  /**
+   * 图标：$formkit: iconify + format: svg ⇒ 值形如 { value: '<svg …>' }。
+   * 后台不预置默认图标；留空则该项只显示文字。
+   */
+  icon?: { value?: string };
+  /**
+   * 导航链接：支持站内路径与完整网址；
+   * 留空表示指向当前页面（用于「个人资料」这类表示当前所在页的条目）。
+   */
+  url?: string;
+}
+
+/**
+ * 本人项目：卡片数据取自「项目集」插件（plugin metadata.name = portfolio）的
+ * projectFinder.list(page, size)，本组只保留卡片右上角「全部项目 →」的链接地址
+ * （链接文字固定、走 i18n，不再做成设置项）。
+ */
+export interface AboutProjects {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  /**
+   * 显示几个项目（默认 4）。
+   * 注意：Halo FormKit 的 number 字段实际存出来的可能是字符串，模板侧取数前
+   * 必须先经 #conversions.convert(..., 'java.lang.Integer') 再传给 Finder。
+   */
+  count?: number | string;
+  /** 是否显示右上角「全部项目 →」（地址固定 /portfolio，文字固定走 i18n） */
+  showMore?: boolean;
+}
+
+/** 最近的提交（文章 + 瞬间各取 count 条后归并） */
+export interface AboutActivity {
+  enable?: boolean;
+  /**
+   * 卡片上总共显示几条（文章、瞬间各取这么多条作候选 → 客户端归并排序后截断）。
+   * 模板侧做算术前会经 #conversions.convert 转类型。
+   */
+  count?: number | string;
+}
+
+/**
+ * 我的技能（关于页面侧栏卡片）。
+ * 卡片数据（分组 + 图标 + 名称）取自「技能页面」设置，本组只管卡片右上角的「全部技能 →」。
+ */
+export interface AboutSkills {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  /** 是否显示右上角「全部技能 →」 */
+  showMore?: boolean;
+  /** 链接地址：技能页是非固定路由的自定义页面，故需配置；留空则不显示该链接 */
+  url?: string;
+}
+
+/** 我的朋友 / 保持联系 */
+export interface AboutFriends {
+  enable?: boolean;
+  /**
+   * 显示数量：每次请求由服务端随机取 N 条友链渲染（linkFinder.random(N)，零 JS）。
+   * 模板侧取数前会经 #conversions.convert 转类型并夹到 [1, 12]。
+   */
+  count?: number | string;
+}
+
+/** 保持联系（数据取自侧栏「个人简介小组件 → 社交媒体」，此处只有显隐开关） */
+export interface AboutContact {
+  /** 是否显示「保持联系」卡片 */
+  enable?: boolean;
+}
+
+/** 页脚卡 */
+export interface AboutFooter {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+  eyebrow?: string;
+  motto?: string;
+  linkItems?: AboutFooterLinkItem[];
+}
+
+/** 页脚链接条目（后台「名称 + 链接」必填、图标可选、最多 5 条） */
+export interface AboutFooterLinkItem {
+  /** 名称（后台必填），留空时回退显示链接 */
+  label?: string;
+  /** 图标：iconify + format: svg ⇒ 值形如 { value: '<svg …>' }；留空则只显示名称 */
+  icon?: { value?: string };
+  url?: string;
 }
 
 // ========== 侧边栏 ==========
