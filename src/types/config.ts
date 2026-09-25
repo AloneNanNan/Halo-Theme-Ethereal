@@ -12,7 +12,7 @@ export interface ThemeConfig {
   external_link: ExternalLink;
 }
 
-/** 扩展页面设置：朋友圈 / 时间轴 / 技能 / 关于我（后台未配置的子组可能缺失，均视为可选） */
+/** 扩展页面设置：朋友圈 / 时间轴 / 技能 / 关于页面（后台未配置的子组可能缺失，均视为可选） */
 export interface ExtendPages {
   friends?: Friends;
   timeline?: Timeline;
@@ -348,8 +348,8 @@ export interface SkillItem {
   color?: string;
 }
 
-// ========== 「关于我」页面设置 ==========
-/** 「关于我」页面设置（对应 settings.yaml 的 extendPages.about 组，未配置的子组均视为可选） */
+// ========== 「关于页面」设置 ==========
+/** 「关于页面」设置（对应 settings.yaml 的 extendPages.about 组，未配置的子组均视为可选） */
 export interface About {
   /** 身份卡片 */
   identity?: AboutIdentity;
@@ -466,7 +466,7 @@ export interface AboutActivity {
 }
 
 /**
- * 我的技能（关于我页侧栏卡片）。
+ * 我的技能（关于页面侧栏卡片）。
  * 卡片数据（分组 + 图标 + 名称）取自「技能页面」设置，本组只管卡片右上角的「全部技能 →」。
  */
 export interface AboutSkills {

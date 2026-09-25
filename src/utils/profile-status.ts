@@ -111,8 +111,8 @@ export const STATUS_OPTIONS: StatusOption[] = [
   },
 ];
 
-/** 状态徽章选择器：侧栏头像卡徽章 + 关于我页英雄区状态胶囊（同源绑定）。
- *  注意两者在 DOM 里都可能出现（关于我页同时有侧栏与胶囊），且胶囊位于
+/** 状态徽章选择器：侧栏头像卡徽章 + 关于页面英雄区状态胶囊（同源绑定）。
+ *  注意两者在 DOM 里都可能出现（关于页面同时有侧栏与胶囊），且胶囊位于
  *  #swup-container 内、侧栏在其后 ⇒ 只用 querySelector 会永远只命中胶囊，
  *  因此读写一律走 querySelectorAll。 */
 const BADGE_SELECTOR = "#profile-status-badge, .about-status-pill";
@@ -189,7 +189,7 @@ function getCustomText(key: string): string {
 }
 
 /** 同步悬浮气泡文案（移除原生 title 避免双提示）。
- *  侧栏徽章是**纯图标**，气泡用来补状态文案；关于我页胶囊本身已经把状态文案
+ *  侧栏徽章是**纯图标**，气泡用来补状态文案；关于页面胶囊本身已经把状态文案
  *  显示出来了，再弹一条同样的文案属冗余提示，故只给它「点击可切换」的动作提示。 */
 function syncTooltip() {
   const status = getCurrentStatus();
@@ -208,7 +208,7 @@ function syncTooltip() {
 
 /** 更新状态图标 DOM（无需刷新页面），并同步气泡文案。
  *  用 DOM API 构建（不用 innerHTML，避免 CodeQL 静态告警）。
- *  同时更新侧栏徽章与关于我页状态胶囊；胶囊是「图标 + 文案」结构，
+ *  同时更新侧栏徽章与关于页面状态胶囊；胶囊是「图标 + 文案」结构，
  *  重建时需补文案节点，否则切换后会退化成只有图标。 */
 function setBadgeStatus(status: string) {
   const opt = getOption(status) || STATUS_OPTIONS[0];
