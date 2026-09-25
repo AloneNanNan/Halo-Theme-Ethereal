@@ -1,15 +1,12 @@
 ---
-// 关于我页面模板（Halo 自定义页面，自定义模板选 about）。
-// 数据来自主题设置「扩展页面 → 关于我页面」→ theme.config.extendPages.about。
-//
-// 布局：身份卡（横跨）→ 顶部导航（横跨）→ 两栏
-//   主列：关于我 / 本人项目 / 最近的提交
-//   侧列：我的技能 / 我的朋友 / 保持联系
-//   （「我的朋友」位于我的技能下方，带头像卡片墙）
-// 两栏按**容器宽度**分档（≥880px 才分栏），不跟视口走 —— 见 .about-cols-wrap。
-// 「关于我正文」由 extend-pages.js 在客户端按段落渲染；其余字段都已服务端直出。
-// 「本人项目」取自「项目集」插件的项目、「我的技能」取自技能页面配置。
-// 友链取自 Halo 友链插件的 linkFinder.random(N)（每次请求随机取 N 条，N 可在主题设置里调）。
+// 关于页面模板（Halo 自定义页面，自定义模板选 about），配置来自 extendPages.about。
+// 结构：身份卡 → 顶部导航 → 两栏（主列：个人简介 / 本人项目 / 最近提交；
+// 侧列：我的技能 / 我的朋友 / 保持联系）→ 页脚卡。
+// 数据源：本人项目 =「项目集」插件；我的技能 = 技能页面设置；
+// 我的朋友 = 友链插件 linkFinder.random(N)；最近提交 = 本站文章 + 瞬间。
+// 两栏按容器宽度分档（.about-cols-wrap）：阈值 880px 大于默认内容列宽（恒 872px），
+// 故分栏目前不会触发，属已知预期，待内容区加宽后自动生效。
+// 「个人简介」正文由服务端直出纯文本（无 JS 也可见），extend-pages.js 再重建成段落。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import "../styles/about.css";
 ---
@@ -18,23 +15,10 @@ import "../styles/about.css";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.about.description(${site.title})}"
 >
-  <!-- 数据通道：
-       · cfg          = 本页配置（主题设置 → 关于我）
-       · aboutPosts   = 最新已发布文章（Finder 变量，用 ?. 空安全）
-       · aboutMoments = 最新瞬间（瞬间插件注入 momentFinder；未装插件时短路为 null）
-       两组一起供「最近的提交」卡片用，客户端按 data-time 归并成一条时间线。
-       · friendLinks  = 「我的朋友」的友链（linkFinder.random(friendCount)，服务端随机取 N 条；
-       url / logo 的合法性在卡片里逐条判断）。
-       · friendCount  = 「我的朋友」显示条数（已转 Integer 并夹到 [1, 12]）。
-
-       🔴🔴 1.4.84 修正（推翻 1.4.83 的错误结论）：这条 th:with 的变量
-       **能被下方所有卡片正常读到**（cfg / aboutPosts 一直在被「关于我」
-       「最近的提交」等卡片使用且渲染正常）。1.4.83 曾误判「顶层 th:with
-       跨 slot 失效」，于是把变量下放到卡片自身 section 的 th:with，却又把
-       th:if 放在了**同一个元素上**——Thymeleaf 里 th:if(优先级3) 先于
-       th:with(优先级4) 执行 ⇒ th:if 求值时变量还是 null ⇒ 恒假。所以
-       1.4.83 依然没修好。正确做法：变量就在这条顶层 th:with 里补 groups，
-       卡片/subnav 直接用，勿再在消费点上叠 th:with + th:if。 -->
+  <!-- 变量统一在本条（页面顶层）th:with 定义，下方卡片直接读：
+       cfg / aboutPosts / aboutMoments / friendLinks / friendCount / skill* / projects / socials。
+       ⚠️ 不要在消费点上再叠 th:with + th:if：Thymeleaf 的 th:if(优先级 3) 早于
+       th:with(优先级 4)，同一元素上 th:if 读不到该元素 th:with 的变量，会恒为假。 -->
   <div
     th:with="cfg=${theme.config?.extendPages?.about},
       rawActivityCount=${cfg?.activity?.count != null ? #conversions.convert(cfg?.activity?.count, 'java.lang.Integer') : 5},
@@ -60,10 +44,8 @@ import "../styles/about.css";
     th:remove="tag"
   >
     <!-- ================= ① 身份卡 =================
-         ⚠️ 本页 cfg = theme.config?.extendPages?.about（页面级作用域），
-         所以「在线状态」等侧栏配置项**不能**写 cfg?.sidebar?.…（永远为 null，
-         1.4.90 正是踩了这条 ⇒ 状态胶囊恒不渲染），必须走完整路径
-         theme.config?.sidebar?.profile?.statusSettings（同 socials 的写法）。 -->
+         ⚠️ cfg 是本页配置，取侧栏项必须写完整路径
+         theme.config?.sidebar?.profile?.…（写成 cfg?.sidebar?.… 恒为 null）。 -->
     <section
       class="card-base about-hero-card onload-animation mb-4"
       th:if="${cfg?.identity?.enable != false}"
@@ -82,12 +64,14 @@ import "../styles/about.css";
         <!-- 头像：本卡单独设置优先；留空回落到侧栏「个人简介小组件」的头像
              （该字段默认值就是主题内置头像，两者都空时也用它兜底，不留破图） -->
         <span class="about-avatar">
+          <!-- 头像与右侧 h1 是同一身份，语义上属装饰（空 alt），
+               避免读屏把名字播报两遍 -->
           <img
             class="about-avatar__image"
             th:src="${avatarSrc}"
-            th:alt="${ident?.name ?: site.title}"
+            th:alt="''"
             src=""
-            alt="avatar"
+            alt=""
           />
         </span>
         <div class="min-w-0 flex-1">
@@ -111,15 +95,12 @@ import "../styles/about.css";
           >
             一句话简介
           </p>
-          <!-- 状态：1.4.90 起优先绑定主题「在线状态」statusSettings（与侧栏头像卡
-               同源，点击同样弹出切换模态框，由 profile-status.ts 委托处理）；
-               未启用 / 未配置时回退 ident.status 静态文案（闪电图标行）。
-               图标/动效/配色类与 Profile.astro 的 th:case 分支逐字面量一致
-               （Tailwind 只认完整字面量 + 空白分隔，别运行时拼类名）。 -->
-          <!-- 无障碍名 = 可见状态文案 + 视觉隐藏的「切换当前状态」提示。
-               ⚠️ 不写死 aria-label="切换当前状态"：本胶囊**有可见文案**，
-               可访问名不含可见文本会违反 WCAG 2.5.3（Label in Name）；
-               而同主题的 Categories.astro 里也因为这条 2.5.3 删过同类 aria-label。 -->
+          <!-- 状态：启用侧栏「在线状态」时用可点击的胶囊（与侧栏头像卡同源，
+               由 profile-status.ts 委托切换），否则回退 ident.status 静态文案。
+               图标/动效类名与 Profile.astro 的 th:case 分支逐字面量一致
+               （Tailwind 只认完整字面量，别运行时拼类名）。 -->
+          <!-- 无障碍名 = 可见文案 + sr-only 的「切换当前状态」：胶囊有可见文本，
+               写死 aria-label 会违反 WCAG 2.5.3（Label in Name）。 -->
           <button
             type="button"
             class="about-status about-status-pill"
@@ -223,12 +204,10 @@ import "../styles/about.css";
           </p>
         </div>
 
-        <!-- 卡片按钮：条目完全自定义（文字 / 图标 / 链接，字段结构同顶部导航），
-             数量上限由设置项自身的 max: 3 限制（后台加不了第 4 条），模板不再重复截断。
-             第 1 个为主按钮（主题色高亮），其余为次按钮。
-             「名称 + 链接」都填了才算有效条目（只填其一视为未配置），一条都没有时整块不渲染。
-             图标：$formkit: iconify + format: svg ⇒ 值是一整段内联 SVG（fill 为 currentColor），
-             必须 th:utext 注入、留空则完全不渲染图标元素 —— 同顶部导航的写法。 -->
+        <!-- 卡片按钮：数量上限由设置项 max: 3 限制，第 1 个是主按钮、其余为次按钮；
+             「文字 + 链接」都填才算有效条目，一条都没有时整块不渲染。
+             图标（iconify svg）必须 th:utext 注入，留空不渲染图标元素（同顶部导航）。
+             只有外链新开标签，站内路径在当前页跳转（同顶部导航、项目卡片口径）。 -->
         <div
           class="about-hero-actions"
           th:if="${actions != null and not #lists.isEmpty(actions)}"
@@ -240,7 +219,7 @@ import "../styles/about.css";
               ? 'about-btn--primary'
               : 'about-btn--ghost'}"
             th:href="${act?.url}"
-            target="_blank"
+            th:target="${act?.url != null and (act?.url.startsWith('http') or act?.url.startsWith('//')) ? '_blank' : null}"
             rel="noopener noreferrer"
           >
             <span
@@ -255,12 +234,9 @@ import "../styles/about.css";
     </section>
 
     <!-- ================= ② 顶部导航（长条菜单） =================
-         条目完全自定义（主题设置 → 关于我 → 顶部导航 → 导航条目：图标 / 文字 / 链接），
-         一条都没配时整块导航不渲染。
-         th:if 引用的是页面顶层 th:with 定义的 cfg（**外层变量**），不是同元素 th:with，
-         所以不存在「th:if(300) 先于 th:with(400) 求值」的坑。
-         链接留空 = 指向当前页面（用于「个人资料」这类表示当前所在页的条目），
-         这类条目自动带 is-active + aria-current="page"，与改动前的行为一致。 -->
+        条目完全自定义（主题设置 → 关于页面 → 顶部导航卡片 → 导航条目）；
+        一条都没配时整块不渲染。链接留空 = 指向当前页（自动带 is-active +
+        aria-current="page"，用于「个人资料」这类条目）。 -->
     <nav
       class="card-base about-subnav onload-animation mb-4"
       th:if="${cfg?.nav?.enable != false and cfg?.nav?.items != null and not #lists.isEmpty(cfg?.nav?.items)}"
@@ -291,12 +267,13 @@ import "../styles/about.css";
       <div class="about-cols">
         <!-- ---------- 主列 ---------- -->
         <div class="about-col-main">
-          <!-- 关于我（个人简介卡片） -->
+          <!-- 关于我（个人简介卡片）：显隐与内容都取自 cfg.intro。
+               引语与正文都为空时整卡不渲染，避免留一张只有标题的空卡（同其它内容卡口径）。 -->
           <section
             class="card-base onload-animation"
-            th:if="${cfg?.intro?.enable != false}"
+            th:if="${cfg?.intro?.enable != false and (!#strings.isEmpty(cfg?.intro?.quote) or !#strings.isEmpty(cfg?.intro?.intro))}"
           >
-            <div class="about-card-head-row mb-5">
+            <div class="about-card-head-row">
               <h2
                 class="about-card-title text-90"
                 th:text="#{page.about.introTitle}"
@@ -311,26 +288,28 @@ import "../styles/about.css";
             >
               引语
             </blockquote>
+            <!-- 正文先由服务端直出纯文本（.about-paragraphs 的 pre-line 让换行可见），
+                 extend-pages.js 再清空本容器、按同一份 th:data-lines 重建成 <p> 段落 ——
+                 保证有 / 无 JS 都读得到正文，且文本同源不额外增加体积。 -->
             <div
               class="about-paragraphs"
-              th:if="${!#strings.isEmpty(cfg?.intro?.intro)}"
-              th:data-lines="${cfg?.intro?.intro}"
               data-lines-render="paragraphs"
+              th:data-lines="${cfg?.intro?.intro}"
+              th:text="${#strings.trim(cfg?.intro?.intro)}"
+              th:if="${!#strings.isEmpty(cfg?.intro?.intro)}"
             >
             </div>
           </section>
 
-          <!-- 本人项目：数据 = 「项目集」插件的项目（plugin metadata.name = portfolio）。
-               取前 4 个（插件默认排序：priority desc → 创建时间 desc），点击进项目详情页。
-               ⚠️ 插件未安装时整卡隐藏：直接调 Finder 会抛异常、容器被跳过（同「瞬间预览条」的处理）。
-               项目模型里没有图标字段，左侧小图标按序号轮换内置图标（纯装饰，不代表项目语义）；
-               techStacks 是插件给的字符串数组，直接服务端 th:each 渲染为标签。 -->
+          <!-- 本人项目：数据 = 「项目集」插件（plugin metadata.name = portfolio），
+               按其默认排序取前 N 个，点击进项目详情页；插件未安装时整卡隐藏
+               （直接调 Finder 会抛异常）。techStacks 是字符串数组，直接 th:each 渲染。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.projects?.enable != false and projects != null and projects.items != null and not #lists.isEmpty(projects.items)}"
           >
             <div
-              class="about-card-head-row mb-5 flex flex-wrap items-center justify-between gap-3"
+              class="about-card-head-row flex flex-wrap items-center justify-between gap-3"
             >
               <h2
                 class="about-card-title text-90"
@@ -338,9 +317,7 @@ import "../styles/about.css";
               >
                 本人项目
               </h2>
-              <!-- 链接文字与地址都固定，只留「显示 / 隐藏」开关：
-                   文字走 i18n；地址是「项目集」插件的列表路由 /portfolio（不支持自定义），
-                   用 @{} 包一层以兼容部署上下文路径。 -->
+              <!-- 文字走 i18n、地址是插件固定路由 /portfolio；@{} 兼容部署上下文路径 -->
               <a
                 class="about-section-link"
                 th:if="${cfg?.projects?.showMore != false}"
@@ -350,18 +327,16 @@ import "../styles/about.css";
               </a>
             </div>
             <div class="about-proj-grid">
-              <!-- 卡片不放图标：项目集插件的项目模型里没有图标字段，按下标编一套图标
-                   属于「假信息」（同一个项目换个排序就换图标），不如不要，版式也更干净。
-                   正文列直接铺满首列，右上角保留外链箭头。 -->
+              <!-- 不放图标：项目模型没有图标字段，按下标编一套等于假信息；右上角保留外链箭头 -->
               <a
                 class="about-proj"
                 th:each="project : ${projects.items}"
                 th:href="@{/portfolio/{slug}(slug=${project?.slug})}"
               >
                 <span class="about-proj__body">
-                  <strong class="about-proj__title" th:text="${project?.title}"
-                    >项目名</strong
-                  >
+                  <h3 class="about-proj__title" th:text="${project?.title}">
+                    项目名
+                  </h3>
                   <span
                     class="about-proj__desc"
                     th:if="${!#strings.isEmpty(project?.summary)}"
@@ -371,8 +346,9 @@ import "../styles/about.css";
                     class="about-proj__tech"
                     th:if="${project?.techStacks != null and not #lists.isEmpty(project?.techStacks)}"
                   >
-                    <i th:each="tech : ${project?.techStacks}" th:text="${tech}"
-                    ></i>
+                    <span
+                      th:each="tech : ${project?.techStacks}"
+                      th:text="${tech}"></span>
                   </span>
                 </span>
                 <span
@@ -382,20 +358,16 @@ import "../styles/about.css";
             </div>
           </section>
 
-          <!-- 最近的提交：数据 = 最新文章 + 最新瞬间（服务端直出，无 JS 也完整可见）。
-               样式 = 时间轴：竖虚线 + 节点圆点 + 「日期 / 类型 / 标题」三段式行，
-               取主题已有三套时间轴的组合写法 —— 时间轴页 .timeline-node 的节点缩放光环、
-               朋友圈 .friends-timeline 的虚线列 + 日期在前、归档页 .dash-line 的虚线基调。
-               瞬间的 spec.content.raw 是富文本 HTML，先剥标签再当纯文本用；
-               超长交给 .about-activity-title 的单行省略号收尾，不做裁剪。
-               行上的 data-time（ISO-8601）供客户端把两组归并成一条时间线，
-               归并后按 data-count（= 设置里的「显示数量」）截断到总共 N 条。
-               无 JS 时不做归并与截断，两组按服务端顺序完整展示（渐进增强）。 -->
+          <!-- 最近提交：数据 = 最新文章 + 最新瞬间，服务端直出（无 JS 也完整可见）；
+               样式为时间轴（竖虚线 + 节点圆点 + 日期/类型/标题三段式）。
+               瞬间的 content.raw 是富文本，先剥标签当纯文本用，超长由单行省略号收尾。
+               行上 data-time 供客户端把两组归并、并按 data-count 截断到 N 条；
+               无 JS 时按服务端顺序完整展示（渐进增强）。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.activity?.enable != false and (aboutPostCount + aboutMomentCount) > 0}"
           >
-            <div class="about-card-head-row mb-5">
+            <div class="about-card-head-row">
               <h2
                 class="about-card-title text-90"
                 th:text="#{page.about.activityTitle}"
@@ -448,8 +420,7 @@ import "../styles/about.css";
                 th:each="m : ${aboutMoments}"
                 th:with="momentText=${m?.spec?.content?.raw != null
                     ? m?.spec?.content?.raw.replaceAll('<[^>]*>', ' ').trim()
-                    : ''},
-                  momentLabel=${#strings.defaultString(momentText, '分享了一条瞬间')}"
+                    : ''}"
                 th:data-time="${m?.spec?.releaseTime}"
               >
                 <span class="about-activity-dot" aria-hidden="true"></span>
@@ -471,8 +442,17 @@ import "../styles/about.css";
                         th:text="#{page.about.activityMoment}">瞬间</span
                       >
                     </span>
-                    <span class="about-activity-title" th:text="${momentLabel}"
-                      >内容</span
+                    <span
+                      class="about-activity-title"
+                      th:if="${!#strings.isEmpty(momentText)}"
+                      th:text="${momentText}">内容</span
+                    >
+                    <!-- 无正文的瞬间（例如只发了一张图）没有可展示文本，退回 i18n 通用文案 -->
+                    <span
+                      class="about-activity-title"
+                      th:unless="${!#strings.isEmpty(momentText)}"
+                      th:text="#{page.about.momentFallback}"
+                      >分享了一条瞬间</span
                     >
                   </span>
                   <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
@@ -487,13 +467,10 @@ import "../styles/about.css";
 
         <!-- ---------- 侧列 ---------- -->
         <div class="about-col-side">
-          <!-- 我的技能：数据 = 「技能页面」设置里的技能（theme.config.extendPages.skills.entries.items）。
-               按设置的 category（前端 / 后端 / 数据库 / 工具 / 其他）分组展示，每组「组名 + 胶囊行」；
-               分组写死 5 块而不是按 category 动态归并：分类本身是固定枚举，写死才能直接对上 i18n key、
-               分组顺序也稳定（与技能页筛选条同序）；分组为空则整组不渲染，全空则整卡隐藏。
-               胶囊 = 技能自己的 iconify 图标（可选，留空只显示文字）+ 技能名，纯展示、不可点。
-               右上角「全部技能 →」走「技能页面 → 技能页面地址 / 显示」两个设置项（同本人项目的开关思路）。
-               每组过滤「名称非空」的条目（skillXxx 在页面顶层 th:with 里已过滤，避免出现空壳分组）。 -->
+          <!-- 我的技能：数据 = 「技能页面」设置里的技能，按 category 分 5 组展示
+               （写死分组而非动态归并：分类是固定枚举，写死才能直接对上 i18n key 且顺序稳定）。
+               分组为空则不渲染该组，全空则整卡隐藏；分组数据已在顶层 th:with 过滤「名称非空」。
+               胶囊纯展示不可点；右上角「全部技能」按钮由设置里的开关 + 地址控制。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.skills?.enable != false and skillItems != null and not #lists.isEmpty(skillItems)}"
@@ -518,7 +495,6 @@ import "../styles/about.css";
             </div>
             <div class="about-skill-groups">
               <div
-                class="about-skill-group"
                 th:if="${skillFrontend != null and not #lists.isEmpty(skillFrontend)}"
               >
                 <p
@@ -542,7 +518,6 @@ import "../styles/about.css";
                 </div>
               </div>
               <div
-                class="about-skill-group"
                 th:if="${skillBackend != null and not #lists.isEmpty(skillBackend)}"
               >
                 <p
@@ -566,7 +541,6 @@ import "../styles/about.css";
                 </div>
               </div>
               <div
-                class="about-skill-group"
                 th:if="${skillDatabase != null and not #lists.isEmpty(skillDatabase)}"
               >
                 <p
@@ -590,7 +564,6 @@ import "../styles/about.css";
                 </div>
               </div>
               <div
-                class="about-skill-group"
                 th:if="${skillTools != null and not #lists.isEmpty(skillTools)}"
               >
                 <p
@@ -611,7 +584,6 @@ import "../styles/about.css";
                 </div>
               </div>
               <div
-                class="about-skill-group"
                 th:if="${skillOther != null and not #lists.isEmpty(skillOther)}"
               >
                 <p
@@ -634,21 +606,11 @@ import "../styles/about.css";
             </div>
           </section>
 
-          <!-- 我的朋友（数据取自本站友情链接）
-               2026-09-13：由「文字胶囊网格」改版为「带头像的卡片墙」，
-               并从「我的技能」上方移到下方（LQ 要求：我的技能卡片下面）。
-               形态：圆形 logo + 名称 + 单行描述，两列网格。
-               数据源：Links 插件的 linkFinder.random(N) —— 服务端每次请求随机取 N 条
-               （N = 设置里的「显示数量」），所以「每次刷新换一批」是零 JS 的：客户端洗牌
-               那套已从 extend-pages.js 移除，超量条目也不会下发到前台。
-               ⚠️ 依赖插件的 random(maxSize)（插件 README 有列，但主题里此前没用过）：
-               若插件版本不支持，本页渲染会抛错 —— 届时把顶层 th:with 的 friendLinks 换回
-               linkFinder.groupBy()，本段按分组两轮遍历即可（改动只有这两处）。
-
-               🔴🔴 1.4.84 修正：变量都在上方页面顶层 th:with 里（friendLinks /
-               friendCount）。**不要**在本 section 上再叠 th:with + th:if：th:if(3)
-               先于 th:with(4) 执行，同元素上 th:if 读不到 th:with 的变量
-               （1.4.83 正是这样修坏的）。 -->
+          <!-- 我的朋友：卡片墙（圆形 logo + 名称 + 单行描述，两列网格）。
+               数据源 = 友链插件 linkFinder.random(N)（N = 设置里的「显示数量」），
+               服务端每次请求随机取 N 条 ⇒「刷新换一批」零 JS，超量条目也不下发到前台。
+               ⚠️ 依赖插件的 random(maxSize)：若插件版本不支持会渲染抛错，届时把顶层
+               th:with 的 friendLinks 换回 linkFinder.groupBy()，本段按分组两轮遍历即可。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.friends?.enable != false and friendLinks != null and !#lists.isEmpty(friendLinks)}"
@@ -661,8 +623,7 @@ import "../styles/about.css";
                 我的朋友
               </h2>
             </div>
-            <!-- aboutLogoOk 口径与页脚友链一致：logo 非空且是 http / // / / 开头；
-                 url 非法时只渲染卡片、不生成 href（沿用原有行为）。 -->
+            <!-- logo / url 只接受 http、//、/ 开头；url 非法时只渲染卡片不生成 href -->
             <div class="about-friends">
               <a
                 class="about-friend"
@@ -700,9 +661,8 @@ import "../styles/about.css";
             </div>
           </section>
 
-          <!-- 保持联系：数据 = 侧栏「个人简介小组件 → 社交媒体」
-               （social_icon 是 $formkit: iconify + format: svg ⇒ 值是一整段内联 SVG，
-               必须用 th:utext 注入，不能走 th:class —— 见 Profile.astro / Footer.astro） -->
+          <!-- 保持联系：数据 = 侧栏「个人简介小组件 → 社交媒体」。
+               social_icon 是 iconify 内联 SVG，必须 th:utext 注入（同 Profile.astro） -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.contact?.enable != false and socials != null and !#lists.isEmpty(socials)}"
@@ -740,11 +700,8 @@ import "../styles/about.css";
     </div>
 
     <!-- ================= ④ 页脚卡 ================= -->
-    <!-- 页脚链接走结构化设置（主题设置 → 关于我 → 页脚 → 页脚链接：名称 + 图标（可选）+ 链接，
-         最多 5 条由设置项自身的 max 限制），不再用「名称|链接」的多行文本 ——
-         名称位置填成 URL 那种误用就此消失。
-         图标与「我的技能」胶囊 / 身份卡按钮同一套：iconify(format: svg) 值是一整段内联 SVG，
-         必须 th:utext 注入、留空则完全不渲染图标元素。 -->
+    <!-- 页脚卡：小标题 + 文案 + 链接按钮（结构化设置，最多 5 条由设置项 max 限制）。
+         图标与技能胶囊 / 身份卡按钮同一套：iconify 内联 SVG 走 th:utext，留空不渲染。 -->
     <section
       class="card-base about-footer-card onload-animation mb-4"
       th:if="${cfg?.footer?.enable != false and ((!#strings.isEmpty(cfg?.footer?.motto)) or (cfg?.footer?.linkItems != null and !#lists.isEmpty(cfg?.footer?.linkItems)))}"
@@ -788,8 +745,8 @@ import "../styles/about.css";
     </section>
   </div>
 
-  <!-- 多行字段渲染（正文 / 项目技术栈 / 标签）+ 友链随机
-       + 「最近的提交」两组数据归并排序 -->
+  <!-- extend-pages.js：个人简介正文的段落重建（服务端已直出同一份纯文本兜底）
+       + 「最近提交」两组数据按 data-time 归并排序 -->
   <script
     is:inline
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/extend-pages.js?v=${ASSET_VERSION}`}

@@ -1,15 +1,9 @@
-// @ts-nocheck —— 与 timeline.js 同款：配合模板里 th:data-* 多行字段在客户端渲染。
-// 目前只服务「关于我」页的「关于我正文」：模板把多行文本写进 data-lines，
-// 这里按行拆成 <p> 段落（data-lines-render="paragraphs"）。
-//
-// 为什么要客户端渲染：settings.yaml 里该字段是 textarea（每行一段），
-// 而 Thymeleaf 侧没有顺手的分行迭代；timeline.js 已确立同一做法。
-//
-// 其余字段都已改服务端直出、不再经过本文件：
-// 「我的技能」读技能页面配置、「项目技术栈」读项目集插件数据、
-// 「保持联系」「页脚链接」是结构化设置 / 直接读侧栏社交；
-// 「我的朋友」也已在服务端按「显示数量」截前 N 条（原来靠本文件洗牌截断，已移除）。
-//
+// @ts-nocheck —— 与 timeline.js 同款：配合模板里 th:data-* 字段做客户端增强。
+// 只服务「关于页面」两件事：
+//   1. 「个人简介」正文：按 data-lines 把多行文本拆成 <p> 段落（服务端已直出纯文本
+//      兜底，这里只把它换成与设计一致的段落版式）；
+//   2. 「最近提交」：按 data-time 归并文章 + 瞬间两组行，并按 data-count 截断。
+// 其余字段均已服务端直出，不经过本文件。
 // Swup 换页由 SwupScriptsPlugin 重执行（DOM 已替换），data-rendered 守卫仅防重复。
 (function () {
   function splitLines(raw) {
@@ -25,14 +19,16 @@
   }
 
   function render(el) {
-    // 契约：data-lines-render 目前只认 paragraphs（「关于我正文」每行一段）。
+    // 契约：data-lines-render 目前只认 paragraphs（「个人简介」正文每行一段）。
     // 出现未知取值一律不渲染 —— 不做「静默兜底」，避免留下无人使用的分支。
     if (el.getAttribute("data-lines-render") !== "paragraphs") return;
 
     var lines = splitLines(el.getAttribute("data-lines"));
+    // 模板已把同一份文本服务端直出为纯文本（无 JS 时靠 .about-paragraphs 的
+    // white-space: pre-line 显示），这里先清空再重建，避免正文出现两遍。
+    el.textContent = "";
     if (lines.length === 0) {
-      // 容器里可能已经有服务端渲染的静态子节点，这种情况只跳过追加，不能整块摘掉。
-      if (!el.childNodes.length) el.remove();
+      el.remove();
       return;
     }
 

@@ -1,9 +1,7 @@
 ---
 /**
- * 全站瞬间栏：顶部横向滚动跑马灯 + 底部标签筛选。
- *
- * 挂载在 #main-panel-wrapper 内、#main-grid 之上且位于 #swup-container 之外，
- * 因此全站每页都渲染、站内换页不掉、直刷任意页也在。
+ * 全站瞬间栏：横向滚动跑马灯 + 底部标签筛选，挂在 #main-panel-wrapper 内、
+ * #main-grid 之上、#swup-container 之外 ⇒ 全站每页都有、站内换页不重载。
  *
  * 结构：
  *  ┌──────────────────────────────────────────────┐
@@ -11,20 +9,13 @@
  *  │  #标签·n  #标签·n  #标签·n  …                │  标签筛选行
  *  └──────────────────────────────────────────────┘
  *
- * 数据流：
- * - 跑马灯 SSR 渲染最近瞬间，content.raw 为富文本（可能含 HTML），
- *   由前端 JS 截取「首个逻辑行」后回填（隐藏 span 传值，避免 HTML 转义外露）；
- *   每条呈现为「作者名：首行内容」，内容再单行限宽省略（40ch）兜底。
- * - 标签同样用隐藏 span 传入，JS 去重 + 计数后渲染为胶囊链接。
- * - 无缝滚动：把内容补足一屏后整体复制一份，轨道在 0 ↔ -50% 之间平移即无缝；
- *   hover / 键盘聚焦暂停；两端渐隐。
- * - 开关：theme.config.layout.pageLayout.momentsBar.enable
- *   （主题设置 → 页面布局 → 瞬间预览条，全站生效，默认关闭）
- * - 数量：theme.config.layout.pageLayout.momentsBar.count
- *
- * 依赖：瞬间插件（提供 momentFinder）。插件未安装时整条不渲染（不再退化为
- * 空态常驻，否则未装插件的站点每页顶部都会多一条空卡片 + 死链）；
- * 插件已装但一条瞬间都没有时仍渲染卡片并显示空态。
+ * 要点：
+ * - 瞬间正文由服务端先剥标签（无 JS 也不露标签原文），端上 JS 再取首个逻辑行、
+ *   隐藏正文为空的条目，内容单行限宽省略（40ch）。
+ * - 标签用隐藏 span 传入，JS 去重计数后渲染为胶囊；无缝滚动靠复制一屏实现，
+ *   hover / 键盘聚焦暂停。
+ * - 开关与数量：layout.pageLayout.momentsBar.enable / .count（默认关闭）。
+ * - 依赖「瞬间」插件：未安装时整条不渲染（避免空卡片 + 死链常驻）。
  */
 ---
 
@@ -34,11 +25,10 @@
   th:if="${theme.config?.layout?.pageLayout?.momentsBar?.enable == true and momentFinder != null}"
   th:with="homeMoments = ${momentFinder?.list({size: theme.config?.layout?.pageLayout?.momentsBar?.count ?: 10})}"
 >
-  <!-- 门槛 = 开关显式开启（默认关闭，故用 == true 而不是 != false）且插件已装
-       （momentFinder 存在）：插件缺失时整条不渲染，而不是退化成「空态常驻 +
-       指向不存在的 /moments 的死链」。
-       注意 th:if 只引用**外部变量** momentFinder，不引用同元素 th:with 定义的
-       homeMoments —— th:if(300) 先于 th:with(400) 求值，引用后者会恒为假。 -->
+  <!-- 门槛 = 开关显式开启（默认关闭，故用 == true）且插件已装（momentFinder 存在）：
+       插件缺失时整条不渲染，避免退化成「空态常驻 + /moments 死链」。
+       ⚠️ th:if 只引用外部变量 momentFinder，不能引用同元素 th:with 的 homeMoments
+       （th:if 优先级 3 早于 th:with 优先级 4，引用后者恒为假）。 -->
   <!-- 整条可点击覆盖层：空白区域点击跳 /moments（z-1，内容在 z-10 之上） -->
   <a
     th:href="@{/moments}"
@@ -88,10 +78,12 @@
               th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.displayName)}"
               >：</span
             >
-            <!-- 原始内容（可能是富文本 HTML）：先以文本承载，JS 解析为纯文本后回填 -->
+            <!-- 原始内容（可能是富文本 HTML）：服务端先剥掉标签再以纯文本输出，
+                 无 JS 时也不会露出 <p> 之类的标签；端上 JS 再取首个逻辑行回填 -->
             <span
               class="home-moment-text text-sm text-50"
-              th:text="${moment.spec.content.raw}">内容</span
+              th:text="${moment.spec.content.raw.replaceAll('<[^>]*>', ' ')}"
+              >内容</span
             >
             <span
               class="home-moment-dot mx-3 inline-block h-1 w-1 shrink-0 rounded-full bg-(--primary)/40"
@@ -129,8 +121,7 @@
   </div>
 
   <!-- ===== 底部：标签筛选 =====
-       data-moments-url：站内链接前缀由服务端下发（@{/moments} 自带上下文路径），
-       供下方内联脚本拼标签链接；硬编码 "/moments" 在子路径部署时会 404。 -->
+       data-moments-url = 站内链接前缀（@{/moments} 自带上下文路径），供脚本拼标签链接 -->
   <div
     id="home-moments-tags"
     class="relative z-10 mt-3 flex flex-wrap items-center gap-2"
@@ -194,10 +185,8 @@
     animation-play-state: paused;
   }
 
-  /* 单条瞬间：只显示第一行——瞬间内容由 JS 截取首个逻辑行（去图片、按 br/
-     段落断行），此处再限宽单行省略兜底，防某条首行本身超长撑破轨道。
-     inline-block 是关键：默认 span 是 inline，white-space 不生效。
-     !important 防止被任何更高优先级的样式覆盖 */
+  /* 单条瞬间：JS 已取首个逻辑行，这里再限宽单行省略兜底，防首行本身超长撑破轨道。
+     inline-block 是关键（默认 span 是 inline，white-space 不生效）；!important 防覆盖 */
   .home-moment-text {
     display: inline-block !important;
     max-width: 40ch;
@@ -374,14 +363,11 @@
       }
 
       // ===== 3. 标签提取去重 + 计数，渲染胶囊 =====
-      // 必须在补屏/复制之后读、且**只看第一个 group**：从整条 track 数会把每个
-      // 标签算成 k×2 遍（历史上踩过「标签计数翻倍」这个坑）。
-      // 用 createElement 而非 innerHTML 拼接：标签名来自用户数据，拼 HTML 会引入
-      // DOM 型 XSS（历史缺陷）。
+      // ⚠️ 必须在补屏/复制之后读、且只看第一个 group（从整条 track 数会算成 k×2 遍）；
+      // 用 createElement 而非 innerHTML：标签名来自用户数据，拼 HTML 有 XSS 风险。
       if (tagsBox && tagsBox.getAttribute("data-rendered") !== "1") {
         tagsBox.setAttribute("data-rendered", "1");
-        // 站内链接前缀由服务端下发（@{/moments} 带上下文路径）：不硬编码 "/moments"，
-        // 否则站点部署在子路径下时标签胶囊会 404。
+        // 站内链接前缀由服务端下发（子路径部署时硬编码 "/moments" 会 404）
         var momentsUrl = tagsBox.getAttribute("data-moments-url") || "/moments";
         var firstGroup = track.querySelector(".home-moments-group");
         var tagMap = new Map();

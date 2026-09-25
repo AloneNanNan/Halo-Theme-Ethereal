@@ -26,7 +26,7 @@ spec:
       - name: "技能"
         description: "个人技能展示页面（在主题设置的「技能」Tab 中配置数据）"
         file: "skills.html"
-      - name: "关于我"
+      - name: "关于页面"
         description: "个人介绍页面（页面内容在主题设置的「扩展页面 → 关于页面」中配置）"
         file: "about.html"
   settingName: "Ethereal-setting"

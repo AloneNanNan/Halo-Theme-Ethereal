@@ -1,25 +1,15 @@
 /* ==========================================================================
-   「关于我」页面（about.html）的卡片体系样式。
-   原先是 about.astro 里 <Fragment slot="head"> 内的 <style is:global> —— Astro 会把它
-   打成页面级 CSS 文件，与独立样式文件完全等价；抽出来的目的只是可维护性：
-   1700 行的页面模板里藏 970 行 CSS，改任何一处卡片样式都要跨千行滚动。
-
-   选择器全部以 .about-* 前缀命名，只作用于「关于我」页；由 about.astro 在
-   frontmatter 里 import（与 photos.astro 引入 photos-gallery-lightbox.css 同款）。
+   「关于页面」（about.html）的卡片体系样式，由 about.astro 在 frontmatter 里 import。
+   原先是页面模板内的 <style is:global>，抽成独立文件只为可维护性；选择器一律
+   .about-* 前缀，只作用于本页。
    ========================================================================== */
 
 /* ==========================================================================
-   「关于我」卡片体系 —— 逐条对齐参考站 rainzt.cn/about/
-   参考站把卡级规则写在该页自己的样式表里（不在主题 .card-base）：
-     · 外壳   1px 细边（主色 14% 混分隔线）+ 大范围极淡投影
-     · 卡头   图标 1.08rem 主色 / 标题 1rem·780·-.015em / 尾标 .68rem
-     · 内嵌项 1px 分隔线边 + 半径 .78rem + 底 = 95% card-bg 混 5% 主色
-     · 可点内嵌项 hover：边 48% 主色 + 底 7% 主色 + 投影 + 上浮 2px
-   本主题与参考站同名同值（--radius-large / --line-divider / --card-bg / --primary），
-   数值可直接照搬；只补一个参考站有、本主题没有的 --content-meta。
+   卡片体系的取色与尺度统一走主题变量（--radius-large / --line-divider /
+   --card-bg / --primary），并在本页作用域补一个次要文字色 --content-meta。
    ========================================================================== */
 
-/* 卡片作用域内补齐参考站的「次要文字色」（rgba .7 / .6 的等价物） */
+/* 卡片作用域内补齐次要文字色（rgba .7 / .6 的等价物） */
 .about-hero-card,
 .about-subnav,
 .about-col-main > section,
@@ -29,10 +19,8 @@
 }
 
 /* ================= ① 卡级外壳 =================
-   ⚠️ 这里刻意**不加边框、不加阴影**（2026-09-12 LQ 明确要求）：
-   早前一度照参考站给这几张卡加了 1px 主色描边 + `box-shadow: 0 .7rem 1.8rem`，
-   但 LQ 认为「外面包一圈」不符合本主题的设计语言 —— 卡片应当直接融进页面背景，
-   只靠间距分隔，不加壳。改动前勿擅自补回（参考站有 ≠ 本主题要跟）。 */
+   ⚠️ 刻意不加边框、不加阴影：卡片直接融进页面背景，只靠间距分隔。
+   加壳不符合本主题设计语言，改动前勿擅自补回。 */
 .about-hero-card,
 .about-col-main > section,
 .about-col-side > section,
@@ -42,13 +30,13 @@
 }
 
 /* ================= ② 页头：身份卡 =================
-   卡面保持纯净：不加顶部柔光（早前的 ::after 渐隐高光已于 2026-09-12 移除）。 */
+   卡面保持纯净：不加顶部柔光（早前的 ::after 渐隐高光已移除）。 */
 .about-hero-card {
   position: relative;
   overflow: hidden;
   padding: clamp(1.1rem, 2.5vw, 1.65rem);
 }
-/* 头像 = 主色描边相框 + 内层留白 + 圆角图（对齐参考站 .profile-avatar） */
+/* 头像 = 主色描边相框 + 内层留白 + 圆角图 */
 .about-avatar {
   display: block;
   flex: none;
@@ -69,7 +57,7 @@
   background: var(--card-bg);
   object-fit: cover;
 }
-/* 姓名 / 身份 / 简介 / 状态：字号阶梯对齐参考站 */
+/* 姓名 / 身份 / 简介 / 状态：字号阶梯 */
 .about-name {
   margin: 0;
   font-size: clamp(1.7rem, 3.2vw, 2.35rem);
@@ -103,9 +91,8 @@
   height: 0.95rem;
   color: var(--primary);
 }
-/* 绑定主题「在线状态」statusSettings 的胶囊形态（1.4.90）：
-   与侧栏头像卡的状态徽章同源，点击同样弹出切换模态框（profile-status.ts）。
-   胶囊描边/底色走 var(--primary) ⇒ 跟随主题色相与访客色相面板。 */
+/* 绑定主题「在线状态」的胶囊形态：与侧栏头像卡徽章同源，点击弹出切换模态框
+   （profile-status.ts）；描边/底色走 var(--primary)，跟随主题色相。 */
 .about-status-pill {
   gap: 0.5rem;
   padding: 0.34rem 0.85rem;
@@ -146,11 +133,8 @@
 }
 
 /* ================= ③ 页头按钮 =================
-   刻意保持与「心愿墙」页 .wish-bar-btn 逐属性一致（早前明确要求），
-   不跟参考站的 .profile-action 走。 */
-/* 2026-09-13：移动端改为**并排等宽两个**（原先纵向堆叠，LQ 要求对齐参考站）；
-   ≥640px 仍回到纵向堆叠、与身份卡并排。
-   只动容器布局 —— .about-btn 自身与「心愿墙」页 .wish-bar-btn 的逐属性一致保持不变。 */
+   按钮样式刻意与「心愿墙」页 .wish-bar-btn 逐属性一致。 */
+/* 移动端并排等宽两个、≥640px 回到纵向堆叠（只动容器布局，.about-btn 自身不变） */
 /* 按钮列：条目竖排（数量上限由设置项的 max: 3 管）。
    它是身份卡行（.about-hero-card 的首个 div）的第三个 flex item，与头像、文字列并列：
    ≥640px 行容器为 sm:items-center ⇒ 整列相对头像 / 文字列**垂直居中**；
@@ -237,7 +221,7 @@
   /* 左右留出内边距，左对齐时首个条目不会贴到卡片边缘（面板 Tab 栏同款做法） */
   padding: 0 1rem;
   overflow-x: auto;
-  /* 与卡片一致：不加边框 / 阴影，只靠底色与下方主色短横线区分（2026-09-12 去壳） */
+  /* 与卡片一致：不加边框 / 阴影，只靠底色与下方主色短横线区分 */
   border: none;
   border-radius: var(--radius-large);
   background: color-mix(in srgb, var(--card-bg) 94%, transparent);
@@ -339,13 +323,9 @@
   gap: 1rem;
   min-width: 0;
 }
-/* 卡头与其下正文的间距。
-   卡头下原先还有一条 1px 分隔线（等价于参考站 .profile-readme__body 的 border-top），
-   现按「标题下不加横线」去掉，只用留白区分卡头与正文；若要恢复，加回
-   border-bottom: 1px solid var(--line-divider)。
-   主列卡头行（.about-card-head-row）与侧列卡头（.about-card-head）共用同一套规则。
-   用语义类选中，**不依赖 Tailwind 工具类**（原写法 .mb-5:first-child 在有人把
-   间距改成 mb-4 或给卡头加一层 wrapper 时会静默失效）。 */
+/* 卡头与其下正文的间距（主列 .about-card-head-row 与侧列 .about-card-head 共用）。
+   原先这里还有一条 1px 分隔线，已按「标题下不加横线」去掉，只用留白区分；
+   要恢复就加回 border-bottom: 1px solid var(--line-divider)。 */
 .about-card-head-row,
 .about-card-head {
   padding-bottom: 0.5rem;
@@ -355,7 +335,7 @@
   margin-bottom: 0.75rem;
 }
 
-/* ================= ⑥ 小区块标签 kicker = 参考站 .profile-section-kicker ================= */
+/* ================= ⑥ 小区块标签 kicker ================= */
 .about-section-label {
   display: inline-flex;
   align-items: center;
@@ -368,7 +348,7 @@
   line-height: 1.3;
   text-transform: uppercase;
 }
-/* 卡头右侧的「更多 →」= 参考站 .profile-section-link */
+/* 卡头右侧的「更多 →」 */
 .about-section-link {
   display: inline-flex;
   align-items: center;
@@ -404,19 +384,22 @@
   white-space: pre-line;
 }
 
-/* ================= ⑧ 正文段落 = 参考站 .profile-markdown p ================= */
+/* ================= ⑧ 正文段落 ================= */
 .about-paragraphs > p {
   max-width: 72ch;
   margin: 0.85rem 0 0;
   color: var(--content-meta);
   font-size: 0.92rem;
   line-height: 1.9;
+  /* 无 JS 时容器里是服务端直出的整段纯文本（含真实换行），pre-line 让换行可见；
+     有 JS 时容器会被清空重建为 <p>，每个 <p> 内不含换行，本属性对它们无影响 */
+  white-space: pre-line;
 }
 .about-paragraphs > p:first-child {
   margin-top: 0;
 }
 
-/* ================= ⑨ 内嵌卡片：项目 = 参考站 .project-card ================= */
+/* ================= ⑨ 内嵌卡片：项目 ================= */
 .about-proj-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -466,6 +449,8 @@
   min-width: 0;
 }
 .about-proj__title {
+  /* <h3>：清掉浏览器默认外边距，其余间距交给 .about-proj__body 的网格 gap */
+  margin: 0;
   overflow: hidden;
   color: var(--deep-text);
   /* 没有图标方块后标题成了卡片视觉锚点，字号上调一档并给悬停反馈 */
@@ -493,8 +478,8 @@
   flex-wrap: wrap;
   gap: 0.25rem;
 }
-/* 项目卡底部技术标签 = 参考站 .project-card__tags em */
-.about-proj__tech i {
+/* 项目卡底部技术标签 */
+.about-proj__tech > span {
   font-style: normal;
   padding: 0.18rem 0.34rem;
   border-radius: 0.35rem;
@@ -503,7 +488,7 @@
   font-size: 0.6rem;
   line-height: 1.2;
 }
-/* 外链箭头 = 参考站 .project-card__arrow / .activity-arrow */
+/* 外链箭头 */
 .about-proj__arrow,
 .about-activity-arrow {
   color: var(--content-meta);
@@ -519,7 +504,7 @@
   transform: translate(0.1rem, -0.1rem);
 }
 
-/* ================= ⑪ 卡头 = 参考站 .profile-panel__header / .profile-side-heading =================
+/* ================= ⑩ 卡头 =================
    卡头与正文的间距由 ⑤ 的共用规则提供（.about-card-head 与 .about-card-head-row），
    不再有下方分隔线。 */
 .about-card-head {
@@ -553,11 +538,10 @@
   background: var(--primary);
 }
 
-/* ================= ⑫ 我的朋友（带头像卡片墙）/ 我的技能（标签胶囊） =================
-   2026-09-13 改版：两个卡片原本共用 .about-friend / .about-tag-chip 一套胶囊样式，
-   现在「我的朋友」升级为带头像卡片墙 ⇒ **必须解耦**，否则我的技能会被一起改掉。
-   · .about-friends / .about-friend*  → 卡片墙（圆形 logo + 名称 + 描述，2 列）
-   · .about-tag-list / .about-tag-chip → 仍是胶囊（保持参考站 .stack-list 青色系） */
+/* ================= ⑪ 我的朋友（带头像卡片墙）/ 我的技能（标签胶囊） =================
+   ⚠️ 两者样式必须解耦（曾经共用一套胶囊样式）：「我的朋友」是卡片墙
+   （.about-friends / .about-friend*），「我的技能」才是胶囊（.about-tag-list /
+   .about-tag-chip），混用会把卡片当胶囊渲染。 */
 .about-friends {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -617,10 +601,12 @@
   color: var(--primary);
   outline: none;
 }
-/* 上浮只在桌面端（触屏没有 hover，位移反而造成「点了没反应」的错觉），
-   并接入主题「样式开关 → 卡片悬浮效果」（body.card-hover-lift-enabled）：
-   开关关闭时只保留上方的描边 / 底色 / 文字色反馈，不再上浮 */
-@media (hover: hover) and (pointer: fine) {
+/* 上浮接入主题「样式开关 → 卡片悬浮效果」（body.card-hover-lift-enabled）：
+   开关关闭时只保留上方的描边 / 底色 / 文字色反馈，不再上浮。
+   媒体条件与「本人项目」卡片、以及主题基准 .card-hover-lift 统一为 min-width: 768px ——
+   原先这里用的是 hover:hover + pointer:fine，与项目卡不是同一套判定，同一个开关在
+   触屏平板等设备上会出现「一张卡动、一张卡不动」。 */
+@media (min-width: 768px) {
   body.card-hover-lift-enabled .about-friend:hover {
     transform: translateY(-1px);
     box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 14%, transparent);
@@ -672,11 +658,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 胶囊本体（我的技能专用，服务端 th:each 渲染，不再是 JS 生成）。
-   ⚠️ 2026-09-13 起「我的朋友」已是卡片墙，**不要加入本规则** ——
-   原来两者共用一套胶囊样式，改版时必须解耦，否则卡片被当胶囊渲染。
-   胶囊结构 = iconify 图标（可选，技能自己的图标）+ 技能名，纯展示、不可点
-   （曾试过点击跳技能页分类，已按需求砍掉）；图标走 currentColor，跟随胶囊文字色。 */
+/* 胶囊本体（我的技能专用，服务端 th:each 渲染）：iconify 图标（可选）+ 技能名，
+   纯展示不可点；图标走 currentColor 跟随文字色。⚠️ 勿把「我的朋友」的卡片加进来。 */
 .about-tag-chip {
   display: inline-flex;
   align-items: center;
@@ -708,11 +691,9 @@
   background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
   color: var(--primary);
 }
-/* 1.4.90：删掉参考站 .stack-list 的硬编码青色（#42c7b0 / #159b8b）覆写，
-   回归上方基础规则的 var(--primary) ⇒ 胶囊效果跟随主题色相
-   （含后台主题色与访客面板色相），符合本主题视觉语言。 */
+/* 胶囊 hover 统一走 var(--primary)，以跟随主题色相（含后台主题色与访客面板色相）。 */
 
-/* ================= ⑬ 保持联系 = 参考站 .profile-connect-list ================= */
+/* ================= ⑫ 保持联系 ================= */
 .about-connect-list {
   display: grid;
   gap: 0.4rem;
@@ -781,7 +762,7 @@
   transform: translate(0.1rem, -0.1rem);
 }
 
-/* ================= ⑭ 最近的提交：时间轴 = 参考 时间轴页 .timeline-list/.timeline-node
+/* ================= ⑬ 最近提交：时间轴 = 参考 时间轴页 .timeline-list/.timeline-node
    ＋ 朋友圈 .friends-timeline ＋ 归档页 .dash-line =================
    三套的取法：轴线用「朋友圈 / 归档页」的 2px 虚线基调；节点用「时间轴页」的实心圆点
    ＋ hover 放大与主题色光环；日期前置单列在标题上方，沿用朋友圈「日期在上、内容在下」。 */
@@ -908,7 +889,7 @@
   line-height: 1;
 }
 
-/* ================= ⑰ 页脚卡 = 参考站 .profile-footer ================= */
+/* ================= ⑭ 页脚卡 ================= */
 /* ⚠️ margin-top 不能省：外层 th:with 容器带 th:remove="tag"，渲染后页脚卡是
    .about-cols-wrap 的**直接兄弟**，而 .about-cols-wrap 没有下外边距 ⇒
    不加这条时页脚卡与两栏区块的间距是 0，和全页 1rem 的节奏对不上。
@@ -957,8 +938,8 @@ section.about-footer-card {
   outline: none;
 }
 
-/* ================= ⑱ 窄屏档 = 参考站 ≤640px 那一组 ================= */
-@media (max-width: 640px) {
+/* ================= ⑮ 窄屏档（< 640px，与上面 min-width:640px 档错开边界） ================= */
+@media (max-width: 639.98px) {
   .about-cols {
     gap: 0.75rem;
   }
@@ -1019,7 +1000,7 @@ section.about-footer-card {
   .about-friends {
     grid-template-columns: minmax(0, 1fr);
   }
-  /* 参考站 ≤640px：内嵌卡整体缩一档（图标已去掉，只留正文列 + 箭头列） */
+  /* 窄屏：内嵌卡整体缩一档（图标已去掉，只留正文列 + 箭头列） */
   .about-proj {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
@@ -1058,7 +1039,7 @@ section.about-footer-card {
   }
 }
 
-/* ================= ⑲ 尊重「减少动态效果」 ================= */
+/* ================= ⑯ 尊重「减少动态效果」 ================= */
 @media (prefers-reduced-motion: reduce) {
   .about-friend,
   .about-connect,
