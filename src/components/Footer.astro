@@ -1,136 +1,185 @@
 ---
+import FooterBeian from "./FooterBeian.astro";
+import FooterCopyright from "./FooterCopyright.astro";
+import FooterCredit from "./FooterCredit.astro";
+import FooterCustomLinks from "./FooterCustomLinks.astro";
 import FooterFriendLinks from "./FooterFriendLinks.astro";
-
-const currentYear = new Date().getFullYear();
 ---
 
+<!--
+  页脚 = 版式 × 分割带（相互独立，共 4 种组合）：
+    · 版式 footer.styleConfig.style：classic 经典（默认）/ card 卡片
+    · 分割带 footer.styleConfig.divider.style：classic 虚线（默认）/ star 星芒
+  缺省走经典款，升级前没有 styleConfig 的存量配置外观不变。
+
+  取值集中在下面这层 th:with（只对后代可见，不能与同元素 th:if 互赖）。
+  版权行 / 自定义链接 / 备案 / 署名四段内容两种版式一致，已抽成同目录子组件复用；
+  这里只负责各自的**外层排版容器**（经典居中堆叠、卡片左右分栏）。
+-->
 <div
-  class="mx-8 my-10 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 md:mx-32"
+  th:with="
+    footerStyle = ${theme.config?.footer?.styleConfig?.style ?: 'classic'},
+    footerDividerStyle = ${theme.config?.footer?.styleConfig?.divider?.style ?: 'classic'}"
+  th:remove="tag"
 >
+  <!-- ============ 分割带（经典虚线 / 星芒装饰） ============
+       与版式无关、可任意组合。用 `!= 'star'` 而非 `== 'classic'`：空值 /
+       未知值也会落到经典款，保证两个互斥分支必有一个命中。 -->
+  <div
+    th:if="${footerDividerStyle != 'star'}"
+    class="mx-8 my-10 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 md:mx-32"
+  >
+  </div>
+  <div
+    th:if="${footerDividerStyle == 'star'}"
+    class="relative mx-8 my-6 flex items-center justify-center md:mx-32"
+  >
+    <!-- 贯穿渐隐线：中部最浓、两端透明；星芒位于正中覆盖断口 -->
+    <span
+      class="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-linear-to-r from-transparent via-(--primary)/25 to-transparent"
+    ></span>
+    <!-- 居中星芒徽标。默认用页面底色画圆遮罩避免细线穿过星星；
+         全屏透明壁纸下的覆写见文件末尾。 -->
+    <span
+      class="footer-star-badge relative z-10 inline-flex size-7 items-center justify-center rounded-full bg-(--page-bg) text-(--primary)"
+    >
+      <span
+        class="absolute inset-0 rounded-full border border-(--primary)/30 transition"
+      ></span>
+      <svg
+        viewBox="0 0 24 24"
+        class="size-3.5 drop-shadow-sm"
+        aria-hidden="true"
+      >
+        <path
+          fill="currentColor"
+          d="M12 0c.7 5.3 6.7 10.7 12 12-5.3 1.3-11.3 6.7-12 12-.7-5.3-6.7-10.7-12-12C5.3 10.7 11.3 5.3 12 0z"
+        ></path>
+      </svg>
+    </span>
+  </div>
+
+  <!-- 友链独立块：卡片版式下改嵌进卡片顶行（见下方），此处跳过避免同页出现两次。
+       ⚠️ th:unless 必须挂在真实元素上（挂 Astro 组件标签会被静默丢弃），故包一层 div。 -->
+  <div th:unless="${footerStyle == 'card'}" th:remove="tag">
+    <FooterFriendLinks />
+  </div>
+
+  <!-- ============ 经典页脚（单栏居中） ============ -->
+  <footer
+    th:unless="${footerStyle == 'card'}"
+    class="mb-12 flex flex-col items-center justify-center rounded-2xl px-6 text-center text-sm text-50 transition"
+  >
+    <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+      <FooterCopyright />
+    </div>
+    <!-- 自定义页脚链接 -->
+    <div
+      th:if="${theme.config?.footer?.customLinks != null && not #lists.isEmpty(theme.config?.footer?.customLinks?.items)}"
+      class="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1"
+    >
+      <FooterCustomLinks />
+    </div>
+    <div
+      class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+      th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text) or not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
+    >
+      <FooterBeian />
+    </div>
+    <div
+      th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
+      class="mt-2"
+    >
+      <FooterCredit />
+    </div>
+  </footer>
+
+  <!-- ============ 卡片页脚（整块一张 .card-base 卡片） ============
+       ① 顶行：站点标题 · 友情链接（compact）· 社交图标
+       ② 虚线分隔
+       ③ 底行：左「版权 + 链接」 / 右「备案 + 署名」
+       窄屏（<sm）折成纵向堆叠。顶行只放单行站点标题、不渲染副标题：两行堆叠时
+       垂直居中的是整块几何中心（落在两行之间），标题必然会偏上。 -->
+  <footer th:if="${footerStyle == 'card'}" class="card-base mb-12">
+    <!-- ① 顶行：身份 ←→ 社交，中间留给友链 -->
+    <div
+      class="flex flex-col gap-5 px-6 pb-6 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+    >
+      <div
+        class="relative min-w-0 pl-5 text-xl font-bold text-neutral-900 transition before:absolute before:left-0 before:top-1/2 before:h-5 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+      >
+        <span th:text="${site.title}">Ethereal</span>
+      </div>
+
+      <!-- 中间占位：友链 compact 形态。未启用友链时本 div 为空，靠 flex-1 吃掉
+           两端空白，布局自动回到「身份 ←→ 社交」两端对齐。 -->
+      <div class="min-w-0 sm:mx-6 sm:flex-1">
+        <FooterFriendLinks compact />
+      </div>
+
+      <!-- 右侧：社交图标，复用侧边栏「个人资料 → 社交媒体」（与侧栏同款按钮） -->
+      <div
+        th:if="${theme.config?.sidebar?.profile?.social_media != null and not #lists.isEmpty(theme.config?.sidebar?.profile?.social_media)}"
+        class="flex flex-wrap items-center gap-2.5"
+      >
+        <a
+          th:each="social : ${theme.config?.sidebar?.profile?.social_media}"
+          th:if="${social.social_icon != null and not #strings.isEmpty(social.social_icon.value)}"
+          th:href="${social.url}"
+          th:title="${social.name ?: social.text}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="social-btn-lift btn-regular size-9 rounded-lg duration-200 active:scale-90"
+          th:utext="${social.social_icon.value}"></a>
+      </div>
+    </div>
+
+    <!-- ② 分隔线 -->
+    <div
+      class="mx-6 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 sm:mx-8"
+    >
+    </div>
+
+    <!-- ③ 底行：左「版权 + 链接」 / 右「备案 + 署名」 -->
+    <div
+      class="flex flex-col gap-3 px-6 py-5 text-sm text-50 sm:flex-row sm:items-center sm:justify-between sm:px-8"
+    >
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <FooterCopyright />
+        </div>
+        <!-- 自定义页脚链接 -->
+        <div
+          th:if="${theme.config?.footer?.customLinks != null && not #lists.isEmpty(theme.config?.footer?.customLinks?.items)}"
+          class="flex flex-wrap items-center gap-x-2 gap-y-1"
+        >
+          <FooterCustomLinks />
+        </div>
+      </div>
+
+      <!-- 右列：窄屏左对齐、桌面右对齐（与左列呈镜像） -->
+      <div class="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
+        <div
+          class="flex flex-wrap items-center justify-start gap-x-4 gap-y-1 sm:justify-end"
+          th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text) or not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
+        >
+          <FooterBeian />
+        </div>
+        <div
+          th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
+        >
+          <FooterCredit />
+        </div>
+      </div>
+    </div>
+  </footer>
 </div>
 
-<!-- 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），插件未安装 / 未开启时整块跳过。
-     组件内部为 <nav> 地标，样式随组件（is:global，Astro 会提升到 head 且只输出一次）。 -->
-<FooterFriendLinks />
-<footer
-  class="mb-12 flex flex-col items-center justify-center rounded-2xl px-6 text-center text-sm text-50 transition"
->
-  <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-    <!-- Astro 编译会剥掉元素间的空白，行内空隙必须用 {" "} 显式补回（见下方 Powered by 行） -->
-    <span
-      >&copy; <span id="copyright-year">{currentYear}</span>{" "}
-      <span th:text="${site.title}">Ethereal</span>.{" "}
-      <span th:text="#{footer.rights}">All Rights Reserved.</span></span
-    >
-    <span class="whitespace-nowrap">
-      <span
-        th:if="${theme.config?.footer?.displayLinks?.enable_privacy != null ? theme.config?.footer?.displayLinks?.enable_privacy : false}"
-        th:remove="tag"
-        >/&nbsp;<a
-          class="link font-medium text-(--primary)"
-          th:href="@{${theme.config?.footer?.displayLinks?.privacy_url != null ? theme.config?.footer?.displayLinks?.privacy_url : '/privacy'}}"
-          th:text="#{common.privacyPolicy}">隐私政策</a
-        ></span
-      >
-      <span
-        th:if="${pluginFinder.available('PluginFeed') && (theme.config?.footer?.displayLinks?.enable_rss == null || theme.config?.footer?.displayLinks?.enable_rss)}"
-        th:remove="tag"
-        >&nbsp;/&nbsp;<a
-          class="link font-medium text-(--primary)"
-          target="_blank"
-          th:href="@{/rss.xml}">RSS</a
-        ></span
-      >
-      <span
-        th:if="${pluginFinder.available('PluginSitemap') && (theme.config?.footer?.displayLinks?.enable_sitemap == null || theme.config?.footer?.displayLinks?.enable_sitemap)}"
-        th:remove="tag"
-        >&nbsp;/&nbsp;<a
-          class="link font-medium text-(--primary)"
-          target="_blank"
-          th:href="@{/sitemap.xml}">Sitemap</a
-        ></span
-      >
-    </span>
-  </div>
-  <!-- 自定义页脚链接 -->
-  <div
-    th:if="${theme.config?.footer?.customLinks != null && not #lists.isEmpty(theme.config?.footer?.customLinks?.items)}"
-    class="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1"
-  >
-    <span
-      th:each="link, stat : ${theme.config?.footer?.customLinks?.items}"
-      th:remove="tag"
-    >
-      <span
-        th:if="${not #strings.isEmpty(link.html)}"
-        th:remove="tag"
-        th:utext="${link.html}"></span>
-      <span th:unless="${not #strings.isEmpty(link.html)}" th:remove="tag">
-        <span th:if="${not stat.first}"> / </span>
-        <a
-          th:if="${not #strings.isEmpty(link.url)}"
-          class="link font-medium text-(--primary)"
-          target="_blank"
-          th:href="${link.url}"
-          th:text="${link.name}">Link</a
-        >
-        <span
-          th:unless="${not #strings.isEmpty(link.url)}"
-          class="link font-medium text-(--primary)"
-          th:text="${link.name}">Link</span
-        >
-      </span>
-    </span>
-  </div>
-  <div
-    class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
-    th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text) or not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
-  >
-    <a
-      th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text)}"
-      class="inline-flex items-center gap-1 link font-medium text-(--primary)"
-      th:href="${theme.config?.footer?.beian?.icp_link}"
-      target="_blank"
-    >
-      <span class="icon-[material-symbols--verified-outline-rounded] h-4 w-4"
-      ></span>
-      <span class="text-sm" th:text="${theme.config?.footer?.beian?.icp_text}"
-      ></span>
-    </a>
-    <a
-      th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
-      class="inline-flex items-center gap-1 link font-medium text-(--primary)"
-      th:href="${theme.config?.footer?.beian?.gongan_link}"
-      target="_blank"
-    >
-      <img
-        src={`/themes/Ethereal/assets/images/ghs.png?v=${ASSET_VERSION}`}
-        alt="公安备案图标"
-        loading="lazy"
-        decoding="async"
-        width="16"
-        height="16"
-        class="inline-block h-4 w-4"
-      />
-      <span
-        class="text-sm"
-        th:text="${theme.config?.footer?.beian?.gongan_text}"></span>
-    </a>
-  </div>
-  <div
-    th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
-    class="mt-2"
-  >
-    <span th:text="#{footer.poweredBy}">Powered by</span>{" "}
-    <a
-      class="link font-medium text-(--primary)"
-      target="_blank"
-      href="https://www.halo.run">Halo</a
-    >{" "}&{" "}
-    <a
-      class="link font-medium text-(--primary)"
-      target="_blank"
-      href="https://github.com/AloneNanNan/halo-theme-ethereal">Ethereal</a
-    >
-  </div>
-</footer>
+<style is:global>
+  /* 星芒徽标的底色圆遮罩：普通模式取页面底色（--page-bg）遮断细线。
+     「全屏透明」壁纸下实际背景是盖住页面的壁纸，--page-bg 会造成一个不透明
+     圆饼，故改透明让细线自然穿过。 */
+  html[data-banner-display="transparent"] .footer-star-badge {
+    background: transparent;
+  }
+</style>

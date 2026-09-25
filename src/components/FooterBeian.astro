@@ -1,0 +1,35 @@
+---
+// 页脚备案信息（ICP + 公安联网备案），数据来自后台「页脚 → 备案信息」。
+// 只输出两个 <a>，不含外层容器；「任一填了才显示」由调用方的外层 div 判定，
+// 这里只按字段是否为空决定单个链接的显隐。
+---
+
+<a
+  th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.icp_text)}"
+  class="inline-flex items-center gap-1 link font-medium text-(--primary)"
+  th:href="${theme.config?.footer?.beian?.icp_link}"
+  target="_blank"
+>
+  <span class="icon-[material-symbols--verified-outline-rounded] h-4 w-4"
+  ></span>
+  <span class="text-sm" th:text="${theme.config?.footer?.beian?.icp_text}"
+  ></span>
+</a>
+<a
+  th:if="${not #strings.isEmpty(theme.config?.footer?.beian?.gongan_text)}"
+  class="inline-flex items-center gap-1 link font-medium text-(--primary)"
+  th:href="${theme.config?.footer?.beian?.gongan_link}"
+  target="_blank"
+>
+  <img
+    src={`/themes/Ethereal/assets/images/ghs.png?v=${ASSET_VERSION}`}
+    alt="公安备案图标"
+    loading="lazy"
+    decoding="async"
+    width="16"
+    height="16"
+    class="inline-block h-4 w-4"
+  />
+  <span class="text-sm" th:text="${theme.config?.footer?.beian?.gongan_text}"
+  ></span>
+</a>

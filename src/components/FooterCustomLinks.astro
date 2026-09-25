@@ -1,0 +1,31 @@
+---
+// 页脚「自定义链接」（后台「页脚 → 自定义链接」）。
+// 只输出遍历内容，不含外层容器（排版由 Footer.astro 决定）；「填了 HTML 优先渲染
+// HTML，否则渲染名称 + 链接」及非首项前的 `/` 都在这里。
+// 列表空判定留在调用方的外层 div（th:each 遍历 null 本就不输出）。
+---
+
+<span
+  th:each="link, stat : ${theme.config?.footer?.customLinks?.items}"
+  th:remove="tag"
+>
+  <span
+    th:if="${not #strings.isEmpty(link.html)}"
+    th:remove="tag"
+    th:utext="${link.html}"></span>
+  <span th:unless="${not #strings.isEmpty(link.html)}" th:remove="tag">
+    <span th:if="${not stat.first}"> / </span>
+    <a
+      th:if="${not #strings.isEmpty(link.url)}"
+      class="link font-medium text-(--primary)"
+      target="_blank"
+      th:href="${link.url}"
+      th:text="${link.name}">Link</a
+    >
+    <span
+      th:unless="${not #strings.isEmpty(link.url)}"
+      class="link font-medium text-(--primary)"
+      th:text="${link.name}">Link</span
+    >
+  </span>
+</span>

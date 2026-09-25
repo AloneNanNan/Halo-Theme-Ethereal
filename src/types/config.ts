@@ -666,10 +666,33 @@ export interface PostSummary {
 
 // ========== 页脚 ==========
 export interface Footer {
+  /** 页脚样式（页脚样式类型 + 分割带样式类型，未配置时按经典款渲染） */
+  styleConfig?: FooterStyleConfig;
   beian: Beian;
   displayLinks: FooterDisplayLinks;
   customLinks?: FooterCustomLinks;
   friendLinks?: FooterFriendLinks;
+}
+
+/**
+ * 页脚样式配置（settings.yaml 的 footer.styleConfig 组）。
+ *
+ * 说明：Halo 实际存的是任意字符串，这里的字面量联合只是「约定的合法值」。
+ * 模板侧用否定式判断（`!= 'card'` / `!= 'star'` 走经典分支），所以
+ * null（升级前没有该字段）、空串、未知值都会静默回落到经典款，不会出现
+ * 两个互斥分支都不渲染的情况。
+ */
+export interface FooterStyleConfig {
+  /** 页脚样式类型：classic 经典页脚（默认）/ card 卡片页脚 */
+  style?: "classic" | "card";
+  /** 分割带样式（页脚上方的分隔元素，与页脚样式相互独立，可任意组合） */
+  divider?: FooterDividerConfig;
+}
+
+/** 页脚分割带样式配置 */
+export interface FooterDividerConfig {
+  /** 分割带样式类型：classic 经典虚线（默认）/ star 星芒装饰 */
+  style?: "classic" | "star";
 }
 
 /** 页脚友情链接卡片墙（数据来自 Links 插件，插件未安装时不渲染） */

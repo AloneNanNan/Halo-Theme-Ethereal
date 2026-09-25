@@ -1,0 +1,41 @@
+---
+// 页脚版权行：`© 年份 站点名. 保留所有权利` + 隐私政策 / RSS / Sitemap 快捷链接。
+// 只输出行内内容（两个 span），不含外层排版容器——经典页脚居中、卡片页脚左对齐由
+// Footer.astro 决定；两个 span 是调用方 flex 行的直接子项，间距靠容器的 gap-x。
+const currentYear = new Date().getFullYear();
+---
+
+<span
+  >&copy; {currentYear}{" "}
+  <span th:text="${site.title}">Ethereal</span>.{" "}
+  <span th:text="#{footer.rights}">All Rights Reserved.</span></span
+>
+<span class="whitespace-nowrap">
+  <span
+    th:if="${theme.config?.footer?.displayLinks?.enable_privacy != null ? theme.config?.footer?.displayLinks?.enable_privacy : false}"
+    th:remove="tag"
+    >/&nbsp;<a
+      class="link font-medium text-(--primary)"
+      th:href="@{${theme.config?.footer?.displayLinks?.privacy_url != null ? theme.config?.footer?.displayLinks?.privacy_url : '/privacy'}}"
+      th:text="#{common.privacyPolicy}">隐私政策</a
+    ></span
+  >
+  <span
+    th:if="${pluginFinder.available('PluginFeed') && (theme.config?.footer?.displayLinks?.enable_rss == null || theme.config?.footer?.displayLinks?.enable_rss)}"
+    th:remove="tag"
+    >&nbsp;/&nbsp;<a
+      class="link font-medium text-(--primary)"
+      target="_blank"
+      th:href="@{/rss.xml}">RSS</a
+    ></span
+  >
+  <span
+    th:if="${pluginFinder.available('PluginSitemap') && (theme.config?.footer?.displayLinks?.enable_sitemap == null || theme.config?.footer?.displayLinks?.enable_sitemap)}"
+    th:remove="tag"
+    >&nbsp;/&nbsp;<a
+      class="link font-medium text-(--primary)"
+      target="_blank"
+      th:href="@{/sitemap.xml}">Sitemap</a
+    ></span
+  >
+</span>

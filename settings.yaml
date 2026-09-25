@@ -2398,6 +2398,44 @@ spec:
       label: 页脚
       formSchema:
         - $formkit: group
+          name: styleConfig
+          label: 页脚样式
+          value:
+            style: classic
+            divider:
+              style: classic
+          children:
+            - $formkit: select
+              name: style
+              id: footer_style
+              key: footer_style
+              label: 页脚样式类型
+              value: classic
+              help: "经典：单栏居中的原版细线页脚；卡片：整块卡片式页脚"
+              options:
+                - label: 经典页脚
+                  value: classic
+                - label: 卡片页脚
+                  value: card
+            - $formkit: group
+              name: divider
+              label: 分割带样式
+              value:
+                style: classic
+              children:
+                - $formkit: select
+                  name: style
+                  id: footer_divider_style
+                  key: footer_divider_style
+                  label: 分割带样式类型
+                  value: classic
+                  help: "经典虚线：页脚上方的虚线分隔线；星芒装饰：渐隐细线 + 居中星芒徽标的装饰带"
+                  options:
+                    - label: 经典虚线
+                      value: classic
+                    - label: 星芒装饰
+                      value: star
+        - $formkit: group
           name: beian
           label: 备案信息
           value:

@@ -87,6 +87,15 @@
     @apply flex items-center justify-center bg-(--btn-regular-bg) text-(--btn-content) transition hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) dark:text-white/75;
   }
 
+  /* 社交图标按钮（个人简介小组件 / 页脚卡片）的悬浮上移 + 轻放大：接入「样式开关 →
+     卡片悬浮效果」，桌面端（≥768px）生效。:not(:active) 让按下的 active:scale-90
+     单独生效——两者都落在 transform 上，同时匹配会相乘（1.05 × 0.9）缩不到位。 */
+  @media (min-width: 768px) {
+    body.card-hover-lift-enabled .social-btn-lift:hover:not(:active) {
+      transform: translateY(-2px) scale(1.05);
+    }
+  }
+
   .text-90 {
     @apply text-black/90 dark:text-white/90;
   }
