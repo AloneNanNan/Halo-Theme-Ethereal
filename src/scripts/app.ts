@@ -208,10 +208,107 @@ if (!customElements.get("widget-layout")) {
   customElements.define("widget-layout", WidgetLayoutElement);
 }
 
+// ── 非主题页判定（#82）──
+// 主题页都由 MainGridLayout 外壳渲染，必然带 astro.config.mjs 声明的全部 Swup 容器
+// （清单由调用方从 swup.options.containers 取，改配置无需同步）；插件自带前台页
+// （独立模板，或经契约外壳 templates/layout.html 渲染的页面）都没有 —— 缺任一项即交还浏览器。
+// 选择器非常规或取不到清单时返回 false（不交还）：宁可漏判、退化为原行为，不误判主题页。
+function shouldHandoffToBrowser(html: string, containers: unknown): boolean {
+  if (!Array.isArray(containers) || containers.length === 0) return false;
+  const ids = containers.map((selector) =>
+    typeof selector === "string" && /^#[A-Za-z][\w-]*$/.test(selector)
+      ? selector.slice(1)
+      : "",
+  );
+  if (ids.some((id) => !id)) return false;
+  return ids.some((id) => !html.includes(id));
+}
+
 // ── Swup hooks ──
 function setupSwup() {
   if ((window as any).__etherealSwupHandlersBound) return;
   (window as any).__etherealSwupHandlersBound = true;
+
+  // ── 非主题页不接管（#82）──
+  // 目标页没有主题容器时，SwupHeadPlugin 会摘掉整套主题 CSS（换页期间可见的导航栏/
+  // 侧栏/页脚当场无样式），随后 replaceContent 容器不匹配报错并整页刷新。挂 page:load
+  // （响应 HTML 到手时）：abort() 置 done 后 renderPage / animatePageIn 都在入口
+  // `if (e.done) return` 直接返回，head 合并与内容替换绝不发生，等价于「这次点击不走
+  // Swup」，代价只有一次已发出的 HTML 请求。
+  // 下场动画不等 fetch，此时必然已开始/播完，而 abort 跳过了 visit:end 的收尾 ——
+  // 故下方撤回换页态，避免页面定格在"主内容已淡出"。
+  window.swup.hooks.on(
+    "page:load",
+    (
+      visit: {
+        abort?: () => void;
+        to?: { url?: string; hash?: string };
+        history?: { popstate?: boolean };
+      },
+      args: { page?: { html?: string } },
+    ) => {
+      // @swup/astro 的类型声明不含运行时字段；本钩子只用到下面这几个
+      const swup = window.swup as {
+        options?: { containers?: unknown; skipPopStateHandling?: unknown };
+        navigating?: boolean;
+        onVisitEnd?: unknown;
+      };
+      const options = swup.options;
+      const html = args?.page?.html;
+      if (
+        typeof html !== "string" ||
+        !shouldHandoffToBrowser(html, options?.containers)
+      ) {
+        return;
+      }
+      const target = `${visit.to?.url ?? ""}${visit.to?.hash ?? ""}`;
+      if (!target) return;
+      visit.abort?.();
+      // abort 跳过了 swup 成功流程末尾的复位，这里补齐：navigating 不复位会让本文档
+      // 后续 popstate 访问挂到永不触发的 onVisitEnd 队列上静默失效（地址变了内容不变），
+      // 复位前的同一 URL 点击也会被 preventDefault 吞掉
+      swup.navigating = false;
+      swup.onVisitEnd = undefined;
+      // abort 跳过 visit:end / animation:in:end，补上它们的收尾清理
+      document.documentElement.classList.remove(
+        "is-changing",
+        "is-animating",
+        "is-leaving",
+        "is-rendering",
+        "home-switch",
+        "toc-not-ready",
+      );
+      document.getElementById("page-height-extend")?.classList.add("hidden");
+      // popstate（前进/后退）场景：浏览器已经走完这次遍历，直接真实加载目标即可
+      if (visit.history?.popstate) {
+        window.location.replace(target);
+        return;
+      }
+      // 点击场景：swup 已为本轮 visit pushState 了一条属于本文档的目标占位条目，直接
+      // 真实跳转会串错条目链 —— 回退只回退地址、不恢复文档（Chrome 实测）。必须先
+      // history.back() 撤掉它再跳；这步的 popstate 要临时屏蔽 swup 接管，免得它白拉一次。
+      const originalSkip = options?.skipPopStateHandling;
+      const restoreSkip = () => {
+        if (options) options.skipPopStateHandling = originalSkip;
+      };
+      if (options) options.skipPopStateHandling = () => true;
+      // 兜底：极端情况下没有可回退的条目（不应发生）时也别把点击吞掉
+      const fallback = window.setTimeout(() => {
+        restoreSkip();
+        window.location.assign(target);
+      }, 200);
+      window.addEventListener(
+        "popstate",
+        () => {
+          window.clearTimeout(fallback);
+          restoreSkip();
+          window.location.assign(target);
+        },
+        { once: true },
+      );
+      window.history.back();
+    },
+  );
 
   // 注：曾在此把 --content-delay 改为 0ms（让换页后内容立即浮现），但该变量被全部
   // 入场动画的 animation-delay: calc(var(--content-delay) + Xms) 消费，点击时修改

@@ -50,6 +50,15 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 - 脚本路径基于 `import.meta.url` 解析（pnpm 脚本固定以包根为 CWD，按 `../README.md` 相对 CWD 写会指向项目外），任意目录下均可运行。
 - 该文件仅供发布时手工粘贴到 halo.run 开发者后台的应用详情页——商店版本说明走 GitHub Release body（ci.yaml 用 release.md），与它无关。
 
+## Swup 非主题页豁免
+
+非主题页（插件自带前台页等没有主题 Swup 容器、也不是由主题 Layout 渲染的页面）**不交给 Swup 接管**：一旦接管，`SwupHeadPlugin` 会先摘掉整套主题 CSS（换页期间可见的导航栏/侧栏/页脚当场无样式），随后 `replaceContent` 容器不匹配报错并整页刷新。守卫在 `src/scripts/app.ts` 的 `page:load` 钩子：目标页缺任一容器（清单取自 `swup.options.containers`，改容器配置无需同步）即 `visit.abort()`，交还浏览器原生跳转。新增主题页面无需任何改动（容器齐备即正常接管）。
+
+**两处勿改错（浏览器 / swup 内部时序坑）**：
+
+- **交还姿势**：必须先 `history.back()` 撤销 Swup 刚 pushState 的占位条目、再 `location.assign`，否则浏览器回退只回退地址不恢复文档（地址变了内容不变、需刷新；Chrome 实测）。别改回 `location.replace`。
+- **abort 的收尾**：`visit.abort()` 会跳过 Swup 成功流程末尾的状态复位，必须手动补 `navigating = false` 并清掉 `onVisitEnd`，否则该文档后续前进/后退会被静默丢弃（同样表现为"地址变、内容不变"）。
+
 ## 目录结构速览
 
 - `src/pages/*.astro` — 页面模板（`post.astro`、`index.astro`、`category.astro` 等）
