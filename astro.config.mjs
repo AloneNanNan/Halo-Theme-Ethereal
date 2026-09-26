@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 
 import { stripHtmlCommentsInDir } from "./scripts/strip-html-comments.mjs";
+import { ensureIconMaskPrefixInDir } from "./scripts/ensure-icon-mask-prefix.mjs";
 import {
   compileAssets,
   copyVendorAssets,
@@ -35,6 +36,18 @@ const stripHtmlComments = {
   hooks: {
     "astro:build:done": async ({ dir }) => {
       await stripHtmlCommentsInDir(fileURLToPath(dir));
+    },
+  },
+};
+
+// 构建后处理：兜底补回 iconify 图标遮罩被 CSS 工具链裁掉的 -webkit- 前缀
+// （缺前缀会让 Chromium<120 上的图标被裁切，详见脚本内注释与 issue #83）
+/** @type {import("astro").AstroIntegration} */
+const ensureIconMaskPrefix = {
+  name: "ensure-icon-mask-prefix",
+  hooks: {
+    "astro:build:done": async ({ dir }) => {
+      await ensureIconMaskPrefixInDir(fileURLToPath(dir));
     },
   },
 };
@@ -80,6 +93,7 @@ export default defineConfig({
   integrations: [
     stripHtmlComments,
     buildAssets,
+    ensureIconMaskPrefix,
     swup({
       theme: false,
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
