@@ -4,7 +4,11 @@
   --content-delay: 150ms;
   /* TOC 目录高亮/悬浮过渡时长（TOC.astro 的 duration-() 与 components.css 共用） */
   --toc-transition-duration: 150ms;
-  --page-width: 75rem;
+  /* 两栏布局总宽（宽屏）= 内容列 64rem(1024px) + md:px-4(2) + 侧栏(17.5) + gap(1) = 84.5rem；
+     三栏共用同一内容列宽 ⇒ 总宽 103rem。
+     ⚠️ 必须与 constants.ts 的 PAGE_WIDTH 一致（它会内联到 <html>、压过本声明），
+     改宽度时同步 components.css 的 .layout-three-column 与顶部 TOC 隐藏断点。 */
+  --page-width: 84.5rem;
   --banner-height: 35vh;
   --banner-height-home: 65vh;
   --banner-height-extend: 30vh;

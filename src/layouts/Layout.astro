@@ -571,7 +571,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       }
 
       /* 导航栏宽度跟随内容区：fixed 脱离文档流后若不显式收窄，会占满整屏
-         （视口 <75rem 时卡片 max-w 撑满屏幕；宽屏时缺少 #top-row 的 md:px-4
+         （视口 <84.5rem 时卡片 max-w 撑满屏幕；宽屏时缺少 #top-row 的 md:px-4
          内边距、与内容边缘齐平）。按 #top-row 同款几何收窄并居中。
          768px 起统一（<768px 由上方移动端块 left/right:0 全宽），xl（80rem）
          起 #top-row 由 w-full 换为 xl:w-[92vw]，宽度覆盖见下方 1024+ 块。

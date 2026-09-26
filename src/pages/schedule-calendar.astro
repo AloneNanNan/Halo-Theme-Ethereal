@@ -229,8 +229,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <span th:text="#{page.schedule.upcoming}">即将开始</span>
       </div>
 
+      <!-- 卡片最小宽 240px（同作品集 / 友情链接 / 技能）：min>226 保证最宽时（容器上限
+           952px）不掉到 4 列，min≤248 保证容器 776px（三栏 + 视口≈1600）时仍排 3 列。
+           本页另两处网格（顶部概要 md:grid-cols-2、周历 md:grid-cols-7）是视口断点控制的
+           固定列数，与本处的 auto-fill 无关，勿混改。 -->
       <div
-        class="grid grid-cols-[repeat(auto-fill,minmax(min(260px,100%),1fr))] gap-4"
+        class="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-4"
       >
         <div
           th:each="item, itemStat : ${upcomingItems}"

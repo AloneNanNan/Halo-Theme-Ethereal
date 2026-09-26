@@ -16,37 +16,25 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     <article class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 头部：标签 + 标题 + 元信息 -->
       <header class="mb-8">
-        <!-- 标签行 -->
-        <div class="mb-4 flex flex-wrap items-center gap-2">
+        <!-- 标题行：标题与推荐徽章同排（徽章贴标题文字右侧）
+             标题 flex-1 + min-w-0 ⇒ 长标题在自身内部换行、徽章始终留在同一行右侧；
+             mb-3 从 h1 移到本行容器上；h1 的 before 装饰竖线仍以本容器为包含块（relative），位置不变。
+             推荐徽章是权重标识、不属于「分类」，故不并入下方分类区。 -->
+        <div class="relative mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1
+            class="min-w-0 flex-1 text-3xl font-bold text-black/90 transition before:absolute before:-left-4.5 before:top-3 before:h-5 before:rounded-md before:bg-(--primary) dark:text-white/90 md:text-[2.25rem]/[2.75rem] md:before:w-1"
+            th:text="${project.title}"
+          >
+            Project Title
+          </h1>
           <span
             th:if="${project.featured}"
-            class="inline-flex items-center gap-1 rounded-lg bg-(--primary)/10 px-3 py-1 text-sm font-medium text-(--primary)"
+            class="inline-flex shrink-0 items-center gap-1 rounded-lg bg-(--primary)/10 px-3 py-1 text-sm font-medium text-(--primary)"
           >
             <span class="icon-[material-symbols--star-rounded] text-base"
             ></span>
             <span th:text="#{page.portfolio.featured}">推荐</span>
           </span>
-          <span
-            th:if="${not #strings.isEmpty(project.platform)}"
-            class="inline-flex items-center rounded-lg bg-(--btn-regular-bg) px-3 py-1 text-sm font-medium text-(--btn-content)"
-            th:text="${platformLabels[project.platform] ?: project.platform}"
-            >Platform</span
-          >
-          <span
-            th:if="${not #strings.isEmpty(project.type)}"
-            class="inline-flex items-center rounded-lg bg-(--btn-regular-bg) px-3 py-1 text-sm font-medium text-(--btn-content)"
-            th:text="${typeLabels[project.type] ?: project.type}">Type</span
-          >
-        </div>
-
-        <!-- 标题 -->
-        <div class="relative">
-          <h1
-            class="mb-3 block w-full text-3xl font-bold text-black/90 transition before:absolute before:-left-4.5 before:top-3 before:h-5 before:rounded-md before:bg-(--primary) dark:text-white/90 md:text-[2.25rem]/[2.75rem] md:before:w-1"
-            th:text="${project.title}"
-          >
-            Project Title
-          </h1>
         </div>
 
         <!-- 元信息行 -->
@@ -122,6 +110,75 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             >
           </div>
         </div>
+
+        <!-- 分类区：分类 / 技术栈 / 标签三行，行首小标题固定宽 w-13(52px)、三行左对齐成一列，
+             上方一条分隔线与元信息行隔开。小标题的 pt-1.5 是为了与右侧首个 chip 的文字对齐
+             （chip 自带 py-1.5 内边距），不加会顶到行首上方。
+             ★ 仅展示、不做点击筛选：全部用 <span>，不生成链接、不带 hover。 -->
+        <div
+          th:if="${not #strings.isEmpty(project.platform) or not #strings.isEmpty(project.type) or not #lists.isEmpty(project.techStacks) or not #lists.isEmpty(project.tags)}"
+          class="mt-5 flex flex-col gap-2 border-t border-black/10 pt-5 dark:border-white/10"
+        >
+          <!-- 分类（平台 / 类型） -->
+          <div
+            th:if="${not #strings.isEmpty(project.platform) or not #strings.isEmpty(project.type)}"
+            class="flex items-start gap-3"
+          >
+            <span
+              class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
+              th:text="#{page.portfolio.category}">分类</span
+            >
+            <span class="flex min-w-0 flex-wrap gap-2">
+              <span
+                th:if="${not #strings.isEmpty(project.platform)}"
+                class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
+                th:text="${platformLabels[project.platform] ?: project.platform}"
+                >Platform</span
+              >
+              <span
+                th:if="${not #strings.isEmpty(project.type)}"
+                class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
+                th:text="${typeLabels[project.type] ?: project.type}">Type</span
+              >
+            </span>
+          </div>
+
+          <!-- 技术栈 -->
+          <div
+            th:if="${not #lists.isEmpty(project.techStacks)}"
+            class="flex items-start gap-3"
+          >
+            <span
+              class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
+              th:text="#{page.portfolio.stack}">技术栈</span
+            >
+            <span class="flex min-w-0 flex-wrap gap-2">
+              <span
+                th:each="tech : ${project.techStacks}"
+                class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
+                th:text="${tech}">Tech</span
+              >
+            </span>
+          </div>
+
+          <!-- 标签 -->
+          <div
+            th:if="${not #lists.isEmpty(project.tags)}"
+            class="flex items-start gap-3"
+          >
+            <span
+              class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
+              th:text="#{page.portfolio.tags}">标签</span
+            >
+            <span class="flex min-w-0 flex-wrap gap-2">
+              <span
+                th:each="tag : ${project.tags}"
+                class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
+                th:text="${tag}">Tag</span
+              >
+            </span>
+          </div>
+        </div>
       </header>
 
       <!-- 封面图 -->
@@ -145,45 +202,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
         <div th:utext="${content}">Content</div>
       </div>
 
-      <!-- 底部：技术栈 + 标签 -->
-      <div
-        th:if="${not #lists.isEmpty(project.techStacks) or not #lists.isEmpty(project.tags)}"
-        class="mt-8 border-t border-black/10 pt-6 dark:border-white/10"
-      >
-        <!-- 技术栈 -->
-        <div th:if="${not #lists.isEmpty(project.techStacks)}" class="mb-4">
-          <h3
-            class="mb-3 text-sm font-bold text-50"
-            th:text="#{page.portfolio.stack}"
-          >
-            技术栈
-          </h3>
-          <div class="flex flex-wrap gap-2">
-            <span
-              th:each="tech : ${project.techStacks}"
-              class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content) transition hover:bg-(--primary) hover:text-white dark:hover:text-black/70"
-              th:text="${tech}">Tech</span
-            >
-          </div>
-        </div>
-
-        <!-- 标签 -->
-        <div th:if="${not #lists.isEmpty(project.tags)}">
-          <h3
-            class="mb-3 text-sm font-bold text-50"
-            th:text="#{page.portfolio.tags}"
-          >
-            标签
-          </h3>
-          <div class="flex flex-wrap gap-2">
-            <span
-              th:each="tag : ${project.tags}"
-              class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
-              th:text="${tag}">Tag</span
-            >
-          </div>
-        </div>
-      </div>
+      <!-- 技术栈 / 标签已上移到 header 末尾的分类区（全页只保留那一处分类展示） -->
     </article>
   </div>
 </MainGridLayout>

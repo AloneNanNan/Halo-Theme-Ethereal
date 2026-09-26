@@ -2,6 +2,7 @@
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import FilterTabs from "../components/control/FilterTabs.astro";
 import PageHeader from "../components/control/PageHeader.astro";
+import PortfolioCard from "../components/PortfolioCard.astro";
 ---
 
 <MainGridLayout
@@ -79,192 +80,43 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:if="${featured != null and not featured.items.isEmpty()}"
             class="mb-8"
           >
-            <h2 class="mb-4 flex items-center gap-2 text-lg font-bold text-90">
-              <span
-                class="icon-[material-symbols--star-rounded] text-(--primary)"
-              ></span>
+            <!-- 分区标题：与友情链接页的分组标题同款（text-xl + font-bold + text-90），
+                 不再另加主题色竖线/图标；「全部项目」用同一套，改动两处同步 -->
+            <h2 class="mb-4 text-xl font-bold text-90">
               <span th:text="#{page.portfolio.featuredProjects}">推荐项目</span>
             </h2>
+            <!-- 卡片最小宽 240px（与下方「全部项目」网格同值，改动两处同步；
+                 取值范围 (226, 248] 的推导见下方注释） -->
             <div
-              class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))]"
+              class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
             >
-              <div
-                th:each="project, stat : ${featured.items}"
-                th:style="|animation-delay: min(calc(var(--content-delay) + ${stat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-                class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95 card-hover-lift"
-              >
-                <!-- 封面 -->
-                <a
-                  th:if="${not #strings.isEmpty(project.cover)}"
-                  th:href="@{/portfolio/{slug}(slug=${project.slug})}"
-                  class="block overflow-hidden"
-                >
-                  <img
-                    th:src="${project.cover}"
-                    th:alt="${project.title}"
-                    loading="lazy"
-                    class="h-44 w-full object-cover transition group-hover:scale-105"
-                  />
-                </a>
-                <div class="flex flex-col p-5">
-                  <!-- 推荐标记 + 平台/类型标签 -->
-                  <div class="mb-2 flex flex-wrap items-center gap-1.5">
-                    <span
-                      class="inline-flex items-center gap-0.5 rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
-                    >
-                      <span
-                        class="icon-[material-symbols--star-rounded] text-xs"
-                      ></span>
-                      <span th:text="#{page.portfolio.featured}">推荐</span>
-                    </span>
-                    <span
-                      th:if="${not #strings.isEmpty(project.platform)}"
-                      class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                      th:text="${platformLabels[project.platform] ?: project.platform}"
-                      >Platform</span
-                    >
-                    <span
-                      th:if="${not #strings.isEmpty(project.type)}"
-                      class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                      th:text="${typeLabels[project.type] ?: project.type}"
-                      >Type</span
-                    >
-                  </div>
-                  <!-- 标题 -->
-                  <a
-                    th:href="@{/portfolio/{slug}(slug=${project.slug})}"
-                    class="block text-lg font-bold text-90 transition hover:text-(--primary)"
-                  >
-                    <span class="line-clamp-2" th:text="${project.title}"
-                      >Project Title</span
-                    >
-                  </a>
-                  <!-- 摘要 -->
-                  <p
-                    th:if="${not #strings.isEmpty(project.summary)}"
-                    class="mt-2 line-clamp-2 text-sm leading-6 text-50"
-                    th:text="${project.summary}"
-                  >
-                    Summary
-                  </p>
-                  <!-- 技术栈 -->
-                  <div
-                    th:if="${not #lists.isEmpty(project.techStacks)}"
-                    class="mt-3 flex flex-wrap gap-1"
-                  >
-                    <span
-                      th:each="tech : ${project.techStacks}"
-                      class="rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                      th:text="${tech}">Tech</span
-                    >
-                  </div>
-                </div>
-              </div>
+              <PortfolioCard eachExpr="project, stat : ${featured.items}" />
             </div>
           </div>
         </div>
       </div>
 
       <!-- 项目卡片网格 -->
+      <!-- 卡片最小宽 240px：列数由「网格容器宽」决定（容器 = 内容列 − 本页 section 的
+           md:px-9 72px，随窗口在 482~952px 之间浮动），所以 min 必须同时满足两头，
+           取值区间只有 (226, 248]：
+             · min > 226px ⇒ 最宽时（容器上限 952px）不会排成 4 列（4×226+3×16=952，
+               单卡被压到 226px）
+             · min ≤ 248px ⇒ 容器 776px（三栏 + 视口≈1600）时仍能排 3 列
+           ⚠️ 推荐项目区用同一个网格（见文件上方），改动务必两处同步。 -->
+      <!-- 全部项目分区标题：与「推荐项目」同款（text-xl + font-bold + text-90）
+           ⚠️ th:if 与下方网格同条件（Thymeleaf 两处无法共享），改动务必同步 -->
+      <h2
+        th:if="${projects != null and not projects.items.isEmpty()}"
+        class="mb-4 text-xl font-bold text-90"
+      >
+        <span th:text="#{page.portfolio.allProjects}">全部项目</span>
+      </h2>
       <div
         th:if="${projects != null and not projects.items.isEmpty()}"
-        class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))]"
+        class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
       >
-        <div
-          th:each="project, stat : ${projects.items}"
-          th:style="|animation-delay: min(calc(var(--content-delay) + ${stat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-          class="card-base btn-card-outline group overflow-hidden rounded-xl onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95 card-hover-lift"
-        >
-          <!-- 封面 -->
-          <a
-            th:if="${not #strings.isEmpty(project.cover)}"
-            th:href="@{/portfolio/{slug}(slug=${project.slug})}"
-            class="block overflow-hidden"
-          >
-            <img
-              th:src="${project.cover}"
-              th:alt="${project.title}"
-              loading="lazy"
-              class="h-44 w-full object-cover transition group-hover:scale-105"
-            />
-          </a>
-          <div
-            th:classappend="${#strings.isEmpty(project.cover) ? 'pt-5' : ''}"
-            class="flex flex-col p-5"
-          >
-            <!-- 平台/类型标签 -->
-            <div class="mb-2 flex flex-wrap gap-1.5">
-              <span
-                th:if="${not #strings.isEmpty(project.platform)}"
-                class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                th:text="${platformLabels[project.platform] ?: project.platform}"
-                >Platform</span
-              >
-              <span
-                th:if="${not #strings.isEmpty(project.type)}"
-                class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                th:text="${typeLabels[project.type] ?: project.type}">Type</span
-              >
-            </div>
-            <!-- 标题 -->
-            <a
-              th:href="@{/portfolio/{slug}(slug=${project.slug})}"
-              class="block text-lg font-bold text-90 transition hover:text-(--primary)"
-            >
-              <span class="line-clamp-2" th:text="${project.title}"
-                >Project Title</span
-              >
-            </a>
-            <!-- 摘要 -->
-            <p
-              th:if="${not #strings.isEmpty(project.summary)}"
-              class="mt-2 line-clamp-2 text-sm leading-6 text-50"
-              th:text="${project.summary}"
-            >
-              Summary
-            </p>
-            <!-- 技术栈 -->
-            <div
-              th:if="${not #lists.isEmpty(project.techStacks)}"
-              class="mt-3 flex flex-wrap gap-1"
-            >
-              <span
-                th:each="tech : ${project.techStacks}"
-                class="rounded-md bg-(--btn-regular-bg) px-2 py-0.5 text-xs font-medium text-(--btn-content)"
-                th:text="${tech}">Tech</span
-              >
-            </div>
-            <!-- 外链快捷入口 -->
-            <div
-              th:if="${not #strings.isEmpty(project.repoUrl) or not #strings.isEmpty(project.demoUrl)}"
-              class="mt-3 flex items-center gap-3 text-xs text-30"
-            >
-              <a
-                th:if="${not #strings.isEmpty(project.repoUrl)}"
-                th:href="${project.repoUrl}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="flex items-center gap-1 transition hover:text-(--primary)"
-              >
-                <span class="icon-[material-symbols--code-rounded] text-sm"
-                ></span>
-                <span th:text="#{page.portfolio.repo}">仓库</span>
-              </a>
-              <a
-                th:if="${not #strings.isEmpty(project.demoUrl)}"
-                th:href="${project.demoUrl}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="flex items-center gap-1 transition hover:text-(--primary)"
-              >
-                <span
-                  class="icon-[material-symbols--play-circle-rounded] text-sm"
-                ></span>
-                <span th:text="#{page.portfolio.demo}">演示</span>
-              </a>
-            </div>
-          </div>
-        </div>
+        <PortfolioCard eachExpr="project, stat : ${projects.items}" />
       </div>
 
       <!-- 空状态 -->

@@ -95,6 +95,10 @@ import PageHeader from "../components/control/PageHeader.astro";
     />
 
     <!-- 技能卡片网格（按当前 category 参数在服务端过滤） -->
+    <!-- 卡片最小宽 280px（刻意比作品集 / 友情链接 / 日程的 240 大一档，勿"统一"）：
+         技能卡头部是「48px 图标 + 16px 间距 + 名字 + 熟练度徽章」横排，min 取 240 时
+         自动填充到 3 列的临界档为 248px 卡，扣掉 p-5 后名字区只剩 ~84px，
+         text-lg 下 JavaScript 这类长名会被 truncate 截掉。 -->
     <div
       class="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-4"
     >

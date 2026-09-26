@@ -59,7 +59,10 @@ export function calcBannerHeightExtend(
 export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 3.5;
 
 // Page width: rem
-export const PAGE_WIDTH = 75;
+// 两栏布局总宽（宽屏）= 内容列 64rem(1024px) + md:px-4(2) + 侧栏(17.5) + gap(1) = 84.5rem。
+// ⚠️ 本值会被 Layout.astro 内联写到 <html> 的 style 上，压过 variables.css 的同名声明 ⇒
+// 改宽度必须同时改这里与 variables.css；三栏总宽（103rem）与 TOC 隐藏断点见 components.css。
+export const PAGE_WIDTH = 84.5;
 
 // Banner 响应式常量
 export const BANNER_MIN_HEIGHT_PX = 180;

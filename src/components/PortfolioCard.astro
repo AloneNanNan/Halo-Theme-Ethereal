@@ -1,0 +1,168 @@
+---
+// 项目集列表卡片（列表页「推荐项目」与「全部项目」两处共用同一份）。
+//
+// 依赖外层 th:each 提供的环境变量：`project`（当前项目）、`stat`（迭代状态，
+// 仅用于入场动画的 animation-delay）。th:each 由调用方经 eachExpr 传入、且直接
+// 落在本组件根元素上 —— 因此**不会多出一层包裹节点**，卡片在网格里仍是网格项，
+// 抽取组件前后的 DOM 结构完全一致。
+//   <PortfolioCard eachExpr="project, stat : ${projects.items}" />
+// platformLabels / typeLabels 来自页面顶部 th:with 的作用域，勿在本组件内重新调 Finder。
+//
+// 尺寸口径（几处非整数值都是有意对齐的，别"顺手规整"）：
+//   · 正文内边距 15 / 18 / 17px、元素间距统一 6px、字号刻度 标题 16px · 摘要 13px ·
+//     标签 11px —— 一整套紧凑刻度；换回 p-5 / text-lg / text-sm 会立刻"头重脚松"
+//     （标题每行少放字、三个间距变 8/8/12 且不匀）。
+//   · 封面用 aspect-[2/1] 而非固定高度，理由见下方注释。
+//   · 精选卡片 = 主色描边 30% + 卡内极淡主色底 4%。必须用工具类而不是无分层的自定义类，
+//     否则会把 hover 底色（hover:bg-(--btn-card-bg-hover)，在 @layer utilities）压掉。
+//   · 悬浮反馈分三层、各管各的：整卡底色（根 hover:）/ 封面（group/cover）/ 标题（group/title）。
+//     卡内一律用命名 group，不要在卡片根上挂匿名 group —— 那会让卡内所有 group-hover:
+//     都退化成「悬浮整卡即触发」。
+interface Props {
+  /** th:each 表达式，如 "project, stat : ${projects.items}" */
+  eachExpr: string;
+}
+
+const { eachExpr } = Astro.props;
+---
+
+<div
+  th:each={eachExpr}
+  th:style="|animation-delay: min(calc(var(--content-delay) + ${stat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+  th:classappend="${project.featured == true ? ' border-(--primary)/30 bg-(--primary)/4' : ''}"
+  class="card-base btn-card-outline flex flex-col overflow-hidden onload-animation hover:bg-(--btn-card-bg-hover) active:bg-(--btn-card-bg-active) active:scale-95 card-hover-lift"
+>
+  <!-- 封面：用 aspect-[2/1] 而非固定 h-44 —— 封面多为 GitHub OG 图（2:1、白底、
+       图内含仓库名），固定 176px 高在窄卡下必须裁两侧（248px 卡时裁掉 26%）且封面
+       占比过高（约 43% 卡高）显得"图大文少"。aspect 随卡宽等比 ⇒ 2:1 图零裁切，
+       卡窄时封面也同步变矮、正文占比自然上升。 -->
+  <a
+    th:if="${not #strings.isEmpty(project.cover)}"
+    th:href="@{/portfolio/{slug}(slug=${project.slug})}"
+    class="group/cover relative block shrink-0 overflow-hidden"
+  >
+    <img
+      th:src="${project.cover}"
+      th:alt="${project.title}"
+      loading="lazy"
+      class="aspect-[2/1] w-full object-cover transition group-hover/cover:scale-105"
+    />
+    <!-- 封面悬浮反馈：30% 黑遮罩 + 居中箭头（scale-50→100 + 淡入）。
+         尺寸按本卡封面定：封面是 2:1 横幅（约 307×153），用 text-3xl(30px)，再大就吃掉
+         近 1/3 高度。字形取 mingcute--right-fill（24 网格线宽 3、45° 圆头折线），比线宽
+         2/24 的细箭头更清楚；遮罩盒始终 1em×1em，故不影响布局。
+         用命名 group/cover 触发：缩放 + 遮罩 + 箭头只在悬浮封面本身时出现，
+         与标题的 group/title 互不干扰。 -->
+    <div
+      class="pointer-events-none absolute inset-0 z-10 transition group-hover/cover:bg-black/30 group-active/cover:bg-black/50"
+    >
+    </div>
+    <div
+      class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+    >
+      <span
+        class="icon-[mingcute--right-fill] scale-50 text-3xl text-white opacity-0 transition group-hover/cover:scale-100 group-hover/cover:opacity-100"
+      ></span>
+    </div>
+  </a>
+  <!-- 正文：内边距固定 15/18/17px，无封面时不再单独补顶部内边距 —— 补的 pt 与基础值
+       同量，属空操作（两个 pt 工具类互相覆盖，胜负取决于 CSS 源码顺序，故已删）。 -->
+  <div class="flex grow flex-col px-[1.125rem] pt-[0.9375rem] pb-[1.0625rem]">
+    <!-- 标题 + 箭头：未悬浮时 opacity-0 并向左偏 2px，悬浮标题时淡入滑到位（字形同封面）。
+         用命名 group/title 触发 ⇒ 只有悬浮标题才亮；封面另有独立箭头（见上），互不干扰。
+         箭头是 flex 子项、占位固定（不用 absolute）⇒ 悬浮时不产生文字重排；
+         移动端没有 hover，故 md 以上才显示，隐藏时把占位一并让出。 -->
+    <a
+      th:href="@{/portfolio/{slug}(slug=${project.slug})}"
+      class="group/title flex items-center gap-1 text-base leading-[1.45] font-bold text-90 transition hover:text-(--primary)"
+    >
+      <span class="line-clamp-2" th:text="${project.title}">Project Title</span>
+      <span
+        class="icon-[mingcute--right-fill] hidden shrink-0 -translate-x-0.5 text-lg text-(--primary) opacity-0 transition group-hover/title:translate-x-0 group-hover/title:opacity-100 md:inline"
+      ></span>
+    </a>
+    <!-- 推荐标记 + 平台/类型标签（在标题下方）。
+         推荐标记带 th:if：两处列表都只给被标了推荐的项目显示，不再区分"推荐区恒显示" -->
+    <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+      <span
+        th:if="${project.featured == true}"
+        class="inline-flex items-center gap-0.5 rounded-md bg-(--primary)/10 px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--primary)"
+      >
+        <span class="icon-[material-symbols--star-rounded] text-[0.6875rem]"
+        ></span>
+        <span th:text="#{page.portfolio.featured}">推荐</span>
+      </span>
+      <span
+        th:if="${not #strings.isEmpty(project.platform)}"
+        class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--btn-content)"
+        th:text="${platformLabels[project.platform] ?: project.platform}"
+        >Platform</span
+      >
+      <span
+        th:if="${not #strings.isEmpty(project.type)}"
+        class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--btn-content)"
+        th:text="${typeLabels[project.type] ?: project.type}">Type</span
+      >
+    </div>
+    <!-- 摘要 -->
+    <p
+      th:if="${not #strings.isEmpty(project.summary)}"
+      class="mt-1.5 line-clamp-2 text-[0.8125rem] leading-[1.55] text-50"
+      th:text="${project.summary}"
+    >
+      Summary
+    </p>
+    <!-- 技术栈 -->
+    <div
+      th:if="${not #lists.isEmpty(project.techStacks)}"
+      class="mt-1.5 flex flex-wrap gap-1"
+    >
+      <span
+        th:each="tech : ${project.techStacks}"
+        class="rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.6] font-medium text-(--btn-content)"
+        th:text="${tech}">Tech</span
+      >
+    </div>
+    <!-- 底部元信息：上分隔线 + 左侧更新日期 + 右侧外链（仓库 / 演示）。
+         间距分两段，别合并：上方空占位条 flex-1 负责把整条推到卡片底部（配合
+         卡片 flex flex-col + 正文 grow ⇒ 同排卡片的横线落在同一高度），其 mt-3
+         同时提供横线**上方**的最小间隙。⚠️ 不要把 mt-auto 直接写在横线元素上：
+         auto 在「同排最高的那张卡」上会算成 0，横线就会贴到技术栈上；而该元素
+         自身的 pt-2.5 是横线**下方**的间距，顶不了上方。th:if 兜底避免三项都空
+         时留一条空横线。 -->
+    <div class="mt-3 flex-1" aria-hidden="true"></div>
+    <div
+      th:if="${not #strings.isEmpty(project.updateTime) or not #strings.isEmpty(project.demoUrl) or not #strings.isEmpty(project.repoUrl)}"
+      class="flex items-center justify-between gap-2 border-t border-black/10 pt-2.5 text-xs text-30 dark:border-white/10"
+    >
+      <span
+        th:if="${not #strings.isEmpty(project.updateTime)}"
+        th:text="${#strings.substring(project.updateTime, 0, 10)}"
+        >2026-01-01</span
+      >
+      <span class="ml-auto flex shrink-0 items-center gap-2.5">
+        <a
+          th:if="${not #strings.isEmpty(project.repoUrl)}"
+          th:href="${project.repoUrl}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-0.5 transition hover:text-(--primary)"
+        >
+          <span class="icon-[material-symbols--code-rounded] text-sm"></span>
+          <span th:text="#{page.portfolio.repo}">仓库</span>
+        </a>
+        <a
+          th:if="${not #strings.isEmpty(project.demoUrl)}"
+          th:href="${project.demoUrl}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-0.5 transition hover:text-(--primary)"
+        >
+          <span class="icon-[material-symbols--play-circle-rounded] text-sm"
+          ></span>
+          <span th:text="#{page.portfolio.demo}">演示</span>
+        </a>
+      </span>
+    </div>
+  </div>
+</div>

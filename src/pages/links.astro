@@ -107,8 +107,16 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:text="${#lists.size(group.links)}">0</span
           >
         </div>
+        <!-- 卡片最小宽 240px：列数由「网格容器宽」决定（容器 = 内容列 − 本卡片的
+             md:px-9 72px，随窗口在 482~952px 之间浮动），所以 min 必须同时满足两头，
+             取值区间只有 (226, 248]：
+               · min > 226px ⇒ 最宽时（容器上限 952px）不会排成 4 列
+                 （4×226+3×16=952，卡会被压到 226px、文字区只剩 ~130px ——
+                 本卡固定开销就有 96px：48px logo + 16px gap + 左右 p-4）
+               · min ≤ 248px ⇒ 容器 776px（三栏 + 视口≈1600）时仍能排 3 列，否则掉成 2 列
+             ⚠️ 改成 280 会让中等窗口掉成 2 列，改回 220 会在最宽时变 4 列。 -->
         <div
-          class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))]"
+          class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
         >
           <a
             th:each="link, linkStat : ${group.links}"

@@ -143,12 +143,11 @@
     opacity: 0;
   }
 
-  /* 两栏悬浮目录宽度限制：视口不足以容纳最小目录宽度时隐藏，避免目录在
-     窄屏下挤成一条线。断点与 variables.css 的 --toc-width 公式联动
-     （两栏 --page-width 固定 75rem）：
-     --toc-width = (100vw - 75rem)/2 - 1rem >= 6rem  →  视口 >= 89rem。
-     改动 --toc-width 公式或两栏 page-width 时需同步此断点 */
-  @media (max-width: 88.99rem) {
+  /* 两栏悬浮目录宽度限制：视口不足以容纳最小目录宽度时隐藏，避免目录在窄屏下挤成一条线。
+     断点与 --toc-width 公式联动（两栏 --page-width = 84.5rem）：
+     --toc-width = (100vw - 84.5rem)/2 - 1rem >= 6rem  →  视口 >= 98.5rem。
+     ⚠️ 改动 --toc-width 公式或两栏 page-width 时必须同步此断点，否则会出现负宽度目录 */
+  @media (max-width: 98.49rem) {
     #toc-wrapper {
       display: none !important;
     }
@@ -178,15 +177,16 @@
     @apply w-12;
   }
 
-  /* 双栏布局页面宽度：与 72002dd 一致，使用默认 --page-width: 75rem */
+  /* 双栏布局页面宽度：用默认 --page-width（84.5rem，见 variables.css 与 constants.ts） */
   .layout-two-column {
     /* 使用默认 --page-width，无需覆盖 */
   }
 
-  /* 三栏布局页面宽度：中间内容宽度 = 双栏右页面宽度 (75 - 17.5 - 1 = 56.5) */
-  /* 总宽 = 17.5 + 1 + 56.5 + 1 + 17.5 = 93.5 */
+  /* 三栏布局页面宽度：与两栏共用同一「内容列宽」64rem(1024px)，只多一个侧栏 + 1 个 gap。
+     总宽 = md:px-4(2) + 侧栏(17.5) + gap(1) + 内容列(64) + gap(1) + 侧栏(17.5) = 103rem。
+     两栏同为 64rem 内容列 ⇒ 切换布局模式时正文/卡片宽度不跳变。 */
   .layout-three-column {
-    --page-width: 93.5rem !important;
+    --page-width: 103rem !important;
   }
 
   .hide-scrollbar {
