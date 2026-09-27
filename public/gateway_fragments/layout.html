@@ -475,9 +475,12 @@
           color: #fff;
         }
 
-        /* 隐藏 Halo 注入的装饰图标，避免错位（按钮内 SVG 除外） */
-        .form-inner img,
-        .form-inner svg:not(.btn-hover-content svg) {
+        /* 隐藏 Halo 注入的装饰图标，避免错位（按钮内 SVG 除外）。
+           排除人机验证插件（plugin-captcha）注入到表单内的元素：
+           其 #captcha-widget 位于 .form-inner 内，内含验证码 img 与刷新按钮 svg，
+           若一并隐藏会导致「本地图片验证」只显示输入框、图片空白 */
+        .form-inner img:not(#captcha-widget img),
+        .form-inner svg:not(.btn-hover-content svg):not(#captcha-widget svg) {
           display: none !important;
         }
 
