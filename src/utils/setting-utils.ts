@@ -158,6 +158,9 @@ export interface VisitorSwitches {
   transparent: boolean;
   wallpaperMode: boolean;
   wallpaperSettings: boolean;
+  effects: boolean;
+  cardBorder: boolean;
+  cardFollowTheme: boolean;
 }
 
 function getCarrier(): HTMLElement | null {
@@ -182,6 +185,9 @@ function readVisitorSwitches(): VisitorSwitches {
     transparent: enable && carrierBool("visitorTransparent", true),
     wallpaperMode: enable && carrierBool("visitorWallpaperMode", true),
     wallpaperSettings: enable && carrierBool("visitorWallpaperSettings", true),
+    effects: enable && carrierBool("visitorEffects", true),
+    cardBorder: enable && carrierBool("visitorCardBorder", true),
+    cardFollowTheme: enable && carrierBool("visitorCardFollow", true),
   };
 }
 
@@ -364,8 +370,23 @@ export function getDefaultWallpaperParams(): WallpaperParams {
   };
 }
 
+/** 当前生效的壁纸参数默认值：全屏沉浸（hero）下模糊默认取 heroBlurMax（对齐 onlynn 12px），
+ *  其余模式取 wallpaperBlur（仅透明模式消费） */
+export function getCurrentWallpaperDefaults(): WallpaperParams {
+  const d = getCarrier()?.dataset ?? {};
+  const isHero =
+    document.documentElement.getAttribute("data-banner-display") ===
+      "fullscreen" &&
+    document.documentElement.getAttribute("data-fullscreen-layout") === "hero";
+  return {
+    opacity: parseNum(d.wallpaperOpacity, 0.8),
+    blur: isHero ? parseNum(d.heroBlurMax, 12) : parseNum(d.wallpaperBlur, 10),
+    cardAlpha: parseNum(d.wallpaperCardAlpha, 0.6),
+  };
+}
+
 export function getStoredWallpaperParams(): WallpaperParams {
-  const defaults = getDefaultWallpaperParams();
+  const defaults = getCurrentWallpaperDefaults();
   if (!getVisitorSwitches().transparent) return defaults;
   return {
     opacity: parseNum(
@@ -390,8 +411,19 @@ export function applyWallpaperParams(params: WallpaperParams): void {
     "--transparent-wallpaper-opacity",
     String(params.opacity),
   );
-  body.style.setProperty("--transparent-wallpaper-blur", `${params.blur}px`);
+  // 全屏沉浸（hero）模糊消费 --hero-wallpaper-blur-max（fullscreen-hero 斜坡封顶）；
+  // 全屏透明模式消费 --transparent-wallpaper-blur。面板滑块在两个模式下都写对应变量
+  const isHero =
+    document.documentElement.getAttribute("data-banner-display") ===
+      "fullscreen" &&
+    document.documentElement.getAttribute("data-fullscreen-layout") === "hero";
+  body.style.setProperty(
+    isHero ? "--hero-wallpaper-blur-max" : "--transparent-wallpaper-blur",
+    `${params.blur}px`,
+  );
   body.style.setProperty("--transparent-card-alpha", String(params.cardAlpha));
+  // 通知依赖壁纸参数的运行期脚本（fullscreen-hero 模糊 max）重算（事件驱动，替代宽 observer）
+  window.dispatchEvent(new CustomEvent("wallpaperParamsChanged"));
 }
 
 export function setWallpaperParam(
@@ -477,6 +509,45 @@ export function setBannerDisplay(mode: BannerDisplayMode): void {
   applyBannerDisplay(mode);
 }
 
+/* ── 全屏布局（classic 文档流 / hero 钉屏+模糊+卡片半透明，对齐 Firefly） ── */
+
+export type FullscreenLayoutMode = "classic" | "hero";
+
+const FULLSCREEN_LAYOUT_MODES: FullscreenLayoutMode[] = ["classic", "hero"];
+
+function isFullscreenLayoutMode(value: unknown): value is FullscreenLayoutMode {
+  return (
+    typeof value === "string" &&
+    (FULLSCREEN_LAYOUT_MODES as string[]).includes(value)
+  );
+}
+
+export function getDefaultFullscreenLayout(): FullscreenLayoutMode {
+  // 后台默认（theme.config.layout.bannerLayout.fullscreenLayout，经 ConfigCarrier data 属性传递）；
+  // 未设回退 classic（对齐 Firefly fullscreen.layout ?? classic）
+  const v = getCarrier()?.dataset?.["fullscreenLayoutDefault"];
+  return v === "hero" ? "hero" : "classic";
+}
+
+export function getStoredFullscreenLayout(): FullscreenLayoutMode {
+  if (!getVisitorSwitches().wallpaperMode) return getDefaultFullscreenLayout();
+  const stored = localStorage.getItem("fullscreenLayout");
+  return isFullscreenLayoutMode(stored) ? stored : getDefaultFullscreenLayout();
+}
+
+export function setFullscreenLayout(mode: FullscreenLayoutMode): void {
+  localStorage.setItem("fullscreenLayout", mode);
+  applyFullscreenLayout(mode);
+}
+
+/** 应用全屏布局：写 html[data-fullscreen-layout]；仅全屏模式有意义，
+ *  切换时由 banner-mode-transitioning 过渡兜底 */
+export function applyFullscreenLayout(mode: FullscreenLayoutMode): void {
+  document.documentElement.setAttribute("data-fullscreen-layout", mode);
+  // 通知 fullscreen-hero 等依赖布局的重算（事件驱动，替代 html 属性 MutationObserver）
+  window.dispatchEvent(new CustomEvent("fullscreenLayoutChange"));
+}
+
 /* ── 波浪（横幅底部动效） ── */
 
 export function getDefaultWave(): boolean {
@@ -498,6 +569,75 @@ export function applyWave(enabled: boolean): void {
 export function setWave(enabled: boolean): void {
   localStorage.setItem("bannerWave", String(enabled));
   applyWave(enabled);
+}
+
+/* ── 底部渐变过渡（独立于波浪；对齐 Firefly gradient：三选/UA 解析 + 属性门控） ── */
+
+/** 后台三选默认（enabled / disabled / desktop_only）按当前视口解析成布尔 */
+export function getDefaultGradient(): boolean {
+  const raw = getCarrier()?.dataset?.gradientDefault;
+  if (raw == null || raw === "" || raw === "enabled") return true;
+  if (raw === "disabled") return false;
+  // desktop_only：移动端（<1024px）默认关
+  return typeof window !== "undefined" ? window.innerWidth >= 1024 : true;
+}
+
+export function getStoredGradient(): boolean {
+  if (!getVisitorSwitches().wallpaperSettings) return getDefaultGradient();
+  const stored = localStorage.getItem("gradientEnabled");
+  return stored == null ? getDefaultGradient() : stored === "true";
+}
+
+/** 应用渐变开关：写 html[data-gradient-enabled]（CSS 门控）；关闭时隐藏渐变 */
+export function applyGradient(enabled: boolean): void {
+  document.documentElement.setAttribute(
+    "data-gradient-enabled",
+    String(enabled),
+  );
+}
+
+export function setGradient(enabled: boolean): void {
+  localStorage.setItem("gradientEnabled", String(enabled));
+  applyGradient(enabled);
+}
+
+export function resetGradient(): void {
+  localStorage.removeItem("gradientEnabled");
+  applyGradient(getDefaultGradient());
+}
+
+/* ── 壁纸轮播开关（对齐 Firefly carousel：默认关=随机一张不轮播；事件驱动重算） ── */
+
+export function getDefaultCarousel(): boolean {
+  return carrierBool("carouselDefault", false);
+}
+
+export function getStoredCarousel(): boolean {
+  if (!getVisitorSwitches().wallpaperSettings) return getDefaultCarousel();
+  const stored = localStorage.getItem("bannerCarouselEnabled");
+  return stored == null ? getDefaultCarousel() : stored === "true";
+}
+
+/** 应用轮播开关：写 html[data-banner-carousel-enabled] + 派发 bannerCarouselChange
+ *  通知 banner-carousel 脚本重算（对齐 Firefly setBannerCarouselEnabled） */
+export function applyCarousel(enabled: boolean): void {
+  document.documentElement.setAttribute(
+    "data-banner-carousel-enabled",
+    String(enabled),
+  );
+  window.dispatchEvent(
+    new CustomEvent("bannerCarouselChange", { detail: { enabled } }),
+  );
+}
+
+export function setCarousel(enabled: boolean): void {
+  localStorage.setItem("bannerCarouselEnabled", String(enabled));
+  applyCarousel(enabled);
+}
+
+export function resetCarousel(): void {
+  localStorage.removeItem("bannerCarouselEnabled");
+  applyCarousel(getDefaultCarousel());
 }
 
 /* ── 首页壁纸标题（banner 标题层显隐，随壁纸设置区开关联动） ── */
@@ -574,7 +714,7 @@ export function resetWallpaperParams(): void {
   localStorage.removeItem("wallpaperOpacity");
   localStorage.removeItem("wallpaperBlur");
   localStorage.removeItem("wallpaperCardAlpha");
-  applyWallpaperParams(getDefaultWallpaperParams());
+  applyWallpaperParams(getCurrentWallpaperDefaults());
 }
 
 export function resetWallpaperMode(): void {
@@ -590,4 +730,86 @@ export function resetWave(): void {
 export function resetBannerTitle(): void {
   localStorage.removeItem("bannerTitle");
   applyBannerTitle(getDefaultBannerTitle());
+}
+
+/* ── 樱花特效（前台面板「特效」分区开关；sakura.js 监听 sakuraToggle 启停） ── */
+
+/** 后台 effects.sakura.enable 默认值（ConfigCarrier data-sakura-default） */
+export function getDefaultSakuraEnabled(): boolean {
+  return carrierBool("sakuraDefault", false);
+}
+
+export function getStoredSakuraEnabled(): boolean {
+  if (!getVisitorSwitches().effects) return getDefaultSakuraEnabled();
+  const stored = localStorage.getItem("sakuraEnabled");
+  return stored == null ? getDefaultSakuraEnabled() : stored === "true";
+}
+
+/** 切换樱花：写 localStorage + data-sakura-enabled，并派发 sakuraToggle 供 sakura.js 启停 */
+export function setSakuraEnabled(enabled: boolean): void {
+  localStorage.setItem("sakuraEnabled", String(enabled));
+  document.documentElement.setAttribute("data-sakura-enabled", String(enabled));
+  window.dispatchEvent(
+    new CustomEvent("sakuraToggle", { detail: { enabled } }),
+  );
+}
+
+export function resetSakura(): void {
+  localStorage.removeItem("sakuraEnabled");
+  setSakuraEnabled(getDefaultSakuraEnabled());
+}
+
+/* ── 卡片边框和阴影（前台面板「卡片样式」分区；对齐 Firefly enable-card-border） ── */
+
+export function getDefaultCardBorderEnabled(): boolean {
+  return carrierBool("cardBorderDefault", false);
+}
+
+export function getStoredCardBorderEnabled(): boolean {
+  if (!getVisitorSwitches().cardBorder) return getDefaultCardBorderEnabled();
+  const stored = localStorage.getItem("cardBorderEnabled");
+  return stored == null ? getDefaultCardBorderEnabled() : stored === "true";
+}
+
+export function applyCardBorder(enabled: boolean): void {
+  document.documentElement.classList.toggle("enable-card-border", enabled);
+}
+
+export function setCardBorderEnabled(enabled: boolean): void {
+  localStorage.setItem("cardBorderEnabled", String(enabled));
+  applyCardBorder(enabled);
+}
+
+export function resetCardBorder(): void {
+  localStorage.removeItem("cardBorderEnabled");
+  applyCardBorder(getDefaultCardBorderEnabled());
+}
+
+/* ── 卡片跟随主题色（对齐 Firefly card-follow-theme-hue） ── */
+
+export function getDefaultCardFollowThemeEnabled(): boolean {
+  return carrierBool("cardFollowDefault", false);
+}
+
+export function getStoredCardFollowThemeEnabled(): boolean {
+  if (!getVisitorSwitches().cardFollowTheme)
+    return getDefaultCardFollowThemeEnabled();
+  const stored = localStorage.getItem("cardFollowThemeEnabled");
+  return stored == null
+    ? getDefaultCardFollowThemeEnabled()
+    : stored === "true";
+}
+
+export function applyCardFollowTheme(enabled: boolean): void {
+  document.body.classList.toggle("card-follow-theme-hue", enabled);
+}
+
+export function setCardFollowThemeEnabled(enabled: boolean): void {
+  localStorage.setItem("cardFollowThemeEnabled", String(enabled));
+  applyCardFollowTheme(enabled);
+}
+
+export function resetCardFollowTheme(): void {
+  localStorage.removeItem("cardFollowThemeEnabled");
+  applyCardFollowTheme(getDefaultCardFollowThemeEnabled());
 }

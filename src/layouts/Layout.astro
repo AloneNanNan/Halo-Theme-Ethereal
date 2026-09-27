@@ -1,5 +1,6 @@
 ---
 import ConfigCarrier from "../components/ConfigCarrier.astro";
+import SakuraEffect from "../components/SakuraEffect.astro";
 import WelcomePopup from "../components/control/WelcomePopup.astro";
 import WaveEffect from "../components/WaveEffect.astro";
 import {
@@ -160,6 +161,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   th:data-speed="${theme.config?.style?.animationSpeed?.speedTier}"
   th:data-banner-display="${bannerMode}"
+  th:data-fullscreen-layout="${theme.config?.layout?.bannerLayout?.fullscreenLayout ?: 'classic'}"
   th:with={bannerModeThWith() + ", " + speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
@@ -433,7 +435,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
     th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
-    th:style="|--bannerOffset: ${theme.config?.style?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.style?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.layout?.bannerLayout?.cardOpacity ?: 0.6};|"
+    th:style="|--bannerOffset: ${theme.config?.style?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.style?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.layout?.bannerLayout?.cardOpacity ?: 0.6}; --hero-wallpaper-blur-max: ${theme.config?.layout?.bannerLayout?.heroBlurMax ?: 12}px; --hero-inner-blur: ${theme.config?.layout?.bannerLayout?.heroInnerBlur ?: 8}px;|"
     data-overlayscrollbars-initialize
   >
     <ConfigCarrier />
@@ -465,6 +467,19 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         } else {
           localStorage.removeItem("cardHoverLift");
           localStorage.removeItem("navbarBlur");
+        }
+
+        // 卡片边框和阴影 / 卡片跟随主题色（对齐 Firefly；class 需在首帧前应用防 FOUC）
+        var cardBorder = localStorage.getItem("cardBorderEnabled");
+        if (cardBorder != null) {
+          document.documentElement.classList.toggle(
+            "enable-card-border",
+            cardBorder === "true",
+          );
+        }
+        var cardFollow = localStorage.getItem("cardFollowThemeEnabled");
+        if (cardFollow != null) {
+          body.classList.toggle("card-follow-theme-hue", cardFollow === "true");
         }
 
         // 透明设置（全屏透明模式）：覆盖 body 内联变量
@@ -519,17 +534,53 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
             "enable-banner",
             mode === "banner" || mode === "fullscreen",
           );
+          // 全屏布局（classic/hero，对齐 Firefly）：仅全屏模式生效；
+          // 访客 localStorage 值优先，未设置时保留 SSR 后台默认（html 属性）
+          if (mode === "fullscreen") {
+            var fsLayouts = ["classic", "hero"];
+            var fsLayout = localStorage.getItem("fullscreenLayout");
+            if (fsLayouts.indexOf(fsLayout) !== -1) {
+              document.documentElement.setAttribute(
+                "data-fullscreen-layout",
+                fsLayout,
+              );
+            }
+          }
         } else {
           localStorage.removeItem("bannerDisplay");
         }
 
-        // 壁纸设置访客覆盖（波浪 + 首页壁纸标题）：关闭时给 body 加对应
-        // 隐藏类（CSS 门控）；开启/缺省时由后台默认决定
+        // 壁纸设置访客覆盖（波浪 + 底部渐变 + 轮播 + 首页壁纸标题）：关闭时写
+        // 对应 html 属性/body 类（CSS 门控）；开启/缺省时由后台默认决定
         if (enable && on(d.visitorWallpaperSettings)) {
           var waveDefault = d.waveDefault !== "false";
           var waveStored = localStorage.getItem("bannerWave");
           var waveOn = waveStored == null ? waveDefault : waveStored === "true";
           if (!waveOn) body.classList.add("wave-disabled");
+
+          // 底部渐变：三选（enabled/disabled/desktop_only）按视口解析，对齐 Firefly
+          var gradientRaw = d.gradientDefault || "enabled";
+          var gradientStored = localStorage.getItem("gradientEnabled");
+          var gradientOn =
+            gradientStored == null
+              ? gradientRaw === "enabled" ||
+                (gradientRaw === "desktop_only" && window.innerWidth >= 1024)
+              : gradientStored === "true";
+          document.documentElement.setAttribute(
+            "data-gradient-enabled",
+            String(gradientOn),
+          );
+
+          // 轮播：默认关（随机一张不轮播），对齐 Firefly carousel.enable=false
+          var carouselStored = localStorage.getItem("bannerCarouselEnabled");
+          var carouselOn =
+            carouselStored == null
+              ? on(d.carouselDefault)
+              : carouselStored === "true";
+          document.documentElement.setAttribute(
+            "data-banner-carousel-enabled",
+            String(carouselOn),
+          );
 
           var bannerTitleDefault = d.bannerTitleDefault !== "false";
           var bannerTitleStored = localStorage.getItem("bannerTitle");
@@ -540,6 +591,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           if (!bannerTitleOn) body.classList.add("banner-title-disabled");
         } else {
           localStorage.removeItem("bannerWave");
+          localStorage.removeItem("gradientEnabled");
+          localStorage.removeItem("bannerCarouselEnabled");
           localStorage.removeItem("bannerTitle");
         }
       })();
@@ -668,5 +721,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <script>
       import "../scripts/app";
     </script>
+    <!-- 樱花特效（后台开关 effects.sakura.enable 控制是否加载） -->
+    <SakuraEffect />
   </body>
 </html>

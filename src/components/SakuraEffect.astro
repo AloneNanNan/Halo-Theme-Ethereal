@@ -1,0 +1,12 @@
+---
+// 樱花特效脚本加载器（自 Firefly 迁移，2026-09-23）
+// 渲染门：后台设置 effects.sakura.enable == true 才输出脚本（不下载 sakura.js）；
+// 配置读取在 sakura.js 内完成（#theme-config JSON → getThemeConfig()）。
+const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
+---
+
+<script
+  th:if="${theme.config?.effects?.sakura?.enable == true}"
+  src={`${basePath}/assets/sakura.js?v=${ASSET_VERSION}`}
+  defer
+  is:inline></script>

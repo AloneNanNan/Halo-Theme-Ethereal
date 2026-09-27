@@ -8,6 +8,7 @@ export interface ThemeConfig {
   extendPages: ExtendPages;
   post: Post;
   footer: Footer;
+  effects: Effects;
   links: Links;
   external_link: ExternalLink;
 }
@@ -113,12 +114,18 @@ export interface Layout {
 export interface BannerLayout {
   /** 显示模式：disabled 关闭 | banner 横幅模式（默认，首页延伸 65vh）| fullscreen 全屏模式（首页 100vh）| transparent 全屏透明（无横幅、整屏壁纸背景） */
   displayMode?: "disabled" | "banner" | "fullscreen" | "transparent";
+  /** 全屏模式布局：classic 经典（文档流壁纸、不模糊）| hero 沉浸（钉视口 + 模糊 + 标题视差，对齐 Firefly）；未设默认 classic */
+  fullscreenLayout?: "classic" | "hero";
   /** 全屏透明模式：壁纸整体不透明度（0.3-1，默认 0.8，仅 transparent 模式生效） */
   wallpaperOpacity?: number;
   /** 全屏透明模式：壁纸背景模糊强度（px，0-24，仅 transparent 模式生效） */
   wallpaperBlur?: number;
   /** 全屏透明模式：卡片/导航栏/悬浮按钮的半透明程度（0.3-1，设为 1 即不透明，需开启高级材质，仅 transparent 模式生效） */
   cardOpacity?: number;
+  /** 全屏沉浸（hero）：首页下滑 0.6 视口高内壁纸模糊 0→该值的封顶值（onlynn 原版 12px，仅 fullscreen+hero 生效） */
+  heroBlurMax?: number;
+  /** 全屏沉浸（hero）：非首页固定壁纸模糊（onlynn 原版 8px，仅 fullscreen+hero 生效） */
+  heroInnerBlur?: number;
 }
 
 /** 菜单栏设置 */
@@ -422,6 +429,7 @@ export interface Widget {
   show_visits?: boolean;
   show_upvotes?: boolean;
   show_comments?: boolean;
+  show_heatmap?: boolean;
   tencent_key?: string;
   default_city?: string;
   fallback_text?: string;
@@ -447,6 +455,16 @@ export interface Post {
   summary?: PostSummary;
   /** 文章操作栏：点赞/分享/打赏 */
   actionBar?: PostActionBar;
+  /** 沉浸式阅读（自 Firefly 迁移，2026-09-23） */
+  immersiveReading?: ImmersiveReading;
+}
+
+/** 沉浸式阅读配置：与 settings.yaml post.immersiveReading 及 scripts/assets/immersive-reading.ts 保持一致 */
+export interface ImmersiveReading {
+  enable?: boolean;
+  defaultOn?: boolean;
+  tocEnabled?: boolean;
+  tocPosition?: "left" | "right";
 }
 
 export interface PostActionBar {
@@ -597,3 +615,24 @@ export interface ExternalLink {
 
 export type LIGHT_DARK_MODE =
   typeof LIGHT_MODE | typeof DARK_MODE | typeof AUTO_MODE;
+
+// ========== 特效（自 Firefly 迁移，2026-09-23）==========
+export interface Effects {
+  sakura?: Sakura;
+}
+
+/** 樱花飘落配置：与 settings.yaml effects.sakura 及 scripts/assets/sakura.ts 保持一致 */
+export interface Sakura {
+  enable?: boolean;
+  sakuraNum?: number;
+  limitTimes?: number;
+  size?: { min?: number; max?: number };
+  opacity?: { min?: number; max?: number };
+  speed?: {
+    horizontal?: { min?: number; max?: number };
+    vertical?: { min?: number; max?: number };
+    rotation?: number;
+    fadeSpeed?: number;
+  };
+  zIndex?: number;
+}

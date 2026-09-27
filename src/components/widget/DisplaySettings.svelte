@@ -16,15 +16,24 @@
     getDefaultPostListMasonry,
     getStoredPostListMasonry,
     setPostListMasonry,
-    getDefaultWallpaperParams,
+    getCurrentWallpaperDefaults,
     getStoredWallpaperParams,
     setWallpaperParam,
     getDefaultBannerDisplay,
     getStoredBannerDisplay,
     setBannerDisplay,
+    getDefaultFullscreenLayout,
+    getStoredFullscreenLayout,
+    setFullscreenLayout,
     getDefaultWave,
     getStoredWave,
     setWave,
+    getDefaultGradient,
+    getStoredGradient,
+    setGradient,
+    getDefaultCarousel,
+    getStoredCarousel,
+    setCarousel,
     getDefaultBannerTitle,
     getStoredBannerTitle,
     setBannerTitle,
@@ -33,9 +42,24 @@
     resetWallpaperParams,
     resetWallpaperMode,
     resetWave,
+    resetGradient,
+    resetCarousel,
     resetBannerTitle,
+    getDefaultSakuraEnabled,
+    getStoredSakuraEnabled,
+    setSakuraEnabled,
+    resetSakura,
+    getDefaultCardBorderEnabled,
+    getStoredCardBorderEnabled,
+    setCardBorderEnabled,
+    resetCardBorder,
+    getDefaultCardFollowThemeEnabled,
+    getStoredCardFollowThemeEnabled,
+    setCardFollowThemeEnabled,
+    resetCardFollowTheme,
     type PostListLayoutMode,
     type BannerDisplayMode,
+    type FullscreenLayoutMode,
   } from "../../utils/setting-utils";
   import { t } from "../../utils/i18n";
 
@@ -59,14 +83,22 @@
 
   /* ── 壁纸模式 / 壁纸设置（首页壁纸标题 + 波浪）状态 ── */
   let wallpaperMode = $state<BannerDisplayMode>(getStoredBannerDisplay());
+  let fullscreenLayout = $state<FullscreenLayoutMode>(getStoredFullscreenLayout());
   let wave = $state(getStoredWave());
+  let gradient = $state(getStoredGradient());
+  let carousel = $state(getStoredCarousel());
   let bannerTitle = $state(getStoredBannerTitle());
   const defaultBannerDisplay = getDefaultBannerDisplay();
   const defaultWave = getDefaultWave();
+  const defaultGradient = getDefaultGradient();
+  const defaultCarousel = getDefaultCarousel();
   const defaultBannerTitle = getDefaultBannerTitle();
   const dirtyWallpaperMode = $derived(wallpaperMode !== defaultBannerDisplay);
   const dirtyWallpaperSettings = $derived(
-    wave !== defaultWave || bannerTitle !== defaultBannerTitle,
+    wave !== defaultWave ||
+      gradient !== defaultGradient ||
+      carousel !== defaultCarousel ||
+      bannerTitle !== defaultBannerTitle,
   );
 
   // 壁纸参数区跟随访客当前生效模式（仅全屏透明时显示），而非服务端初值
@@ -77,22 +109,37 @@
     showWallpaperMode &&
     switches.wallpaperSettings &&
     (defaultWave || defaultBannerTitle);
+  // 壁纸参数区（透明度/模糊度/卡片透明度）：透明模式全显示；全屏沉浸(hero)布局下
+  // 显示「背景模糊度」+「卡片透明度」（hero 模糊斜坡封顶/卡片磨砂均消费，对齐 onlynn 可调）
   const showWallpaper = $derived(
-    switches.transparent && wallpaperMode === "transparent",
+    switches.transparent &&
+      (wallpaperMode === "transparent" ||
+        (wallpaperMode === "fullscreen" && fullscreenLayout === "hero")),
   );
 
-  /* ── 面板 Tab（外观 / 壁纸，参考 firefly） ── */
+  /* ── 面板 Tab（外观 / 壁纸 / 特效，参考 firefly） ── */
   const hasAppearanceContent = $derived(!hueFixed || showLayout || showCardStyle);
   const hasWallpaperContent = $derived(showWallpaperMode || showWallpaper);
-  const showTabBar = $derived(hasAppearanceContent && hasWallpaperContent);
-  let activeTab = $state<"appearance" | "wallpaper">("appearance");
+  // 特效分区：访客特效开关 + 后台已启用樱花（后台为总开关，未启用则无法开启）
+  const defaultSakuraEnabled = getDefaultSakuraEnabled();
+  const hasEffectsContent = $derived(switches.effects && defaultSakuraEnabled);
+  const visibleTabCount = $derived(
+    [hasAppearanceContent, hasWallpaperContent, hasEffectsContent].filter(Boolean)
+      .length,
+  );
+  const showTabBar = $derived(visibleTabCount > 1);
+  let activeTab = $state<"appearance" | "wallpaper" | "effects">("appearance");
 
   // 当前 Tab 不可用时自动切换到可用的 Tab
   $effect(() => {
-    if (hasWallpaperContent && !hasAppearanceContent) {
-      activeTab = "wallpaper";
-    } else if (!hasWallpaperContent) {
-      activeTab = "appearance";
+    if (
+      (activeTab === "appearance" && !hasAppearanceContent) ||
+      (activeTab === "wallpaper" && !hasWallpaperContent) ||
+      (activeTab === "effects" && !hasEffectsContent)
+    ) {
+      if (hasAppearanceContent) activeTab = "appearance";
+      else if (hasWallpaperContent) activeTab = "wallpaper";
+      else if (hasEffectsContent) activeTab = "effects";
     }
   });
 
@@ -117,6 +164,11 @@
   let cardHoverLift = $state(getStoredCardHoverLift());
   let navbarBlur = $state(getStoredNavbarBlur());
   let postListMasonry = $state(getStoredPostListMasonry());
+  // 樱花特效（前台面板「特效」分区）
+  let sakuraEnabled = $state(getStoredSakuraEnabled());
+  // 卡片边框和阴影 / 卡片跟随主题色（对齐 Firefly）
+  let cardBorder = $state(getStoredCardBorderEnabled());
+  let cardFollowTheme = $state(getStoredCardFollowThemeEnabled());
   // 面板里透明度类参数以百分比展示（存储为 0–1）
   const storedWallpaper = getStoredWallpaperParams();
   let wallpaperOpacity = $state(Math.round(storedWallpaper.opacity * 100));
@@ -128,12 +180,19 @@
   const defaultCardHoverLift = getDefaultCardHoverLift();
   const defaultNavbarBlur = getDefaultNavbarBlur();
   const defaultPostListMasonry = getDefaultPostListMasonry();
-  const defaultWallpaper = getDefaultWallpaperParams();
+  const defaultWallpaper = getCurrentWallpaperDefaults();
   const dirtyLayout = $derived(layout !== defaultLayout);
   const dirtyCard = $derived(
     cardHoverLift !== defaultCardHoverLift ||
       navbarBlur !== defaultNavbarBlur ||
       postListMasonry !== defaultPostListMasonry,
+  );
+  const dirtySakura = $derived(sakuraEnabled !== defaultSakuraEnabled);
+  const defaultCardBorder = getDefaultCardBorderEnabled();
+  const defaultCardFollowTheme = getDefaultCardFollowThemeEnabled();
+  const dirtyCardBorder = $derived(cardBorder !== defaultCardBorder);
+  const dirtyCardFollowTheme = $derived(
+    cardFollowTheme !== defaultCardFollowTheme,
   );
   const showMasonry = $derived(showCardStyle && layout === "grid");
   const dirtyWallpaper = $derived(
@@ -170,7 +229,7 @@
       value: "transparent",
       icon: "icon-[material-symbols--full-coverage-outline-rounded]",
       key: "display.wallpaperModeTransparent",
-      label: "全屏透明",
+      label: "覆盖透明",
     },
   ];
 
@@ -179,9 +238,54 @@
     setBannerDisplay(mode);
   }
 
+  function chooseFsLayout(mode: FullscreenLayoutMode) {
+    fullscreenLayout = mode;
+    setFullscreenLayout(mode);
+  }
+
   function toggleWave() {
     wave = !wave;
     setWave(wave);
+  }
+
+  function toggleGradient() {
+    gradient = !gradient;
+    setGradient(gradient);
+  }
+
+  function toggleCarousel() {
+    carousel = !carousel;
+    setCarousel(carousel);
+  }
+
+  function toggleSakura() {
+    sakuraEnabled = !sakuraEnabled;
+    setSakuraEnabled(sakuraEnabled);
+  }
+
+  function resetSakuraBtn() {
+    resetSakura();
+    sakuraEnabled = defaultSakuraEnabled;
+  }
+
+  function toggleCardBorder() {
+    cardBorder = !cardBorder;
+    setCardBorderEnabled(cardBorder);
+  }
+
+  function resetCardBorderBtn() {
+    resetCardBorder();
+    cardBorder = defaultCardBorder;
+  }
+
+  function toggleCardFollowTheme() {
+    cardFollowTheme = !cardFollowTheme;
+    setCardFollowThemeEnabled(cardFollowTheme);
+  }
+
+  function resetCardFollowBtn() {
+    resetCardFollowTheme();
+    cardFollowTheme = defaultCardFollowTheme;
   }
 
   function toggleBannerTitle() {
@@ -196,8 +300,12 @@
 
   function resetWallpaperSettingsBtn() {
     resetWave();
+    resetGradient();
+    resetCarousel();
     resetBannerTitle();
     wave = getDefaultWave();
+    gradient = getDefaultGradient();
+    carousel = getDefaultCarousel();
     bannerTitle = getDefaultBannerTitle();
   }
 
@@ -247,7 +355,7 @@
 
   function resetWallpaper() {
     resetWallpaperParams();
-    const p = getDefaultWallpaperParams();
+    const p = getCurrentWallpaperDefaults();
     wallpaperOpacity = Math.round(p.opacity * 100);
     wallpaperBlur = Math.round(p.blur);
     wallpaperCardAlpha = Math.round(p.cardAlpha * 100);
@@ -265,6 +373,12 @@
               role="tab" aria-selected={activeTab === "wallpaper"} on:click={() => (activeTab = "wallpaper")}>
         <span>{t("display.tabWallpaper", "壁纸")}</span>
       </button>
+      {#if hasEffectsContent}
+        <button type="button" class="panel-tab" class:panel-tab-on={activeTab === "effects"}
+                role="tab" aria-selected={activeTab === "effects"} on:click={() => (activeTab = "effects")}>
+          <span>{t("display.tabEffects", "特效")}</span>
+        </button>
+      {/if}
     </div>
   {/if}
 
@@ -343,6 +457,20 @@
           <span class="toggle-label">{t("display.navbarBlur", "高级材质")}</span>
           <span class="toggle" class:toggle-on={navbarBlur}><span class="toggle-knob"></span></span>
         </button>
+        {#if switches.cardBorder}
+          <button type="button" class="toggle-row" class:toggle-on={cardBorder} role="switch" aria-checked={cardBorder} on:click={toggleCardBorder}>
+            <span class="icon-[material-symbols--border-style-rounded] toggle-icon"></span>
+            <span class="toggle-label">{t("display.cardBorder", "卡片边框和阴影")}</span>
+            <span class="toggle" class:toggle-on={cardBorder}><span class="toggle-knob"></span></span>
+          </button>
+        {/if}
+        {#if switches.cardFollowTheme}
+          <button type="button" class="toggle-row" class:toggle-on={cardFollowTheme} role="switch" aria-checked={cardFollowTheme} on:click={toggleCardFollowTheme}>
+            <span class="icon-[material-symbols--palette-outline] toggle-icon"></span>
+            <span class="toggle-label">{t("display.cardFollowTheme", "卡片跟随主题色")}</span>
+            <span class="toggle" class:toggle-on={cardFollowTheme}><span class="toggle-knob"></span></span>
+          </button>
+        {/if}
         {#if showMasonry}
           <button type="button" class="toggle-row" class:toggle-on={postListMasonry} role="switch" aria-checked={postListMasonry} on:click={toggleMasonry}>
             <span class="icon-[material-symbols--waterfall-chart-rounded] toggle-icon"></span>
@@ -376,6 +504,25 @@
         </div>
       {/if}
 
+      <!-- 全屏布局（经典 classic / 沉浸 hero，对齐 Firefly）仅全屏模式显示 -->
+      {#if wallpaperMode === "fullscreen"}
+        <div class="section-title mb-3 mt-4">
+          {t("display.fullscreenLayout", "全屏布局")}
+        </div>
+        <div class="mode-grid" role="group" aria-label={t("display.fullscreenLayout", "全屏布局")}>
+          <button type="button" class="mode-item" class:mode-on={fullscreenLayout === "classic"}
+                  aria-pressed={fullscreenLayout === "classic"} on:click={() => chooseFsLayout("classic")}>
+            <span class="icon-[material-symbols--view-day-outline-rounded] mode-icon"></span>
+            <span>{t("display.fullscreenClassic", "经典")}</span>
+          </button>
+          <button type="button" class="mode-item" class:mode-on={fullscreenLayout === "hero"}
+                  aria-pressed={fullscreenLayout === "hero"} on:click={() => chooseFsLayout("hero")}>
+            <span class="icon-[material-symbols--desktop-landscape-outline-rounded] mode-icon"></span>
+            <span>{t("display.fullscreenHero", "沉浸")}</span>
+          </button>
+        </div>
+      {/if}
+
       <!-- 壁纸设置（横幅/全屏：首页壁纸标题 + 波浪开关，参考 firefly 的壁纸设置分区） -->
       {#if showWallpaperSettings && (wallpaperMode === "banner" || wallpaperMode === "fullscreen")}
         <div class="section-title mb-3">
@@ -401,12 +548,26 @@
             <span class="toggle" class:toggle-on={wave}><span class="toggle-knob"></span></span>
           </button>
         {/if}
+        {#if defaultGradient}
+          <button type="button" class="toggle-row" class:toggle-on={gradient} role="switch" aria-checked={gradient} on:click={toggleGradient}>
+            <span class="icon-[material-symbols--gradient-rounded] toggle-icon"></span>
+            <span class="toggle-label">{t("display.gradient", "底部渐变")}</span>
+            <span class="toggle" class:toggle-on={gradient}><span class="toggle-knob"></span></span>
+          </button>
+        {/if}
+        <!-- 轮播开关：不依赖后台默认（carousel 默认关，用户仍需能开），
+             壁纸设置区可见即显示（对齐 Firefly bannerCarouselSwitchable） -->
+        <button type="button" class="toggle-row" class:toggle-on={carousel} role="switch" aria-checked={carousel} on:click={toggleCarousel}>
+          <span class="icon-[material-symbols--photo-library-outline-rounded] toggle-icon"></span>
+          <span class="toggle-label">{t("display.carousel", "壁纸轮播")}</span>
+          <span class="toggle" class:toggle-on={carousel}><span class="toggle-knob"></span></span>
+        </button>
       {/if}
 
-      <!-- 透明设置（全屏透明模式） -->
+      <!-- 壁纸参数（透明模式全显示；全屏沉浸 hero 仅模糊/卡片透明度，壁纸恒不透明） -->
       {#if showWallpaper}
         <div class="section-title mb-3">
-          {t("display.wallpaper", "透明设置")}
+          {t("display.wallpaper", "壁纸设置")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
                   class:opacity-0={!dirtyWallpaper} class:pointer-events-none={!dirtyWallpaper} on:click={resetWallpaper}>
             <div class="text-(--btn-content)">
@@ -414,6 +575,8 @@
             </div>
           </button>
         </div>
+        <!-- 壁纸透明度仅透明模式（hero 壁纸恒不透明，对齐 onlynn） -->
+        {#if wallpaperMode === "transparent"}
         <div class="slider-row">
           <div class="slider-label">
             <span>{t("display.wallpaperOpacity", "壁纸透明度")}</span>
@@ -422,12 +585,14 @@
           <input aria-label={t("display.wallpaperOpacity", "壁纸透明度")} type="range" min="30" max="100" step="5"
                  bind:value={wallpaperOpacity} on:input={applyOpacity} class="wallpaper-slider">
         </div>
+        {/if}
+        <!-- 背景模糊度：透明模式与全屏沉浸(hero)均生效（hero 写斜坡封顶 --hero-wallpaper-blur-max） -->
         <div class="slider-row">
           <div class="slider-label">
-            <span>{t("display.wallpaperBlur", "模糊度")}</span>
+            <span>{t("display.wallpaperBlur", "背景模糊度")}</span>
             <span class="value-badge">{wallpaperBlur}px</span>
           </div>
-          <input aria-label={t("display.wallpaperBlur", "模糊度")} type="range" min="0" max="24" step="1"
+          <input aria-label={t("display.wallpaperBlur", "背景模糊度")} type="range" min="0" max="20" step="1"
                  bind:value={wallpaperBlur} on:input={applyBlur} class="wallpaper-slider">
         </div>
         <div class="slider-row">
@@ -438,6 +603,26 @@
           <input aria-label={t("display.wallpaperCardAlpha", "卡片透明度")} type="range" min="30" max="100" step="5"
                  bind:value={wallpaperCardAlpha} on:input={applyCardAlpha} class="wallpaper-slider">
         </div>
+      {/if}
+    {/if}
+
+    {#if activeTab === "effects"}
+      <!-- 特效：樱花飘落开关（sakura.js 监听 sakuraToggle 启停） -->
+      {#if hasEffectsContent}
+        <div class="section-title mb-3">
+          {t("display.effectsSettings", "特效设置")}
+          <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
+                  class:opacity-0={!dirtySakura} class:pointer-events-none={!dirtySakura} on:click={resetSakuraBtn}>
+            <div class="text-(--btn-content)">
+              <div icon="fa6-solid:arrow-rotate-left" class="icon-[fa6-solid--arrow-rotate-left] text-[0.875rem]"></div>
+            </div>
+          </button>
+        </div>
+        <button type="button" class="toggle-row" class:toggle-on={sakuraEnabled} role="switch" aria-checked={sakuraEnabled} on:click={toggleSakura}>
+          <span class="icon-[mdi--flower-poppy] toggle-icon"></span>
+          <span class="toggle-label">{t("display.sakuraEffect", "樱花飘落")}</span>
+          <span class="toggle" class:toggle-on={sakuraEnabled}><span class="toggle-knob"></span></span>
+        </button>
       {/if}
     {/if}
   </div>
@@ -690,6 +875,10 @@
 
   /* 透明设置滑块：样式同主题色相滑块（1.5rem 高轨道 + 小圆角直角 + 白色矩形滑块），
   轨道用比开关行开启态背景再深一档的按钮色（btn-regular-bg-active） */
+  #display-setting input[type="range"] {
+    /* 拖动滑杆时不触发页面滚动/文本选择（X20） */
+    touch-action: none;
+  }
   #display-setting input[type="range"].wallpaper-slider {
     -webkit-appearance: none;
     appearance: none;

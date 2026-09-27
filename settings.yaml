@@ -33,16 +33,19 @@ spec:
           name: bannerLayout
           label: Banner 布局
           value:
-            displayMode: banner
+            displayMode: transparent
             wallpaperOpacity: 0.8
             wallpaperBlur: 10
             cardOpacity: 0.6
+            fullscreenLayout: classic
+            heroBlurMax: 12
+            heroInnerBlur: 8
           children:
             - $formkit: select
               name: displayMode
               id: banner_displayMode
               label: 模式
-              value: banner
+              value: transparent
               help: "关闭/纯色模式：不显示横幅，页面为纯色背景；横幅模式：非首页显示 35vh 横幅、首页延伸至 65vh；全屏模式：非首页同横幅模式，首页 banner 占满整屏（100vh）；全屏透明：无横幅、整屏壁纸作为页面背景，配合「高级材质」使内容与组件卡片磨砂透明"
               options:
                 - label: 关闭/纯色模式
@@ -53,6 +56,45 @@ spec:
                   value: fullscreen
                 - label: 全屏透明
                   value: transparent
+            - $formkit: select
+              name: fullscreenLayout
+              id: banner_fullscreenLayout
+              key: banner_fullscreenLayout
+              label: 全屏布局
+              value: classic
+              if: "$get(banner_displayMode).value === 'fullscreen'"
+              help: "全屏模式的布局：经典（文档流壁纸、不模糊、卡片不透明）或沉浸（hero：壁纸钉视口 + 模糊 + 标题视差，对齐 Firefly）。访客仍可在前台「显示设置」面板切换"
+              options:
+                - label: 经典（classic）
+                  value: classic
+                - label: 沉浸（hero）
+                  value: hero
+            - $formkit: number
+              name: heroBlurMax
+              id: banner_heroBlurMax
+              key: banner_heroBlurMax
+              if: "$get(banner_displayMode).value === 'fullscreen' && $get(banner_fullscreenLayout).value === 'hero'"
+              preserve: true
+              label: 沉浸模糊上限
+              min: 0
+              max: 40
+              step: 2
+              value: 12
+              validation: "min:0|max:40"
+              help: "首页下滑 0.6 视口高度内壁纸模糊从 0 渐变的封顶值（onlynn 原版 12px）；首页下滑到顶后保持该值"
+            - $formkit: number
+              name: heroInnerBlur
+              id: banner_heroInnerBlur
+              key: banner_heroInnerBlur
+              if: "$get(banner_displayMode).value === 'fullscreen' && $get(banner_fullscreenLayout).value === 'hero'"
+              preserve: true
+              label: 非首页沉浸模糊
+              min: 0
+              max: 20
+              step: 1
+              value: 8
+              validation: "min:0|max:20"
+              help: "非首页全屏沉浸布局的固定壁纸模糊（onlynn 原版 8px），与首页渐变无关"
             - $formkit: number
               name: wallpaperOpacity
               id: banner_transparent_wallpaperOpacity
@@ -70,25 +112,27 @@ spec:
               id: banner_transparent_wallpaperBlur
               key: banner_transparent_wallpaperBlur
               if: "$get(banner_displayMode).value === 'transparent'"
+              preserve: true
               label: 背景模糊度
               min: 0
-              max: 24
+              max: 20
               step: 1
               value: 10
-              validation: "min:0|max:24"
-              help: "壁纸背景模糊强度（0~24 px，默认 10），值越大越柔和；导航栏与悬浮按钮糊到的内容随之改变"
+              validation: "min:0|max:20"
+              help: "壁纸背景模糊强度（0~20 px，默认 10），值越大越柔和；导航栏与悬浮按钮糊到的内容随之改变。仅全屏透明模式生效（全屏沉浸布局的模糊见「沉浸模糊上限/非首页沉浸模糊」）"
             - $formkit: number
               name: cardOpacity
               id: banner_transparent_cardOpacity
               key: banner_transparent_cardOpacity
-              if: "$get(banner_displayMode).value === 'transparent'"
+              if: "$get(banner_displayMode).value === 'transparent' || ($get(banner_displayMode).value === 'fullscreen' && $get(banner_fullscreenLayout).value === 'hero')"
+              preserve: true
               label: 卡片透明度
               min: 0.3
               max: 1
               step: 0.05
               value: 0.6
               validation: "min:0.3|max:1"
-              help: "内容/组件卡片、导航栏与悬浮按钮的半透明程度（0.3~1，默认 0.6），需同时开启「高级材质」"
+              help: "内容/组件卡片、导航栏与悬浮按钮的半透明程度（0.3~1，默认 0.6），磨砂效果在透明模式与全屏沉浸（hero）布局下生效"
         - $formkit: group
           name: postList
           label: 文章卡片布局
@@ -228,6 +272,9 @@ spec:
                 wallpaperMode: true
                 wallpaperSettings: true
                 transparent: true
+                effects: true
+                cardBorder: true
+                cardFollowTheme: true
               children:
                 - $formkit: switch
                   name: enable
@@ -284,6 +331,30 @@ spec:
                   label: 透明设置调节
                   value: true
                   help: "仅横幅「全屏透明」模式下显示，访客可调节壁纸透明度 / 模糊度 / 卡片透明度"
+                - $formkit: switch
+                  name: effects
+                  id: visitorStyle_effects
+                  key: visitorStyle_effects
+                  if: "$get(visitorStyle_enable).value"
+                  label: 特效切换
+                  value: true
+                  help: "开启后访客可在面板「特效」分区开关樱花飘落（需先在「特效」设置中启用樱花）"
+                - $formkit: switch
+                  name: cardBorder
+                  id: visitorStyle_cardBorder
+                  key: visitorStyle_cardBorder
+                  if: "$get(visitorStyle_enable).value"
+                  label: 卡片边框切换
+                  value: true
+                  help: "访客可在面板中开关卡片边框和阴影"
+                - $formkit: switch
+                  name: cardFollowTheme
+                  id: visitorStyle_cardFollowTheme
+                  key: visitorStyle_cardFollowTheme
+                  if: "$get(visitorStyle_enable).value"
+                  label: 卡片跟随主题色切换
+                  value: true
+                  help: "访客可在面板中开关卡片背景跟随主题色相"
         - $formkit: group
           name: floatingButtons
           label: 浮动导航按钮
@@ -392,6 +463,7 @@ spec:
             mode: single
             src: "/themes/Ethereal/assets/images/demo-banner.png"
             carousel:
+              enable: false
               images: []
               effect: fade
               dots: true
@@ -730,8 +802,13 @@ spec:
           value:
             # banner_wave 三选：disabled 关闭 / enabled 开启 / desktop_only 移动端关闭（触屏设备不加载动画）
             banner_wave: enabled
+            # banner_gradient 三选（对齐 Firefly gradient.enable）：渐变独立于波浪开关；
+            # 关闭时波浪开着也不再显示底部渐变
+            banner_gradient: enabled
             navbar_blur: true
             card_hover_lift: true
+            card_border: false
+            card_follow_theme: false
           children:
             # 三选开关（写法与 color_scheme 一致）：关闭 / 开启 / 移动端关闭
             - $formkit: select
@@ -739,6 +816,18 @@ spec:
               label: 底部波浪效果
               value: enabled
               help: "在 Banner 底部显示波浪过渡效果；移动端关闭指触屏设备不显示动画，可降低性能开销和加载时间"
+              options:
+                - label: 关闭
+                  value: disabled
+                - label: 开启
+                  value: enabled
+                - label: 移动端关闭
+                  value: desktop_only
+            - $formkit: select
+              name: banner_gradient
+              label: 底部渐变过渡
+              value: enabled
+              help: "壁纸底部到页面底色的平滑过渡；独立于波浪开关（波浪开着也可同时显示渐变，对齐 Firefly）"
               options:
                 - label: 关闭
                   value: disabled
@@ -756,6 +845,16 @@ spec:
               label: 卡片悬浮效果
               value: true
               help: "卡片悬停时轻微上移并显示主题色阴影"
+            - $formkit: switch
+              name: card_border
+              label: 卡片边框和阴影
+              value: false
+              help: "为卡片添加细边框与阴影（访客可在显示设置面板切换，此项为默认值）"
+            - $formkit: switch
+              name: card_follow_theme
+              label: 卡片跟随主题色
+              value: false
+              help: "卡片背景跟随主题色相（浅色模式下生效；访客可在显示设置面板切换，此项为默认值）"
         - $formkit: group
           name: animationSpeed
           label: 动画速度
@@ -928,6 +1027,8 @@ spec:
                       value: weather
                     - label: 最近日程
                       value: schedule
+                    - label: 日历
+                      value: calendar
                     - label: 自定义HTML
                       value: html
                 - $formkit: checkbox
@@ -995,6 +1096,13 @@ spec:
                   preserve: true
                   label: 显示评论数
                   value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'calendar'"
+                  name: show_heatmap
+                  key: widget_calendar_show_heatmap
+                  preserve: true
+                  label: 显示年度热力图
+                  value: true
                 - $formkit: date
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
@@ -1163,6 +1271,8 @@ spec:
                       value: weather
                     - label: 最近日程
                       value: schedule
+                    - label: 日历
+                      value: calendar
                     - label: 自定义HTML
                       value: html
                 - $formkit: checkbox
@@ -1230,6 +1340,13 @@ spec:
                   preserve: true
                   label: 显示评论数
                   value: false
+                - $formkit: checkbox
+                  if: "$value.value === 'calendar'"
+                  name: show_heatmap
+                  key: right_widget_calendar_show_heatmap
+                  preserve: true
+                  label: 显示年度热力图
+                  value: true
                 - $formkit: date
                   if: "$value.value === 'site-stats'"
                   name: site_start_date
@@ -1816,6 +1933,42 @@ spec:
                   aspectRatio: "1/1"
                   value: ""
                   help: "上传支付宝收款二维码图片（建议 1:1 正方形）"
+        - $formkit: group
+          name: immersiveReading
+          label: 沉浸式阅读
+          help: "文章页一键进入专注阅读模式（隐藏侧栏/装饰，正文限宽居中，配套目录抽屉）；仅桌面端（≥1024px）可用"
+          value:
+            enable: true
+            defaultOn: false
+            tocEnabled: true
+            tocPosition: left
+          children:
+            - $formkit: switch
+              name: enable
+              id: immersive_reading_enable
+              label: 启用
+              value: true
+            - $formkit: switch
+              name: defaultOn
+              id: immersive_reading_default_on
+              label: 进入文章页默认开启
+              value: false
+              help: "开启后访问文章页自动进入沉浸阅读模式"
+            - $formkit: switch
+              name: tocEnabled
+              id: immersive_reading_toc_enable
+              label: 显示目录抽屉
+              value: true
+            - $formkit: select
+              name: tocPosition
+              id: immersive_reading_toc_position
+              label: 目录位置
+              value: left
+              options:
+                - label: 左侧
+                  value: left
+                - label: 右侧
+                  value: right
     - group: extendPages
       label: 扩展页面
       formSchema:
@@ -2415,3 +2568,142 @@ spec:
               value: theme
             - label: Halo 默认
               value: halo
+    - group: effects
+      label: 特效
+      formSchema:
+        - $formkit: group
+          name: sakura
+          label: 樱花飘落
+          help: "全屏樱花飘落特效（自 Firefly 迁移），默认关闭；开启后需配合主题构建产物中 sakura.js 生效"
+          children:
+            - $formkit: switch
+              name: enable
+              id: sakura_enable
+              label: 启用樱花特效
+              value: false
+            - $formkit: number
+              name: sakuraNum
+              id: sakura_num
+              label: 樱花数量
+              value: 21
+              min: 1
+              max: 200
+              step: 1
+            - $formkit: number
+              name: limitTimes
+              id: sakura_limit_times
+              label: 越界循环次数
+              value: -1
+              min: -1
+              max: 100
+              step: 1
+              help: "花瓣飘出屏幕后的重置次数，-1 为无限循环"
+            - $formkit: group
+              name: size
+              label: 尺寸倍率
+              children:
+                - $formkit: number
+                  name: min
+                  id: sakura_size_min
+                  label: 最小
+                  value: 0.5
+                  min: 0.1
+                  max: 3
+                  step: 0.1
+                - $formkit: number
+                  name: max
+                  id: sakura_size_max
+                  label: 最大
+                  value: 1.1
+                  min: 0.1
+                  max: 3
+                  step: 0.1
+            - $formkit: group
+              name: opacity
+              label: 不透明度
+              children:
+                - $formkit: number
+                  name: min
+                  id: sakura_opacity_min
+                  label: 最小
+                  value: 0.3
+                  min: 0.1
+                  max: 1
+                  step: 0.05
+                - $formkit: number
+                  name: max
+                  id: sakura_opacity_max
+                  label: 最大
+                  value: 0.9
+                  min: 0.1
+                  max: 1
+                  step: 0.05
+            - $formkit: group
+              name: speed
+              label: 速度
+              children:
+                - $formkit: group
+                  name: horizontal
+                  label: 水平速度
+                  children:
+                    - $formkit: number
+                      name: min
+                      id: sakura_speed_h_min
+                      label: 最小
+                      value: -1.7
+                      min: -5
+                      max: 5
+                      step: 0.1
+                    - $formkit: number
+                      name: max
+                      id: sakura_speed_h_max
+                      label: 最大
+                      value: -1.2
+                      min: -5
+                      max: 5
+                      step: 0.1
+                - $formkit: group
+                  name: vertical
+                  label: 垂直速度
+                  children:
+                    - $formkit: number
+                      name: min
+                      id: sakura_speed_v_min
+                      label: 最小
+                      value: 1.5
+                      min: 0
+                      max: 10
+                      step: 0.1
+                    - $formkit: number
+                      name: max
+                      id: sakura_speed_v_max
+                      label: 最大
+                      value: 2.2
+                      min: 0
+                      max: 10
+                      step: 0.1
+                - $formkit: number
+                  name: rotation
+                  id: sakura_speed_rotation
+                  label: 旋转速度
+                  value: 0.03
+                  min: 0
+                  max: 1
+                  step: 0.01
+                - $formkit: number
+                  name: fadeSpeed
+                  id: sakura_speed_fade
+                  label: 消失速度
+                  value: 0.03
+                  min: 0.001
+                  max: 1
+                  step: 0.01
+                  help: "不应大于最小不透明度"
+            - $formkit: number
+              name: zIndex
+              id: sakura_zindex
+              label: 层级 (z-index)
+              value: 100
+              min: 0
+              max: 9999
+              step: 1

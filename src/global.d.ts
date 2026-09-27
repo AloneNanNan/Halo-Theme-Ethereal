@@ -20,5 +20,7 @@ declare global {
     // 当前文章 URL 同步（scripts/assets/post-share.ts）
     __etherealSyncCurrentPostUrl?: () => void;
     __etherealSyncCurrentPostUrlBound?: boolean;
+    // 全屏壁纸视差/模糊斜坡绑定标记（scripts/assets/fullscreen-hero.ts）
+    __fullscreenHeroBound?: boolean;
   }
 }
