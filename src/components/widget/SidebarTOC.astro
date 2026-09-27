@@ -1,0 +1,48 @@
+---
+import TOC from "./TOC.astro";
+
+/**
+ * 侧边栏目录卡片：左右两栏共用（勿复制第二份）。
+ *
+ * 高度契约：卡片高度跟着内容走——条目少就矮、条目多就撑到吸顶块限高（见 Layout.astro
+ * 侧栏段落）后内部滚动；吸顶块被限高时，卡片是唯一承担伸缩的项（吸顶组件被
+ * `flex-shrink: 0` 钉住自然高度），滚动由内层 #toc-inner-wrapper-sidebar 承担。
+ *
+ * ⚠️ 三处 flex 写法都不能随手改成 flex-1（`flex: 1 1 0%`），原理都是
+ * 「负空间按 收缩系数 × flex-basis 分摊，basis 为 0 的那一项既不缩也不长」：
+ * 1. 卡片：必须 flex-auto（`flex: 1 1 auto`）。basis 为 0 时卡片不参与收缩，限高变化
+ *    （如导航栏出现让出 72px）会全部砸到吸顶组件上把它们压扁。
+ * 2. 内层滚动区：必须 flex-auto（本元素）。basis 为 0 时它对卡片的内容高贡献为 0，
+ *    卡片的 basis 只剩标题高 → 卡片被外墙的 min-h 钉死：单条目录留一大块空白、
+ *    长目录把条目全塞进几十像素的小滚动区（实测 20 条时只有 140px 可滚）。
+ * 3. min-h 保底取 6rem（≈「标题 + 1 个条目」的自然高度）：只为「两个吸顶组件本身
+ *    快到一屏」这类极端情况兜底，日常不会撑出空白。无目录时由 Layout.astro 用
+ *    `:has([data-toc-empty]:not(.hidden))` 撤掉保底并把卡片收回内容高度。
+ *
+ * 显示门控（文章页 / 主题开启目录 / 目录在本栏）由调用方的 th:if 负责：
+ * 左栏见 SideBar.astro 的 #sidebar-toc，右栏见 RightSideBar.astro 的 #right-sidebar-toc。
+ */
+---
+
+<div
+  class="card-base hidden md:flex min-h-[6rem] flex-auto flex-col overflow-hidden pb-0"
+>
+  <div
+    class="relative mb-2 ml-8 mt-4 shrink-0 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+    th:text="#{widget.toc.title}"
+  >
+    目录
+  </div>
+  {
+    /* data-toc-scroll：TOC 组件靠 closest("[data-toc-scroll]") 找滚动容器（不认 id），
+      故卡片换到任意一栏都成立；Layout.astro 的侧栏限高规则也用它做 :has() 判定，
+      改名会同时打断两处 */
+  }
+  <div
+    id="toc-inner-wrapper-sidebar"
+    data-toc-scroll
+    class="hide-scrollbar min-h-0 flex-auto overflow-x-hidden overflow-y-auto pb-4"
+  >
+    <TOC />
+  </div>
+</div>

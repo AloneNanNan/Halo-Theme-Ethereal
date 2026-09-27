@@ -432,7 +432,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
        客户端 isHomePath（utils/banner-sync.ts）为权威，换页时由 syncHomeClass 纠正 -->
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
-    th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '')}"
+    th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '') + (theme.config?.layout?.pageLayout?.layoutMode == 'two-column' and theme.config?.layout?.pageLayout?.rightSidebarMode ? ' layout-two-column-right' : '')}"
     th:style="|--bannerOffset: ${theme.config?.style?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.style?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.layout?.bannerLayout?.cardOpacity ?: 0.6};|"
     data-overlayscrollbars-initialize
   >
@@ -585,6 +585,94 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
+      /* 两栏布局「右栏模式」：侧栏挪到右侧（正文在左），两栏的悬浮目录镜像到左侧空白槽。
+         类挂在 <body> 上——#main-grid 与 #toc-container 是兄弟节点，只有 body 级类能同时
+         命中两者（既有的 .layout-two-column 挂在 #top-row 与面板 div 上，到不了 #toc-container，
+         别照抄那套作用域）。用 CSS 覆盖而不是加第二套 Tailwind 任意值类：同一属性两条
+         任意值工具类谁生效取决于产物里的生成顺序，不可靠 */
+      body.layout-two-column-right #toc-wrapper {
+        right: auto !important;
+        left: calc(-1 * var(--toc-width)) !important;
+      }
+      @media (min-width: 768px) {
+        body.layout-two-column-right #main-grid {
+          grid-template-columns: 1fr 17.5rem !important;
+        }
+        body.layout-two-column-right #main-column {
+          grid-column-start: 1 !important;
+        }
+        body.layout-two-column-right #sidebar {
+          grid-column-start: 2 !important;
+        }
+      }
+
+      /* 配置了「移动端小组件」时：移动端隐藏左右两栏。
+         类由 MobileSideBar.astro 的内联脚本在**挂载成功后**加到 <html>（不是服务端
+         渲染时就加）——脚本没跑（禁用 JS、报错）时类不存在，移动端照旧显示左右两栏，
+         不会因为"移动端列表没挂上"而白屏。断点与 Tailwind 的 md 一致（768px） */
+      @media (max-width: 767.98px) {
+        html.has-mobile-sidebar #sidebar,
+        html.has-mobile-sidebar #right-sidebar {
+          display: none !important;
+        }
+      }
+
+      /* 目录槽位：左右两栏各一个恒存在的 Swup 容器（见 SideBar.astro /
+         RightSideBar.astro），内容随换页替换。空壳时必须不产生盒子、也不占吸顶块的
+         flex gap，故 display:contents（不要用 Tailwind 的 .contents 类：下面按数量
+         隐藏组件的规则会误伤它） */
+      #sidebar-toc,
+      #right-sidebar-toc {
+        display: contents;
+      }
+
+      /* 侧栏含目录时的吸顶块（左右两栏同源规则）：
+         · max-height 必须扣除吸顶位置下移的让位量，否则目录底部会溢出屏幕下方；
+           --navbar-sticky-offset 只在 1024+ 块定义，低于该断点回退到导航栏高度
+         · 从 md 起生效——目录卡片是 hidden md:flex（<768px 走目录弹窗按钮），
+           手机上不能让一张看不见的卡片白吃两个吸顶名额、也不该限高
+         · :has(槽位 > *) 同时是按页门控：槽位是 Swup 容器，换页后里面有没有卡片由
+           服务端条件决定；无目录的页面（首页/分类页等）这些规则都不命中 →
+           吸顶组件照常全部显示、没有多余限高、也不会被裁 */
+      @media (min-width: 768px) {
+        #sidebar-sticky:has(#sidebar-toc > *),
+        #right-sidebar-sticky:has(#right-sidebar-toc > *) {
+          max-height: calc(
+            100vh - var(--navbar-sticky-offset, var(--navbar-height)) - 2rem
+          ) !important;
+          overflow: hidden !important;
+        }
+        /* 吸顶组件保持自然高度：差额只该由目录卡片承担。组件若参与收缩，导航栏出现
+           让出 72px 时限高变小，就会按比例把两块组件压扁——flex 负空间按「收缩系数 ×
+           flex-basis」分摊，目录卡片 basis 为 0 时完全不参与，压力全落到组件上。
+           .card-base 覆盖吸顶组件的三种形态（WidgetLayout / Profile / 自定义HTML），
+           widget 内部没有嵌套 .card-base，故不会误伤组件内部布局；
+           > :not(槽位) 把槽位排除在外 → 目录卡片不被钉住，仍可伸缩（见 SidebarTOC.astro） */
+        #sidebar-sticky:has(#sidebar-toc > *) > :not(#sidebar-toc) .card-base,
+        #right-sidebar-sticky:has(#right-sidebar-toc > *)
+          > :not(#right-sidebar-toc)
+          .card-base {
+          flex-shrink: 0;
+        }
+        /* 空目录（"此文章无目录"占位）时卡片回到内容高度：既不长大、也撤掉 min-h 保底，
+           否则一行提示会被撑在一整块空白卡片里（移动端弹窗目录是另一套容器，不受影响）。
+           [data-toc-empty] 的 hidden 类由 TOC 组件 init() 按有无标题切换，:has() 实时跟随 */
+        #sidebar-toc .card-base:has([data-toc-empty]:not(.hidden)),
+        #right-sidebar-toc .card-base:has([data-toc-empty]:not(.hidden)) {
+          flex-grow: 0;
+          min-height: 0;
+        }
+        /* 文章页只留前 2 个吸顶组件，把剩余高度让给目录（左右同源）。
+           排除槽位自身，否则「2 个吸顶组件 + 槽位」时槽位正好排在第 3 个被隐藏。
+           ⚠️ 折行不要落在 :has 前面——那会变成后代选择器（匹配不到任何元素） */
+        #sidebar-sticky:has(#sidebar-toc > *)
+          > :nth-child(n + 3):not(#sidebar-toc),
+        #right-sidebar-sticky:has(#right-sidebar-toc > *)
+          > :nth-child(n + 3):not(#right-sidebar-toc) {
+          display: none;
+        }
+      }
+
       /* 桌面端导航栏统一 fixed 定位固定在顶部（固定/非固定模式共用）。
          区别仅在「是否随滚动隐藏」：固定模式 navbar-hidden 强制 translate:none
          （永不隐藏）；非固定模式由 scroll-manager 按滚动方向加/移除 navbar-hidden
@@ -641,20 +729,19 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
             1rem - var(--banner-height-extend) + var(--navbar-sticky-offset)
           ) !important;
         }
-        /* 右侧栏吸顶（含文章目录）高度：吸顶位置下移了让位量，
-           max-height 必须同步扣除，否则目录底部会溢出屏幕下方 */
-        #right-sidebar-sticky:has(#toc-inner-wrapper-right) {
-          max-height: calc(
-            100vh - var(--navbar-sticky-offset) - 2rem
-          ) !important;
-        }
-        /* 侧边栏 top 过渡：与导航栏 --dur-scroll 同步（位移顺滑跟随收起/出现），
-           否则 class 切换会让侧边栏瞬间跳位，与导航栏 700ms 滑动错位。
+        /* 侧边栏 top / max-height 过渡：与导航栏 --dur-scroll 同步（位移顺滑跟随
+           收起/出现），否则 class 切换会让侧边栏瞬间跳位，与导航栏 700ms 滑动错位。
+           max-height 必须一起过渡：含目录的页面限高是
+           100vh - 让位量 - 2rem，导航栏出现时让位量 0 → 72px，限高瞬间少 72px，
+           而 72px 的负空间全由目录卡片承担（吸顶组件被 flex-shrink: 0 钉住），
+           于是目录"咔"地缩一截。两个属性同规则、同时长 → 与导航栏滑动同拍。
            注意：必须无条件挂在元素上——若只写在 .dynamic-navbar-hidden 里，
            移除该类时元素已失去 transition，回程会瞬跳 */
         #sidebar-sticky,
         #right-sidebar-sticky {
-          transition: top var(--dur-scroll, 700ms) ease !important;
+          transition:
+            top var(--dur-scroll, 700ms) ease,
+            max-height var(--dur-scroll, 700ms) ease !important;
         }
       }
     </style>

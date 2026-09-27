@@ -23,6 +23,14 @@ spec:
                 - label: 三栏布局
                   value: three-column
             - $formkit: switch
+              name: rightSidebarMode
+              key: rightSidebarMode_enable
+              preserve: true
+              if: "$get(layoutMode).value === 'two-column'"
+              label: 右栏模式
+              value: false
+              help: "两栏布局下将侧栏放到右侧。「左侧边栏小组件」列表的内容会显示在右侧，悬浮目录镜像到左侧空白槽"
+            - $formkit: switch
               name: categoryBar
               id: categoryBar_enable
               key: categoryBar_enable
@@ -930,17 +938,30 @@ spec:
           children:
             - $formkit: array
               name: widgets
-              label: 左侧边栏小部件
-              help: "在左侧边栏显示的部件，按顺序排列；点击部件进行详细配置"
+              label: 左侧边栏小组件
+              help: "在左侧边栏显示的小组件，按顺序排列（两栏布局开启「右栏模式」时显示在右侧）。每个小组件可单独设置是否吸顶，不吸顶的小组件需排在列表最前面；除「自定义HTML」外，其余小组件的详细配置都在本页下方对应的分组里"
               value:
+                - value: profile
+                  sticky: false
+                - value: announcement
+                  sticky: false
                 - value: categories
                 - value: tag
+              itemLabels:
+                - type: text
+                  label: $value.value
+                - type: text
+                  label: $value.name
               children:
                 - $formkit: select
                   name: value
                   id: widgets_value
-                  label: 部件
+                  label: 小组件
                   options:
+                    - label: 个人简介
+                      value: profile
+                    - label: 公告
+                      value: announcement
                     - label: 热门文章
                       value: popular-posts
                     - label: 文章分类
@@ -960,202 +981,19 @@ spec:
                     - label: 自定义HTML
                       value: html
                 - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_posts
-                  key: widget_site_stats_show_posts
-                  preserve: true
-                  label: 显示文章数
+                  name: sticky
+                  key: widget_sticky
+                  label: 吸顶
                   value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_categories
-                  key: widget_site_stats_show_categories
-                  preserve: true
-                  label: 显示分类数
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_tags
-                  key: widget_site_stats_show_tags
-                  preserve: true
-                  label: 显示标签数
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_total_words
-                  key: widget_site_stats_show_total_words
-                  preserve: true
-                  label: 显示总字数
-                  value: true
-                  help: "未安装「API 拓展包」插件时由客户端逐篇统计，文章较多会有额外请求"
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_last_activity
-                  key: widget_site_stats_show_last_activity
-                  preserve: true
-                  label: 显示最后活动
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_running_days
-                  key: widget_site_stats_show_running_days
-                  preserve: true
-                  label: 显示运行天数
-                  value: true
-                  help: "需同时在下方选择网站上线日期，未选择则不显示该项"
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_visits
-                  key: widget_site_stats_show_visits
-                  preserve: true
-                  label: 显示访问量
-                  value: false
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_upvotes
-                  key: widget_site_stats_show_upvotes
-                  preserve: true
-                  label: 显示点赞数
-                  value: false
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_comments
-                  key: widget_site_stats_show_comments
-                  preserve: true
-                  label: 显示评论数
-                  value: false
-                - $formkit: date
-                  if: "$value.value === 'site-stats'"
-                  name: site_start_date
-                  key: widget_site_stats_site_start_date
-                  preserve: true
-                  label: 网站上线日期
-                  help: "用于计算运行天数，留空则不显示运行天数"
+                  help: "勾选后该小组件随页面滚动停靠在侧边栏顶部；取消勾选则随页面一起滚走。不吸顶的小组件必须排在列表最前面：若它前面已存在勾选吸顶的小组件，本项会自动回退为吸顶"
                 - $formkit: text
-                  if: "$value.value === 'weather'"
-                  name: tencent_key
-                  key: widget_weather_tencent_key
+                  if: "$value.value === 'html'"
+                  name: name
+                  key: widget_html_name
                   preserve: true
-                  label: 腾讯位置服务 Key
+                  label: 名称
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
-                - $formkit: text
-                  if: "$value.value === 'weather'"
-                  name: default_city
-                  key: widget_weather_default_city
-                  preserve: true
-                  label: 默认城市编码
-                  value: "110000"
-                  help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
-                - $formkit: url
-                  if: "$value.value === 'hitokoto'"
-                  name: hitokoto_api
-                  key: widget_hitokoto_api
-                  preserve: true
-                  label: 一言 API 地址
-                  value: ""
-                  help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
-                - $formkit: text
-                  if: "$value.value === 'hitokoto'"
-                  name: fallback_text
-                  key: widget_hitokoto_fallback_text
-                  preserve: true
-                  label: 获取失败文案
-                  value: "世界很大，开心第一。"
-                  help: "一言获取失败时显示的句子"
-                - $formkit: text
-                  if: "$value.value === 'hitokoto'"
-                  name: fallback_source
-                  key: widget_hitokoto_fallback_source
-                  preserve: true
-                  label: 获取失败来源
-                  value: "楠南NanNan"
-                  help: "一言获取失败时显示的作者或来源"
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: server
-                  key: widget_music_server
-                  preserve: true
-                  label: 平台
-                  value: netease
-                  options:
-                    - label: 网易云音乐
-                      value: netease
-                    - label: QQ 音乐
-                      value: tencent
-                    - label: 酷狗音乐
-                      value: kugou
-                    - label: 虾米音乐
-                      value: xiami
-                    - label: 百度音乐
-                      value: baidu
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: type
-                  key: widget_music_type
-                  preserve: true
-                  label: 类型
-                  value: playlist
-                  options:
-                    - label: 歌曲
-                      value: song
-                    - label: 歌单
-                      value: playlist
-                    - label: 专辑
-                      value: album
-                    - label: 歌手
-                      value: artist
-                    - label: 搜索
-                      value: search
-                - $formkit: text
-                  if: "$value.value === 'music'"
-                  name: id
-                  key: widget_music_id
-                  preserve: true
-                  label: ID
-                  validation: required
-                  help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: play_mode
-                  key: widget_music_play_mode
-                  preserve: true
-                  label: 播放模式
-                  value: list
-                  options:
-                    - label: 列表循环
-                      value: list
-                    - label: 单曲循环
-                      value: one
-                    - label: 随机
-                      value: random
-                - $formkit: number
-                  if: "$value.value === 'music'"
-                  name: volume
-                  key: widget_music_volume
-                  preserve: true
-                  label: 默认音量
-                  min: 0
-                  max: 1
-                  step: 0.1
-                  value: 0.7
-                - $formkit: url
-                  if: "$value.value === 'music'"
-                  name: music_api
-                  key: widget_music_api
-                  preserve: true
-                  label: 自定义 Meting API
-                  help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
-                - $formkit: number
-                  if: "$value.value === 'schedule'"
-                  name: limit
-                  key: widget_schedule_limit
-                  preserve: true
-                  label: 显示条数
-                  min: 1
-                  max: 10
-                  value: 3
-                  help: "显示最近日程的条数，最多10条，显示过多会导致小组件过高，建议保持默认"
+                  help: "仅用于后台条目列表分辨是哪个自定义块，不影响前台显示"
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
@@ -1165,17 +1003,26 @@ spec:
                   value: "<p>自定义HTML</p>"
             - $formkit: array
               name: rightWidgets
-              label: 右侧边栏小部件
-              help: "仅三栏布局（布局设置中的页面布局）下生效，两栏布局时不显示右侧边栏;点击部件进行详细配置"
+              label: 右侧边栏小组件
+              help: "在右侧边栏显示的小组件，仅「布局设置 → 页面布局 → 三栏布局」下生效。每个小组件可单独设置是否吸顶，不吸顶的小组件需排在列表最前面；除「自定义HTML」外，其余小组件的详细配置都在本页下方对应的分组里"
               value:
                 - value: hitokoto
                 - value: site-stats
+              itemLabels:
+                - type: text
+                  label: $value.value
+                - type: text
+                  label: $value.name
               children:
                 - $formkit: select
                   name: value
                   id: right_widgets_value
-                  label: 部件
+                  label: 小组件
                   options:
+                    - label: 个人简介
+                      value: profile
+                    - label: 公告
+                      value: announcement
                     - label: 热门文章
                       value: popular-posts
                     - label: 文章分类
@@ -1195,202 +1042,19 @@ spec:
                     - label: 自定义HTML
                       value: html
                 - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_posts
-                  key: right_widget_site_stats_show_posts
-                  preserve: true
-                  label: 显示文章数
+                  name: sticky
+                  key: right_widget_sticky
+                  label: 吸顶
                   value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_categories
-                  key: right_widget_site_stats_show_categories
-                  preserve: true
-                  label: 显示分类数
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_tags
-                  key: right_widget_site_stats_show_tags
-                  preserve: true
-                  label: 显示标签数
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_total_words
-                  key: right_widget_site_stats_show_total_words
-                  preserve: true
-                  label: 显示总字数
-                  value: true
-                  help: "未安装「API 拓展包」插件时由客户端逐篇统计，文章较多会有额外请求"
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_last_activity
-                  key: right_widget_site_stats_show_last_activity
-                  preserve: true
-                  label: 显示最后活动
-                  value: true
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_running_days
-                  key: right_widget_site_stats_show_running_days
-                  preserve: true
-                  label: 显示运行天数
-                  value: true
-                  help: "需同时在下方选择网站上线日期，未选择则不显示该项"
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_visits
-                  key: right_widget_site_stats_show_visits
-                  preserve: true
-                  label: 显示访问量
-                  value: false
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_upvotes
-                  key: right_widget_site_stats_show_upvotes
-                  preserve: true
-                  label: 显示点赞数
-                  value: false
-                - $formkit: checkbox
-                  if: "$value.value === 'site-stats'"
-                  name: show_comments
-                  key: right_widget_site_stats_show_comments
-                  preserve: true
-                  label: 显示评论数
-                  value: false
-                - $formkit: date
-                  if: "$value.value === 'site-stats'"
-                  name: site_start_date
-                  key: right_widget_site_stats_site_start_date
-                  preserve: true
-                  label: 网站上线日期
-                  help: "用于计算运行天数，留空则不显示运行天数"
+                  help: "勾选后该小组件随页面滚动停靠在侧边栏顶部；取消勾选则随页面一起滚走。不吸顶的小组件必须排在列表最前面：若它前面已存在勾选吸顶的小组件，本项会自动回退为吸顶"
                 - $formkit: text
-                  if: "$value.value === 'weather'"
-                  name: tencent_key
-                  key: right_widget_weather_tencent_key
+                  if: "$value.value === 'html'"
+                  name: name
+                  key: right_widget_html_name
                   preserve: true
-                  label: 腾讯位置服务 Key
+                  label: 名称
                   value: ""
-                  help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。对【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求。"
-                - $formkit: text
-                  if: "$value.value === 'weather'"
-                  name: default_city
-                  key: right_widget_weather_default_city
-                  preserve: true
-                  label: 默认城市编码
-                  value: "110000"
-                  help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
-                - $formkit: url
-                  if: "$value.value === 'hitokoto'"
-                  name: hitokoto_api
-                  key: right_widget_hitokoto_api
-                  preserve: true
-                  label: 一言 API 地址
-                  value: ""
-                  help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
-                - $formkit: text
-                  if: "$value.value === 'hitokoto'"
-                  name: fallback_text
-                  key: right_widget_hitokoto_fallback_text
-                  preserve: true
-                  label: 获取失败文案
-                  value: "世界很大，开心第一。"
-                  help: "一言获取失败时显示的句子"
-                - $formkit: text
-                  if: "$value.value === 'hitokoto'"
-                  name: fallback_source
-                  key: right_widget_hitokoto_fallback_source
-                  preserve: true
-                  label: 获取失败来源
-                  value: "楠南NanNan"
-                  help: "一言获取失败时显示的作者或来源"
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: server
-                  key: right_widget_music_server
-                  preserve: true
-                  label: 平台
-                  value: netease
-                  options:
-                    - label: 网易云音乐
-                      value: netease
-                    - label: QQ 音乐
-                      value: tencent
-                    - label: 酷狗音乐
-                      value: kugou
-                    - label: 虾米音乐
-                      value: xiami
-                    - label: 百度音乐
-                      value: baidu
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: type
-                  key: right_widget_music_type
-                  preserve: true
-                  label: 类型
-                  value: playlist
-                  options:
-                    - label: 歌曲
-                      value: song
-                    - label: 歌单
-                      value: playlist
-                    - label: 专辑
-                      value: album
-                    - label: 歌手
-                      value: artist
-                    - label: 搜索
-                      value: search
-                - $formkit: text
-                  if: "$value.value === 'music'"
-                  name: id
-                  key: right_widget_music_id
-                  preserve: true
-                  label: ID
-                  validation: required
-                  help: 歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词
-                - $formkit: select
-                  if: "$value.value === 'music'"
-                  name: play_mode
-                  key: right_widget_music_play_mode
-                  preserve: true
-                  label: 播放模式
-                  value: list
-                  options:
-                    - label: 列表循环
-                      value: list
-                    - label: 单曲循环
-                      value: one
-                    - label: 随机
-                      value: random
-                - $formkit: number
-                  if: "$value.value === 'music'"
-                  name: volume
-                  key: right_widget_music_volume
-                  preserve: true
-                  label: 默认音量
-                  min: 0
-                  max: 1
-                  step: 0.1
-                  value: 0.7
-                - $formkit: url
-                  if: "$value.value === 'music'"
-                  name: music_api
-                  key: right_widget_music_api
-                  preserve: true
-                  label: 自定义 Meting API
-                  help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
-                - $formkit: number
-                  if: "$value.value === 'schedule'"
-                  name: limit
-                  key: right_widget_schedule_limit
-                  preserve: true
-                  label: 显示条数
-                  min: 1
-                  max: 10
-                  value: 3
-                  help: "显示最近日程的条数，最多10条，显示过多会导致小组件过高，建议保持默认"
+                  help: "仅用于后台条目列表分辨是哪个自定义块，不影响前台显示"
                 - $formkit: textarea
                   if: "$value.value === 'html'"
                   name: html
@@ -1398,53 +1062,82 @@ spec:
                   preserve: true
                   label: HTML
                   value: "<p>自定义HTML</p>"
+            - $formkit: array
+              name: mobileWidgets
+              label: 移动端小组件
+              help: "单独配置移动端显示的小组件以及顺序，留空则沿用上面两个列表的条目与顺序（左栏+右栏）"
+              value: []
+              itemLabels:
+                - type: text
+                  label: $value.value
+                - type: text
+                  label: $value.name
+              children:
+                - $formkit: select
+                  name: value
+                  id: mobile_widgets_value
+                  label: 小组件
+                  options:
+                    - label: 个人简介
+                      value: profile
+                    - label: 公告
+                      value: announcement
+                    - label: 热门文章
+                      value: popular-posts
+                    - label: 文章分类
+                      value: categories
+                    - label: 文章标签
+                      value: tag
+                    - label: 音乐播放器
+                      value: music
+                    - label: 一言
+                      value: hitokoto
+                    - label: 站点统计
+                      value: site-stats
+                    - label: 天气
+                      value: weather
+                    - label: 最近日程
+                      value: schedule
+                    - label: 自定义HTML
+                      value: html
+                - $formkit: text
+                  if: "$value.value === 'html'"
+                  name: name
+                  key: mobile_widget_html_name
+                  preserve: true
+                  label: 名称
+                  value: ""
+                  help: "仅用于后台条目列表分辨是哪个自定义块，不影响前台显示"
+                - $formkit: textarea
+                  if: "$value.value === 'html'"
+                  name: html
+                  key: mobile_widget_html_html
+                  preserve: true
+                  label: HTML
+                  value: "<p>自定义HTML</p>"
         - $formkit: group
           name: profile
           label: 个人简介小组件
-          value:
-            enable_profile: true
-            display_position: left
+          help: "把「个人简介」加入任一侧边栏列表即显示"
           children:
-            - $formkit: switch
-              name: enable_profile
-              id: enable_profile_switch
-              value: true
-              label: 启用个人简介小组件
-              help: "开启后显示个人简介小组件（位于侧边栏首位，不参与吸顶，随页面滚动）"
-            - $formkit: select
-              name: display_position
-              if: "$get(enable_profile_switch).value"
-              label: 个人简介小组件显示位置
-              value: left
-              help: "选择个人简介小组件显示在左侧还是右侧侧边栏，两栏布局时仅显示在左侧"
-              options:
-                - label: 左侧边栏
-                  value: left
-                - label: 右侧边栏
-                  value: right
             - $formkit: attachment
               name: avatar
-              if: "$get(enable_profile_switch).value"
               value: /themes/Ethereal/assets/images/demo-avatar.png
               label: 头像
             - $formkit: text
               name: name
-              if: "$get(enable_profile_switch).value"
               label: 昵称
               value: NanNan
             - $formkit: text
               name: bio
-              if: "$get(enable_profile_switch).value"
               label: 简介
               value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
             - $formkit: url
               name: url
-              if: "$get(enable_profile_switch).value"
               label: 链接(点击跳转登录和后台可使用 /login )
               value: /about
             - $formkit: array
               name: social_media
-              if: "$get(enable_profile_switch).value"
               label: 社交媒体
               children:
                 - $formkit: iconify
@@ -1461,7 +1154,6 @@ spec:
                   validation: "required"
             - $formkit: group
               name: statusSettings
-              if: "$get(enable_profile_switch).value"
               label: 在线状态
               help: "昵称右侧的状态表情与展示文案"
               value:
@@ -1575,9 +1267,8 @@ spec:
         - $formkit: group
           name: announcement
           label: 公告小组件
+          help: "把「公告」加入任一侧边栏列表即显示"
           value:
-            enable: false
-            position: left
             content: "欢迎来到我的博客！这是一则示例公告。"
             closable: true
             link:
@@ -1586,33 +1277,14 @@ spec:
               url: ""
               external: false
           children:
-            - $formkit: switch
-              name: enable
-              id: announcement_enable
-              label: 启用公告
-              value: false
-              help: "开启后显示公告小组件（侧边栏首位为个人简介小组件时显示在第二位），不参与吸顶，随页面滚动"
-            - $formkit: select
-              name: position
-              if: "$get(announcement_enable).value"
-              label: 显示位置
-              value: left
-              help: "公告仅可显示在左侧边栏或右侧边栏，两栏布局时仅显示在左侧"
-              options:
-                - label: 左侧边栏
-                  value: left
-                - label: 右侧边栏
-                  value: right
             - $formkit: textarea
               name: content
-              if: "$get(announcement_enable).value"
               label: 公告内容
               value: "欢迎来到我的博客！这是一则示例公告。"
             - $formkit: switch
               name: enable_html
               id: announcement_enable_html
               key: announcement_enable_html
-              if: "$get(announcement_enable).value"
               label: 内容呈现为HTML
               value: false
               help: "开启后按 HTML 渲染（可写链接、图标、富文本），关闭时按纯文本显示。样式请用 px/rem 固定值；内容不过滤，只填可信 HTML；带脚本时用类选择器而非 id 初始化。"
@@ -1628,13 +1300,11 @@ spec:
               help: "内容区高度由 HTML 自身决定，超过此值则在公告内部滚动；留空使用默认 640px"
             - $formkit: switch
               name: closable
-              if: "$get(announcement_enable).value"
               label: 允许关闭
               value: true
               help: "开启后访客可点击关闭按钮隐藏公告"
             - $formkit: group
               name: link
-              if: "$get(announcement_enable).value"
               label: 链接设置
               children:
                 - $formkit: switch
@@ -1658,6 +1328,191 @@ spec:
                   label: 外部链接
                   value: false
                   help: "开启后在新标签页打开"
+        - $formkit: group
+          name: siteStats
+          label: 站点统计小组件
+          help: "把「站点统计」加入任一侧边栏列表即显示；未勾选任何统计项时整个小组件不渲染"
+          value:
+            items:
+              - posts
+              - categories
+              - tags
+              - total_words
+              - last_activity
+              - running_days
+            site_start_date: ""
+          children:
+            - $formkit: select
+              name: items
+              label: 统计项
+              multiple: true
+              sortable: true
+              clearable: true
+              placeholder: 选择要展示的统计项
+              value:
+                - posts
+                - categories
+                - tags
+                - total_words
+                - last_activity
+                - running_days
+              help: "可多选，勾选顺序即前台展示顺序；未勾选任何统计项时不显示该小组件"
+              options:
+                - label: 文章数量
+                  value: posts
+                  description: 展示文章数量
+                - label: 分类数量
+                  value: categories
+                  description: 展示分类数量
+                - label: 标签数量
+                  value: tags
+                  description: 展示标签数量
+                - label: 总字数
+                  value: total_words
+                  description: 建议安装「API 拓展包」，未安装时客户端逐篇统计
+                - label: 最后活动
+                  value: last_activity
+                  description: 展示最近一篇文章的发布时间
+                - label: 运行天数
+                  value: running_days
+                  description: 展示运行天数，需填写下方网站上线日期
+                - label: 访问量
+                  value: visits
+                  description: 展示访问量
+                - label: 点赞数
+                  value: upvotes
+                  description: 展示点赞数
+                - label: 评论数
+                  value: comments
+                  description: 展示评论数
+            - $formkit: date
+              name: site_start_date
+              label: 网站上线日期
+              help: "用于计算运行天数，留空则不显示运行天数"
+        - $formkit: group
+          name: weather
+          label: 天气小组件
+          help: "把「天气」加入任一侧边栏列表即显示；此处的 Key 同时被欢迎弹窗的 IP 定位复用"
+          value:
+            tencent_key: ""
+            default_city: "110000"
+          children:
+            - $formkit: text
+              name: tencent_key
+              label: 腾讯位置服务 Key
+              value: ""
+              help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。请对控制台【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求"
+            - $formkit: text
+              name: default_city
+              label: 默认城市编码
+              value: "110000"
+              help: "IP定位失败时的回退城市，填写行政区划编码如 110000（北京）或 310000（上海）"
+        - $formkit: group
+          name: hitokoto
+          label: 一言小组件
+          help: "把「一言」加入任一侧边栏列表即显示"
+          value:
+            hitokoto_api: ""
+            fallback_text: "世界很大，开心第一。"
+            fallback_source: "楠南NanNan"
+          children:
+            - $formkit: url
+              name: hitokoto_api
+              label: 一言 API 地址
+              value: ""
+              help: "留空则使用内置默认一言 API（https://v1.hitokoto.cn/）"
+            - $formkit: text
+              name: fallback_text
+              label: 获取失败文案
+              value: "世界很大，开心第一。"
+              help: "一言获取失败时显示的句子"
+            - $formkit: text
+              name: fallback_source
+              label: 获取失败来源
+              value: "楠南NanNan"
+              help: "一言获取失败时显示的作者或来源"
+        - $formkit: group
+          name: music
+          label: 音乐播放器小组件
+          help: "把「音乐播放器」加入任一侧边栏列表即显示"
+          value:
+            server: netease
+            type: playlist
+            id: ""
+            play_mode: list
+            volume: 0.7
+            music_api: ""
+          children:
+            - $formkit: select
+              name: server
+              label: 平台
+              value: netease
+              options:
+                - label: 网易云音乐
+                  value: netease
+                - label: QQ 音乐
+                  value: tencent
+                - label: 酷狗音乐
+                  value: kugou
+                - label: 虾米音乐
+                  value: xiami
+                - label: 百度音乐
+                  value: baidu
+            - $formkit: select
+              name: type
+              label: 类型
+              value: playlist
+              options:
+                - label: 歌曲
+                  value: song
+                - label: 歌单
+                  value: playlist
+                - label: 专辑
+                  value: album
+                - label: 歌手
+                  value: artist
+                - label: 搜索
+                  value: search
+            - $formkit: text
+              name: id
+              label: ID
+              help: "歌曲 / 歌单 / 专辑 / 歌手 ID，搜索类型时填写关键词。请填写，未填写时前台显示「音乐播放器未配置 ID」提示"
+            - $formkit: select
+              name: play_mode
+              label: 播放模式
+              value: list
+              options:
+                - label: 列表循环
+                  value: list
+                - label: 单曲循环
+                  value: one
+                - label: 随机
+                  value: random
+            - $formkit: number
+              name: volume
+              label: 默认音量
+              min: 0
+              max: 1
+              step: 0.1
+              value: 0.7
+            - $formkit: url
+              name: music_api
+              label: 自定义 Meting API
+              help: 留空时使用 MetingJS 默认 API，地址可包含 :server、:type、:id、:r 占位符
+        - $formkit: group
+          name: schedule
+          label: 最近日程小组件
+          help: "把「最近日程」加入任一侧边栏列表即显示；需安装日程日历插件"
+          value:
+            limit: 3
+          children:
+            - $formkit: number
+              name: limit
+              label: 显示条数
+              min: 1
+              max: 10
+              value: 3
+              help: "显示最近日程的条数，最多10条，显示过多会导致小组件过高，建议保持默认"
     - group: post
       label: 文章
       formSchema:
@@ -1733,6 +1588,7 @@ spec:
           label: 目录
           value:
             enable_toc: true
+            position: right
             toc_depth: 2
           children:
             - $formkit: switch
@@ -1741,6 +1597,19 @@ spec:
               label: 启用目录
               value: true
               help: "启用目录"
+            - $formkit: select
+              name: position
+              key: toc_position
+              preserve: true
+              if: "$get(toc_enable).value"
+              label: 目录位置
+              value: right
+              options:
+                - value: right
+                  label: 右侧边栏
+                - value: left
+                  label: 左侧边栏
+              help: "三栏布局下目录所在栏。该栏在文章页只保留前 2 个吸顶组件给目录腾空间；两栏布局不受影响，仍用悬浮目录"
             - $formkit: number
               name: toc_depth
               if: "$get(toc_enable).value"

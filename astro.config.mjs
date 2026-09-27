@@ -99,11 +99,16 @@ export default defineConfig({
       animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
       // the default value `transition-` cause transition delay
       // when the Tailwind class `transition-all` is used
+      // 两侧栏本身都**不是**容器（换页不更新）：小组件全是全局配置，不做替换能省掉
+      // 每页重跑脚本（音乐播放器重建、天气重复扫描、一言换句）与状态重置；唯一「按页
+      // 变化」的内容是目录，故只为目录各留一个槽位容器：#sidebar-toc / #right-sidebar-toc。
+      // ⚠️ 容器必须在每个主题页存在，否则 app.ts 的 page:load 守卫会让整站换页 abort
       containers: [
         "#swup-container",
         "#toc-container",
-        "#right-sidebar",
         "#toc-popup",
+        "#sidebar-toc",
+        "#right-sidebar-toc",
       ],
       // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"）：app.ts 在
       // content:scroll 接管并调用 window.scrollTo 原生平滑，插件的

@@ -1,22 +1,41 @@
 ---
-import Announcement from "./Announcement.astro";
 import Categories from "./Categories.astro";
-import Hitokoto from "./Hitokoto.astro";
-import MusicPlayer from "./MusicPlayer.astro";
-import PopularPosts from "./PopularPosts.astro";
-import Profile from "./Profile.astro";
-import Schedule from "./Schedule.astro";
-import SiteStats from "./SiteStats.astro";
+import SidebarTOC from "./SidebarTOC.astro";
 import Tags from "./Tags.astro";
-import Weather from "./Weather.astro";
 
 interface Props {
   class?: string;
+  /** 当前页是否为带目录的页面（文章页），由 MainGridLayout 按路由传入 */
+  showToc?: boolean;
   "th:classappend"?: string;
 }
 
 const className = Astro.props.class;
+const showToc = Astro.props.showToc || false;
 const thClassappend = Astro.props["th:classappend"] || "";
+// 小组件分派片段的引用表达式：片段在 WidgetSwitch.astro 定义一次（全站一套），
+// 这里只留一行引用，条目配置以参数传入（详见 WidgetSwitch.astro 顶部注释）
+const widgetSwitchReplace = "~{::widgetSwitch(${widget})}";
+
+/**
+ * 吸顶前缀规则：条目「未勾选吸顶」且它前面所有条目也都未勾选时，才归入不吸顶区；
+ * 前面一旦出现过勾选吸顶的条目，后面的未勾选条目一律回退为吸顶。
+ *
+ * 判定写作「前缀中未勾选吸顶的条目数 == 当前下标」——前缀规则下与「前面没有勾选项」
+ * 等价。选择器 .?[] 内部只引用 #this，不触 Thymeleaf 上下文变量，规避 SpringEL 7
+ * 在列表选择/投影内解析上下文变量抛 EL1008E 的已知坑（见 archives.astro 顶部注释）。
+ */
+const nonStickyExpr = `widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky == false].size() == widgetStat.index`;
+const nonStickyIf = `\${${nonStickyExpr}}`;
+const stickyIf = `\${not (${nonStickyExpr})}`;
+// 不吸顶区只可能是一段前缀，故「列表首项不吸顶」即代表该区有内容
+const hasNonStickyIf = `\${widgets != null and not #lists.isEmpty(widgets) and widgets[0].sticky == false}`;
+// 左栏目录卡片：目录位置配置为 left、且非两栏布局（两栏继续用 #toc-container 的悬浮目录）。
+// position / layoutMode 都是运行时主题配置，只能在 Thymeleaf 侧判断，故用 th:with 引入
+// tocOnLeft 变量。tocEnabledExpr 与右栏各留一份（有意重复，两份条件必须一致）
+const tocEnabledExpr =
+  "theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc";
+const tocIf = showToc ? `\${tocOnLeft and (${tocEnabledExpr})}` : "false";
 ---
 
 <aside
@@ -25,85 +44,50 @@ const thClassappend = Astro.props["th:classappend"] || "";
   th:classappend={thClassappend}
 >
   <div
-    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position != 'right'}"
-    class="mb-4 flex w-full flex-col gap-4"
+    th:with="widgets=${theme.config?.sidebar?.widgetsConfig?.widgets}, tocOnLeft=${theme.config?.post?.toc?.position == 'left' and theme.config?.layout?.pageLayout?.layoutMode != 'two-column'}"
+    th:remove="tag"
   >
-    <Profile />
-  </div>
-  <div
-    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.sidebar?.profile?.display_position == 'right'}"
-    class="mb-4 flex w-full flex-col gap-4"
-    th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:!hidden'}"
-  >
-    <Profile />
-  </div>
-  <!-- 公告：非吸顶，Profile 之后、小组件之前；两栏布局时即使设置为右侧也显示在左侧 -->
-  <div
-    th:if="${theme.config?.sidebar?.announcement?.enable != false and (theme.config?.sidebar?.announcement?.position != 'right' or theme.config?.layout?.pageLayout?.layoutMode == 'two-column')}"
-    class="mb-4 flex w-full flex-col gap-4"
-  >
-    <Announcement class="onload-animation" />
-  </div>
-  <!-- 公告（position=right，三栏布局）：移动端在左侧栏兜底显示（桌面隐藏，由右侧栏渲染），
-       保证移动端公告始终显示在 Profile 之后、小组件之前 -->
-  <div
-    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right' and theme.config?.layout?.pageLayout?.layoutMode != 'two-column'}"
-    class="mb-4 flex w-full flex-col gap-4"
-    th:classappend="${'xl:!hidden'}"
-  >
-    <Announcement class="onload-animation" />
-  </div>
-  <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
-    <div
-      class="contents"
-      th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.widgets}"
-    >
-      <div class="contents" th:switch="${widget.value}">
-        <div class="contents" th:case="'categories'">
-          <Categories class="onload-animation" />
-        </div>
-        <div class="contents" th:case="'tag'">
-          <Tags class="onload-animation" />
-        </div>
-        <div class="contents" th:case="'music'">
-          <MusicPlayer
-            class="onload-animation"
-            th:style="|animation-delay: min(calc(var(--content-delay) + ${widgetStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-          />
-        </div>
-        <div class="contents" th:case="'hitokoto'">
-          <Hitokoto class="onload-animation" />
-        </div>
-        <div class="contents" th:case="'site-stats'">
-          <SiteStats class="onload-animation" />
-        </div>
-        <div class="contents" th:case="'weather'">
-          <Weather
-            class="onload-animation"
-            th:style="|animation-delay: min(calc(var(--content-delay) + ${widgetStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-          />
-        </div>
-        <div class="contents" th:case="'popular-posts'">
-          <PopularPosts class="onload-animation" />
-        </div>
-        <div class="contents" th:case="'schedule'">
-          <Schedule class="onload-animation" />
-        </div>
-        <div
-          th:case="'html'"
-          class="card-base onload-animation p-4"
-          th:utext="${widget.html}"
-        >
-        </div>
+    {/* 不吸顶区：正常流，排在吸顶块之前，随页面一起滚走 */}
+    <div class="mb-4 flex w-full flex-col gap-4" th:if={hasNonStickyIf}>
+      <div
+        class="contents"
+        th:each="widget, widgetStat : ${widgets}"
+        th:if={nonStickyIf}
+      >
+        <div th:replace={widgetSwitchReplace}></div>
       </div>
     </div>
-    <!-- 默认小组件（新安装主题未保存设置时显示） -->
-    <div
-      th:if="${theme.config?.sidebar?.widgetsConfig?.widgets == null}"
-      class="contents"
-    >
-      <div class="contents"><Categories class="onload-animation" /></div>
-      <div class="contents"><Tags class="onload-animation" /></div>
+
+    {
+      /* 吸顶区：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名 */
+    }
+    <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
+      <div
+        class="contents"
+        th:each="widget, widgetStat : ${widgets}"
+        th:if={stickyIf}
+      >
+        <div th:replace={widgetSwitchReplace}></div>
+      </div>
+      {/* 默认小组件（新安装主题未保存设置时显示） */}
+      <div th:if="${widgets == null}" class="contents">
+        <div class="contents"><Categories class="onload-animation" /></div>
+        <div class="contents"><Tags class="onload-animation" /></div>
+      </div>
+      {
+        /* 目录槽位（Swup 容器）：左栏是普通节点、不随换页更新，只有把这一格单独做成
+          容器，目录才能像右栏那样由服务端条件按页渲染——文章页换成目录卡片，
+          其他页面换成空内容，无需任何客户端 refresh / 显隐逻辑。
+          ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：目标页缺任一容器即 abort），
+          故这里恒渲染、不带 th:if；显示条件写在里面的 th:if 上。
+          吸顶限额与限高由 Layout.astro 的 #sidebar-sticky:has(#sidebar-toc > *) 承担：
+          卡片在不在由 Swup 换页实时决定，无目录的页面左栏吸顶组件照常全部显示 */
+      }
+      <div id="sidebar-toc">
+        <div th:remove="tag" th:if={tocIf}>
+          <SidebarTOC />
+        </div>
+      </div>
     </div>
   </div>
 </aside>

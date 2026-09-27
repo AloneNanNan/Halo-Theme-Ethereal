@@ -1,0 +1,71 @@
+---
+/**
+ * 小组件分派片段（Thymeleaf 片段库）：全套 `th:switch` 只在这里定义一次。
+ *
+ * 引用方式：各侧栏在自己的 `th:each="widget, widgetStat : ..."` 迭代体内写
+ *   <div th:replace="~{::widgetSwitch(${widget})}"></div>
+ * Thymeleaf 把它替换成本片段的渲染结果；条目配置以片段参数传入，其余上下文由调用处继承。
+ * 做成片段是为了去重：这段标记含全部小组件的 HTML 与内联脚本（约 60 KB），5 处引用各内联
+ * 一份时每页模板 654 KB、主题包 5.3 MB，定义一次后只留「一份片段 + 五行引用」（详见 AGENTS.md）。
+ *
+ * ⚠️ 两个硬约束（改动前必读）：
+ * 1. 外层 th:if="false" 守卫只负责「定义处不渲染」——片段选择走解析树、不受它影响，
+ *    引用处照常取得到；守卫**不能**写进片段根元素，否则副本连条件一起复制、渲染结果为空。
+ * 2. 片段根元素必须自带 class="contents"：th:replace 是整体替换，不保留引用点 div 的属性。
+ */
+import Announcement from "./Announcement.astro";
+import Categories from "./Categories.astro";
+import Hitokoto from "./Hitokoto.astro";
+import MusicPlayer from "./MusicPlayer.astro";
+import PopularPosts from "./PopularPosts.astro";
+import Profile from "./Profile.astro";
+import Schedule from "./Schedule.astro";
+import SiteStats from "./SiteStats.astro";
+import Tags from "./Tags.astro";
+import Weather from "./Weather.astro";
+---
+
+<div th:if="false">
+  <div
+    class="contents"
+    th:fragment="widgetSwitch(widget)"
+    th:switch="${widget.value}"
+  >
+    <div class="contents" th:case="'profile'">
+      <Profile />
+    </div>
+    <div class="contents" th:case="'announcement'">
+      <Announcement class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'categories'">
+      <Categories class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'tag'">
+      <Tags class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'music'">
+      <MusicPlayer class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'hitokoto'">
+      <Hitokoto class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'site-stats'">
+      <SiteStats class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'weather'">
+      <Weather class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'popular-posts'">
+      <PopularPosts class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'schedule'">
+      <Schedule class="onload-animation" />
+    </div>
+    <div
+      th:case="'html'"
+      class="card-base onload-animation p-4"
+      th:utext="${widget.html}"
+    >
+    </div>
+  </div>
+</div>

@@ -2,7 +2,7 @@
 // 最近日程小组件（自由配置型，配套 halo-plugin-schedule-calendar 插件）。
 // - 数据来源：scheduleCalendarFinder.upcoming(limit)（未来 365 天内按开始时间排序）
 // - 插件未安装/未启用时通过 pluginFinder.available 优雅降级，避免全站 500
-// - 后台可配置：显示条数（widget.limit，默认 3，上限 10）
+// - 后台可配置：显示条数（sidebar.schedule.limit，默认 3，上限 10，在「最近日程小组件」分组里）
 import WidgetLayout from "./WidgetLayout.astro";
 
 interface Props {
@@ -26,7 +26,7 @@ const className = Astro.props.class;
     <div
       th:if="${schedulePluginAvailable}"
       th:remove="tag"
-      th:with="scheduleItems=${scheduleCalendarFinder.upcoming(widget.limit ?: 3)}"
+      th:with="scheduleItems=${scheduleCalendarFinder.upcoming(theme.config?.sidebar?.schedule?.limit ?: 3)}"
     >
       <!-- 空状态 -->
       <div

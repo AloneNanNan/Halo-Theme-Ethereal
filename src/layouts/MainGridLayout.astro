@@ -5,9 +5,11 @@ import Footer from "../components/Footer.astro";
 import HomeMoments from "../components/HomeMoments.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import Navbar from "../components/Navbar.astro";
+import MobileSideBar from "../components/widget/MobileSideBar.astro";
 import RightSideBar from "../components/widget/RightSideBar.astro";
 import SideBar from "../components/widget/SideBar.astro";
 import TOC from "../components/widget/TOC.astro";
+import WidgetSwitch from "../components/widget/WidgetSwitch.astro";
 import {
   bannerMobileThWith,
   bannerThWith,
@@ -88,6 +90,13 @@ const {
   isHomePage={isHomePage}
 >
   <slot slot="head" name="head" />
+
+  {
+    /* 小组件分派片段库：全站只渲染一次（定义处带 th:if="false" 守卫，不产生输出），
+       各侧栏用 th:replace="~{::widgetSwitch(${widget})}" 引用，避免每个引用处都内联
+       一份 60 KB 的小组件标记——详见 WidgetSwitch.astro 顶部注释。位置在 body 内即可 */
+  }
+  <WidgetSwitch />
 
   <div
     id="top-row"
@@ -452,8 +461,10 @@ const {
         class="pointer-events-auto left-0 right-0 mx-auto grid w-full grid-cols-[1fr] grid-rows-[auto] gap-4 px-0 transition duration-[var(--dur-banner,700ms)] md:grid-cols-[17.5rem_1fr] md:grid-rows-[auto_1fr_auto] md:px-4"
         th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:grid-cols-[17.5rem_1fr_17.5rem]'}"
       >
-        <!-- 主内容区 - 移动端第一项 -->
+        <!-- 主内容区 - 移动端第一项。id 被两栏「右栏模式」的 CSS 用来与侧栏交换列位置
+             （见 Layout.astro 的 body.layout-two-column-right 段落），勿改名 -->
         <div
+          id="main-column"
           class="col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2 flex flex-col gap-4"
         >
           <div
@@ -476,6 +487,7 @@ const {
         <SideBar
           class="onload-animation col-span-2 md:mb-4 md:col-span-1 md:row-start-1 md:col-start-1 lg:max-w-70"
           th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? '' : 'xl:row-span-2'}"
+          showToc={showToc}
         />
 
         <!-- 右侧栏 - 移动端第三项，平板隐藏；两栏或三栏右栏为空时 xl 隐藏，
@@ -485,6 +497,13 @@ const {
           th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'xl:!hidden' : ''}"
           showToc={showToc}
         />
+
+        <!-- 移动端专用侧栏（<768px 显示）：仅在配置了「移动端小组件」时渲染。
+             内容放在 <template> 里、由组件内的内联脚本按断点克隆挂载（桌面端不加载
+             移动端专属小部件），挂载成功后才给 <html> 加 has-mobile-sidebar →
+             移动端隐藏上面两个 aside（CSS 见 Layout.astro）；脚本没跑则不加类，
+             移动端照旧显示左右两栏，不会白屏。详见 MobileSideBar.astro 注释 -->
+        <MobileSideBar />
 
         <!-- 移动端页脚 -->
         <div class="footer onload-animation col-span-2 block lg:hidden">

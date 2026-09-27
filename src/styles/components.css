@@ -132,12 +132,13 @@
     @apply pointer-events-none opacity-0;
   }
 
-  /* 换页期间隐藏目录（两栏 #toc-wrapper + 三栏右侧边栏 TOC）：门控挂在
-     <html> 的 toc-not-ready 类上而非容器自身——Swup 换页会替换
-     #toc-container / #right-sidebar 容器，加在旧节点上的类随旧节点销毁，
-     新节点无类导致换页期间目录提前显示；<html> 不被 Swup 替换，
-     标记跨换页存活（visit:start 加、visit:end 移除，见 app.ts） */
+  /* 换页期间隐藏目录（两栏 #toc-wrapper + 左右侧栏 TOC）：门控挂在 <html> 的
+     toc-not-ready 类上而非容器自身——Swup 换页会替换 #toc-container 与两侧栏的
+     目录槽位 #sidebar-toc / #right-sidebar-toc，加在旧节点上的类随旧节点销毁，
+     新节点无类导致换页期间目录提前显示；<html> 不被 Swup 替换，标记跨换页存活
+     （visit:start 加、visit:end 移除，见 app.ts） */
   html.toc-not-ready #toc-wrapper,
+  html.toc-not-ready #sidebar table-of-contents,
   html.toc-not-ready #right-sidebar table-of-contents {
     pointer-events: none;
     opacity: 0;
@@ -1076,9 +1077,9 @@
   color: var(--primary) !important;
 }
 
-/* 三栏布局 active-indicator 与目录条目同宽（条目左右各内缩 0.75rem，
+/* 三栏布局高亮条（[data-toc-indicator]）与目录条目同宽（条目左右各内缩 0.75rem，
    避免虚线框占满整个小组件宽度而比标题高亮更宽） */
-.layout-three-column #active-indicator {
+.layout-three-column [data-toc-indicator] {
   left: 0.75rem !important;
   right: 0.75rem !important;
 }

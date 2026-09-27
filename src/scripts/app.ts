@@ -208,6 +208,328 @@ if (!customElements.get("widget-layout")) {
   customElements.define("widget-layout", WidgetLayoutElement);
 }
 
+// ── table-of-contents 自定义元素（目录组件）──
+// 与 widget-layout 同理：必须在全局无条件注册，不能依赖任何具体实例的渲染位置。
+// TOC 在页面里有多个实例（左右侧栏目录槽位、两栏悬浮目录、移动端目录弹窗），
+// 而侧栏实例会被 th:if 按 post.toc.position 配置移除；Astro 对组件脚本全页只输出
+// 一次且落在第一个实例处，注册脚本随该实例被移除时，另一栏的 <table-of-contents>
+// 永远不会 upgrade —— 表现为目录卡片整体空白（条目、"此文章无目录"占位都没有）。
+class TableOfContents extends HTMLElement {
+  tocEl: HTMLElement | null = null;
+  visibleClass = "visible";
+  mutationObserver?: MutationObserver;
+  scrollHandler?: () => void;
+  resizeHandler?: () => void;
+  anchorNavTarget: HTMLElement | null = null;
+  headings: HTMLElement[] = [];
+  tocEntries: HTMLAnchorElement[] = [];
+  active: boolean[] = [];
+  activeIndicator: HTMLElement | null = null;
+
+  connectedCallback() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", this.refresh);
+    } else {
+      this.refresh();
+    }
+
+    // 换页后刷新由 app.ts 中 swup.hooks.on("content:replace") 的真实钩子
+    // 承担；原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  }
+
+  disconnectedCallback() {
+    this.mutationObserver?.disconnect();
+    this.removeWindowListeners();
+    this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+    document.removeEventListener("DOMContentLoaded", this.refresh);
+  }
+
+  refresh = () => {
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (!this.isConnected) return;
+        if (!this.init()) {
+          window.setTimeout(() => this.isConnected && this.init(), 80);
+        }
+      }),
+    );
+  };
+
+  reset() {
+    this.mutationObserver?.disconnect();
+    this.removeWindowListeners();
+    this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+    this.querySelectorAll("[data-toc-entry]").forEach((entry) =>
+      entry.remove(),
+    );
+    this.headings = [];
+    this.tocEntries = [];
+    this.active = [];
+    this.anchorNavTarget = null;
+    this.activeIndicator = this.querySelector("[data-toc-indicator]");
+    this.activeIndicator?.setAttribute("style", "opacity: 0");
+    this.querySelector("[data-toc-empty]")?.classList.add("hidden");
+  }
+
+  removeWindowListeners() {
+    if (this.scrollHandler) {
+      window.removeEventListener("scroll", this.scrollHandler);
+      this.scrollHandler = undefined;
+    }
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler);
+      this.resizeHandler = undefined;
+    }
+  }
+
+  init() {
+    this.reset();
+    const content = document.querySelector<HTMLElement>("#content, .custom-md");
+    const scrollParent = this.closest("[data-toc-scroll]");
+    this.tocEl =
+      scrollParent instanceof HTMLElement
+        ? scrollParent
+        : document.getElementById("toc-inner-wrapper");
+    if (!content || !this.tocEl) {
+      return false;
+    }
+
+    this.mutationObserver = new MutationObserver(() => {
+      if (!this.headings.length) this.refresh();
+    });
+    this.mutationObserver.observe(content, {
+      childList: true,
+      subtree: true,
+    });
+
+    const allHeadings = Array.from(
+      content.querySelectorAll<HTMLElement>("h1, h2, h3, h4, h5, h6"),
+    ).filter((heading) => heading.textContent?.trim());
+    const maxDepth = Math.max(1, Number(this.dataset.maxDepth || "4"));
+    const minDepth = allHeadings.length
+      ? Math.min(
+          ...allHeadings.map((heading) => Number(heading.tagName.substring(1))),
+        )
+      : 1;
+    this.headings = allHeadings.filter(
+      (heading) => Number(heading.tagName.substring(1)) < minDepth + maxDepth,
+    );
+    this.active = this.headings.map(() => false);
+
+    if (!this.headings.length) {
+      const emptyEl = this.querySelector<HTMLElement>("[data-toc-empty]");
+      if (emptyEl) {
+        emptyEl.textContent = this.dataset.emptyText || "此文章无目录";
+        emptyEl.classList.remove("hidden");
+      }
+      return true;
+    }
+    this.querySelector("[data-toc-empty]")?.classList.add("hidden");
+
+    this.tocEl.addEventListener("click", this.handleAnchorClick, {
+      capture: true,
+    });
+    // 条目先追加到 DocumentFragment，最后一次性 insertBefore：避免逐条
+    // 插入（每次 childList 变化都会使布局失效，长文换页后 TOC 初始化时
+    // 反复触发整页重排——实测 visit:end 后 300ms 级卡顿来源）
+    const fragment = document.createDocumentFragment();
+    this.headings.forEach((heading, index) => {
+      if (!heading.id) {
+        heading.id = `heading-${index}`;
+      }
+
+      const depth = Number(heading.tagName.substring(1));
+      const title = heading.textContent?.trim() || "";
+      const link = document.createElement("a");
+      link.dataset.tocEntry = "true";
+      link.href = `#${heading.id}`;
+      link.className =
+        "px-2 flex gap-2 relative transition-all duration-(--toc-transition-duration) w-full min-h-9 rounded-xl hover:bg-(--toc-btn-hover) hover:pl-3 active:bg-(--toc-btn-active) py-2";
+      // 三栏布局：调整条目边距以适配更窄的 TOC 宽度
+      if (this.closest(".layout-three-column")) {
+        link.style.marginLeft = "0.75rem";
+        link.style.marginRight = "0.75rem";
+        link.style.width = "calc(100% - 1.5rem)";
+      }
+      link.innerHTML = `
+        <div class="transition w-5 h-5 shrink-0 rounded-lg text-xs flex items-center justify-center font-bold ${
+          depth === minDepth ? "bg-(--toc-badge-bg) text-(--btn-content)" : ""
+        } ${depth === minDepth + 1 ? "ml-4" : ""} ${depth >= minDepth + 2 ? "ml-8" : ""}">
+          ${depth === minDepth ? String(index + 1) : ""}
+          ${depth === minDepth + 1 ? '<div class="transition w-2 h-2 rounded-[0.1875rem] bg-(--toc-badge-bg)"></div>' : ""}
+          ${depth >= minDepth + 2 ? '<div class="transition w-1.5 h-1.5 rounded-sm bg-black/5 dark:bg-white/10"></div>' : ""}
+        </div>
+        <div class="toc-title transition duration-(--toc-transition-duration) text-sm ${depth >= minDepth + 2 ? "text-30" : "text-50"}"></div>
+      `;
+      const titleEl = link.querySelector(".toc-title");
+      if (titleEl) {
+        titleEl.textContent = title;
+      }
+      fragment.appendChild(link);
+      this.tocEntries.push(link);
+    });
+    this.insertBefore(fragment, this.activeIndicator);
+
+    // 高亮更新由 scroll/resize 的 rAF 节流驱动；读 rect 与写 class 的顺序由
+    // toggleActiveHeading 保证（先读后写，避免 layout thrash）。勿改用
+    // IntersectionObserver：isIntersecting 是「与视口相交」而非「顶边越过 96px 线」，
+    // 集合取 max 会指向视口底部标题，与原 currentHeadingIndex 语义不等价（I23 曾引入已回退）
+    let scrollTicking = false;
+    this.scrollHandler = () => {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        scrollTicking = false;
+        // 换页期间（html.toc-not-ready）目录被 CSS 隐藏，跳过高亮计算：
+        // 平滑回顶滚动时每帧读 rect + 写 class 纯属浪费（不可见），
+        // 显示后（类移除）自动恢复
+        if (document.documentElement.classList.contains("toc-not-ready")) {
+          return;
+        }
+        this.updateActiveByScroll();
+      });
+    };
+    this.resizeHandler = () => {
+      if (document.documentElement.classList.contains("toc-not-ready")) {
+        return;
+      }
+      this.updateActiveByScroll();
+    };
+    window.addEventListener("scroll", this.scrollHandler, { passive: true });
+    window.addEventListener("resize", this.resizeHandler);
+    this.updateActiveByScroll();
+    return true;
+  }
+
+  update() {
+    requestAnimationFrame(() => {
+      this.toggleActiveHeading();
+      this.scrollToActiveHeading();
+    });
+  }
+
+  toggleActiveHeading() {
+    let min = this.active.length;
+    let max = -1;
+    // 先只遍历 active 数组计算 min/max（不碰 DOM），再统一读一次布局、
+    // 最后写入 class/style：避免「写 class → 读 rect → 写 style」的
+    // 写-读交错强制重排（单帧内仅一次布局计算）
+    for (let i = 0; i < this.active.length; i++) {
+      if (this.active[i]) {
+        min = Math.min(min, i);
+        max = Math.max(max, i);
+      }
+    }
+
+    if (min > max || !this.tocEl || !this.activeIndicator) {
+      this.activeIndicator?.setAttribute("style", "opacity: 0");
+      for (let i = 0; i < this.active.length; i++) {
+        this.tocEntries[i]?.classList.remove(this.visibleClass);
+      }
+      return;
+    }
+
+    const parentOffset = this.getBoundingClientRect().top;
+    const top = this.tocEntries[min].getBoundingClientRect().top - parentOffset;
+    const bottom =
+      this.tocEntries[max].getBoundingClientRect().bottom - parentOffset;
+    this.activeIndicator.setAttribute(
+      "style",
+      `top: ${top}px; height: ${bottom - top}px`,
+    );
+    for (let i = 0; i < this.active.length; i++) {
+      this.tocEntries[i]?.classList.toggle(this.visibleClass, this.active[i]);
+    }
+  }
+
+  scrollToActiveHeading() {
+    if (this.anchorNavTarget || !this.tocEl) return;
+    const activeHeading = this.querySelectorAll<HTMLElement>(
+      `.${this.visibleClass}`,
+    );
+    if (!activeHeading.length) return;
+
+    const topmost = activeHeading[0];
+    const bottommost = activeHeading[activeHeading.length - 1];
+    const tocHeight = this.tocEl.clientHeight;
+    const scrollTop = this.tocEl.scrollTop;
+    // 统一坐标系：以滚动容器 tocEl 为基准（rect 差值），不再混用 offsetTop
+    // （相对最近 positioned 祖先，即 table-of-contents）与 scrollTop（相对
+    // tocEl）——两者隔着 h-8 spacer 等元素，混用依赖巧合的 32px 才成立
+    const tocTop = this.tocEl.getBoundingClientRect().top;
+    const topOffset = topmost.getBoundingClientRect().top - tocTop + scrollTop;
+    const bottomOffset =
+      bottommost.getBoundingClientRect().bottom - tocTop + scrollTop;
+    // 高亮变化即跟随滚动（update 仅在 active 变化时调用，dirty 检查已在
+    // updateActiveByScroll 承担）：恢复 v1.1.1 的平滑跟随行为。目录小容器的
+    // smooth 滚动不触发 window 级 scrollHandler，无放大重排问题
+    const top =
+      bottomOffset - topOffset < 0.9 * tocHeight
+        ? topOffset - 32
+        : bottomOffset - tocHeight * 0.8;
+    this.tocEl.scrollTo({
+      top,
+      left: 0,
+      behavior: "smooth",
+    });
+  }
+
+  handleAnchorClick = (event: Event) => {
+    const anchor = event
+      .composedPath()
+      .find((element) => element instanceof HTMLAnchorElement);
+    if (!(anchor instanceof HTMLAnchorElement)) return;
+
+    const id = decodeURIComponent(anchor.hash?.substring(1));
+    this.anchorNavTarget =
+      this.headings.find((heading) => heading.id === id) || null;
+    const activeIndex = this.headings.findIndex((heading) => heading.id === id);
+    if (activeIndex >= 0) {
+      this.active = this.tocEntries.map((_, index) => index === activeIndex);
+      this.update();
+    }
+  };
+
+  currentHeadingIndex() {
+    if (!this.headings.length) return -1;
+
+    const offset = 96;
+    let activeIndex = 0;
+    for (let index = 0; index < this.headings.length; index++) {
+      if (this.headings[index].getBoundingClientRect().top <= offset) {
+        activeIndex = index;
+      } else {
+        break;
+      }
+    }
+
+    return activeIndex;
+  }
+
+  updateActiveByScroll = () => {
+    const activeIndex = this.currentHeadingIndex();
+    if (activeIndex < 0) return;
+
+    const active = this.tocEntries.map((_, index) => index === activeIndex);
+    // dirty 检查：高亮未变化时跳过 indicator 定位/滚动，消除每 tick 布局读取
+    if (active.every((value, index) => value === this.active[index])) {
+      return;
+    }
+    if (
+      this.anchorNavTarget &&
+      this.anchorNavTarget.getBoundingClientRect().top <= 100
+    ) {
+      this.anchorNavTarget = null;
+    }
+    this.active = active;
+    this.update();
+  };
+}
+
+if (!customElements.get("table-of-contents")) {
+  customElements.define("table-of-contents", TableOfContents);
+}
+
 // ── 非主题页判定（#82）──
 // 主题页都由 MainGridLayout 外壳渲染，必然带 astro.config.mjs 声明的全部 Swup 容器
 // （清单由调用方从 swup.options.containers 取，改配置无需同步）；插件自带前台页
@@ -225,6 +547,10 @@ function shouldHandoffToBrowser(html: string, containers: unknown): boolean {
 }
 
 // ── Swup hooks ──
+// 侧栏目录（左右两栏的目录槽位各可能有一个）：换页刷新与浮动按钮可见性判定共用
+const SIDEBAR_TOC_SELECTOR =
+  "#sidebar table-of-contents, #right-sidebar table-of-contents";
+
 function setupSwup() {
   if ((window as any).__etherealSwupHandlersBound) return;
   (window as any).__etherealSwupHandlersBound = true;
@@ -363,49 +689,18 @@ function setupSwup() {
   window.swup.hooks.on("animation:in:end", () => {
     document.documentElement.classList.remove("home-switch");
   });
-  // 换页保留右栏音乐播放器：#right-sidebar 是 Swup 容器，换页会整块替换内容，
-  // 播放器随之重建（重新拉取歌单 + loading 转圈）；左栏 #sidebar 不是容器，故
-  // 无此现象。这里在替换前把播放器节点暂存到 <body>（仍留在文档内，音频不中断），
-  // 替换后再放回新容器对应位置；新页面右栏没有该小组件时（如文章页只显示前 2 个）
-  // 直接丢弃，行为与"该页不显示音乐"一致。
-  const MUSIC_WIDGET_SELECTOR = '#right-sidebar [data-widget="music"]';
-  let parkedMusicWidget: HTMLElement | null = null;
-  // 暂存期间保持元素"被渲染但不可见"：display:none 会停掉动画，visibility:hidden
-  // 不会——元素仍在渲染管线中，封面旋转（WAAPI）与音频都不中断。
-  const restoreMusicWidget = () => {
-    const widget = parkedMusicWidget;
-    parkedMusicWidget = null;
-    if (!widget) return;
-    const slot = document.querySelector(MUSIC_WIDGET_SELECTOR);
-    if (slot) {
-      slot.replaceWith(widget);
-      widget.style.removeProperty("visibility");
-      widget.style.removeProperty("position");
-      widget.style.removeProperty("top");
-    } else {
-      widget.remove();
-    }
-  };
-  window.swup.hooks.before("content:replace", () => {
-    // 上一次暂存尚未归还（如连续快速导航）时先归还，避免节点滞留在 <body>
-    // 上既不可见又继续播放
-    restoreMusicWidget();
-    const widget = document.querySelector<HTMLElement>(MUSIC_WIDGET_SELECTOR);
-    if (!widget) return;
-    widget.style.visibility = "hidden"; // 不可见但仍在渲染，动画不中断
-    widget.style.position = "absolute";
-    widget.style.top = "-9999px"; // 移出视口且不在文档流中占位
-    document.body.appendChild(widget); // 脱离待替换容器但仍在文档内
-    parkedMusicWidget = widget;
-  });
-  window.swup.hooks.on("content:replace", restoreMusicWidget);
-  // 导航中止时 content:replace 不触发，兜底还原，避免播放器卡在隐藏的游离状态
-  window.swup.hooks.on("visit:end", restoreMusicWidget);
+  // 注：此处原有「换页保留右栏音乐播放器」的寄存逻辑，因 #right-sidebar 曾是 Swup 容器。
+  // 侧栏现已全部改为普通节点（容器只剩目录槽位），播放器不再被替换，寄存逻辑删除；留着
+  // 反而危险（暂存后原位置查不到，归还分支会走 remove()）。副作用：被吸顶额度挤出可视区
+  // 的播放器现在是「CSS 隐藏但继续播放」，旧实现是整块丢弃。
   window.swup.hooks.on("content:replace", () => {
-    const rightToc = document.querySelector(
-      "#right-sidebar table-of-contents",
-    ) as (HTMLElement & { refresh?: () => void }) | null;
-    rightToc?.refresh?.();
+    // 侧栏目录：左栏 #sidebar-toc、右栏 #right-sidebar-toc 两个槽位都是 Swup 容器，
+    // 换页整块替换后自定义元素随新节点升级重建，这里再刷一次，兜住首帧的深度/高亮状态
+    document
+      .querySelectorAll(SIDEBAR_TOC_SELECTOR)
+      .forEach((toc) =>
+        (toc as HTMLElement & { refresh?: () => void }).refresh?.(),
+      );
     // 换页兜底：弹窗是 swup 容器已整容器替换（自动关闭），但目录按钮在 Swup
     // 容器外不刷新，需复位「目录」图标与 aria 状态，避免残留 X 态。
     // （下方 updateTocBtnVisibility 的 close 只在按钮隐藏时收弹窗，两者分工不同）
@@ -454,12 +749,14 @@ function setupSwup() {
     }) => {
       restoreOriginalHistoryStateHandlers();
       // 标记会话内已发生换页（<html> 不被 Swup 替换，标记永久有效）：
-      // #right-sidebar 是 swup 容器，换页会换入带静态 onload-animation 类的新
-      // aside，transition.css 据此标记永久抑制其入场动画（首刷动画不受影响）。
+      // 触发换页的容器会换入带静态 onload-animation 类的节点（两侧栏目录槽位、
+      // #toc-container 等），transition.css 据此标记永久抑制其入场动画
+      // （首刷动画不受影响）。
       document.documentElement.classList.add("swup-visited");
       // 换页进行中：目录隐藏（CSS 门控 html.toc-not-ready，覆盖两栏/三栏）。
-      // 挂在 <html> 上而非容器类：Swup 换页会替换 #toc-container /
-      // #right-sidebar 容器，旧节点上的类随销毁，新节点无类会导致目录提前显示
+      // 挂在 <html> 上而非容器类：Swup 换页会替换 #toc-container 与两侧栏的目录
+      // 槽位 #sidebar-toc / #right-sidebar-toc，旧节点上的类随销毁，新节点无类会
+      // 导致目录提前显示
       document.documentElement.classList.add("toc-not-ready");
       needsScrollWait =
         !visit?.history?.popstate && !visit?.to?.hash && window.scrollY > 0;
@@ -525,7 +822,7 @@ function setupSwup() {
 }
 
 // 目录悬浮按钮显隐（I29）：只要页面没有可见目录（两栏悬浮目录 #toc-wrapper /
-// 三栏右侧栏目录 #right-sidebar table-of-contents），就显示目录悬浮按钮——
+// 三栏侧栏目录 #sidebar table-of-contents、#right-sidebar table-of-contents），就显示目录悬浮按钮——
 // 面向移动端/平板端无目录场景；空目录文章仍显示按钮，点开弹窗展示"此文章无目录"
 // 占位（与目录小组件一致）。.floating-controls 位于 Swup 容器外、换页不刷新，
 // 故换页（content:replace）与窗口 resize 都要重算：offsetParent 对 display:none
@@ -535,12 +832,11 @@ function updateTocBtnVisibility() {
   if (!btn) return;
   const hasTocWidget = !!document.querySelector("#toc-popup table-of-contents");
   const floatingToc = document.getElementById("toc-wrapper");
-  const rightToc = document.querySelector(
-    "#right-sidebar table-of-contents",
-  ) as HTMLElement | null;
+  // 侧栏目录可能在左栏（#sidebar-toc 容器，目录位置配置为左）或右栏，两处都算
+  const sideTocs = document.querySelectorAll(SIDEBAR_TOC_SELECTOR);
   const hasVisibleToc = !!(
     (floatingToc && floatingToc.offsetParent) ||
-    (rightToc && rightToc.offsetParent)
+    Array.from(sideTocs).some((toc) => (toc as HTMLElement).offsetParent)
   );
   const show = hasTocWidget && !hasVisibleToc;
   btn.classList.toggle("hide", !show);

@@ -10,223 +10,257 @@ const className = Astro.props.class;
 const style = Astro.props.style;
 ---
 
-<!-- 统计项开关有两种默认值约定：原有 6 项默认开启（后台未配置时字段值为 null，
-     != false 即显示）；新增的访问量 / 点赞数 / 评论数默认关闭（== true 才显示）。
-     全部关闭时整个小组件不渲染，避免出现只有标题的空卡片 -->
+<!-- 统计项来自后台「站点统计小组件 → 统计项」多选（数组，顺序 = 勾选顺序，即前台展示顺序）。
+     数组为空、或勾选项会落空时整块不渲染，避免出现只有标题的空卡片。
+     ⚠️ stats 与上线日期必须在这层（祖先元素）的 th:with 里先算好：Thymeleaf 同元素上
+     th:if 先于 th:with 执行，写在内层元素自己的 th:with 里的话守卫读到的是 null，
+     会导致「只勾选了访问量/点赞数/评论数」时整块消失（旧实现即如此）。
+     有 4 项带前置条件——「运行天数」需要上线日期非空，「访问量/点赞数/评论数」需要有站点统计
+     数据（siteStatsFinder 是 Halo 核心自带 Finder、since 2.0.0、无需任何插件，正常情况恒有值，
+     这里的判空仅作防御）；它们的 th:case 外层另套一层 th:if
+     （th:case 与 th:if 优先级同为 300，同元素行为不可靠） -->
 <div
-  class="contents"
-  th:if="${widget.show_posts != false or widget.show_categories != false or widget.show_tags != false or widget.show_total_words != false or widget.show_last_activity != false or (widget.show_running_days != false and widget.site_start_date != null and widget.site_start_date != '') or (widget.show_visits == true and stats != null) or (widget.show_upvotes == true and stats != null) or (widget.show_comments == true and stats != null)}"
-  th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}, stats = ${siteStatsFinder?.getStats()}, serverTotalWords = ${pluginFinder.available('extra-api', '3.*') ? extraApiStatsFinder.getPostWordCount() : null}"
+  th:with="siteStatItems=${theme.config?.sidebar?.siteStats?.items}, siteStartDate=${theme.config?.sidebar?.siteStats?.site_start_date}, siteStatsData=${siteStatsFinder?.getStats()}"
+  th:remove="tag"
 >
-  <WidgetLayout
-    name="站点统计"
-    nameKey="widget.siteStats.title"
-    id="site-stats"
-    class={className}
-    style={style}
+  <div
+    class="contents"
+    th:if="${not #lists.isEmpty(siteStatItems) and (#lists.contains(siteStatItems, 'posts') or #lists.contains(siteStatItems, 'categories') or #lists.contains(siteStatItems, 'tags') or #lists.contains(siteStatItems, 'total_words') or #lists.contains(siteStatItems, 'last_activity') or ((siteStartDate != null and siteStartDate != '') and #lists.contains(siteStatItems, 'running_days')) or (siteStatsData != null and (#lists.contains(siteStatItems, 'visits') or #lists.contains(siteStatItems, 'upvotes') or #lists.contains(siteStatItems, 'comments'))))}"
+    th:with="posts = ${postFinder.list({page: 1, size: 1})}, categories = ${categoryFinder.listAll()}, tags = ${tagFinder.listAll()}, stats = ${siteStatsData}, serverTotalWords = ${pluginFinder.available('extra-api', '3.*') ? extraApiStatsFinder.getPostWordCount() : null}"
   >
-    <div class="flex flex-col gap-1">
-      <!-- 文章数 -->
-      <a
-        th:if="${widget.show_posts != false}"
-        th:href="@{/archives}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--library-books-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.posts}">文章</span
-          >
-        </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${posts.total}">0</span
+    <WidgetLayout
+      name="站点统计"
+      nameKey="widget.siteStats.title"
+      id="site-stats"
+      class={className}
+      style={style}
+    >
+      <div class="flex flex-col gap-1">
+        <div
+          class="contents"
+          th:each="statItem : ${theme.config?.sidebar?.siteStats?.items}"
+          th:switch="${statItem}"
         >
-      </a>
+          <!-- 文章数 -->
+          <a
+            th:case="'posts'"
+            th:href="@{/archives}"
+            class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+          >
+            <div class="flex items-center gap-2.5">
+              <span
+                class="icon-[material-symbols--library-books-outline-rounded] text-xl text-(--primary)"
+              ></span>
+              <span
+                class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                th:text="#{widget.siteStats.posts}">文章</span
+              >
+            </div>
+            <span
+              class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+              th:text="${posts.total}">0</span
+            >
+          </a>
 
-      <!-- 分类数 -->
-      <a
-        th:if="${widget.show_categories != false}"
-        th:href="@{/categories}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--book-2-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.categories}">分类</span
+          <!-- 分类数 -->
+          <a
+            th:case="'categories'"
+            th:href="@{/categories}"
+            class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
-        </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${#lists.size(categories)}">0</span
-        >
-      </a>
+            <div class="flex items-center gap-2.5">
+              <span
+                class="icon-[material-symbols--book-2-outline-rounded] text-xl text-(--primary)"
+              ></span>
+              <span
+                class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                th:text="#{widget.siteStats.categories}">分类</span
+              >
+            </div>
+            <span
+              class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+              th:text="${#lists.size(categories)}">0</span
+            >
+          </a>
 
-      <!-- 标签数 -->
-      <a
-        th:if="${widget.show_tags != false}"
-        th:href="@{/tags}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--tag-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.tags}">标签</span
+          <!-- 标签数 -->
+          <a
+            th:case="'tags'"
+            th:href="@{/tags}"
+            class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
-        </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${#lists.size(tags)}">0</span
-        >
-      </a>
+            <div class="flex items-center gap-2.5">
+              <span
+                class="icon-[material-symbols--tag-rounded] text-xl text-(--primary)"
+              ></span>
+              <span
+                class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                th:text="#{widget.siteStats.tags}">标签</span
+              >
+            </div>
+            <span
+              class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+              th:text="${#lists.size(tags)}">0</span
+            >
+          </a>
 
-      <!-- 访问量（siteStatsFinder，默认关闭，需后台勾选后显示） -->
-      <div
-        th:if="${widget.show_visits == true and stats != null}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--visibility-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.visits}">访问量</span
+          <!-- 访问量（Halo 自带 siteStatsFinder）：选中该统计项且有数据时才渲染 -->
+          <div th:case="'visits'" class="contents">
+            <div
+              th:if="${stats != null}"
+              class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="icon-[material-symbols--visibility-outline-rounded] text-xl text-(--primary)"
+                ></span>
+                <span
+                  class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                  th:text="#{widget.siteStats.visits}">访问量</span
+                >
+              </div>
+              <span
+                class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+                th:text="${stats.visit}">0</span
+              >
+            </div>
+          </div>
+
+          <!-- 点赞数（Halo 自带 siteStatsFinder）：选中该统计项且有数据时才渲染 -->
+          <div th:case="'upvotes'" class="contents">
+            <div
+              th:if="${stats != null}"
+              class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="icon-[material-symbols--favorite-outline-rounded] text-xl text-(--primary)"
+                ></span>
+                <span
+                  class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                  th:text="#{widget.siteStats.upvotes}">点赞数</span
+                >
+              </div>
+              <span
+                class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+                th:text="${stats.upvote}">0</span
+              >
+            </div>
+          </div>
+
+          <!-- 评论数（Halo 自带 siteStatsFinder）：选中该统计项且有数据时才渲染 -->
+          <div th:case="'comments'" class="contents">
+            <div
+              th:if="${stats != null}"
+              class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="icon-[mdi--comment-text-outline] text-xl text-(--primary)"
+                ></span>
+                <span
+                  class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                  th:text="#{widget.siteStats.comments}">评论数</span
+                >
+              </div>
+              <span
+                class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+                th:text="${stats.comment}">0</span
+              >
+            </div>
+          </div>
+
+          <!-- 总字数（客户端计算） -->
+          <div
+            th:case="'total_words'"
+            class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
+            <div class="flex items-center gap-2.5">
+              <span
+                class="icon-[material-symbols--draw-outline-rounded] text-xl text-(--primary)"
+              ></span>
+              <span
+                class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                th:text="#{widget.siteStats.totalWords}">总字数</span
+              >
+            </div>
+            <!-- data-server-words：API 拓展包插件（app-di1jh8gd;extra-api ≥3.x）已安装时，
+               服务端在此注入全站总字数，客户端直接展示、不再逐篇抓正文 -->
+            <span
+              id="site-stats-total-words"
+              th:attr="data-server-words=${serverTotalWords != null ? serverTotalWords : ''}"
+              class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+              >--</span
+            >
+          </div>
+
+          <!-- 最后活动（客户端计算) -->
+          <div
+            th:case="'last_activity'"
+            class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+          >
+            <div class="flex items-center gap-2.5">
+              <span
+                class="icon-[material-symbols--history-rounded] text-xl text-(--primary)"
+              ></span>
+              <span
+                class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                th:text="#{widget.siteStats.lastActivity}">最后活动</span
+              >
+            </div>
+            <span
+              id="site-stats-last-activity"
+              class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+              >--</span
+            >
+          </div>
+
+          <!-- 运行天数：选中该统计项且已填「网站上线日期」时才渲染 -->
+          <div th:case="'running_days'" class="contents">
+            <div
+              id="site-stats-running-days-row"
+              th:if="${theme.config?.sidebar?.siteStats?.site_start_date != null and theme.config?.sidebar?.siteStats?.site_start_date != ''}"
+              class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="icon-[material-symbols--calendar-clock-outline-rounded] text-xl text-(--primary)"
+                ></span>
+                <span
+                  class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+                  th:text="#{widget.siteStats.runningDays}">运行天数</span
+                >
+              </div>
+              <div class="flex items-center">
+                <span
+                  id="site-stats-running-days"
+                  class="text-base font-bold text-neutral-900 dark:text-neutral-100"
+                  th:attr="data-start-date=${theme.config?.sidebar?.siteStats?.site_start_date}"
+                  >--</span
+                >
+                <span
+                  class="ml-1 text-sm text-neutral-500 dark:text-neutral-400"
+                  th:text="#{widget.siteStats.days}">天</span
+                >
+              </div>
+            </div>
+          </div>
         </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${stats.visit}">0</span
-        >
       </div>
-
-      <!-- 点赞数（siteStatsFinder，默认关闭） -->
-      <div
-        th:if="${widget.show_upvotes == true and stats != null}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--favorite-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.upvotes}">点赞数</span
-          >
-        </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${stats.upvote}">0</span
-        >
-      </div>
-
-      <!-- 评论数（siteStatsFinder，默认关闭） -->
-      <div
-        th:if="${widget.show_comments == true and stats != null}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[mdi--comment-text-outline] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.comments}">评论数</span
-          >
-        </div>
-        <span
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          th:text="${stats.comment}">0</span
-        >
-      </div>
-
-      <!-- 总字数（客户端计算） -->
-      <div
-        th:if="${widget.show_total_words != false}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--draw-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.totalWords}">总字数</span
-          >
-        </div>
-        <!-- data-server-words：API 拓展包插件（app-di1jh8gd;extra-api ≥3.x）已安装时，
-             服务端在此注入全站总字数，客户端直接展示、不再逐篇抓正文 -->
-        <span
-          id="site-stats-total-words"
-          th:attr="data-server-words=${serverTotalWords != null ? serverTotalWords : ''}"
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          >--</span
-        >
-      </div>
-
-      <!-- 最后活动（客户端计算) -->
-      <div
-        th:if="${widget.show_last_activity != false}"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--history-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.lastActivity}">最后活动</span
-          >
-        </div>
-        <span
-          id="site-stats-last-activity"
-          class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-          >--</span
-        >
-      </div>
-
-      <!-- 运行天数 -->
-      <div
-        id="site-stats-running-days-row"
-        class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
-        th:if="${widget.show_running_days != false and widget.site_start_date != null and widget.site_start_date != ''}"
-      >
-        <div class="flex items-center gap-2.5">
-          <span
-            class="icon-[material-symbols--calendar-clock-outline-rounded] text-xl text-(--primary)"
-          ></span>
-          <span
-            class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            th:text="#{widget.siteStats.runningDays}">运行天数</span
-          >
-        </div>
-        <div class="flex items-center">
-          <span
-            id="site-stats-running-days"
-            class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-            th:attr="data-start-date=${widget.site_start_date}">--</span
-          >
-          <span
-            class="ml-1 text-sm text-neutral-500 dark:text-neutral-400"
-            th:text="#{widget.siteStats.days}">天</span
-          >
-        </div>
-      </div>
-    </div>
-  </WidgetLayout>
+    </WidgetLayout>
+  </div>
 </div>
 
 <script is:inline th:inline="none">
   (function () {
+    // 实例作用域：脚本是 is:inline、每个实例各跑一份，重复配置（如左栏 + 移动端列表）
+    // 时必须只操作自己这一份——用 currentScript 取本实例所在条目容器再查元素，否则
+    // getElementById 永远命中文档里第一个实例，重复的那份是空壳。
+    // currentScript 对 is:inline 的经典脚本有效（模块脚本为 null），缺失时退化为 document。
+    var widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
       window.__etherealI18n ||
@@ -324,8 +358,8 @@ const style = Astro.props.style;
     }
 
     function applyStatsToDOM(stats) {
-      var wordsEl = document.getElementById("site-stats-total-words");
-      var activityEl = document.getElementById("site-stats-last-activity");
+      var wordsEl = widgetRoot.querySelector("#site-stats-total-words");
+      var activityEl = widgetRoot.querySelector("#site-stats-last-activity");
       // 插件已提供 data-server-words 时，服务端值优先（精确、零请求），仅做格式化
       if (wordsEl && wordsEl.getAttribute("data-server-words")) {
         wordsEl.textContent = formatNumber(
@@ -342,7 +376,7 @@ const style = Astro.props.style;
     function updateSiteStats() {
       // 插件（API 拓展包 extra-api ≥3.x）已安装时，服务端在 data-server-words
       // 注入全站总字数，客户端无需再逐篇抓正文，只需统计最后活动
-      var wordsEl0 = document.getElementById("site-stats-total-words");
+      var wordsEl0 = widgetRoot.querySelector("#site-stats-total-words");
       var serverHasWords = !!(
         wordsEl0 && wordsEl0.getAttribute("data-server-words")
       );
@@ -514,7 +548,7 @@ const style = Astro.props.style;
     }
 
     function updateRunningDays() {
-      var el = document.getElementById("site-stats-running-days");
+      var el = widgetRoot.querySelector("#site-stats-running-days");
       if (!el) return;
       var startDate = el.getAttribute("data-start-date");
       if (!startDate) return;
@@ -528,8 +562,8 @@ const style = Astro.props.style;
 
     function refreshSiteStats() {
       // 检查元素是否存在（可能在 swup 容器外或内）
-      var wordsEl = document.getElementById("site-stats-total-words");
-      var activityEl = document.getElementById("site-stats-last-activity");
+      var wordsEl = widgetRoot.querySelector("#site-stats-total-words");
+      var activityEl = widgetRoot.querySelector("#site-stats-last-activity");
       if (wordsEl || activityEl) {
         updateSiteStats();
       }

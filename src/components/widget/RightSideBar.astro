@@ -1,18 +1,11 @@
 ---
-import Announcement from "./Announcement.astro";
-import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
-import MusicPlayer from "./MusicPlayer.astro";
-import PopularPosts from "./PopularPosts.astro";
-import Profile from "./Profile.astro";
-import Schedule from "./Schedule.astro";
+import SidebarTOC from "./SidebarTOC.astro";
 import SiteStats from "./SiteStats.astro";
-import Tags from "./Tags.astro";
-import Weather from "./Weather.astro";
-import TOC from "./TOC.astro";
 
 interface Props {
   class?: string;
+  /** 当前页是否为带目录的页面（文章页），由 MainGridLayout 按路由传入 */
   showToc?: boolean;
   "th:classappend"?: string;
 }
@@ -20,6 +13,25 @@ interface Props {
 const className = Astro.props.class;
 const showToc = Astro.props.showToc || false;
 const thClassappend = Astro.props["th:classappend"] || "";
+// 小组件分派片段的引用表达式（与左栏同源）：片段在 WidgetSwitch.astro 定义一次，
+// 这里只留一行引用，条目配置以参数传入（详见 WidgetSwitch.astro 顶部注释）
+const widgetSwitchReplace = "~{::widgetSwitch(${widget})}";
+
+// 与左栏同源的前缀规则（详细说明见 SideBar.astro）
+const nonStickyExpr = `widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky == false].size() == widgetStat.index`;
+const nonStickyIf = `\${${nonStickyExpr}}`;
+const hasNonStickyIf = `\${widgets != null and not #lists.isEmpty(widgets) and widgets[0].sticky == false}`;
+// 吸顶条目一律全部渲染——「文章页只留前 2 个给目录腾空间」改由 Layout.astro 的
+// #right-sidebar-sticky:has(#right-sidebar-toc > *) 规则按「目录卡片在不在」判定，
+// 与左栏完全同源（右栏已不是 Swup 容器，服务端序号判断反而要引入 position 运行时
+// 变量、容易与其它条件 AND 错位）
+const stickyIf = `\${not (${nonStickyExpr})}`;
+// 目录卡片：文章页（showToc）+ 主题开启目录 + 目录位置在本栏（position 非 left）+ 非两栏布局。
+// position / layoutMode 都是运行时主题配置，只能在 Thymeleaf 侧判断，故用 th:with 引入
+// tocOnRight 变量。tocEnabledExpr 与左栏各留一份（有意重复，两份条件必须一致）
+const tocEnabledExpr =
+  "theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc";
+const tocIf = showToc ? `\${tocOnRight and (${tocEnabledExpr})}` : "false";
 ---
 
 <aside
@@ -27,100 +39,58 @@ const thClassappend = Astro.props["th:classappend"] || "";
   class:list={[className, "w-full", "onload-animation"]}
   th:classappend={thClassappend}
 >
-  {/* Profile：不吸顶，随页面滚动（两种布局模式一致） */}
   <div
-    th:if="${theme.config?.sidebar?.profile?.enable_profile != false and theme.config?.layout?.pageLayout?.layoutMode != 'two-column' and theme.config?.sidebar?.profile?.display_position == 'right'}"
-    class="hidden xl:flex w-full flex-col gap-4"
+    th:with="widgets=${theme.config?.sidebar?.widgetsConfig?.rightWidgets}, tocOnRight=${theme.config?.post?.toc?.position != 'left' and theme.config?.layout?.pageLayout?.layoutMode != 'two-column'}"
+    th:remove="tag"
   >
-    <Profile />
-  </div>
-  {/* 公告：非吸顶，Profile 之后、小组件之前 */}
-  <div
-    th:if="${theme.config?.sidebar?.announcement?.enable != false and theme.config?.sidebar?.announcement?.position == 'right'}"
-    class="hidden xl:flex w-full flex-col gap-4"
-  >
-    <Announcement />
-  </div>
-  {
-    /* 功能性小组件：吸顶显示；文章页（showToc）限制高度并折叠为前 2 个，为目录腾出剩余空间 */
-  }
-  <div
-    id="right-sidebar-sticky"
-    class:list={[
-      "sticky top-4 flex w-full flex-col gap-4",
-      showToc && "max-h-[calc(100vh-2rem)] overflow-hidden",
-    ]}
-  >
-    <div
-      class="contents"
-      th:each="widget, widgetStat : ${theme.config?.sidebar?.widgetsConfig?.rightWidgets}"
-      th:if={showToc ? "${widgetStat.index < 2}" : "true"}
-    >
-      <div class="contents" th:switch="${widget.value}">
-        <div class="contents" th:case="'popular-posts'">
-          <PopularPosts />
-        </div>
-        <div class="contents" th:case="'categories'">
-          <Categories />
-        </div>
-        <div class="contents" th:case="'tag'">
-          <Tags />
-        </div>
-        <div class="contents" th:case="'music'">
-          <MusicPlayer />
-        </div>
-        <div class="contents" th:case="'hitokoto'">
-          <Hitokoto />
-        </div>
-        <div class="contents" th:case="'site-stats'">
-          <SiteStats />
-        </div>
-        <div class="contents" th:case="'weather'">
-          <Weather />
-        </div>
-        <div class="contents" th:case="'schedule'">
-          <Schedule />
-        </div>
-        <div th:case="'html'" class="card-base p-4" th:utext="${widget.html}">
-        </div>
+    {
+      /* 不吸顶区：随右栏所在位置显示（移动端右栏为第三项，平板宽度下右栏整体隐藏）。
+        mb-4 仅在 xl 以下生效——xl 起 aside 自身是 flex + gap-4，再加 margin 会变成双倍间距 */
+    }
+    <div class="mb-4 xl:mb-0 flex w-full flex-col gap-4" th:if={hasNonStickyIf}>
+      <div
+        class="contents"
+        th:each="widget, widgetStat : ${widgets}"
+        th:if={nonStickyIf}
+      >
+        <div th:replace={widgetSwitchReplace}></div>
       </div>
     </div>
-    {/* 默认右侧小组件（新安装主题未保存设置时显示） */}
+
+    {
+      /* 吸顶块：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名。
+        含目录时的限高、「只留前 2 个吸顶条目」与「吸顶组件不参与收缩」统一由
+        Layout.astro 的 :has(#right-sidebar-toc > *) 规则施加（左右两栏同源） */
+    }
     <div
-      th:if="${theme.config?.sidebar?.widgetsConfig?.rightWidgets == null}"
-      class="contents"
-    >
-      <div class="contents">
-        <Hitokoto />
-      </div>
-      <div class="contents">
-        <SiteStats />
-      </div>
-    </div>
-    {/* 目录：仅文章页（showToc）且主题开启目录时显示，自适应剩余空间 */}
-    <div
-      th:remove="tag"
-      th:if={showToc
-        ? "${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
-        : "false"}
+      id="right-sidebar-sticky"
+      class="sticky top-4 flex w-full flex-col gap-4"
     >
       <div
-        class="card-base hidden md:flex min-h-0 flex-1 flex-col overflow-hidden pb-0"
+        class="contents"
+        th:each="widget, widgetStat : ${widgets}"
+        th:if={stickyIf}
       >
-        <div
-          class="relative mb-2 ml-8 mt-4 shrink-0 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
-          th:text="#{widget.toc.title}"
-        >
-          目录
+        <div th:replace={widgetSwitchReplace}></div>
+      </div>
+      {/* 默认右侧小组件（新安装主题未保存设置时显示） */}
+      <div th:if="${widgets == null}" class="contents">
+        <div class="contents">
+          <Hitokoto />
         </div>
-        <div
-          id="toc-inner-wrapper-right"
-          data-toc-scroll
-          class="hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-4"
-        >
-          <div class="toc-right w-full">
-            <TOC />
-          </div>
+        <div class="contents">
+          <SiteStats />
+        </div>
+      </div>
+      {
+        /* 目录槽位（Swup 容器，与左栏 #sidebar-toc 对称）：右栏本身已不是容器、不随
+          换页更新，只有这一格被替换，目录才能像左栏那样按页由服务端条件渲染。
+          ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：目标页缺任一容器即 abort），
+          故这里恒渲染、不带 th:if；显示条件写在里面的 th:if 上 */
+      }
+      <div id="right-sidebar-toc">
+        <div th:remove="tag" th:if={tocIf}>
+          <SidebarTOC />
         </div>
       </div>
     </div>

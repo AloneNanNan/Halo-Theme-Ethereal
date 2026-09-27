@@ -13,14 +13,25 @@ html.is-animating .transition-swup-fade {
   @apply translate-y-4 opacity-0;
 }
 
-/* 右侧边栏：作为 swup 容器以更新 TOC，但完全禁用过渡动画。
-   swup-visited：首次换页（visit:start）起永久挂在 <html> 上——换页换入的新
-   aside 虽带静态 onload-animation 类（首刷消闪烁所需），此规则令其动画永不
-   重播且保持可见（覆盖 .onload-animation 的 opacity:0），恢复"仅首刷播一次"。 */
+/* 侧栏换页动画抑制：右栏曾是 swup 容器（换页整块替换），需要这两条把新节点的
+   入场动画压掉。侧栏现已全部改为普通节点（换页不重建，仅目录槽位被替换），
+   故两条规则如今只作兜底：容器替换换入的节点、以及换入节点内部的
+   onload-animation（WidgetSwitch 给每个 case 都加了，两侧栏共用）都不会重播。
+   swup-visited：首次换页（visit:start）起永久挂在 <html> 上；首刷时 <html> 上
+   还没有该标记，因此两侧栏的小组件仍会正常播放入场动画（"仅首刷播一次"）。 */
 html.is-changing #right-sidebar,
 html.is-animating #right-sidebar,
 html.swup-visited #right-sidebar {
   transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  translate: none !important;
+}
+
+/* 同上：压掉换入节点内部的入场动画（animation:none 会同时清掉 fill-forwards，
+   故必须补 opacity:1，否则回落基样式 opacity:0 直接把节点藏掉） */
+html.swup-visited #right-sidebar .onload-animation {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;

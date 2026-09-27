@@ -163,6 +163,11 @@ export interface VisitorStyleConfig {
 /** 页面布局 */
 export interface PageLayout {
   layoutMode: string;
+  /**
+   * 两栏布局「右栏模式」（默认关）：把侧栏放到右侧（正文在左），
+   * 并把两栏的悬浮目录镜像到左侧空白槽。仅 layoutMode === 'two-column' 时生效。
+   */
+  rightSidebarMode?: boolean;
   /** 分类导航栏 */
   categoryBar?: boolean;
   /** 瞬间预览条（全站内容区顶部） */
@@ -517,16 +522,67 @@ export interface Sidebar {
   widgetsConfig: WidgetsConfig;
   profile: SidebarProfile;
   announcement?: AnnouncementConfig;
+  /** 站点统计小组件配置（sidebar.siteStats） */
+  siteStats?: SidebarSiteStats;
+  /** 天气小组件配置（sidebar.weather） */
+  weather?: SidebarWeather;
+  /** 一言小组件配置（sidebar.hitokoto） */
+  hitokoto?: SidebarHitokoto;
+  /** 音乐播放器小组件配置（sidebar.music） */
+  music?: SidebarMusic;
+  /** 最近日程小组件配置（sidebar.schedule） */
+  schedule?: SidebarSchedule;
+}
+
+// 以下五个分组是各小组件的「唯一配置源」：条目列表里只放「小组件 + 吸顶」，
+// 详细配置外提到这里，左右侧边栏共用同一份（原先是每个条目各存一份）
+export interface SidebarSiteStats {
+  /**
+   * 展示的统计项，**数组顺序即展示顺序**（后台多选，顺序 = 勾选顺序）。
+   * 取值：posts / categories / tags / total_words / last_activity /
+   *      running_days / visits / upvotes / comments
+   */
+  items?: string[];
+  /** 网站上线日期，用于计算运行天数 */
+  site_start_date?: string;
+}
+
+export interface SidebarWeather {
+  tencent_key?: string;
+  default_city?: string;
+}
+
+export interface SidebarHitokoto {
+  hitokoto_api?: string;
+  fallback_text?: string;
+  fallback_source?: string;
+}
+
+export interface SidebarMusic {
+  server?: string;
+  type?: string;
+  id?: string;
+  play_mode?: string;
+  volume?: number;
+  music_api?: string;
+}
+
+export interface SidebarSchedule {
+  limit?: number;
 }
 
 export interface WidgetsConfig {
   widgets: Widget[];
   rightWidgets?: Widget[];
+  /**
+   * 移动端（<768px）专用条目列表。
+   * 留空 = 移动端沿用 `widgets` + `rightWidgets` 的条目与顺序；
+   * 非空 = 移动端只渲染本列表（按顺序排列，无吸顶概念），左右两栏在移动端整体隐藏。
+   */
+  mobileWidgets?: Widget[];
 }
 
 export interface AnnouncementConfig {
-  enable?: boolean;
-  position?: string;
   content?: string;
   enable_html?: boolean;
   content_height?: number;
@@ -542,8 +598,6 @@ export interface AnnouncementLink {
 }
 
 export interface SidebarProfile {
-  enable_profile?: boolean;
-  display_position?: string;
   name: string;
   bio: string;
   avatar: string;
@@ -573,34 +627,24 @@ export interface SidebarProfileStatusText {
   away?: string;
 }
 
+/**
+ * 侧边栏条目。除「自定义HTML」外，条目只承载「小组件 + 吸顶」两项，
+ * 各小组件的详细配置见 SidebarSiteStats / SidebarWeather / SidebarHitokoto /
+ * SidebarMusic / SidebarSchedule。
+ */
 export interface Widget {
+  /** 小组件标识：profile / announcement / popular-posts / categories / tag / music / hitokoto / site-stats / weather / schedule / html */
   value: string;
+  /**
+   * 是否吸顶（默认 true）。
+   * 注意：勾选与否只是「可能」，实际还要满足前缀规则——未勾选的条目只有在
+   * 它前面所有条目都未勾选时才真的不吸顶，否则回退为吸顶。
+   */
+  sticky?: boolean;
+  /** 自定义HTML条目的名称，仅用于后台条目列表辨识 */
+  name?: string;
+  /** 自定义HTML条目的内容（唯一仍随条目走的配置） */
   html?: string;
-  title?: string;
-  server?: string;
-  type?: string;
-  id?: string;
-  play_mode?: string;
-  volume?: number;
-  api?: string;
-  // music_api / hitokoto_api：原两者共用 api 字段，切换部件时值会互相覆盖；
-  // 拆分后旧配置仍由模板以 music_api ?: api 回退读取
-  music_api?: string;
-  hitokoto_api?: string;
-  site_start_date?: string;
-  show_posts?: boolean;
-  show_categories?: boolean;
-  show_tags?: boolean;
-  show_total_words?: boolean;
-  show_last_activity?: boolean;
-  show_running_days?: boolean;
-  show_visits?: boolean;
-  show_upvotes?: boolean;
-  show_comments?: boolean;
-  tencent_key?: string;
-  default_city?: string;
-  fallback_text?: string;
-  fallback_source?: string;
 }
 
 // ========== 社交媒体 ==========
@@ -655,6 +699,8 @@ export interface ContentDisplay {
 
 export interface Toc {
   enable_toc: boolean;
+  /** 目录所在侧栏（三栏布局）：left = 左侧栏，缺省/right = 右侧栏 */
+  position?: "left" | "right";
   toc_depth: number;
 }
 

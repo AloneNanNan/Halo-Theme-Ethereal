@@ -3,7 +3,6 @@ import WidgetLayout from "./WidgetLayout.astro";
 
 interface Props {
   class?: string;
-  "th:style"?: string;
 }
 
 const className = Astro.props.class;
@@ -48,6 +47,14 @@ const className = Astro.props.class;
 
 <script is:inline>
   (function () {
+    // 实例作用域：脚本是 is:inline、每个实例各跑一份，重复配置（如左栏 + 移动端列表）
+    // 时必须只操作自己这一份——用 currentScript 取本实例所在条目容器再查元素，否则
+    // getElementById 永远命中文档里第一个实例，重复的那份是空壳。
+    // currentScript 对 is:inline 的经典脚本有效（模块脚本为 null），缺失时退化为 document。
+    var widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+
     var CACHE_KEY = "weather_cache";
     var CACHE_TTL = 1 * 60 * 60 * 1000; // 天气缓存 1 小时
     var IP_CACHE_KEY = "weather_ip_cache";
@@ -184,7 +191,7 @@ const className = Astro.props.class;
     }
 
     function renderWeather(result) {
-      var container = document.getElementById("weather-content");
+      var container = widgetRoot.querySelector("#weather-content");
       var rt = result && result.realtime && result.realtime[0];
       if (!container || !rt) {
         renderError();
@@ -289,7 +296,7 @@ const className = Astro.props.class;
     }
 
     function renderError(msg) {
-      var container = document.getElementById("weather-content");
+      var container = widgetRoot.querySelector("#weather-content");
       if (!container) return;
       container.innerHTML = "";
 
@@ -321,7 +328,7 @@ const className = Astro.props.class;
     }
 
     function showErrorKey() {
-      var container = document.getElementById("weather-content");
+      var container = widgetRoot.querySelector("#weather-content");
       if (!container) return;
       container.innerHTML = "";
 
@@ -398,22 +405,12 @@ const className = Astro.props.class;
       }
 
       var config = getConfig();
-      var widgets =
-        (config &&
-          config.sidebar &&
-          config.sidebar.widgetsConfig &&
-          (config.sidebar.widgetsConfig.rightWidgets ||
-            config.sidebar.widgetsConfig.widgets)) ||
-        [];
-      var wc = null;
-      for (var i = 0; i < widgets.length; i++) {
-        if (widgets[i].value === "weather") {
-          wc = widgets[i];
-          break;
-        }
-      }
-      var key = wc && wc.tencent_key;
-      var defaultAdcode = (wc && wc.default_city) || "110000";
+      // 配置已外提到 sidebar.weather 分组，直读即可。
+      // （旧实现在 widgetsConfig 数组里逐个找 value === 'weather'，且写了
+      //  `rightWidgets || widgets`——右栏非空时只看右栏，天气配在左栏就读不到 Key）
+      var wc = (config && config.sidebar && config.sidebar.weather) || {};
+      var key = wc.tencent_key;
+      var defaultAdcode = wc.default_city || "110000";
 
       if (!key) {
         showErrorKey();

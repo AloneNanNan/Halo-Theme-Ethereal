@@ -275,19 +275,13 @@ interface Props {
 
     // 从天气小组件配置读取腾讯位置服务 Key（复用现有 Key，与 Weather.astro 一致）
     function getTencentKey() {
-      var widgets =
+      return (
         (config &&
           config.sidebar &&
-          config.sidebar.widgetsConfig &&
-          (config.sidebar.widgetsConfig.rightWidgets ||
-            config.sidebar.widgetsConfig.widgets)) ||
-        [];
-      for (var i = 0; i < widgets.length; i++) {
-        if (widgets[i].value === "weather" && widgets[i].tencent_key) {
-          return widgets[i].tencent_key;
-        }
-      }
-      return "";
+          config.sidebar.weather &&
+          config.sidebar.weather.tencent_key) ||
+        ""
+      );
     }
 
     // 读取天气 IP 缓存（含完整 ad_info 的新格式；旧格式只有 adcode 则视为无文本）

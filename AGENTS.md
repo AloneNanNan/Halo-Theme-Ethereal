@@ -54,6 +54,8 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 
 非主题页（插件自带前台页等没有主题 Swup 容器、也不是由主题 Layout 渲染的页面）**不交给 Swup 接管**：一旦接管，`SwupHeadPlugin` 会先摘掉整套主题 CSS（换页期间可见的导航栏/侧栏/页脚当场无样式），随后 `replaceContent` 容器不匹配报错并整页刷新。守卫在 `src/scripts/app.ts` 的 `page:load` 钩子：目标页缺任一容器（清单取自 `swup.options.containers`，改容器配置无需同步）即 `visit.abort()`，交还浏览器原生跳转。新增主题页面无需任何改动（容器齐备即正常接管）。
 
+**容器清单**：`#swup-container` / `#toc-container` / `#toc-popup` / `#sidebar-toc` / `#right-sidebar-toc`（`astro.config.mjs`）。**两侧栏 `#sidebar` / `#right-sidebar` 本身不是容器**：换页不替换它们，小组件脚本因此不再每页重跑（音乐播放器不必"寄存"、天气不重复扫描、组件内部状态不重置——原先右栏是容器时那套寄存逻辑已随去容器化删除）；唯一按页变化的目录，各自放在一个恒存在的**槽位容器**里。**新增容器时元素必须在每个主题页都渲染**——不能给容器本身加 `th:if`，否则目标页缺容器会让该页所有换页退化成原生跳转；页面差异只能写在容器**内部**。既有先例：`#toc-container` 在无目录页面渲染空 `<div id="toc" />`，两个目录槽位在非文章页渲染空 div。
+
 **两处勿改错（浏览器 / swup 内部时序坑）**：
 
 - **交还姿势**：必须先 `history.back()` 撤销 Swup 刚 pushState 的占位条目、再 `location.assign`，否则浏览器回退只回退地址不恢复文档（地址变了内容不变、需刷新；Chrome 实测）。别改回 `location.replace`。
@@ -64,6 +66,7 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 - `src/pages/*.astro` — 页面模板（`post.astro`、`index.astro`、`category.astro` 等）
 - `src/components/*.astro` / `*.svelte` — 可复用组件（`PostCard.astro`、`PostList.astro` 等）
 - `src/components/control/` — 分组页共享控件：`FilterTab.astro` / `FilterTabs.astro`（分组筛选 tab）/ `PageHeader.astro`（页头），把 Thymeleaf 表达式当字符串 prop 传（见「组件表达式 prop 约定」）
+- `src/components/widget/` — 侧边栏小组件；`WidgetSwitch.astro` 是左右栏**共用**的条目分派片段库（`th:switch` 全站只定义一份，各栏用 `th:replace` 引用，见「侧边栏小组件」）
 - `src/layouts/*.astro` — 页面布局（`Layout.astro`、`MainGridLayout.astro`）
 - `src/styles/*.css` — 全局样式与 CSS 变量（`variables.css` 定义主题色/圆角等）
 - `src/types/config.ts` — `theme.config` 的类型定义
@@ -87,6 +90,62 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 
 读取默认值时用安全导航，例如 `theme.config?.layout?.postList?.descriptionLines == 0`。
 
+## 侧边栏小组件（条目化 + 吸顶 + 配置外提）
+
+**数据模型（`settings.yaml` 的 `sidebar` 分组）**：
+
+- `widgetsConfig.widgets` / `widgetsConfig.rightWidgets` / `widgetsConfig.mobileWidgets`：条目数组，每项只有 `{ value, sticky?, name?, html? }`（`mobileWidgets` 的条目**没有 `sticky`**）。`value` 取值：`profile` / `announcement` / `popular-posts` / `categories` / `tag` / `music` / `hitokoto` / `site-stats` / `weather` / `schedule` / `html`（`name` + `html` 仅「自定义HTML」使用；条目里的条件字段必须用本列表专属字段名，见「常见坑」的 FormKit 条目——现状是 `widget_html_*` / `right_widget_html_*` / `mobile_widget_html_*`）。
+- **`mobileWidgets`（移动端专用列表，<768px）**：留空 = 移动端沿用 `widgets` + `rightWidgets` 的条目与顺序；非空 = 移动端只显示本列表（`MobileSideBar.astro`，**没有吸顶概念**、按顺序排一个普通流块）。实现要点：
+  1. **条目放在 `<template>` 里**（不是直接渲染），由组件内的 `is:inline` 脚本在移动端断点下 `cloneNode(true)` + `appendChild` 挂载——`<template>` 内容不渲染、内联脚本也不执行，于是「只在移动端用的小部件」在桌面端不会白跑请求（`innerHTML` 插入的脚本不会执行，DOM 插入的会）。挂载脚本必须 `is:inline` 且紧贴 template：Astro 处理过的脚本会变成 defer 模块，挂载推迟到解析结束，移动端会先闪一下左右两栏。
+  2. 挂载成功后才给 `<html>` 加 `has-mobile-sidebar`，由 `Layout.astro` 的 `@media (max-width: 767.98px)` 规则隐藏 `#sidebar` / `#right-sidebar`。**类必须由脚本加、不能服务端渲染时就加**：脚本没跑（禁用 JS）时移动端照旧显示左右两栏，而不是白屏。
+  3. 同一个小部件可以同时配在桌面列表与移动端列表：各小组件脚本都按实例作用域取元素（见「常见坑」的小组件条目），DOM 位置只决定视觉顺序——移动端两个 aside 是 `display:none`，不参与网格排布。
+  4. 挂载是一次性的（`dataset.mounted` 守护）：侧栏在 Swup 容器之外，换页不重建、不重复请求；桌面→移动（拖窄/转屏）由 `matchMedia` 的 change 监听补挂一次。
+- **`profile` / `announcement` 也是普通条目**（可自由排序、可勾吸顶），显示位置由「放进哪个列表」决定；原先的 `position` / `display_position` 与各自的 `enable` 开关已废弃。
+- 各小组件的详细配置**外提为独立分组**：`sidebar.profile` / `announcement` / `siteStats` / `weather` / `hitokoto` / `music` / `schedule`。组件一律读 `theme.config?.sidebar?.<组>?.<字段>`，**不再从条目里读**（改配置读取时别去找 `widget.xxx`）。同类型小组件可在同一列表重复添加，共用同一份配置。
+- 站点统计的「统计项」是多选数组（`sidebar.siteStats.items`），**数组顺序即前台展示顺序**。
+
+**吸顶的前缀规则**：条目勾选「吸顶」才可能吸顶；未勾选的条目**只有在它前面所有条目都未勾选时**才真的不吸顶，一旦前面出现过勾选项就回退为吸顶。判定写作「前缀中未勾选吸顶的条目数 == 当前下标」：
+
+```
+widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky == false].size() == widgetStat.index
+```
+
+两个约束：切片用 List 自身的 `subList(from, to)`（`#lists.subList` 不存在）；选择器 `.?[]` 内部**只引用 `#this`**，不能引用 Thymeleaf 上下文变量（SpringEL 7 会抛 EL1008E）。判定写在 `th:each` 同元素的 `th:if` 上（`th:each` 优先级更高，所以迭代变量可用）。
+
+**渲染结构**：`SideBar.astro` / `RightSideBar.astro` 各自把列表切成「不吸顶区（正常流，排在吸顶块之前）」+「吸顶区」，两区（以及 `MobileSideBar` 的模板）都用 `<div th:replace="~{::widgetSwitch(${widget})}"></div>` 引用 `WidgetSwitch.astro` 里**只定义一次**的 `th:switch` 片段——新增/调整小组件分派只改它，**任何引用处都不要内联第二份 switch**（曾因 5 处内联把每页模板从 344 KB 撑到 654 KB、主题包从 3.1 MB 涨到 5.3 MB）。
+
+**片段库 `WidgetSwitch.astro` 的两个硬约束**（改动前必读，其顶部注释有完整说明）：
+
+1. 它是 Thymeleaf fragment（`th:fragment="widgetSwitch(widget)"`），定义处被外层 `<div th:if="false">` 守卫、由 `MainGridLayout` 全站只渲染一次 → 页面模板里只存一份标记，其余是五处一行引用；片段被选择走解析树、不受 `th:if` 影响，引用处照常取得到。
+2. 守卫**必须留在外层元素**：若把 `th:if` / `th:remove` 写进片段根元素，被 `th:replace` 引用出的副本会连条件一起复制、渲染结果为空。片段根元素还要自带 `class="contents"`（`th:replace` 是整体替换，不保留引用点 div 的属性）。
+
+- **默认小组件列表**（`settings.yaml` → 小组件设置，只对新安装/重置该字段生效，不影响站点已保存的配置）：左栏 `profile`(不吸顶) → `announcement`(不吸顶) → `categories` → `tag`；右栏 `hitokoto` → `site-stats`；移动端留空 = 不启用独立列表，手机端按「内容 → 左栏 → 右栏」顺序显示。`sticky` 复选框默认值是 `true`，不吸顶必须显式写 `sticky: false`，且只能出现在列表前缀（前缀规则见上）。
+
+- `#sidebar-sticky` / `#right-sidebar-sticky` 两个 id 被 `Layout.astro`（吸顶 top / max-height）与 `global.css`（banner 偏移）引用，**勿改名**。
+
+**目录（TOC）挂在哪一栏**：`post.toc.position`（`left` / 缺省 `right`）决定三栏布局下目录挂在哪个侧栏；两栏布局不受影响（继续用 `#toc-container` 的悬浮目录）。两侧栏结构完全对称：各有一个恒存在的**目录槽位容器** `#sidebar-toc` / `#right-sidebar-toc`，槽位内部由服务端按页条件渲染（文章页 + `enable_toc` + 位置在本栏 + 非两栏 → 卡片，否则空内容），**不需要任何客户端 refresh / 显隐代码**。
+
+- 卡片本体是 `SidebarTOC.astro`，左右栏共用（**勿复制第二份**）；滚动容器靠 `closest("[data-toc-scroll]")` 定位、不认 id，所以换到任意一栏都能工作。
+- 「文章页只留前 2 个吸顶组件」「吸顶块限高」「吸顶组件不参与收缩」三条**全部由 `Layout.astro` 的 CSS 承担、左右同源**，门控是 `:has(#sidebar-toc > *)` / `:has(#right-sidebar-toc > *)`（= 槽位里确实有卡片）；无目录的页面（首页/分类页等）三条都不命中，吸顶组件照常全部显示。三个坑：
+  1. 隐藏组件的规则必须 `:not(#槽位id)` 排除槽位自身，否则「2 个吸顶组件 + 槽位」时槽位正好排第 3 个被隐藏；
+  2. 槽位用 `#sidebar-toc, #right-sidebar-toc { display: contents }`（**不能用 `.contents` 类**，会被按 `.contents` 数量的规则误伤）；
+  3. 整段包在 `md+`——卡片是 `hidden md:flex`，手机上不能让它白吃两个吸顶名额、也不该限高。
+- **卡片必须用 `flex-auto`（`flex: 1 1 auto`）而不是 `flex-1`（`flex: 1 1 0%`）**：flex 负空间按「收缩系数 × flex-basis」分摊，basis 为 0 时卡片只会"有余量时长高、不够时一点不缩"，于是限高变化（导航栏出现让出 72px）会全部砸到吸顶组件上把它们压扁。配合「吸顶组件 `flex-shrink: 0`（选中 `.card-base`，覆盖 WidgetLayout / Profile / 自定义HTML 三种形态，widget 内部无嵌套 `.card-base`）」，差额才只由卡片承担（卡片内部本来就能滚）。**卡片内层滚动区（`[data-toc-scroll]`）同样必须 `flex-auto` 而不是 `flex-1`**：内层 basis 为 0 时它对卡片的内容高贡献为 0，卡片 basis 只剩标题高、被 `min-h` 钉死——单词条目录留一块空白、长目录把条目塞进几十像素的小滚动区（实测 20 条只有 140px 可滚）。`min-h` 保底取 6rem（≈ 标题 + 1 个条目）只为极端情况兜底，别调大。**空目录例外**：`:has([data-toc-empty]:not(.hidden))`（hidden 类由 TOC 组件按有无标题切换）时撤掉 `min-h` 保底并 `flex-grow: 0`，卡片收回内容高度，否则一行"此文章无目录"会被撑在一整块空白卡片里。吸顶块保持 `overflow: hidden`、不做内部滚动：极端情况下（两个吸顶组件本身就快到一屏、连卡片 `min-h` 保底都塞不下）目录底部会被裁，属已知取舍。
+- **多实例组件的内部钩子用 `data-*`、不要用 `id`**：`TOC.astro` 一页会渲染多份（侧栏卡片、两栏悬浮目录、移动端弹窗），高亮条与空目录占位故用 `data-toc-indicator` / `data-toc-empty`。重 id 的坑在于 JS 与 CSS 行为不一致——`getElementById` / `querySelector("#…")` 只命中第一个实例，CSS 的 `#…` 却全部命中，表现为"某一份的脚本改错元素"且不报错；查这类钩子一律走 `this.querySelector()` 实例作用域，别用全站查找。
+
+**两栏「右栏模式」**（`pageLayout.rightSidebarMode`，设置项仅在 `layoutMode === 'two-column'` 时出现）：侧栏与正文交换列位置，两栏的悬浮目录镜像到左侧空白槽。两栏的左右完全由 CSS 决定，改动面就是四处，改两栏布局时必须同步：
+
+1. `Layout.astro` 的 `<body>` class `layout-two-column-right`（`th:classappend` 末尾追加）。**必须挂 body**：`#main-grid` 与 `#toc-container` 是兄弟节点，只有 body 级类能同时命中——既有的 `.layout-two-column` 挂在 `#top-row` 与面板 div 上，够不到 TOC（`TOC.astro` 里 `closest(".layout-three-column")` 与 `.layout-three-column [data-toc-entry]` 那套样式其实一直没生效，正是因为够不到）。
+2. `#main-grid` 的 `grid-template-columns: 1fr 17.5rem`（原文 `17.5rem_1fr`）。
+3. `#main-column`（主内容列，`MainGridLayout` 新加的 id）与 `#sidebar` 的 `grid-column-start` 互换。
+4. `#toc-wrapper` 的 `right: auto; left: calc(-1 * var(--toc-width))`（`#toc-inner-wrapper` 是 fixed，横向走静态位置，跟着父元素走，无需另改）。
+
+四处都用 `!important` 覆盖 Tailwind 的任意值工具类：同一属性两条任意值类谁生效取决于产物生成顺序，不可靠。移动端顺序（内容 → 左侧列表 → 右侧列表 → 页脚）与三栏布局都不受该开关影响。
+
+- 右栏 aside 的断点行为：`<768px` 作为「第三项」可见、`768–1279px` 隐藏、`≥1280px` 三栏布局可见 / 两栏布局隐藏。右栏**不吸顶区**的间距只写 `mb-4 xl:mb-0`——xl 起 aside 自身是 `flex + gap-4`，再给 margin 会变成双倍间距。
+- 移动端顺序天然是「左栏列表 → 右栏列表」（`#main-grid` 的排列顺序），已不存在「个人简介/公告固定第一二位」的老逻辑；也**已移除**「右栏的个人简介/公告回落左栏」的兜底，右栏条目在平板宽度下整体不显示。
+- 小组件的**空卡守卫**（勾选项全落空时整卡不渲染）必须放在 `th:with` 的**外层**元素上：同元素 `th:if` 先于 `th:with` 执行，写在一起会拿到 `null`（`SiteStats.astro` 的 `stats` 就曾因此恒为 null，导致「只勾选访问量/点赞/评论」时整卡消失）。
+
 ## Halo/Thymeleaf 特有约定
 
 - `th:text`（输出文本）、`th:if` / `th:unless`（条件）、`th:each`（循环）、`th:href`（链接）、`th:classappend`（追加类）——这些是 Thymeleaf 指令，不是前端属性。
@@ -104,18 +163,27 @@ Halo 应用市场的 Markdown 渲染器不支持 `<picture>`（GitHub 深浅色�
 - 动态 tab 列表用 `<div class="contents" th:each=...>` 包裹（组件标签上的 `th:each` 不会转发到根元素，故不能放 FilterTab 自身）。
 - `iconClass` 只传 `icon-[...]` 名字面量，组件统一追加 `text-base text-(--primary)`；图标名必须留在页面源码，Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${name}]` 动态拼接。
 - **沉默 footgun**：若把字面量误当表达式传（或漏写 `${}`），`astro build` 不报错，只在 Halo 服务端渲染时抛 Thymeleaf 解析异常。改这些组件前先读懂对应 `.astro` 文件顶部的传参注释。
+- `src/components/widget/WidgetSwitch.astro` 不吃表达式 prop：片段内固定用参数 `widget`（引用处传 `${widget}`），自定义 HTML 条目取 `${widget.html}`（见「侧边栏小组件」的片段库说明）。
 
 ## 常见坑（务必注意）
 
 - **不要改 `dist/`**：它是 `pnpm package` 打出的发布 zip 产物，改无效。要改就改 `src/` 后重新构建（HTML 模板产物在 `templates/`）。
 - **Halo 模板缓存**：改完 `templates/` 后 Halo 不会自动重载，必须到后台「主题 → 重载主题」（或重新上传主题包）才生效。服务端渲染中途抛错会表现为**浏览器一直转圈（响应流截断）而非报错页**；此时用 curl 抓页面看是否以 `</html>` 结尾、并到日志搜 `TemplateProcessingException` 定位。直接 `>` 截断 `halo.log` 会因写入偏移错位产生空字节，要用 `strings` 命令读取。
 - **Thymeleaf 同元素属性优先级：`th:if` 先于自身 `th:with` 执行**。依赖本元素 `th:with` 定义的变量不能直接放在同元素的 `th:if` 里（未定义时 SpEL 按 null 比较 → 恒 false，元素静默消失）。解法见 `MainGridLayout.astro` / timeline·skills 分页：外层包一个 `th:with` + `th:remove="tag"` 的元素先算变量，内层元素再写 `th:if`。同理，变量出了定义它的元素作用域即失效，跨块使用要么放公共祖先上、要么在目标元素重新计算。
+- **`th:case` 与 `th:if` 不要写在同一元素上**（两者优先级同为 300，同元素行为不可靠）。需要「命中该 case 且满足额外条件」时，外层用 `<div th:case="...">` 壳、内层元素再写 `th:if`，见 `SiteStats.astro` 的访问量/点赞/评论/运行天数行。
+- **`th:each` / `th:switch` 不要直接加在 flex 容器上**：容器会被复制 N 份，行与行之间的 `gap-*` 随之失效。把迭代/分派放进容器**内部**的 `<div class="contents">` 包装层（`display:contents` 不产生盒子，行仍是原容器的 flex 项），见 `SiteStats.astro`、`SideBar.astro`。
+- **`th:style` 会整条替换元素上的 `style` 属性，要「追加」得用 `th:styleappend`**：Astro 的 `<style define:vars>` 会把 CSS 变量注入到组件根元素的 `style` 里（如 `WidgetLayout.astro` 的 `--collapsedHeight`），对这类元素写 `th:style` 会静默丢掉那些变量。
 - **Thymeleaf 工具方法与类型坑**：`#strings.toInteger` / `#numbers.createInteger` / `#lists.subList` **都不存在**——字符串转数字用 `#conversions.convert(x, 'java.lang.Integer')`，列表切片用 List 自身的 `list.subList(from, to)`；`param.xxx` 是 `String[]` 数组，取值用 `param.xxx[0]` 并先判空和 `matches '\d+'`；FormKit number 字段存出来的可能是字符串，做算术前必须转类型。
 - **Tailwind 任意值里的 `calc(.../2)` 的 `/` 会被解析成修饰符而无法生成**。需要除法时改用等价的固定单位（如 `top-2`、`top-0.5`），或把完整 `calc()` 写进 `is:global` 的 `<style>` 块。
 - **带 `src={...}` / 属性声明的 `<script>` 会被当 `is:inline` 处理**，无法使用 TS/包导入。需要包导入的脚本务必显式加 `is:inline`，或改为模块脚本。
+- **Astro 的组件 `<script>` 与 `<Icon>` 是同一种「只看首次使用处」的坑（脚本版）**：同一组件的脚本**全页只输出一次、落在第一个实例处**。若第一个实例由 Thymeleaf 运行时决定渲不渲染（如侧栏目录卡片可配在左栏或右栏、左栏源码更靠前），该实例被 `th:if` 移除时脚本一并丢失，另一栏的 `<table-of-contents>` 永远不会 upgrade——表现为**目录卡片整体空白**（条目、`此文章无目录` 占位都没有），而换到另一栏却正常。解法：自定义元素的注册与实现放进全局无条件的 `src/scripts/app.ts`（现存 `widget-layout`、`table-of-contents` 两处），组件里只留标记。
+- **小组件脚本必须按实例取元素**：组件脚本是 `is:inline`、每个实例各跑一份，但 `document.getElementById("固定id")` 永远命中文档里**第一个**实例——同一个小部件配在两处（左栏 + 右栏、桌面 + 移动端列表、模板挂载后与桌面那份）时第二份就是空壳。三种既有做法：① `document.currentScript.parentElement` 取本实例容器，再 `querySelector("#id")`（`Hitokoto` / `SiteStats` / `Weather`；**变量名别撞上脚本里的局部变量**——Weather 里有局部 `root`，故用 `widgetRoot`）；② 每实例随机 id（`MusicPlayer` 的 `widgetId`、`PopularPosts` 的 `instanceId`）；③ `querySelectorAll` 一次性处理所有实例（`Announcement`）。页面级配置节点（`#theme-config`）继续用全局取值。
 - **astro-icon 的 sprite 会丢图标**：`astro-icon/components` 的 `<Icon>` 默认走 sprite——同一页面内某个图标只在**首次使用处**输出 `<symbol>`，其余位置只输出 `<use href="#ai:...">`。若首次使用处落在由 Thymeleaf 运行时决定渲不渲染的分支里（如同一小组件可配在左栏或右栏，源码中左栏分支更靠前），该分支没渲染时另一栏就只剩 `<use>` 引用 → 图标全丢。这类位置改用全站统一的 span + `icon-[...]`（图标数据随元素自带，与渲染位置无关），见 `MusicPlayer.astro`；确实要保留 `<Icon>` 时给它加 `is:inline`。另：`astro.config.mjs` 的 `icon({ include })` 白名单已精简到 5 个（`BackToTop.astro` 与目录按钮在用的那几个），新增 `<Icon>` 前必须先把图标加进白名单，否则构建期直接报错。
 - **`icon-[...]` 图标遮罩的 `-webkit-` 前缀会被构建链裁掉**：图标是 CSS 遮罩（`background-color: currentColor` + `mask-image: var(--svg)`），靠 `mask-size:100% 100%` 把固有 24px 的遮罩缩进 `1em` 方框；Chromium < 120（OPPO/一加自带 HeyTap 浏览器、老微信内置内核等）只认 `-webkit-mask-image` / `-webkit-mask-size` / `-webkit-mask-repeat`。这两条前缀是否被保留由构建链按「目标浏览器」决定、且随构建环境漂移（同一份源码不同机器可能一个有一个没有，官方 CI 产物 1.1.0–1.2.4 就缺），缺了表现为图标被裁掉右下角（字形贴边的图标最明显，见 issue #83）。因此 `scripts/ensure-icon-mask-prefix.mjs`（挂在 `astro.config.mjs` 的 `astro:build:done`）会对产物兜底补齐 `-webkit-mask-image/-size/-repeat` 三件套，并在日志里报告「补回 N 条」或「齐全」（压缩产物的末位声明不带分号，脚本会先补声明分隔符，并有"插入点必须在声明边界"的断言，避免再出现"静默产出非法 CSS 却显示已补回"）。**发版前复核**（脚本会就地修正，务必在临时解包目录跑）：`unzip -q dist/<包>.zip -d /tmp/check && node scripts/ensure-icon-mask-prefix.mjs /tmp/check/templates`——输出「齐全」= 包没问题，输出「已兜底补回」= 该包原本是坏的（别发）；再顺手确认无拼接事故：`grep -oh '.\{0,1\}-webkit-mask-size' /tmp/check/templates/assets/*.css | sort | uniq -c`，每行前导字符必须是 `;`。别用 `grep '\.icon-…'` 数条数当唯一判据：`group-[.liked]:icon-[…]` 这类变体选择器写作 `\:icon-\[`，会被漏掉（每份 CSS 少 1 条）。另：**验收/发布一律用 CI 产物**（`pnpm install --frozen-lockfile` + `pnpm build`），本机构建包可能因依赖漂移而「看着正常」，不能当发布依据。
-- **Halo FormKit 已知坑**：互斥 `if` 条件的同类型字段必须加唯一 `key`，否则 Vue 会复用组件实例导致设置值丢失（`settings.yaml` 里已有先例）。侧边栏小组件（`widgetsConfig.widgets` / `rightWidgets`）的条件字段已按 `widget_<部件>_<字段>` / `right_widget_<部件>_<字段>` 全部补齐 `key`——缺 `key` 时切换「部件」下拉会把旧部件的值串到新部件字段上（如音乐的「平台=网易云音乐」串进一言的「API 地址」）。新增小组件配置项时务必同步加唯一 `key`。另：条件字段默认 `preserve: false`——字段因 `if` 不成立而卸载时，**值会从父数据中移除**，表现为切换「部件」下拉后设置丢失，故侧边栏小组件的条件字段统一加了 `preserve: true`。开了 `preserve` 后不同部件的**同名字段会互相覆盖**（音乐的 `api` 与一言的 `api` 就是例子），因此字段名必须带部件前缀（`music_api` / `hitokoto_api`），旧字段由模板以 `新名 ?: 旧名` 回退兼容。
+- **Halo FormKit 已知坑（条件字段的 `key` / `preserve`）**：互斥 `if` 条件的同类型字段必须加唯一 `key`，否则 Vue 会复用组件实例导致设置值丢失（`settings.yaml` 里已有先例）。侧边栏条目里目前只剩「自定义HTML」还有条件字段，它们已按 `widget_html_name` / `widget_html_html`（右侧 `right_widget_*`）补齐 `key` + `preserve: true`。另：条件字段默认 `preserve: false`——字段因 `if` 不成立而卸载时**值会从父数据中移除**，表现为切换下拉后设置丢失，需要保留就显式加 `preserve: true`；而开了 `preserve` 后**不同条目的同名字段会互相覆盖**，故同一容器内不同用途的同名字段必须靠字段名区分（小组件的详细配置已外提为独立分组，组内字段名天然唯一，无需前缀）。
+- **外提到独立分组的配置字段，一律不写无条件必填校验（`validation: required`）**：分组是常显的，「有没有用这个小组件」不再由字段是否存在表达，加了 `required` 会造成「没启用该小组件也保存不了设置」。必填语义改由「模板侧优雅降级 + help 文案提示」承担（例：`MusicPlayer.astro` 在 ID 为空时渲染「未配置 ID」提示卡，见「侧边栏小组件」）。
+- **`select` 的多选模式（`multiple`）可当作「有序选项集合」控件**：`multiple: true`（提交 `value` 数组，**顺序 = 勾选顺序**）、`maxCount`（限选数量）、选项支持 `description`（label 下方说明，且参与本地搜索）。站点统计的「统计项」就是这么做的——数组顺序即前台展示顺序。⚠️ 实测（Halo 2.26）多选下拉**不支持拖动排序**，写 `sortable: true` 也不生效，help 文案别写成「可拖动排序」；要调顺序只能取消后按目标顺序重新勾选。
+- **`array` 的 `itemLabels.label` 不是表达式，只认 `$value.<字段名>` 这个字面前缀**：Halo 的 `ArrayInput.vue` 用 `label.split("$value.")[1]` 取路径再 `get(item, path)`，写 `||`、字符串拼接、三元都会解析成空 → 条目列表全变空白（踩过一次）。要显示条目自身字段就写 `label: $value.value`；另外**不写 `itemLabels` 时它默认列出条目的所有字段**（`value`、`sticky`…），所以要么显式写、要么接受全字段展示。
 - **布局/断点覆盖**：网格 vs 列表、移动端 vs 桌面端的样式差异集中在 `PostList.astro` 的 `is:global` `<style>` 块里，改卡片样式前先看那里有没有对应覆盖，别只改组件类。
 - **i18n 词条里的字面花括号必须转义**：词条值中若需要字面 `{location}` 这类占位（非 `{0}` 数字参数），必须写成 `'{'location'}'`（MessageFormat 单引号转义），否则渲染 `[(#{...})]` 时 MessageFormat 会把它当参数占位符解析并抛错，曾导致全站白屏。新增含花括号词条前先看 `i18n/default.properties` 里 `welcome.defaultTemplate` 的写法。
 - **全局 i18n 助手**：`t()` 读取 `window.i18nResources` 的客户端翻译助手统一由 `Layout.astro` 注入（`window.__etherealI18n`，另含 `__etherealLangTag`/`__etherealSetLanguage`/`__etherealBigNum`）。内联脚本复用即可，不要各自复制实现。

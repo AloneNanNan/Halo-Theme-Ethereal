@@ -1,0 +1,70 @@
+---
+// 小组件分派片段的引用表达式：片段在 WidgetSwitch.astro 定义一次（全站一套），
+// 这里只留一行引用，条目配置以参数传入（详见 WidgetSwitch.astro 顶部注释）
+const widgetSwitchReplace = "~{::widgetSwitch(${widget})}";
+
+/**
+ * 移动端侧边栏（<768px 专用）：仅当「移动端小组件」列表非空时渲染。
+ *
+ * 与左右两栏的区别：没有吸顶概念——条目按配置顺序排成一个普通流块，也不吃
+ * 「文章页只留前 2 个」的限额（限额/限高规则只写在 md+ 断点里）。
+ *
+ * 条目不直接渲染、而是放进 <template>：template 内容与其内联脚本都不执行，桌面端
+ * 不会为「只在移动端用」的小部件白跑请求；只有移动端断点下才由下面的内联脚本克隆挂载
+ * （克隆 + appendChild 插入的 <script> 会执行，innerHTML 插入的不会）。挂载成功才给
+ * <html> 加 has-mobile-sidebar（Layout.astro 据此在移动端隐藏左右两栏）；脚本没跑
+ * （禁用 JS / 报错）时类不存在，移动端照旧显示两栏，不会白屏。挂载是一次性的：侧栏在
+ * Swup 容器之外，换页不重建、不重复请求。
+ *
+ * ⚠️ 挂载脚本必须 is:inline 且紧贴 template：Astro 处理过的脚本会变成 defer 模块，
+ * 挂载被推迟到解析结束，移动端会先闪一下左右两栏。
+ * 位置放在两个 aside 之后：小部件可同时配在桌面列表与移动端列表（各脚本按实例作用域
+ * 取元素，见「常见坑」），DOM 位置只决定视觉顺序。
+ */
+---
+
+<div
+  th:with="mobileWidgets=${theme.config?.sidebar?.widgetsConfig?.mobileWidgets}"
+  th:remove="tag"
+>
+  <div
+    th:if="${mobileWidgets != null and not #lists.isEmpty(mobileWidgets)}"
+    th:remove="tag"
+  >
+    <aside
+      id="mobile-sidebar"
+      class="onload-animation col-span-2 hidden w-full md:hidden"
+    >
+    </aside>
+
+    <template id="mobile-sidebar-template">
+      <div class="mb-4 flex w-full flex-col gap-4">
+        <div class="contents" th:each="widget : ${mobileWidgets}">
+          <div th:replace={widgetSwitchReplace}></div>
+        </div>
+      </div>
+    </template>
+
+    <script is:inline>
+      (function () {
+        var host = document.getElementById("mobile-sidebar");
+        var template = document.getElementById("mobile-sidebar-template");
+        if (!host || !template) return;
+        var query = window.matchMedia("(max-width: 767.98px)");
+
+        function mount() {
+          if (!query.matches || host.dataset.mounted === "true") return;
+          host.dataset.mounted = "true";
+          // 先挂内容再显示：否则会闪一下空侧栏
+          host.appendChild(template.content.cloneNode(true));
+          document.documentElement.classList.add("has-mobile-sidebar");
+          host.classList.remove("hidden");
+        }
+
+        mount();
+        // 桌面 → 移动（拖窄 / 转屏）时补挂一次；移动 → 桌面不卸载，交给 md:hidden 收起
+        if (query.addEventListener) query.addEventListener("change", mount);
+      })();
+    </script>
+  </div>
+</div>
