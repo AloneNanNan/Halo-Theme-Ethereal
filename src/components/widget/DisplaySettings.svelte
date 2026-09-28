@@ -32,12 +32,16 @@
     getDefaultBannerTitle,
     getStoredBannerTitle,
     setBannerTitle,
+    getDefaultSakuraEnabled,
+    getStoredSakuraEnabled,
+    setSakuraEnabled,
     resetPostListLayout,
     resetCardStyle,
     resetWallpaperParams,
     resetWallpaperMode,
     resetWave,
     resetBannerTitle,
+    resetSakura,
     type PostListLayoutMode,
     type BannerDisplayMode,
     type FullscreenLayoutMode,
@@ -57,10 +61,11 @@
     setHue(hue);
   });
 
-  /* ── 访客样式切换：分区可见性 ── */
+  /* ── 访客样式切换：标签页开关（一个后台开关 = 一个标签页） ── */
   const switches = getVisitorSwitches();
-  const showLayout = switches.postListLayout;
-  const showCardStyle = switches.cardStyle;
+  const showAppearance = switches.appearance;
+  const showWallpaper = switches.wallpaper;
+  const showEffects = switches.effects;
 
   /* ── 壁纸模式 / 壁纸设置（首页壁纸标题 + 波浪）状态 ── */
   let wallpaperMode = $state<BannerDisplayMode>(getStoredBannerDisplay());
@@ -81,40 +86,43 @@
     wave !== defaultWave || bannerTitle !== defaultBannerTitle,
   );
 
-  // 全屏布局（经典/沉浸）：访客开关开启 + 当前为全屏模式时显示
-  const showFullscreenLayout = $derived(
-    switches.fullscreenLayout && wallpaperMode === "fullscreen",
+  // 壁纸标签页内的分区显隐：仅随访客当前模式变化（标签页可见性由上方开关管）。
+  // 全屏布局（经典/沉浸）仅全屏模式；壁纸设置（首页标题 + 波浪）仅横幅/全屏且后台有
+  // 可用项；透明参数区仅全屏透明（含全屏沉浸 hero，此时模糊/卡片透明度仍可调）
+  const showFullscreenLayout = $derived(wallpaperMode === "fullscreen");
+  const showWallpaperSettings = $derived(
+    (defaultWave || defaultBannerTitle) &&
+      (wallpaperMode === "banner" || wallpaperMode === "fullscreen"),
+  );
+  const showTransparent = $derived(
+    wallpaperMode === "transparent" ||
+      (wallpaperMode === "fullscreen" && fullscreenLayout === "hero"),
   );
 
-  // 壁纸参数区跟随访客当前生效模式（仅全屏透明时显示），而非服务端初值
-  const showWallpaperMode = switches.wallpaperMode;
-  // 壁纸设置区（横幅/全屏：首页壁纸标题 + 波浪开关）：访客壁纸设置开关 + 任一后台项
-  // 可用（首页壁纸标题或波浪）且访客可切壁纸模式时可见，具体渲染还取决于当前模式
-  const showWallpaperSettings =
-    showWallpaperMode &&
-    switches.wallpaperSettings &&
-    (defaultWave || defaultBannerTitle);
-  // 壁纸参数区：全屏透明模式全显示；「全屏 + 沉浸（hero）」下也显示
-  // （背景模糊度 = 首页斜坡封顶 / 非首页固定值，卡片透明度 = 磨砂强度；
-  // 壁纸透明度只对透明模式有意义，见下方渲染分支）
-  const showWallpaper = $derived(
-    switches.transparent &&
-      (wallpaperMode === "transparent" ||
-        (wallpaperMode === "fullscreen" && fullscreenLayout === "hero")),
+  /* ── 面板 Tab（外观 / 壁纸 / 特效，参考 firefly） ── */
+  type PanelTab = "appearance" | "wallpaper" | "effects";
+  // 可见 Tab 按固定顺序收集：≥2 个时显示 Tab 栏，=1 个时直接渲染该标签页内容
+  const visibleTabs = $derived.by<PanelTab[]>(() => {
+    const tabs: PanelTab[] = [];
+    if (showAppearance) tabs.push("appearance");
+    if (showWallpaper) tabs.push("wallpaper");
+    if (showEffects) tabs.push("effects");
+    return tabs;
+  });
+  const showTabBar = $derived(visibleTabs.length >= 2);
+  // Tab 按钮文案（i18n key 保持字面量，供 Layout.astro 注入的 i18nResources 精确匹配）
+  const tabMeta: Record<PanelTab, { i18nKey: string; fallback: string }> = {
+    appearance: { i18nKey: "display.tabAppearance", fallback: "外观" },
+    wallpaper: { i18nKey: "display.tabWallpaper", fallback: "壁纸" },
+    effects: { i18nKey: "display.tabEffects", fallback: "特效" },
+  };
+  // 初始即定位到第一个可见 Tab（避免首帧渲染不可见分区）；运行期不可见时自动纠偏
+  let activeTab = $state<PanelTab>(
+    visibleTabs.length > 0 ? visibleTabs[0] : "appearance",
   );
-
-  /* ── 面板 Tab（外观 / 壁纸，参考 firefly） ── */
-  const hasAppearanceContent = $derived(!hueFixed || showLayout || showCardStyle);
-  const hasWallpaperContent = $derived(showWallpaperMode || showWallpaper);
-  const showTabBar = $derived(hasAppearanceContent && hasWallpaperContent);
-  let activeTab = $state<"appearance" | "wallpaper">("appearance");
-
-  // 当前 Tab 不可用时自动切换到可用的 Tab
   $effect(() => {
-    if (hasWallpaperContent && !hasAppearanceContent) {
-      activeTab = "wallpaper";
-    } else if (!hasWallpaperContent) {
-      activeTab = "appearance";
+    if (visibleTabs.length > 0 && !visibleTabs.includes(activeTab)) {
+      activeTab = visibleTabs[0];
     }
   });
 
@@ -139,6 +147,7 @@
   let cardHoverLift = $state(getStoredCardHoverLift());
   let navbarBlur = $state(getStoredNavbarBlur());
   let postListMasonry = $state(getStoredPostListMasonry());
+  let sakura = $state(getStoredSakuraEnabled());
   // 面板里透明度类参数以百分比展示（存储为 0–1）
   const storedWallpaper = getStoredWallpaperParams();
   let wallpaperOpacity = $state(Math.round(storedWallpaper.opacity * 100));
@@ -151,18 +160,20 @@
   const defaultNavbarBlur = getDefaultNavbarBlur();
   const defaultPostListMasonry = getDefaultPostListMasonry();
   const defaultWallpaper = getDefaultWallpaperParams();
+  const defaultSakura = getDefaultSakuraEnabled();
   const dirtyLayout = $derived(layout !== defaultLayout);
   const dirtyCard = $derived(
     cardHoverLift !== defaultCardHoverLift ||
       navbarBlur !== defaultNavbarBlur ||
       postListMasonry !== defaultPostListMasonry,
   );
-  const showMasonry = $derived(showCardStyle && layout === "grid");
+  const showMasonry = $derived(layout === "grid");
   const dirtyWallpaper = $derived(
     wallpaperOpacity !== Math.round(defaultWallpaper.opacity * 100) ||
       wallpaperBlur !== Math.round(defaultWallpaper.blur) ||
       wallpaperCardAlpha !== Math.round(defaultWallpaper.cardAlpha * 100),
   );
+  const dirtySakura = $derived(sakura !== defaultSakura);
 
   const modes: {
     value: BannerDisplayMode;
@@ -279,11 +290,21 @@
     setPostListMasonry(postListMasonry);
   }
 
+  function toggleSakura() {
+    sakura = !sakura;
+    setSakuraEnabled(sakura);
+  }
+
   function resetCard() {
     resetCardStyle();
     cardHoverLift = getDefaultCardHoverLift();
     navbarBlur = getDefaultNavbarBlur();
     postListMasonry = getDefaultPostListMasonry();
+  }
+
+  function resetSakuraBtn() {
+    resetSakura();
+    sakura = getDefaultSakuraEnabled();
   }
 
   function applyOpacity() {
@@ -309,15 +330,14 @@
 
 <div id="display-setting" class="float-panel float-panel-closed absolute w-80 right-4 px-4 pb-4 pt-0">
   {#if showTabBar}
+    <!-- Tab 按钮由 visibleTabs 驱动生成：与可见性判断同源，避免按钮列表与开关失步 -->
     <div class="panel-tabs" role="tablist">
-      <button type="button" class="panel-tab" class:panel-tab-on={activeTab === "appearance"}
-              role="tab" aria-selected={activeTab === "appearance"} on:click={() => (activeTab = "appearance")}>
-        <span>{t("display.tabAppearance", "外观")}</span>
-      </button>
-      <button type="button" class="panel-tab" class:panel-tab-on={activeTab === "wallpaper"}
-              role="tab" aria-selected={activeTab === "wallpaper"} on:click={() => (activeTab = "wallpaper")}>
-        <span>{t("display.tabWallpaper", "壁纸")}</span>
-      </button>
+      {#each visibleTabs as tab}
+        <button type="button" class="panel-tab" class:panel-tab-on={activeTab === tab}
+                role="tab" aria-selected={activeTab === tab} on:click={() => (activeTab = tab)}>
+          <span>{t(tabMeta[tab].i18nKey, tabMeta[tab].fallback)}</span>
+        </button>
+      {/each}
     </div>
   {/if}
 
@@ -351,7 +371,7 @@
       {/if}
 
       <!-- 文章布局 -->
-      {#if showLayout}
+      {#if showAppearance}
         <div class="section-title mb-3">
           {t("display.layout", "文章布局")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
@@ -376,7 +396,7 @@
       {/if}
 
       <!-- 卡片样式 -->
-      {#if showCardStyle}
+      {#if showAppearance}
         <div class="section-title mb-3">
           {t("display.cardStyle", "卡片样式")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
@@ -408,7 +428,7 @@
 
     {#if activeTab === "wallpaper"}
       <!-- 壁纸模式（纯色背景/横幅/全屏/全屏透明） -->
-      {#if showWallpaperMode}
+      {#if showWallpaper}
         <div class="section-title mb-3">
           {t("display.wallpaperMode", "壁纸模式")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
@@ -452,7 +472,7 @@
       {/if}
 
       <!-- 壁纸设置（横幅/全屏：首页壁纸标题 + 波浪开关，参考 firefly 的壁纸设置分区） -->
-      {#if showWallpaperSettings && (wallpaperMode === "banner" || wallpaperMode === "fullscreen")}
+      {#if showWallpaperSettings}
         <div class="section-title mb-3">
           {t("display.wallpaperSettings", "壁纸设置")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
@@ -481,7 +501,7 @@
       {/if}
 
       <!-- 透明设置（全屏透明模式） -->
-      {#if showWallpaper}
+      {#if showTransparent}
         <div class="section-title mb-3">
           {t("display.wallpaper", "壁纸设置")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
@@ -518,6 +538,26 @@
           <input aria-label={t("display.wallpaperCardAlpha", "卡片透明度")} type="range" min="30" max="100" step="5"
                  bind:value={wallpaperCardAlpha} on:input={applyCardAlpha} class="wallpaper-slider">
         </div>
+      {/if}
+    {/if}
+
+    {#if activeTab === "effects"}
+      <!-- 特效设置（目前仅樱花；后续特效在其后追加 toggle-row 即可） -->
+      {#if showEffects}
+        <div class="section-title mb-3">
+          {t("display.effectsSettings", "特效设置")}
+          <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
+                  class:opacity-0={!dirtySakura} class:pointer-events-none={!dirtySakura} on:click={resetSakuraBtn}>
+            <div class="text-(--btn-content)">
+              <div icon="fa6-solid:arrow-rotate-left" class="icon-[fa6-solid--arrow-rotate-left] text-[0.875rem]"></div>
+            </div>
+          </button>
+        </div>
+        <button type="button" class="toggle-row" class:toggle-on={sakura} role="switch" aria-checked={sakura} on:click={toggleSakura}>
+          <span class="icon-[mdi--flower-poppy] toggle-icon"></span>
+          <span class="toggle-label">{t("display.sakura", "樱花特效")}</span>
+          <span class="toggle" class:toggle-on={sakura}><span class="toggle-knob"></span></span>
+        </button>
       {/if}
     {/if}
   </div>
@@ -564,7 +604,7 @@
     overflow-y: auto;
   }
 
-  /* Tab 栏（外观/壁纸）：参考状态模态框的居中标题 + 主题色短横线样式 */
+  /* Tab 栏（外观/壁纸/特效）：参考状态模态框的居中标题 + 主题色短横线样式 */
   #display-setting .panel-tabs {
     display: flex;
     justify-content: center;

@@ -273,13 +273,9 @@ spec:
               label: 访客样式切换
               value:
                 enable: true
-                hue: true
-                postListLayout: true
-                cardStyle: true
-                wallpaperMode: true
-                wallpaperSettings: true
-                fullscreenLayout: true
-                transparent: true
+                appearance: true
+                wallpaper: true
+                effects: true
               children:
                 - $formkit: switch
                   name: enable
@@ -287,63 +283,31 @@ spec:
                   key: visitorStyle_enable
                   label: 允许访客切换样式
                   value: true
-                  help: "总开关：开启后访客可在导航栏显示设置面板中切换下列样式；关闭则不显示任何样式切换开关"
+                  help: "总开关：开启后访客可在导航栏显示设置面板中切换下方各标签页；关闭则隐藏面板入口"
                 - $formkit: switch
-                  name: hue
-                  id: visitorStyle_hue
-                  key: visitorStyle_hue
+                  name: appearance
+                  id: visitorStyle_appearance
+                  key: visitorStyle_appearance
                   if: "$get(visitorStyle_enable).value"
-                  label: 主题色相切换
+                  label: 外观切换
                   value: true
-                  help: "访客可在面板中调节主题色相；关闭则隐藏色相选择器，固定为主题颜色中设置的色调"
+                  help: "访客可在「外观」标签页调整主题色相、文章布局与卡片样式"
                 - $formkit: switch
-                  name: postListLayout
-                  id: visitorStyle_postListLayout
-                  key: visitorStyle_postListLayout
+                  name: wallpaper
+                  id: visitorStyle_wallpaper
+                  key: visitorStyle_wallpaper
                   if: "$get(visitorStyle_enable).value"
-                  label: 文章布局切换
+                  label: 壁纸切换
                   value: true
-                  help: "访客可在列表 / 网格布局间切换，后台「文章卡片布局」的默认模式仍作为初始值"
+                  help: "访客可在「壁纸」标签页调整壁纸模式与相关设置"
                 - $formkit: switch
-                  name: cardStyle
-                  id: visitorStyle_cardStyle
-                  key: visitorStyle_cardStyle
+                  name: effects
+                  id: visitorStyle_effects
+                  key: visitorStyle_effects
                   if: "$get(visitorStyle_enable).value"
-                  label: 卡片样式切换
+                  label: 特效切换
                   value: true
-                  help: "访客可开关卡片悬浮效果、高级材质（磨砂）与瀑布流，后台「样式开关」的值仍作为默认"
-                - $formkit: switch
-                  name: wallpaperMode
-                  id: visitorStyle_wallpaperMode
-                  key: visitorStyle_wallpaperMode
-                  if: "$get(visitorStyle_enable).value"
-                  label: 壁纸模式切换
-                  value: true
-                  help: "访客可在纯色背景 / 横幅 / 全屏 / 全屏透明四种模式间切换，后台「横幅布局」的显示模式仍作为默认"
-                - $formkit: switch
-                  name: wallpaperSettings
-                  id: visitorStyle_wallpaperSettings
-                  key: visitorStyle_wallpaperSettings
-                  if: "$get(visitorStyle_enable).value"
-                  label: 壁纸设置切换
-                  value: true
-                  help: "横幅 / 全屏模式下，访客可开关横幅底部波浪动效；后台「样式开关」的波浪设置仍作为默认，后台关闭时前台不显示该开关"
-                - $formkit: switch
-                  name: fullscreenLayout
-                  id: visitorStyle_fullscreenLayout
-                  key: visitorStyle_fullscreenLayout
-                  if: "$get(visitorStyle_enable).value"
-                  label: 全屏布局切换
-                  value: true
-                  help: "仅「全屏模式」下显示，访客可在经典 / 沉浸（Hero）两种布局间切换"
-                - $formkit: switch
-                  name: transparent
-                  id: visitorStyle_transparent
-                  key: visitorStyle_transparent
-                  if: "$get(visitorStyle_enable).value"
-                  label: 透明设置调节
-                  value: true
-                  help: "仅横幅「全屏透明」模式下显示，访客可调节壁纸透明度 / 模糊度 / 卡片透明度"
+                  help: "访客可在「特效」标签页开关樱花特效"
         - $formkit: group
           name: floatingButtons
           label: 浮动导航按钮
@@ -792,6 +756,7 @@ spec:
             banner_wave: enabled
             navbar_blur: true
             card_hover_lift: true
+            sakura: false
           children:
             # 三选开关（写法与 color_scheme 一致）：关闭 / 开启 / 移动端关闭
             - $formkit: select
@@ -816,6 +781,11 @@ spec:
               label: 卡片悬浮效果
               value: true
               help: "卡片悬停时轻微上移并显示主题色阴影"
+            - $formkit: switch
+              name: sakura
+              label: 全局樱花特效
+              value: false
+              help: "开启后全站默认开启樱花飘落特效"
         - $formkit: group
           name: animationSpeed
           label: 动画速度

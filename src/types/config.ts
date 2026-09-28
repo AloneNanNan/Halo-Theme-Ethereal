@@ -144,24 +144,17 @@ export interface MobileMenuConfig {
   visitorStyle?: VisitorStyleConfig;
 }
 
-/** 访客样式切换：控制显示设置面板中访客可自助切换的项，缺省视为开启 */
+/** 访客样式切换：控制显示设置面板中访客可自助切换的标签页，缺省视为开启；
+ *  一个开关对应一个标签页（标签页内的模式相关细分显隐不在此层） */
 export interface VisitorStyleConfig {
   /** 总开关：关闭后不显示任何样式切换开关 */
   enable?: boolean;
-  /** 主题色相切换 */
-  hue?: boolean;
-  /** 文章布局（列表/网格）切换 */
-  postListLayout?: boolean;
-  /** 卡片样式（悬浮效果/高级材质/瀑布流）切换 */
-  cardStyle?: boolean;
-  /** 壁纸模式（纯色背景/横幅/全屏/全屏透明）切换 */
-  wallpaperMode?: boolean;
-  /** 壁纸设置（横幅/全屏下的波浪开关）切换 */
-  wallpaperSettings?: boolean;
-  /** 全屏布局（经典 / 沉浸 Hero）切换，仅全屏模式下显示 */
-  fullscreenLayout?: boolean;
-  /** 透明设置（透明度/模糊度/卡片透明度）调节，仅全屏透明模式下显示 */
-  transparent?: boolean;
+  /** 外观标签页（主题色相 / 文章布局 / 卡片样式）切换 */
+  appearance?: boolean;
+  /** 壁纸标签页（壁纸模式 / 壁纸设置 / 全屏布局 / 透明设置）切换 */
+  wallpaper?: boolean;
+  /** 特效标签页（樱花特效）切换 */
+  effects?: boolean;
 }
 
 /** 页面布局 */
@@ -282,6 +275,8 @@ export interface StyleSwitches {
   banner_wave?: boolean | "enabled" | "disabled" | "desktop_only";
   navbar_blur?: boolean;
   card_hover_lift?: boolean;
+  /** 全局樱花特效：全站默认值（默认关闭），访客可在显示设置面板中覆盖 */
+  sakura?: boolean;
 }
 
 export interface FloatingButtons {

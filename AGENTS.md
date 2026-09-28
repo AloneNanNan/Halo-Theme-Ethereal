@@ -201,15 +201,15 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 ## 访客样式切换（显示设置面板）
 
-导航栏「显示设置」面板允许访客切换样式（参考 firefly）。后台开关在 `settings.yaml` 的 `layout.mobileMenu.visitorStyle` 子组，缺省视为开启；子项开关（主题色相/文章布局/卡片样式/壁纸模式/壁纸设置/透明设置）仅在总开关 `enable` 开启时显示，瀑布流与波浪不再单独设开关（分别随卡片样式、壁纸设置区联动）。
+导航栏「显示设置」面板允许访客切换样式（参考 firefly）。后台开关在 `settings.yaml` 的 `layout.mobileMenu.visitorStyle` 子组，缺省视为开启；开关为**标签页级**（外观/壁纸/特效，一个开关对应面板一个标签页），仅在总开关 `enable` 开启时显示；标签页内的模式相关细分显隐（透明设置仅全屏透明等）仍由客户端按当前模式判断。面板 Tab 栏由「可见 Tab 收集」（`DisplaySettings.svelte` 的 `visibleTabs`）驱动：≥2 个显示 Tab 栏、=1 个直接渲染该分区。
 
-**localStorage 键清单（改键名需三处同步）**：`postListLayout`（list/grid）、`cardHoverLift`、`navbarBlur`（bool 字符串）、`postListMasonry`（bool 字符串，仅网格布局生效）、`wallpaperOpacity`（0–1）、`wallpaperBlur`（px 数值）、`wallpaperCardAlpha`（0–1）、`bannerDisplay`（disabled/banner/fullscreen/transparent）、`bannerWave`（bool 字符串）、`bannerTitle`（bool 字符串，首页壁纸标题）。开关关闭时对应键会被忽略并清理（与 `fixed` 固定色调、`__eecs` 语义一致）。
+**localStorage 键清单（改键名需三处同步）**：`postListLayout`（list/grid）、`cardHoverLift`、`navbarBlur`（bool 字符串）、`postListMasonry`（bool 字符串，仅网格布局生效）、`wallpaperOpacity`（0–1）、`wallpaperBlur`（px 数值）、`wallpaperCardAlpha`（0–1）、`bannerDisplay`（disabled/banner/fullscreen/transparent）、`bannerWave`（bool 字符串）、`bannerTitle`（bool 字符串，首页壁纸标题）、`sakuraEnabled`（bool 字符串，樱花特效，切换后经 `sakuraToggle` 事件实时启停脚本）。开关关闭时对应键会被忽略并清理（与 `fixed` 固定色调、`__eecs` 语义一致）。
 
 **壁纸模式切换约定**：`#banner-wrapper` / `#scroll-down-indicator` / `#banner-credit` / 波浪容器恒渲染（已去 `th:if`），显隐与定位全由 `html[data-banner-display]` 门控（`components.css`），`applyBannerDisplay` 同时切 `body.enable-banner` 并按模式重算 `--banner-height-extend` px（全屏 65vh / 横幅 30vh，数值来自 `constants.ts`）。波浪关闭用 `body.wave-disabled`（CSS 隐藏），开启时由后台默认 + `wave.js` 的 desktop_only 守卫决定。
 
 **默认值传递链路**：后台 `theme.config` → `src/components/ConfigCarrier.astro` 的 `th:data-*` 属性 → `src/utils/setting-utils.ts` 读取。重置默认值时也从 ConfigCarrier 读，勿依赖 body 内联变量（被 JS 覆盖后原值丢失）。
 
-**入口条件同步约定**：`Navbar.astro` 中显示设置按钮的 `th:if` 会逐项枚举 visitorStyle 子开关，与 `ConfigCarrier.astro` 的 `th:data-visitor-*` 一一对应——**新增/删除访客子开关时两处必须同步修改**（Thymeleaf 无法从 data 属性推导，只能手写枚举）。
+**入口条件同步约定**：`Navbar.astro` 中显示设置按钮的 `th:if` 会枚举 visitorStyle 标签页开关（外观/壁纸/特效），与 `ConfigCarrier.astro` 的 `th:data-visitor-*` 一一对应——**新增/删除标签页开关时两处必须同步修改**（Thymeleaf 无法从 data 属性推导，只能手写枚举）。
 
 **脚本执行顺序约定**（务必保持）：
 
@@ -223,6 +223,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **banner 脚本**：`MainGridLayout.astro` 中 6 个 banner 脚本包在 `{isHomePage && <div th:with={bannerThWith()} th:remove="tag">}` 内，按 `mode == 'carousel'` / `isVideo` / `mobileActive` 精确门控——与 `#banner-wrapper` 的 `th:with` 同源表达式，新增模式时两处条件必须一致。
 - **friends/links 合并**：`friends.bundle.js`（4 脚本合并）在 `friends.astro` 以 `not #lists.isEmpty(allItems.items)` 门控（空列表不加载）；`links.bundle.js`（5 脚本合并）恒加载，link-apply/random-visit 的外部门控已移除，改由脚本内部元素存在性守卫承担（新增 links 功能时往 bundle 加 IIFE + 守卫）。
 - **`window.__themeConfig` 缓存契约**：`#theme-config` JSON 由首个消费脚本 parse 并写入 `window.__themeConfig`，其余脚本（含 public/ legacy 的 wave/banner-carousel/banner-src-switch、WelcomePopup 内联脚本）直接复用，不得各自重复 `JSON.parse`。
+- **樱花特效**：`sakura.js` 在 `Layout.astro` 尾部按 `styleSwitches.sakura == true or (visitorStyle.enable != false and visitorStyle.effects != false)` 门控（两者都不成立时樱花永不显示、不输出脚本标签）；默认值走 ConfigCarrier `data-sakura-default`，「访客样式切换 → 特效切换」关闭时忽略 `sakuraEnabled`（Layout 启动脚本负责清理）；图片 / Worker 路径从脚本自身 `src` 推导（`sakura-worker.js` 由主脚本按经典 Worker 加载，不支持 OffscreenCanvas 时回退主线程绘制）；参数集中在 `_sakura-config.ts`、绘制核心 `_sakura-core.ts` 两套实现共享。
 
 **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处，缺一会回退到组件内的中文兜底。
 

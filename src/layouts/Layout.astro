@@ -69,6 +69,9 @@ const i18nInlineScript = `<script th:inline="javascript">
     "display.wallpaperSettings": \`[(#{display.wallpaperSettings})]\`,
     "display.bannerTitle": \`[(#{display.bannerTitle})]\`,
     "display.wave": \`[(#{display.wave})]\`,
+    "display.tabEffects": \`[(#{display.tabEffects})]\`,
+    "display.effectsSettings": \`[(#{display.effectsSettings})]\`,
+    "display.sakura": \`[(#{display.sakura})]\`,
     "nav.language": \`[(#{nav.language})]\`,
     "nav.lightDark": \`[(#{nav.lightDark})]\`,
     "widget.music.noPlaying": \`[(#{widget.music.noPlaying})]\`,
@@ -154,7 +157,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 <html
   th:lang="${#locale.toLanguageTag}"
   th:data-hue="${theme.config?.style?.themeColor?.hue}"
-  th:data-hue-fixed="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable == false or theme.config?.layout?.mobileMenu?.visitorStyle?.hue == false}"
+  th:data-hue-fixed="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable == false or theme.config?.layout?.mobileMenu?.visitorStyle?.appearance == false}"
   th:data-navbar-fixed="${theme.config?.layout?.mobileMenu?.navbarFixed}"
   th:data-theme-anim-style="${theme.config?.layout?.mobileMenu?.enable_change_color_scheme == false ? 'none' : theme.config?.style?.colorScheme?.colorSchemeAnimation?.style}"
   th:data-theme-anim-easing="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.easing}"
@@ -452,10 +455,14 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           return value !== "false";
         };
         var enable = on(d.visitorEnable);
+        // 标签页级开关（对应后台「访客样式切换」：外观 / 壁纸 / 特效；总开关关闭时全视为关）
+        var appearanceOn = enable && on(d.visitorAppearance);
+        var wallpaperOn = enable && on(d.visitorWallpaper);
+        var effectsOn = enable && on(d.visitorEffects);
         var body = document.body;
 
         // 卡片样式：悬浮效果 / 高级材质
-        if (enable && on(d.visitorCardStyle)) {
+        if (appearanceOn) {
           var lift = localStorage.getItem("cardHoverLift");
           if (lift != null) {
             body.classList.toggle("card-hover-lift-enabled", lift === "true");
@@ -470,7 +477,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
 
         // 透明设置（全屏透明模式）：覆盖 body 内联变量
-        if (enable && on(d.visitorTransparent)) {
+        if (wallpaperOn) {
           var num = function (key) {
             var n = parseFloat(localStorage.getItem(key) || "");
             return isNaN(n) ? null : n;
@@ -503,7 +510,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         // 并重算延伸像素（与 constants.ts 的 calcBannerHeightExtend 同式：
         // extendVh 对应 bannerExtendVh，全屏 65 / 横幅 30；%4 对齐对应
         // BANNER_EXTEND_ROUNDING，勿硬编码到别处）。内容解析前生效无 FOUC
-        if (enable && on(d.visitorWallpaperMode)) {
+        if (wallpaperOn) {
           var bannerModes = ["disabled", "banner", "fullscreen", "transparent"];
           var mode = localStorage.getItem("bannerDisplay");
           if (bannerModes.indexOf(mode) === -1) {
@@ -528,7 +535,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         // 全屏布局访客覆盖（classic/hero）：写 html[data-fullscreen-layout]，
         // 仅全屏模式下有视觉效果（CSS 全部带 fullscreen 前缀门控），非全屏模式
         // 保留属性值；访客开关关闭时清 localStorage、交回后台默认（SSR 已写入）
-        if (enable && on(d.visitorFullscreenLayout)) {
+        if (wallpaperOn) {
           var fsLayouts = ["classic", "hero"];
           var fsLayout = localStorage.getItem("fullscreenLayout");
           if (fsLayouts.indexOf(fsLayout) === -1) {
@@ -544,7 +551,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 
         // 壁纸设置访客覆盖（波浪 + 首页壁纸标题）：关闭时给 body 加对应
         // 隐藏类（CSS 门控）；开启/缺省时由后台默认决定
-        if (enable && on(d.visitorWallpaperSettings)) {
+        if (wallpaperOn) {
           var waveDefault = d.waveDefault !== "false";
           var waveStored = localStorage.getItem("bannerWave");
           var waveOn = waveStored == null ? waveDefault : waveStored === "true";
@@ -560,6 +567,12 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         } else {
           localStorage.removeItem("bannerWave");
           localStorage.removeItem("bannerTitle");
+        }
+
+        // 特效（樱花）：可切换时由 sakura.js 自行读取 localStorage 决定启停；
+        // 关闭时清理，交回全局默认（与 setting-utils 的忽略语义一致）
+        if (!effectsOn) {
+          localStorage.removeItem("sakuraEnabled");
         }
       })();
     </script>
@@ -777,5 +790,13 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <!-- 全屏沉浸（hero）布局：滚动模糊斜坡 + 首页标题淡出（脚本内部按
          data-banner-display / data-fullscreen-layout 自门控，无条件加载） -->
     <FullscreenHeroEffect />
+    <!-- 樱花特效：全局开启或访客可切换时加载（两者都不成立则樱花永不显示，不输出脚本）。
+         脚本自身带 window 守卫与 sakuraToggle 监听，Swup 换页重跑不重复初始化；
+         canvas 动态挂 body（Swup 容器外），动画跨页持续 -->
+    <script
+      th:if="${theme.config?.style?.styleSwitches?.sakura == true or (theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and theme.config?.layout?.mobileMenu?.visitorStyle?.effects != false)}"
+      src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/sakura.js?v=${ASSET_VERSION}`}
+      defer
+      is:inline></script>
   </body>
 </html>

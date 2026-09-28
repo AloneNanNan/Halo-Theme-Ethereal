@@ -22,5 +22,12 @@ declare global {
     __etherealSyncCurrentPostUrlBound?: boolean;
     // 全屏沉浸（hero）滚动脚本防重复绑定标记（scripts/assets/fullscreen-hero.ts）
     __fullscreenHeroBound?: boolean;
+    // 樱花特效（scripts/assets/sakura.ts）：初始化守卫 + 管理器调试/扩展入口
+    __sakuraInitialized?: boolean;
+    __etherealSakura?: {
+      init: () => void;
+      stop: () => void;
+      getIsRunning: () => boolean;
+    };
   }
 }

@@ -143,23 +143,22 @@ export function getStoredTheme(): LIGHT_DARK_MODE {
 
 /* ── 访客样式切换（显示设置面板） ─────────────────────────────
  * localStorage 键：postListLayout / cardHoverLift / navbarBlur / postListMasonry /
- *   wallpaperOpacity / wallpaperBlur / wallpaperCardAlpha / bannerDisplay / bannerWave
+ *   wallpaperOpacity / wallpaperBlur / wallpaperCardAlpha / bannerDisplay / bannerWave /
+ *   sakuraEnabled
  * 默认值链路：后台 theme.config → ConfigCarrier data 属性 → 本模块读取；
- * 开关关闭时忽略对应 localStorage（与 fixed 色调、__eecs 语义一致）。
- * public/assets/visitor-post-layout.js 与 Layout.astro 的 body 启动脚本
- * 也读这些键做首帧应用，改键名时需三处同步。
+ * 开关为标签页级（外观/壁纸/特效），关闭时忽略并清理该标签页相关的 localStorage
+ * （与 fixed 色调、__eecs 语义一致）。
+ * public/assets/visitor-post-layout.js、public/assets/sakura.js 与 Layout.astro
+ * 的 body 启动脚本也读这些键做首帧应用，改键名时需多处同步。
  */
 
 export type PostListLayoutMode = "list" | "grid";
 
 export interface VisitorSwitches {
   enable: boolean;
-  postListLayout: boolean;
-  cardStyle: boolean;
-  transparent: boolean;
-  wallpaperMode: boolean;
-  wallpaperSettings: boolean;
-  fullscreenLayout: boolean;
+  appearance: boolean;
+  wallpaper: boolean;
+  effects: boolean;
 }
 
 function getCarrier(): HTMLElement | null {
@@ -179,17 +178,14 @@ function readVisitorSwitches(): VisitorSwitches {
   const enable = carrierBool("visitorEnable", true);
   return {
     enable,
-    postListLayout: enable && carrierBool("visitorLayout", true),
-    cardStyle: enable && carrierBool("visitorCardStyle", true),
-    transparent: enable && carrierBool("visitorTransparent", true),
-    wallpaperMode: enable && carrierBool("visitorWallpaperMode", true),
-    wallpaperSettings: enable && carrierBool("visitorWallpaperSettings", true),
-    fullscreenLayout: enable && carrierBool("visitorFullscreenLayout", true),
+    appearance: enable && carrierBool("visitorAppearance", true),
+    wallpaper: enable && carrierBool("visitorWallpaper", true),
+    effects: enable && carrierBool("visitorEffects", true),
   };
 }
 
 /** 访客开关结果缓存：ConfigCarrier 的 data 属性是服务端静态值、运行期不变，
- *  避免每个 getStored* 内部重复调用时各做 6 次 getElementById */
+ *  避免每个 getStored* 各自重复读取（每次都要 getElementById + 逐字段判断） */
 export function getVisitorSwitches(): VisitorSwitches {
   if (!cachedVisitorSwitches) cachedVisitorSwitches = readVisitorSwitches();
   return cachedVisitorSwitches;
@@ -246,7 +242,7 @@ function triggerContentTransition(afterExit: () => void): void {
 }
 
 export function getStoredPostListLayout(): PostListLayoutMode | null {
-  if (!getVisitorSwitches().postListLayout) return null;
+  if (!getVisitorSwitches().appearance) return null;
   const stored = localStorage.getItem("postListLayout");
   return stored === "list" || stored === "grid" ? stored : null;
 }
@@ -287,13 +283,13 @@ export function getDefaultNavbarBlur(): boolean {
 }
 
 export function getStoredCardHoverLift(): boolean {
-  if (!getVisitorSwitches().cardStyle) return getDefaultCardHoverLift();
+  if (!getVisitorSwitches().appearance) return getDefaultCardHoverLift();
   const stored = localStorage.getItem("cardHoverLift");
   return stored == null ? getDefaultCardHoverLift() : stored === "true";
 }
 
 export function getStoredNavbarBlur(): boolean {
-  if (!getVisitorSwitches().cardStyle) return getDefaultNavbarBlur();
+  if (!getVisitorSwitches().appearance) return getDefaultNavbarBlur();
   const stored = localStorage.getItem("navbarBlur");
   return stored == null ? getDefaultNavbarBlur() : stored === "true";
 }
@@ -315,7 +311,7 @@ export function getDefaultPostListMasonry(): boolean {
 }
 
 export function getStoredPostListMasonry(): boolean {
-  if (!getVisitorSwitches().cardStyle) return getDefaultPostListMasonry();
+  if (!getVisitorSwitches().appearance) return getDefaultPostListMasonry();
   const stored = localStorage.getItem("postListMasonry");
   return stored == null ? getDefaultPostListMasonry() : stored === "true";
 }
@@ -369,7 +365,7 @@ export function getDefaultWallpaperParams(): WallpaperParams {
 
 export function getStoredWallpaperParams(): WallpaperParams {
   const defaults = getDefaultWallpaperParams();
-  if (!getVisitorSwitches().transparent) return defaults;
+  if (!getVisitorSwitches().wallpaper) return defaults;
   return {
     opacity: parseNum(
       localStorage.getItem("wallpaperOpacity") ?? undefined,
@@ -430,7 +426,7 @@ export function getDefaultBannerDisplay(): BannerDisplayMode {
 }
 
 export function getStoredBannerDisplay(): BannerDisplayMode {
-  if (!getVisitorSwitches().wallpaperMode) return getDefaultBannerDisplay();
+  if (!getVisitorSwitches().wallpaper) return getDefaultBannerDisplay();
   const stored = localStorage.getItem("bannerDisplay");
   return isBannerDisplayMode(stored) ? stored : getDefaultBannerDisplay();
 }
@@ -516,8 +512,7 @@ export function getDefaultFullscreenLayout(): FullscreenLayoutMode {
 }
 
 export function getStoredFullscreenLayout(): FullscreenLayoutMode {
-  if (!getVisitorSwitches().fullscreenLayout)
-    return getDefaultFullscreenLayout();
+  if (!getVisitorSwitches().wallpaper) return getDefaultFullscreenLayout();
   const stored = localStorage.getItem("fullscreenLayout");
   return isFullscreenLayoutMode(stored) ? stored : getDefaultFullscreenLayout();
 }
@@ -557,7 +552,7 @@ export function getDefaultWave(): boolean {
 }
 
 export function getStoredWave(): boolean {
-  if (!getVisitorSwitches().wallpaperSettings) return getDefaultWave();
+  if (!getVisitorSwitches().wallpaper) return getDefaultWave();
   const stored = localStorage.getItem("bannerWave");
   return stored == null ? getDefaultWave() : stored === "true";
 }
@@ -580,7 +575,7 @@ export function getDefaultBannerTitle(): boolean {
 }
 
 export function getStoredBannerTitle(): boolean {
-  if (!getVisitorSwitches().wallpaperSettings) return getDefaultBannerTitle();
+  if (!getVisitorSwitches().wallpaper) return getDefaultBannerTitle();
   const stored = localStorage.getItem("bannerTitle");
   return stored == null ? getDefaultBannerTitle() : stored === "true";
 }
@@ -615,6 +610,32 @@ export function applyBannerTitle(enabled: boolean): void {
 export function setBannerTitle(enabled: boolean): void {
   localStorage.setItem("bannerTitle", String(enabled));
   applyBannerTitle(enabled);
+}
+
+/* ── 特效（樱花） ── */
+
+/** 全局樱花特效（后台「样式开关」）作为访客默认值；经 ConfigCarrier data 下发 */
+export function getDefaultSakuraEnabled(): boolean {
+  return carrierBool("sakuraDefault", false);
+}
+
+/** 访客当前樱花开关：特效切换关闭时忽略 localStorage，跟随全局默认 */
+export function getStoredSakuraEnabled(): boolean {
+  if (!getVisitorSwitches().effects) return getDefaultSakuraEnabled();
+  const stored = localStorage.getItem("sakuraEnabled");
+  return stored == null ? getDefaultSakuraEnabled() : stored === "true";
+}
+
+/** 应用樱花开关：派发 sakuraToggle 事件，由 public/assets/sakura.js 实时启停 */
+export function applySakura(enabled: boolean): void {
+  window.dispatchEvent(
+    new CustomEvent("sakuraToggle", { detail: { enabled } }),
+  );
+}
+
+export function setSakuraEnabled(enabled: boolean): void {
+  localStorage.setItem("sakuraEnabled", String(enabled));
+  applySakura(enabled);
 }
 
 /* ── 分区恢复默认 ── */
@@ -663,4 +684,9 @@ export function resetWave(): void {
 export function resetBannerTitle(): void {
   localStorage.removeItem("bannerTitle");
   applyBannerTitle(getDefaultBannerTitle());
+}
+
+export function resetSakura(): void {
+  localStorage.removeItem("sakuraEnabled");
+  applySakura(getDefaultSakuraEnabled());
 }

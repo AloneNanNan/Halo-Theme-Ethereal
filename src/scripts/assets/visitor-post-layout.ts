@@ -22,7 +22,7 @@
   var carrier = document.getElementById("config-carrier");
   var switchable =
     (!carrier || carrier.dataset.visitorEnable !== "false") &&
-    (!carrier || carrier.dataset.visitorLayout !== "false");
+    (!carrier || carrier.dataset.visitorAppearance !== "false");
   if (!switchable) {
     localStorage.removeItem("postListLayout");
     return;
@@ -44,14 +44,14 @@
 
 // 瀑布流覆盖：data-masonry 属性跟随访客选择（仅网格布局下由瀑布流脚本生效，
 // 列表布局下该属性无效果）。开关关闭时忽略并清理，与其它访客键语义一致。
-// 瀑布流随「卡片样式切换」开关联动（同卡片样式区内的其它开关）。
+// 瀑布流随「外观切换」开关联动（同外观标签页内的其它开关）。
 (function () {
   var container = document.getElementById("post-list-container");
   if (!container) return;
   var carrier = document.getElementById("config-carrier");
   var switchable =
     (!carrier || carrier.dataset.visitorEnable !== "false") &&
-    (!carrier || carrier.dataset.visitorCardStyle !== "false");
+    (!carrier || carrier.dataset.visitorAppearance !== "false");
   if (!switchable) {
     localStorage.removeItem("postListMasonry");
     return;
