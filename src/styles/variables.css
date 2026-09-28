@@ -181,3 +181,13 @@ html[data-banner-display="fullscreen"] {
   --banner-height-home: 100vh;
   --banner-height-extend: 65vh;
 }
+
+/* 当前生效的「最大壁纸模糊」语义别名（transparent 模式即壁纸背景模糊；hero 布局
+   为首页滚动斜坡封顶值 / 非首页固定值）。真实取值来自 body 的
+   --transparent-wallpaper-blur（后台「背景模糊度」由 th:style 注入，访客滑块写
+   同一个内联变量）。⚠️ 必须声明在 body 而非 :root：var() 在「声明它的元素」上
+   完成替换 —— 声明在 :root 时替换发生在 html 上，看不到 body 的内联值，会永远
+   落到 fallback（10px），表现为「怎么调模糊都没变化」 */
+body {
+  --wallpaper-blur-max: var(--transparent-wallpaper-blur, 10px);
+}

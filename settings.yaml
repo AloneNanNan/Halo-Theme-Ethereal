@@ -71,6 +71,7 @@ spec:
           label: Banner 布局
           value:
             displayMode: banner
+            fullscreenLayout: classic
             wallpaperOpacity: 0.8
             wallpaperBlur: 10
             cardOpacity: 0.6
@@ -80,7 +81,7 @@ spec:
               id: banner_displayMode
               label: 模式
               value: banner
-              help: "关闭/纯色模式：不显示横幅，页面为纯色背景；横幅模式：非首页显示 35vh 横幅、首页延伸至 65vh；全屏模式：非首页同横幅模式，首页 banner 占满整屏（100vh）；全屏透明：无横幅、整屏壁纸作为页面背景，配合「高级材质」使内容与组件卡片磨砂透明"
+              help: "纯色：无横幅；横幅：非首页 35vh、首页 65vh；全屏：首页整屏，非首页同横幅，分经典/沉浸两种布局；全屏透明：整屏壁纸作背景，配合「高级材质」使卡片磨砂"
               options:
                 - label: 关闭/纯色模式
                   value: disabled
@@ -90,6 +91,19 @@ spec:
                   value: fullscreen
                 - label: 全屏透明
                   value: transparent
+            - $formkit: select
+              name: fullscreenLayout
+              id: banner_fullscreenLayout
+              key: banner_fullscreenLayout
+              if: "$get(banner_displayMode).value === 'fullscreen'"
+              label: 全屏布局
+              value: classic
+              options:
+                - label: 经典模式
+                  value: classic
+                - label: 沉浸模式（Hero）
+                  value: hero
+              help: "经典：壁纸随页滚动移出首屏、不模糊；沉浸：壁纸固定视口，首页下滑由清晰渐变到「背景模糊度」最大值、标题上移淡出，非首页保持模糊"
             - $formkit: number
               name: wallpaperOpacity
               id: banner_transparent_wallpaperOpacity
@@ -101,31 +115,31 @@ spec:
               step: 0.05
               value: 0.8
               validation: "min:0.3|max:1"
-              help: "壁纸整体不透明度（0.3~1，默认 0.8），调低后露出页面底色"
+              help: "壁纸整体不透明度（0.3~1），调低后露出页面底色"
             - $formkit: number
               name: wallpaperBlur
               id: banner_transparent_wallpaperBlur
               key: banner_transparent_wallpaperBlur
-              if: "$get(banner_displayMode).value === 'transparent'"
+              if: "$get(banner_displayMode).value === 'transparent' || ($get(banner_displayMode).value === 'fullscreen' && $get(banner_fullscreenLayout).value === 'hero')"
               label: 背景模糊度
               min: 0
               max: 24
               step: 1
               value: 10
               validation: "min:0|max:24"
-              help: "壁纸背景模糊强度（0~24 px，默认 10），值越大越柔和；导航栏与悬浮按钮糊到的内容随之改变"
+              help: "壁纸模糊强度（0~24 px），值越大越柔和；沉浸布局下为最大模糊：首页下滑由 0 渐变到该值、非首页恒为该值"
             - $formkit: number
               name: cardOpacity
               id: banner_transparent_cardOpacity
               key: banner_transparent_cardOpacity
-              if: "$get(banner_displayMode).value === 'transparent'"
+              if: "$get(banner_displayMode).value === 'transparent' || ($get(banner_displayMode).value === 'fullscreen' && $get(banner_fullscreenLayout).value === 'hero')"
               label: 卡片透明度
               min: 0.3
               max: 1
               step: 0.05
               value: 0.6
               validation: "min:0.3|max:1"
-              help: "内容/组件卡片、导航栏与悬浮按钮的半透明程度（0.3~1，默认 0.6），需同时开启「高级材质」"
+              help: "卡片/导航栏/悬浮按钮的半透明程度（0.3~1），需开启「高级材质」"
         - $formkit: group
           name: postList
           label: 文章卡片布局
@@ -264,6 +278,7 @@ spec:
                 cardStyle: true
                 wallpaperMode: true
                 wallpaperSettings: true
+                fullscreenLayout: true
                 transparent: true
               children:
                 - $formkit: switch
@@ -313,6 +328,14 @@ spec:
                   label: 壁纸设置切换
                   value: true
                   help: "横幅 / 全屏模式下，访客可开关横幅底部波浪动效；后台「样式开关」的波浪设置仍作为默认，后台关闭时前台不显示该开关"
+                - $formkit: switch
+                  name: fullscreenLayout
+                  id: visitorStyle_fullscreenLayout
+                  key: visitorStyle_fullscreenLayout
+                  if: "$get(visitorStyle_enable).value"
+                  label: 全屏布局切换
+                  value: true
+                  help: "仅「全屏模式」下显示，访客可在经典 / 沉浸（Hero）两种布局间切换"
                 - $formkit: switch
                   name: transparent
                   id: visitorStyle_transparent

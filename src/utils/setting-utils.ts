@@ -7,6 +7,7 @@ import {
   calcBannerHeightExtend,
 } from "../constants/constants.ts";
 import type { LIGHT_DARK_MODE } from "../types/config";
+import { readDurBannerMs } from "./dur-banner";
 
 let restoreTransitionFrame = 0;
 
@@ -158,6 +159,7 @@ export interface VisitorSwitches {
   transparent: boolean;
   wallpaperMode: boolean;
   wallpaperSettings: boolean;
+  fullscreenLayout: boolean;
 }
 
 function getCarrier(): HTMLElement | null {
@@ -182,6 +184,7 @@ function readVisitorSwitches(): VisitorSwitches {
     transparent: enable && carrierBool("visitorTransparent", true),
     wallpaperMode: enable && carrierBool("visitorWallpaperMode", true),
     wallpaperSettings: enable && carrierBool("visitorWallpaperSettings", true),
+    fullscreenLayout: enable && carrierBool("visitorFullscreenLayout", true),
   };
 }
 
@@ -450,24 +453,38 @@ function applyBannerExtend(mode: BannerDisplayMode): void {
 /** 应用壁纸模式：写 html[data-banner-display] + 切 body.enable-banner +
  *  重算延伸像素；切换时临时加 html.banner-mode-transitioning 启用平滑过渡
  *  （components.css 中同名规则），并派发 bannerModeChange 事件供外部监听 */
+/** 过渡窗口的收尾定时器（全局唯一）。快速连点 / 连续切换时若不清掉上一个定时器，
+ *  它会在新一轮过渡的中途把 banner-mode-transitioning 摘掉，过渡被打断、元素瞬跳
+ *  到终点 —— 即「壁纸闪一下、没有过渡」 */
+let bannerTransitionTimer: number | undefined;
+
+/** 开启模式切换过渡窗口：加类 → 强制重排（建立「from」态：旧值 + 已启用的过渡，
+ *  由调用方随后改属性值触发过渡）→ 到时摘类恢复元素原本的过渡声明 */
+function openBannerTransitionWindow(root: HTMLElement): void {
+  if (bannerTransitionTimer !== undefined) {
+    window.clearTimeout(bannerTransitionTimer);
+  }
+  root.classList.add("banner-mode-transitioning");
+  void root.offsetWidth;
+  bannerTransitionTimer = window.setTimeout(
+    () => {
+      root.classList.remove("banner-mode-transitioning");
+      bannerTransitionTimer = undefined;
+    },
+    readDurBannerMs(root) + 100,
+  );
+}
+
 export function applyBannerDisplay(mode: BannerDisplayMode): void {
   const root = document.documentElement;
   const body = document.body;
   const enableBanner = mode === "banner" || mode === "fullscreen";
 
   // 过渡：先加类并强制重排建立「from」态（旧值 + 已启用的过渡），再改值
-  root.classList.add("banner-mode-transitioning");
-  void root.offsetWidth;
+  openBannerTransitionWindow(root);
   root.setAttribute("data-banner-display", mode);
   applyBannerExtend(mode);
   body.classList.toggle("enable-banner", enableBanner);
-
-  const dur =
-    parseFloat(getComputedStyle(root).getPropertyValue("--dur-banner")) || 700;
-  window.setTimeout(
-    () => root.classList.remove("banner-mode-transitioning"),
-    dur + 100,
-  );
 
   window.dispatchEvent(new CustomEvent("bannerModeChange", { detail: mode }));
 }
@@ -475,6 +492,62 @@ export function applyBannerDisplay(mode: BannerDisplayMode): void {
 export function setBannerDisplay(mode: BannerDisplayMode): void {
   localStorage.setItem("bannerDisplay", mode);
   applyBannerDisplay(mode);
+}
+
+/* ── 全屏布局（全屏模式下的 classic 经典 / hero 沉浸） ── */
+
+/** 全屏布局：classic 经典（壁纸在文档流内、不模糊）| hero 沉浸（壁纸钉视口 + 首页滚动模糊斜坡 + 标题淡出） */
+export type FullscreenLayoutMode = "classic" | "hero";
+
+const FULLSCREEN_LAYOUT_MODES: FullscreenLayoutMode[] = ["classic", "hero"];
+
+function isFullscreenLayoutMode(value: unknown): value is FullscreenLayoutMode {
+  return (
+    typeof value === "string" &&
+    (FULLSCREEN_LAYOUT_MODES as string[]).includes(value)
+  );
+}
+
+/** 后台默认（theme.config.layout.bannerLayout.fullscreenLayout，经 ConfigCarrier
+ *  的 data-fullscreen-layout-default 传递）；未设回退 classic */
+export function getDefaultFullscreenLayout(): FullscreenLayoutMode {
+  const raw = getCarrier()?.dataset?.fullscreenLayoutDefault;
+  return raw === "hero" ? "hero" : "classic";
+}
+
+export function getStoredFullscreenLayout(): FullscreenLayoutMode {
+  if (!getVisitorSwitches().fullscreenLayout)
+    return getDefaultFullscreenLayout();
+  const stored = localStorage.getItem("fullscreenLayout");
+  return isFullscreenLayoutMode(stored) ? stored : getDefaultFullscreenLayout();
+}
+
+/** 应用全屏布局：写 html[data-fullscreen-layout]（CSS 全部带 fullscreen 前缀门控，
+ *  非全屏模式下无视觉效果但保留值），并派发 fullscreenLayoutChange 供 hero 滚动
+ *  斜坡等脚本监听。
+ *  必须与 applyBannerDisplay 一样先挂过渡窗口：classic 与 hero 的视觉位置由
+ *  「top + translate」一负一正相抵拼出（净位置都是 0），窗口内只放 height/opacity
+ *  过渡、位置类属性保持瞬时，两项同帧到位即零位移；缺窗口时 translate 的过渡会
+ *  单独跑而 top 是瞬时的 —— 一上来就错开整段延伸高度再慢慢归位（即 classic ↔
+ *  hero 切换时「壁纸上下摆动」的成因） */
+export function applyFullscreenLayout(mode: FullscreenLayoutMode): void {
+  const root = document.documentElement;
+  openBannerTransitionWindow(root);
+  root.setAttribute("data-fullscreen-layout", mode);
+  window.dispatchEvent(
+    new CustomEvent("fullscreenLayoutChange", { detail: mode }),
+  );
+}
+
+export function setFullscreenLayout(mode: FullscreenLayoutMode): void {
+  localStorage.setItem("fullscreenLayout", mode);
+  applyFullscreenLayout(mode);
+}
+
+/** 恢复后台默认布局（面板 Reset；与现有 reset* 系列一致：清 localStorage 后应用默认值） */
+export function resetFullscreenLayout(): void {
+  localStorage.removeItem("fullscreenLayout");
+  applyFullscreenLayout(getDefaultFullscreenLayout());
 }
 
 /* ── 波浪（横幅底部动效） ── */

@@ -22,6 +22,10 @@
     getDefaultBannerDisplay,
     getStoredBannerDisplay,
     setBannerDisplay,
+    getDefaultFullscreenLayout,
+    getStoredFullscreenLayout,
+    setFullscreenLayout,
+    resetFullscreenLayout,
     getDefaultWave,
     getStoredWave,
     setWave,
@@ -36,6 +40,7 @@
     resetBannerTitle,
     type PostListLayoutMode,
     type BannerDisplayMode,
+    type FullscreenLayoutMode,
   } from "../../utils/setting-utils";
   import { t } from "../../utils/i18n";
 
@@ -59,14 +64,26 @@
 
   /* ── 壁纸模式 / 壁纸设置（首页壁纸标题 + 波浪）状态 ── */
   let wallpaperMode = $state<BannerDisplayMode>(getStoredBannerDisplay());
+  let fullscreenLayout = $state<FullscreenLayoutMode>(
+    getStoredFullscreenLayout(),
+  );
   let wave = $state(getStoredWave());
   let bannerTitle = $state(getStoredBannerTitle());
   const defaultBannerDisplay = getDefaultBannerDisplay();
+  const defaultFullscreenLayout = getDefaultFullscreenLayout();
   const defaultWave = getDefaultWave();
   const defaultBannerTitle = getDefaultBannerTitle();
   const dirtyWallpaperMode = $derived(wallpaperMode !== defaultBannerDisplay);
+  const dirtyFullscreenLayout = $derived(
+    fullscreenLayout !== defaultFullscreenLayout,
+  );
   const dirtyWallpaperSettings = $derived(
     wave !== defaultWave || bannerTitle !== defaultBannerTitle,
+  );
+
+  // 全屏布局（经典/沉浸）：访客开关开启 + 当前为全屏模式时显示
+  const showFullscreenLayout = $derived(
+    switches.fullscreenLayout && wallpaperMode === "fullscreen",
   );
 
   // 壁纸参数区跟随访客当前生效模式（仅全屏透明时显示），而非服务端初值
@@ -77,8 +94,13 @@
     showWallpaperMode &&
     switches.wallpaperSettings &&
     (defaultWave || defaultBannerTitle);
+  // 壁纸参数区：全屏透明模式全显示；「全屏 + 沉浸（hero）」下也显示
+  // （背景模糊度 = 首页斜坡封顶 / 非首页固定值，卡片透明度 = 磨砂强度；
+  // 壁纸透明度只对透明模式有意义，见下方渲染分支）
   const showWallpaper = $derived(
-    switches.transparent && wallpaperMode === "transparent",
+    switches.transparent &&
+      (wallpaperMode === "transparent" ||
+        (wallpaperMode === "fullscreen" && fullscreenLayout === "hero")),
   );
 
   /* ── 面板 Tab（外观 / 壁纸，参考 firefly） ── */
@@ -174,9 +196,35 @@
     },
   ];
 
+  /* 全屏布局（经典 / 沉浸 Hero）：仅全屏模式下显示 */
+  const fullscreenLayouts: {
+    value: FullscreenLayoutMode;
+    icon: string;
+    key: string;
+    label: string;
+  }[] = [
+    {
+      value: "classic",
+      icon: "icon-[material-symbols--view-day-outline-rounded]",
+      key: "display.fullscreenLayoutClassic",
+      label: "经典模式",
+    },
+    {
+      value: "hero",
+      icon: "icon-[material-symbols--desktop-landscape-outline-rounded]",
+      key: "display.fullscreenLayoutHero",
+      label: "沉浸模式",
+    },
+  ];
+
   function chooseMode(mode: BannerDisplayMode) {
     wallpaperMode = mode;
     setBannerDisplay(mode);
+  }
+
+  function chooseFullscreenLayout(mode: FullscreenLayoutMode) {
+    fullscreenLayout = mode;
+    setFullscreenLayout(mode);
   }
 
   function toggleWave() {
@@ -192,6 +240,11 @@
   function resetWallpaperModeBtn() {
     resetWallpaperMode();
     wallpaperMode = getDefaultBannerDisplay();
+  }
+
+  function resetFullscreenLayoutBtn() {
+    resetFullscreenLayout();
+    fullscreenLayout = getDefaultFullscreenLayout();
   }
 
   function resetWallpaperSettingsBtn() {
@@ -376,6 +429,28 @@
         </div>
       {/if}
 
+      <!-- 全屏布局（经典 / 沉浸 Hero）：仅全屏模式显示 -->
+      {#if showFullscreenLayout}
+        <div class="section-title mb-3 mt-4">
+          {t("display.fullscreenLayout", "全屏布局")}
+          <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
+                  class:opacity-0={!dirtyFullscreenLayout} class:pointer-events-none={!dirtyFullscreenLayout} on:click={resetFullscreenLayoutBtn}>
+            <div class="text-(--btn-content)">
+              <div icon="fa6-solid:arrow-rotate-left" class="icon-[fa6-solid--arrow-rotate-left] text-[0.875rem]"></div>
+            </div>
+          </button>
+        </div>
+        <div class="mode-grid" role="group" aria-label={t("display.fullscreenLayout", "全屏布局")}>
+          {#each fullscreenLayouts as l}
+            <button type="button" class="mode-item" class:mode-on={fullscreenLayout === l.value}
+                    aria-pressed={fullscreenLayout === l.value} on:click={() => chooseFullscreenLayout(l.value)}>
+              <span class="{l.icon} mode-icon"></span>
+              <span>{t(l.key, l.label)}</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+
       <!-- 壁纸设置（横幅/全屏：首页壁纸标题 + 波浪开关，参考 firefly 的壁纸设置分区） -->
       {#if showWallpaperSettings && (wallpaperMode === "banner" || wallpaperMode === "fullscreen")}
         <div class="section-title mb-3">
@@ -394,7 +469,9 @@
             <span class="toggle" class:toggle-on={bannerTitle}><span class="toggle-knob"></span></span>
           </button>
         {/if}
-        {#if defaultWave}
+        <!-- 波浪开关：沉浸模式（hero）没有波浪（#wave-container 被 opacity:0 隐去），
+             选择该布局时隐藏开关；经典模式与横幅模式保留 -->
+        {#if defaultWave && !(wallpaperMode === "fullscreen" && fullscreenLayout === "hero")}
           <button type="button" class="toggle-row" class:toggle-on={wave} role="switch" aria-checked={wave} on:click={toggleWave}>
             <span class="icon-[material-symbols--water-lux-rounded] toggle-icon"></span>
             <span class="toggle-label">{t("display.wave", "波浪")}</span>
@@ -406,7 +483,7 @@
       <!-- 透明设置（全屏透明模式） -->
       {#if showWallpaper}
         <div class="section-title mb-3">
-          {t("display.wallpaper", "透明设置")}
+          {t("display.wallpaper", "壁纸设置")}
           <button aria-label={t("theme.resetDefault", "Reset to Default")} class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
                   class:opacity-0={!dirtyWallpaper} class:pointer-events-none={!dirtyWallpaper} on:click={resetWallpaper}>
             <div class="text-(--btn-content)">
@@ -414,20 +491,23 @@
             </div>
           </button>
         </div>
-        <div class="slider-row">
-          <div class="slider-label">
-            <span>{t("display.wallpaperOpacity", "壁纸透明度")}</span>
-            <span class="value-badge">{wallpaperOpacity}%</span>
+        <!-- 壁纸透明度只对全屏透明模式有意义（hero 下壁纸恒不透明，模糊由下一项承担） -->
+        {#if wallpaperMode === "transparent"}
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>{t("display.wallpaperOpacity", "壁纸透明度")}</span>
+              <span class="value-badge">{wallpaperOpacity}%</span>
+            </div>
+            <input aria-label={t("display.wallpaperOpacity", "壁纸透明度")} type="range" min="30" max="100" step="5"
+                   bind:value={wallpaperOpacity} on:input={applyOpacity} class="wallpaper-slider">
           </div>
-          <input aria-label={t("display.wallpaperOpacity", "壁纸透明度")} type="range" min="30" max="100" step="5"
-                 bind:value={wallpaperOpacity} on:input={applyOpacity} class="wallpaper-slider">
-        </div>
+        {/if}
         <div class="slider-row">
           <div class="slider-label">
-            <span>{t("display.wallpaperBlur", "模糊度")}</span>
+            <span>{t("display.wallpaperBlur", "背景模糊度")}</span>
             <span class="value-badge">{wallpaperBlur}px</span>
           </div>
-          <input aria-label={t("display.wallpaperBlur", "模糊度")} type="range" min="0" max="24" step="1"
+          <input aria-label={t("display.wallpaperBlur", "背景模糊度")} type="range" min="0" max="24" step="1"
                  bind:value={wallpaperBlur} on:input={applyBlur} class="wallpaper-slider">
         </div>
         <div class="slider-row">

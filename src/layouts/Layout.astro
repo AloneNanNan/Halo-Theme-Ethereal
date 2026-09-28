@@ -1,5 +1,6 @@
 ---
 import ConfigCarrier from "../components/ConfigCarrier.astro";
+import FullscreenHeroEffect from "../components/FullscreenHeroEffect.astro";
 import WelcomePopup from "../components/control/WelcomePopup.astro";
 import WaveEffect from "../components/WaveEffect.astro";
 import {
@@ -160,6 +161,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-theme-anim-angle="${theme.config?.style?.colorScheme?.colorSchemeAnimation?.angle}"
   th:data-speed="${theme.config?.style?.animationSpeed?.speedTier}"
   th:data-banner-display="${bannerMode}"
+  th:data-fullscreen-layout="${theme.config?.layout?.bannerLayout?.fullscreenLayout ?: 'classic'}"
   th:with={bannerModeThWith() + ", " + speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
@@ -523,6 +525,23 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           localStorage.removeItem("bannerDisplay");
         }
 
+        // 全屏布局访客覆盖（classic/hero）：写 html[data-fullscreen-layout]，
+        // 仅全屏模式下有视觉效果（CSS 全部带 fullscreen 前缀门控），非全屏模式
+        // 保留属性值；访客开关关闭时清 localStorage、交回后台默认（SSR 已写入）
+        if (enable && on(d.visitorFullscreenLayout)) {
+          var fsLayouts = ["classic", "hero"];
+          var fsLayout = localStorage.getItem("fullscreenLayout");
+          if (fsLayouts.indexOf(fsLayout) === -1) {
+            fsLayout = d.fullscreenLayoutDefault || "classic";
+          }
+          document.documentElement.setAttribute(
+            "data-fullscreen-layout",
+            fsLayout,
+          );
+        } else {
+          localStorage.removeItem("fullscreenLayout");
+        }
+
         // 壁纸设置访客覆盖（波浪 + 首页壁纸标题）：关闭时给 body 加对应
         // 隐藏类（CSS 门控）；开启/缺省时由后台默认决定
         if (enable && on(d.visitorWallpaperSettings)) {
@@ -755,5 +774,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <script>
       import "../scripts/app";
     </script>
+    <!-- 全屏沉浸（hero）布局：滚动模糊斜坡 + 首页标题淡出（脚本内部按
+         data-banner-display / data-fullscreen-layout 自门控，无条件加载） -->
+    <FullscreenHeroEffect />
   </body>
 </html>

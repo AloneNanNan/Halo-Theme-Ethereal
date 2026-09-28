@@ -1,0 +1,11 @@
+---
+// 全屏沉浸（hero）布局脚本加载器：滚动模糊斜坡 + 首页标题上移淡出。
+// 无条件加载：脚本按 html[data-banner-display="fullscreen"] + data-fullscreen-layout
+// 自门控，而访客随时可能把壁纸模式切到「全屏 + 沉浸」，不能用 th:if 限定下载。
+const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
+---
+
+<script
+  src={`${basePath}/assets/fullscreen-hero.js?v=${ASSET_VERSION}`}
+  defer
+  is:inline></script>

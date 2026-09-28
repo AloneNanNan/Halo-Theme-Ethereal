@@ -15,6 +15,12 @@ import "../styles/scrollbar.css";
 import "../styles/external-link-modal.css";
 import "../styles/link-apply-modal.css";
 import "../styles/profile-status.css";
+// 音乐播放器样式：原先是「页面存在 .firefly-music-player 才动态 import」，
+// 但该样式表只有 1.2KB，会被 Astro 的 inlineStylesheets: 'auto' 内联进 HTML，
+// 而 Vite 生成的预加载清单里仍保留独立文件名 → 每次打开页面都产生一个
+// music-player.<hash>.css 的 404 请求（样式本身没丢，只是多一次无用请求）。
+// 改为静态导入：并入主样式包（+1.2KB，可忽略），彻底消除该请求
+import "../styles/music-player.css";
 
 // ── 第三方 ──
 import "overlayscrollbars/styles/overlayscrollbars.css";
@@ -716,9 +722,6 @@ function setupSwup() {
     scrollFunction();
     initLegacyAdmonitions();
     initExternalLinkRedirect();
-    if (document.querySelector(".firefly-music-player")) {
-      import("../styles/music-player.css");
-    }
   });
   // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"，合成器驱动不占
   // 主线程，无 scrl 引擎的每帧 JS 测量卡顿）。同页锚点（目录点击）平滑由
@@ -865,9 +868,6 @@ function init() {
   showBanner();
   initLegacyAdmonitions();
   updateTocBtnVisibility();
-  if (document.querySelector(".firefly-music-player")) {
-    import("../styles/music-player.css");
-  }
 }
 
 setClickOutsideToClose("display-setting", [

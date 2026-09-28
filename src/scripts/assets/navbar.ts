@@ -281,3 +281,64 @@ if (!window.__navbarPanelToggleBound) {
     { capture: true },
   );
 })();
+
+// 导航栏「顶部透明、下滑玻璃」：滚动超过阈值后给 <html> 挂 .navbar-scrolled，
+// 样式由 components.css 的全屏模式段消费（仅在「全屏模式 + 首页 + 高级材质」下
+// 生效，其余情况该状态类无视觉效果）。rAF 节流；换页过渡（Swup 的 is-changing /
+// is-animating）期间保持现状，避免导航栏背景闪烁
+if (!window.__navbarScrollGlassBound) {
+  window.__navbarScrollGlassBound = true;
+
+  var NAVBAR_SCROLL_THRESHOLD = 50;
+  var navbarScrollTicking = false;
+
+  function updateNavbarScrolled() {
+    navbarScrollTicking = false;
+    var root = document.documentElement;
+    // 换页过渡期间不改状态：避免点击瞬间导航栏背景突然消失
+    if (
+      root.classList.contains("is-changing") ||
+      root.classList.contains("is-animating")
+    ) {
+      return;
+    }
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    root.classList.toggle("navbar-scrolled", y > NAVBAR_SCROLL_THRESHOLD);
+  }
+
+  function requestNavbarScrollUpdate() {
+    if (navbarScrollTicking) return;
+    navbarScrollTicking = true;
+    requestAnimationFrame(updateNavbarScrolled);
+  }
+
+  window.addEventListener("scroll", requestNavbarScrollUpdate, {
+    passive: true,
+  });
+  window.addEventListener("resize", requestNavbarScrollUpdate, {
+    passive: true,
+  });
+
+  // 换页过渡结束的那一帧补算一次：Swup 的「滚动归零」发生在过渡窗口内，scroll
+  // 事件被上面的 return 吞掉，若之后用户不滚动，类会残留旧值（从首页深处进文章、
+  // 再回首页时，顶部会错误地显示玻璃底）。监听 <html> 的 class —— is-changing /
+  // is-animating 被 Swup 移除的瞬间重算；只在「过渡 → 非过渡」的转换时触发，
+  // 平时（含 navbar-scrolled 自身变化）零开销
+  var navbarRoot = document.documentElement;
+  var navbarWasTransitioning = false;
+
+  function checkNavbarTransitionEnd() {
+    var now =
+      navbarRoot.classList.contains("is-changing") ||
+      navbarRoot.classList.contains("is-animating");
+    if (navbarWasTransitioning && !now) requestNavbarScrollUpdate();
+    navbarWasTransitioning = now;
+  }
+
+  new MutationObserver(checkNavbarTransitionEnd).observe(navbarRoot, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+
+  updateNavbarScrolled();
+}

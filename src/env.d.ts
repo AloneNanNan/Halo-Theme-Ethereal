@@ -62,6 +62,7 @@ declare namespace astroHTML.JSX {
     "th:data-count"?: string;
     "th:data-hue"?: string;
     "th:data-hue-fixed"?: string;
+    "th:data-fullscreen-layout"?: string;
     "th:data-text"?: string;
     "th:data-submenu-id"?: string;
     "th:data-empty-text"?: string;

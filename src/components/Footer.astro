@@ -177,9 +177,12 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
 
 <style is:global>
   /* 星芒徽标的底色圆遮罩：普通模式取页面底色（--page-bg）遮断细线。
-     「全屏透明」壁纸下实际背景是盖住页面的壁纸，--page-bg 会造成一个不透明
-     圆饼，故改透明让细线自然穿过。 */
-  html[data-banner-display="transparent"] .footer-star-badge {
+     「全屏透明」壁纸下实际背景是盖住页面的壁纸、「全屏沉浸」下页脚卡片是
+     半透明磨砂，两者用 --page-bg 都会形成一个突兀的不透明色饼，
+     故一并改透明让细线自然穿过。 */
+  html[data-banner-display="transparent"] .footer-star-badge,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    .footer-star-badge {
     background: transparent;
   }
 </style>

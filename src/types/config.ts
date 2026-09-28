@@ -114,9 +114,11 @@ export interface Layout {
 export interface BannerLayout {
   /** 显示模式：disabled 关闭 | banner 横幅模式（默认，首页延伸 65vh）| fullscreen 全屏模式（首页 100vh）| transparent 全屏透明（无横幅、整屏壁纸背景） */
   displayMode?: "disabled" | "banner" | "fullscreen" | "transparent";
+  /** 全屏布局（仅 displayMode === "fullscreen" 生效）：classic 经典（壁纸在文档流、不模糊，默认）| hero 沉浸（壁纸钉视口 + 首页滚动模糊斜坡 + 标题淡出 + 非首页固定模糊） */
+  fullscreenLayout?: "classic" | "hero";
   /** 全屏透明模式：壁纸整体不透明度（0.3-1，默认 0.8，仅 transparent 模式生效） */
   wallpaperOpacity?: number;
-  /** 全屏透明模式：壁纸背景模糊强度（px，0-24，仅 transparent 模式生效） */
+  /** 背景模糊强度（px，0-24）：transparent 模式为壁纸背景模糊；fullscreen + hero 布局下为「最大模糊」（首页滚动斜坡的封顶值、非首页的固定值） */
   wallpaperBlur?: number;
   /** 全屏透明模式：卡片/导航栏/悬浮按钮的半透明程度（0.3-1，设为 1 即不透明，需开启高级材质，仅 transparent 模式生效） */
   cardOpacity?: number;
@@ -156,6 +158,8 @@ export interface VisitorStyleConfig {
   wallpaperMode?: boolean;
   /** 壁纸设置（横幅/全屏下的波浪开关）切换 */
   wallpaperSettings?: boolean;
+  /** 全屏布局（经典 / 沉浸 Hero）切换，仅全屏模式下显示 */
+  fullscreenLayout?: boolean;
   /** 透明设置（透明度/模糊度/卡片透明度）调节，仅全屏透明模式下显示 */
   transparent?: boolean;
 }

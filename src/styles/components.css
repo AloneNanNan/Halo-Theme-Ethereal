@@ -292,9 +292,14 @@
     transform: translateY(calc(-100% + var(--wave-cover-offset)));
     /* 时长与 banner 装配件统一用 --dur-banner（随速度档位）：
        硬编码 700ms 会在舒缓档（800ms）/疾速档（500ms）与 banner/主网格
-       移速不一致，wave 领先产生间隙 */
-    transition: transform var(--dur-banner, 700ms)
-      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+       移速不一致，wave 领先产生间隙。
+       opacity 同速同曲线：无横幅模式与 hero 下波浪以透明度隐去（替代 display:none），
+       模式切换需要淡入淡出 */
+    transition:
+      transform var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      opacity var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
   body.is-home #wave-container {
@@ -369,7 +374,11 @@
     transform: translateX(-50%);
     color: rgb(255 255 255 / 0.85);
     cursor: pointer;
-    transition: color 0.3s ease;
+    /* opacity/visibility 的过渡供全屏沉浸（hero）滚动隐藏用（.hide 类） */
+    transition:
+      color 0.3s ease,
+      opacity 0.35s ease,
+      visibility 0.35s ease;
   }
 
   body:not(.is-home) #scroll-down-indicator {
@@ -411,14 +420,23 @@
   /* ── 访客壁纸模式切换支持 ──
      #banner-wrapper 已去掉 th:if 恒渲染，显隐/定位全部由 html[data-banner-display]
      门控，访客运行期切换模式无需重建 DOM。disabled：横幅整体隐藏（含署名/箭头）；
-     波浪仅横幅/全屏显示，透明模式与访客关闭（body.wave-disabled）亦隐藏 */
+     波浪以「透明度」隐去（见下方规则，支持淡入淡出）；总开关关闭时硬隐藏 */
   html[data-banner-display="disabled"] #banner-wrapper,
   html[data-banner-display="disabled"] #banner-credit,
   html[data-banner-display="disabled"] #scroll-down-indicator,
-  html[data-banner-display="disabled"] #wave-container,
-  html[data-banner-display="transparent"] #wave-container,
   body.wave-disabled #wave-container {
     display: none !important;
+  }
+
+  /* 无横幅（纯色 / 全屏透明）与 hero：波浪以透明度隐去 —— 模式切换时淡入淡出。
+     display:none 是无过渡的，切换时会「闪现 / 瞬跳」；容器带 opacity 即整棵子树
+     （三层波浪 SVG）一起渐变，无需逐个处理。pointer-events 归零避免不可见时拦截 */
+  html[data-banner-display="disabled"] #wave-container,
+  html[data-banner-display="transparent"] #wave-container,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #wave-container {
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* 首页壁纸标题访客关闭：opacity 过渡渐隐（替代原 display:none，支持平滑过渡） */
@@ -471,6 +489,197 @@
         var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
+  /* 壁纸容器与媒体元素参与过渡：只列「height + opacity」两项。
+     height：--banner-height-home 在「横幅 65vh ↔ 全屏 100vh」切换（img 是 100%，
+     父级逐帧过渡自动跟随）；opacity：全屏 ↔ 全屏透明的壁纸透明度差异。
+     不列 top / translate：classic/横幅 与 hero/透明 的视觉位置靠「top:-extend +
+     translate:+extend」一负一正相消拼出，两项各走各的过渡会在不同步的帧错位
+     （观感即「壁纸上下摆动」）；两侧净位置相同，瞬时到位即零位移。
+     窗口由 applyBannerDisplay 临时挂 .banner-mode-transitioning，结束即恢复 */
+  html.banner-mode-transitioning #banner-wrapper {
+    transition:
+      height var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      opacity var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
+  }
+
+  html.banner-mode-transitioning #banner,
+  html.banner-mode-transitioning #banner-mobile {
+    transition: height var(--dur-banner, 700ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
+  }
+
+  /* 媒体层的推拉镜头：切换窗口内 img / video 的缩放与模糊平滑过渡 —— 横幅 img
+     无缩放、全屏/透明的 img 带 scale(1.05~1.06)，切换时该差异即为一记轻微推拉。
+     两者必须同窗口：从横幅（清晰、scale 1）切到透明（blur 10px、scale 1.06）时，
+     若模糊瞬时到位而缩放还在路上，起手几帧模糊会采样到容器外、四边露窄暗边
+     （scale 放大正是为模糊采样留边距）。不影响 hero 的滚动模糊斜坡
+     （走 .hero-blur-transitioning，逐帧直写） */
+  html.banner-mode-transitioning #banner img,
+  html.banner-mode-transitioning #banner-mobile img,
+  html.banner-mode-transitioning #banner video,
+  html.banner-mode-transitioning #banner-mobile video {
+    transition:
+      transform var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      filter var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
+  }
+
+  /* ── 全屏模式 · 沉浸（hero）布局（data-fullscreen-layout == 'hero'）──
+     classic 保持既有行为（壁纸在文档流内、随页面滚出首屏、不模糊、标题静态），
+     hero 只在其上覆盖：
+       ① 壁纸容器钉住视口，内容与组件在其上滚动；
+       ② 壁纸模糊由 --hero-wallpaper-blur 驱动（首页由 fullscreen-hero 脚本按滚动
+          写入、非首页恒为最大值，最大值即 --wallpaper-blur-max）；
+       ③ 首页标题透明度由 --hero-title-opacity 驱动（脚本逐帧写，配合内联
+          transform 做上移淡出）；
+       ④ 非首页无标题、无波浪，内容贴导航栏下方；
+       ⑤ 卡片磨砂复用「全屏透明」的规则（见下方 transparent 段）。
+     注意：模糊必须配合放大 —— 纯 blur 会让图片四边采样到容器底色形成暗边，
+     scale(1.05) 保证采样区落在图片内部（与透明模式同机制） */
+
+  /* ① 钉住视口：#banner-wrapper 的 DOM class 含 Tailwind .absolute，且
+     .enable-banner 给了 height 与 translate 延伸量，需整组覆盖 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner-wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100vh !important;
+    height: 100lvh !important;
+    z-index: 0 !important;
+    /* 必须写显式 0 长度而不是 none：translate 的 none 与长度不可插值
+       （CSS Transforms 2），模式切换时会让壁纸整体瞬移（同 #main-grid 的
+       「显式 0 长度基值」注释所述） */
+    translate: 0 0 !important;
+  }
+
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"] #banner,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner-mobile {
+    height: 100% !important;
+    /* 同上：banner 模式下这里是 translate: 0 var(--bannerOffset)（默认 15vh），
+       写 none 会让切换瞬间跳过 15vh */
+    translate: 0 0 !important;
+  }
+
+  /* ② 壁纸模糊：首页首帧保持清晰（--hero-wallpaper-blur 未写时 fallback 0，
+     由脚本随滚动抬升）；非首页 fallback 到最大值，避免壁纸出现后要等脚本
+     执行才变模糊 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner-mobile
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner
+    video,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    #banner-mobile
+    video {
+    filter: blur(var(--hero-wallpaper-blur, 0px));
+    transform: scale(1.05);
+  }
+
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #banner
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #banner-mobile
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #banner
+    video,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #banner-mobile
+    video {
+    filter: blur(var(--hero-wallpaper-blur, var(--wallpaper-blur-max, 10px)));
+  }
+
+  /* 全屏经典布局（classic）的媒体层同样带轻放大：与 hero / 透明保持「全屏壁纸
+     都有轻微放大」的一致观感，同时让「横幅 ↔ 全屏」切换时两侧存在可插值的
+     transform —— 否则 1 → 1 就没有推拉可言。classic 无模糊，放大由
+     #banner-wrapper 的 overflow-hidden 裁切 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="classic"]
+    #banner
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="classic"]
+    #banner-mobile
+    img,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="classic"]
+    #banner
+    video,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="classic"]
+    #banner-mobile
+    video {
+    transform: scale(1.05);
+  }
+
+  /* ③ 首页标题：透明度由脚本逐帧写入，禁用类驱动的 opacity 过渡避免相互打架
+     （访客关闭标题用的 body.banner-title-disabled 带 !important，仍优先生效） */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.is-home
+    #banner-overlay {
+    opacity: var(--hero-title-opacity, 1);
+    transition: none !important;
+  }
+
+  /* ④ 非首页：壁纸是整屏背景，「横幅底边」不存在，内容直接贴导航栏下方 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #main-panel-wrapper {
+    top: var(--no-banner-panel-top) !important;
+  }
+
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #main-grid {
+    min-height: calc(100vh - var(--no-banner-panel-top));
+  }
+
+  /* ⑤ hero 下波浪不露脸：壁纸钉住视口后，波浪会孤零零悬在视口底部。
+     隐去方式见上方「无横幅与 hero 波浪以透明度隐去」规则 ——
+     这里不再用 display:none，否则模式切换时波浪会闪现/瞬跳 */
+
+  /* ⑥ 向下滚动箭头的 hero 隐藏态：hero 下壁纸钉住视口，箭头不会像 classic
+     那样随内容滚出视口，改由脚本在首页滚动超过 100px 时加 .hide
+     （过渡见 #scroll-down-indicator 的 transition） */
+  #scroll-down-indicator.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* ⑦ 全屏模式首页：署名胶囊（#banner-credit）贴在内容区顶边之上 3.25rem
+     （-top-13），而全屏首页的内容区顶边恰好落在 100vh + gap 处 → 胶囊底边
+     恒定越出视口底约 8px 被裁。上移 0.75rem 让它完整落在视口内
+     （classic / hero 同规则，属全屏模式通用修正） */
+  html[data-banner-display="fullscreen"] body.is-home #banner-credit {
+    translate: 0 -0.75rem;
+  }
+
+  /* ⑧ 换页 / 模式切换时的模糊过渡：滚动斜坡要求逐帧直写（有过渡会拖尾），
+     但换页瞬间 0 ⇄ 最大值的跳变太生硬 —— 由脚本在状态切换的瞬间临时挂
+     .hero-blur-transitioning 开一段过渡窗口。时长与缓动必须与内容卡片的下移
+     （html.home-switch #main-panel-wrapper 用 --dur-banner + 同一条缓动）完全
+     一致：两者同时起、同时落，才不会出现"卡片落在还糊着的壁纸上"
+     （或反过来"壁纸先清晰、卡片还在飘"） */
+  html.hero-blur-transitioning #banner img,
+  html.hero-blur-transitioning #banner-mobile img,
+  html.hero-blur-transitioning #banner video,
+  html.hero-blur-transitioning #banner-mobile video {
+    transition: filter var(--dur-banner, 700ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+  }
+
   /* ── 全屏透明模式（displayMode == 'transparent'）──
      布局等同「关闭」（无 enable-banner：内容区贴顶、无波浪/横幅文字），
      仅把 #banner-wrapper 的媒体层（单图/视频/轮播/移动端图）复用为整屏
@@ -483,6 +692,10 @@
     height: 100lvh !important;
     z-index: 0 !important;
     opacity: var(--transparent-wallpaper-opacity, 0.8) !important;
+    /* 必须显式写 0 长度：透明模式下 .enable-banner 不命中，本项会落到初始值 none，
+       而 none 与长度不可插值 —— 与横幅/全屏经典（translate: 0 extend）互切时
+       这项会瞬时而 top 走过渡，形成小幅错位再归位（「上下轻微摇摆」） */
+    translate: 0 0 !important;
   }
 
   html[data-banner-display="transparent"] #banner,
@@ -498,16 +711,16 @@
     display: none !important;
   }
 
-  /* 壁纸磨砂：背景图片/视频模糊 + 轻压暗，形成柔和的背景遮罩
-     （与 Firefly overlay 同思路）；卡片靠半透明背景透出这张模糊壁纸来
-     呈现磨砂感（见下方说明），因此壁纸模糊值即磨砂强度；
-     scale 放大裁掉模糊边缘（外层 overflow-hidden 兜底）。
-     独立于「高级材质」开关 */
+  /* 壁纸磨砂：背景图片/视频模糊，形成柔和的背景遮罩；卡片靠半透明背景透出这张
+     模糊壁纸来呈现磨砂感（见下方说明），因此壁纸模糊值即磨砂强度；scale 放大
+     裁掉模糊边缘（外层 overflow-hidden 兜底）。独立于「高级材质」开关。
+     注：不做 brightness 压暗（曾为 0.95）——压暗会让整页背景偏闷、卡片透出的底
+     也变暗；hero 模式的壁纸本就不压暗，此处统一 */
   html[data-banner-display="transparent"] #banner img,
   html[data-banner-display="transparent"] #banner-mobile img,
   html[data-banner-display="transparent"] #banner video,
   html[data-banner-display="transparent"] #banner-mobile video {
-    filter: blur(var(--transparent-wallpaper-blur, 10px)) brightness(0.95);
+    filter: blur(var(--transparent-wallpaper-blur, 10px));
     transform: scale(1.06);
   }
 
@@ -526,14 +739,31 @@
   html[data-banner-display="transparent"]
     body.navbar-blur-enabled
     .card-base:not(.btn-regular):not(.bg-\(--primary\)),
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .card-base:not(.btn-regular):not(.bg-\(--primary\)),
   html[data-banner-display="transparent"]
     body.navbar-blur-enabled
     .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
       .bg-\(--primary\)
     ),
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
+      .bg-\(--primary\)
+    ),
   html[data-banner-display="transparent"] body.navbar-blur-enabled .float-panel,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .float-panel,
   html[data-banner-display="transparent"] body.navbar-blur-enabled .navbar-blur,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .navbar-blur,
   html[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .floating-btn,
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     body.navbar-blur-enabled
     .floating-btn {
     background-color: rgb(
@@ -544,7 +774,15 @@
   :root.dark[data-banner-display="transparent"]
     body.navbar-blur-enabled
     .card-base:not(.btn-regular):not(.bg-\(--primary\)),
+  :root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .card-base:not(.btn-regular):not(.bg-\(--primary\)),
   :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
+      .bg-\(--primary\)
+    ),
+  :root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     body.navbar-blur-enabled
     .btn-card:not(.btn-regular):not(.floating-btn .btn-card):not(
       .bg-\(--primary\)
@@ -552,15 +790,36 @@
   :root.dark[data-banner-display="transparent"]
     body.navbar-blur-enabled
     .float-panel,
+  :root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
+    .float-panel,
   :root.dark[data-banner-display="transparent"]
+    body.navbar-blur-enabled
+    .navbar-blur,
+  :root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     body.navbar-blur-enabled
     .navbar-blur,
   :root.dark[data-banner-display="transparent"]
     body.navbar-blur-enabled
+    .floating-btn,
+  :root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body.navbar-blur-enabled
     .floating-btn {
+    /* 深灰 #171717 而非纯黑：纯黑在暗色下显得死、脏，深灰更透气 */
     background-color: rgb(
-      0 0 0 / var(--transparent-card-alpha, 0.6)
+      23 23 23 / var(--transparent-card-alpha, 0.6)
     ) !important;
+  }
+
+  /* 全屏模式（经典 / 沉浸）：banner 署名胶囊不再显示——
+     两种全屏布局下内容区直接压在壁纸上，署名胶囊失去「压在横幅下沿」的
+     定位语境（会悬浮在页面中部、与波浪/内容重叠），故隐藏。
+     注：此处用 display:none 隐藏，不做服务端条件渲染，因为布局属性在
+     访客切换壁纸模式时是运行时变更的，需要随之即时显隐。
+     必须 !important：胶囊自带 .flex（display:flex，utilities 层），
+     未加 important 的声明会被其打败（同 disabled / transparent 两条的处理） */
+  html[data-banner-display="fullscreen"] #banner-credit {
+    display: none !important;
   }
 
   /* 全局模糊开关：按钮磨砂放在自身会淡入淡出的外层 .floating-btn 上
@@ -663,6 +922,49 @@
     backdrop-filter: saturate(180%) blur(20px) !important;
     box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.2);
     border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  /* 全屏模式首页：导航栏「顶部透明、下滑玻璃」——
+     顶部（未滚过阈值，html 无 .navbar-scrolled）时背景、模糊、投影、描边全部归零，
+     壁纸完整露出；滚过阈值后恢复为标准玻璃底（.navbar-scrolled 由 navbar.ts 在
+     滚动 > 50px 时挂到 <html>）。
+     仅在「全屏模式 + 首页 + 高级材质开启」三者同时满足时生效；非首页上方是内容卡
+     （无壁纸），保持玻璃。过渡时长与卡片磨砂同源（--dur-banner） */
+  html[data-banner-display="fullscreen"]
+    body.is-home.navbar-blur-enabled
+    .navbar-blur {
+    transition:
+      background-color var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      backdrop-filter var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      -webkit-backdrop-filter var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      box-shadow var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
+      border-color var(--dur-banner, 700ms)
+        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
+  }
+
+  html[data-banner-display="fullscreen"]:not(.navbar-scrolled)
+    body.is-home.navbar-blur-enabled
+    .navbar-blur {
+    background-color: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border-bottom-color: transparent !important;
+  }
+
+  /* 暗色补丁：上方规则的 background-color 特异性 (0,5,2) 低于暗色「卡片磨砂」段的
+     `:root.dark[...][...] body.navbar-blur-enabled .navbar-blur` (0,6,1)，暗色下顶部会被
+     磨砂段涂回半透明底（表现为「顶部仍有背景、但模糊/阴影已清掉」）。本条的 :root.dark
+     前缀把特异性抬到 (0,7,1) 压过磨砂段；仅需声明 background-color（其余属性上方规则
+     已胜出）。滚动后 .navbar-scrolled 使两条都不命中，磨砂段继续提供玻璃底 */
+  :root.dark[data-banner-display="fullscreen"]:not(.navbar-scrolled)
+    body.is-home.navbar-blur-enabled
+    .navbar-blur {
+    background-color: transparent !important;
   }
 
   /* 高级材质关闭：navbar-blur 类恒挂载，退回纯色卡片背景 */
