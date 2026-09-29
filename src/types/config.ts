@@ -183,12 +183,20 @@ export interface MomentsBar {
 export interface PostList {
   /** 默认布局：list 列表（默认）/ grid 网格 */
   defaultMode?: "list" | "grid";
-  /** 列表模式封面位置：right 右侧（默认）/ left 左侧 */
-  coverPosition?: "right" | "left";
+  /** 列表设置（仅列表布局生效） */
+  list?: PostListList;
   /** 简介显示行数，设为 0 不截断 */
   descriptionLines?: number;
   /** 网格设置 */
   grid?: PostListGrid;
+}
+
+/** 列表设置：列表模式封面位置与比例（数据路径 layout.postList.list） */
+export interface PostListList {
+  /** 列表模式封面位置：right 右侧（默认）/ left 左侧 */
+  coverPosition?: "right" | "left";
+  /** 列表封面比例：fill 撑满卡片高度（默认）/ fixed16x9 满宽撑满、内容列被压缩后按 16:9 居中（防裁） */
+  coverRatio?: "fill" | "fixed16x9";
 }
 
 export interface PostListGrid {

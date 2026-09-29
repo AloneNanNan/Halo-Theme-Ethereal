@@ -49,7 +49,9 @@
 
     <div class="category-divider shrink-0" aria-hidden="true"></div>
 
-    <div class="category-scroll flex items-center gap-2 overflow-x-auto">
+    <!-- flex-1：中间滚动区吃掉剩余空间，右侧「分隔线 + 更多」始终贴右端。
+         此前滚动区不弹性，分类不满一屏时「更多」会紧跟在最后一个分类后面 -->
+    <div class="category-scroll flex flex-1 items-center gap-2 overflow-x-auto">
       <div class="contents" th:each="category : ${categoryFinder.listAll()}">
         <a
           th:href="@{${category.status.permalink}}"

@@ -2,12 +2,12 @@
  * 文章卡片布局的 Thymeleaf 表达式生成。
  *
  * 与 settings.yaml 的 layout.postList 配置组对应，读取：
- *   defaultMode / coverPosition / descriptionLines / grid.masonry /
- *   grid.coverFullWidth / grid.coverAutoHeight
+ *   defaultMode / list.coverPosition / list.coverRatio / descriptionLines /
+ *   grid.masonry / grid.coverFullWidth / grid.coverAutoHeight
  *
  * 渲染结果输出到 PostList.astro 的容器上：
  *   th:classappend -> 追加布局类（post-grid-mode / post-list-mode / cover-left /
- *                     grid-cover-inset|full / grid-cover-fill）
+ *                     cover-fixed / grid-cover-inset|full / grid-cover-fill）
  *   th:attr        -> data-masonry（供瀑布流 JS 读取）
  *   th:style       -> --post-card-min-width（写死 320px）/ --post-desc-lines
  *
@@ -23,13 +23,15 @@ export function postListContainerThWith(): string {
   return (
     "postList=${theme.config?.layout?.postList}, " +
     "defaultMode=${postList?.defaultMode ?: 'list'}, " +
-    "coverPosition=${postList?.coverPosition ?: 'right'}, " +
+    "coverPosition=${postList?.list?.coverPosition ?: 'right'}, " +
+    "coverRatio=${postList?.list?.coverRatio ?: 'fill'}, " +
     "descLines=${postList?.descriptionLines ?: 2}, " +
     "masonry=${postList?.grid?.masonry == true}, " +
     "coverFullWidth=${postList?.grid?.coverFullWidth == true}, " +
     "coverAutoHeight=${postList?.grid?.coverAutoHeight != false}, " +
     "gridClass=${defaultMode == 'grid' ? ' post-grid-mode' : ' post-list-mode'}, " +
     "coverExtra=${defaultMode != 'grid' and coverPosition == 'left' ? ' cover-left' : ''}, " +
+    "coverRatioExtra=${coverRatio == 'fixed16x9' ? ' cover-fixed' : ''}, " +
     "gridExtra=${defaultMode == 'grid' and coverFullWidth ? ' grid-cover-full' : ' grid-cover-inset'}, " +
     "gridFill=${defaultMode == 'grid' and !masonry and coverAutoHeight ? ' grid-cover-fill' : ''}"
   );
@@ -41,6 +43,7 @@ export function postListContainerClass(): string {
     "' '" +
     " + ${gridClass}" +
     " + ${coverExtra}" +
+    " + ${coverRatioExtra}" +
     " + ${gridExtra}" +
     " + ${gridFill}"
   );

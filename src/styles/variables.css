@@ -31,7 +31,9 @@
   /* banner 图片定位平移量：position=top→30vh / bottom→0 / center→15vh，
      由 Layout.astro 按后台设置注入覆盖，此为默认兜底 */
   --bannerOffset: 15vh;
-  --post-card-cover-width: 28%;
+  /* 列表模式卡片封面宽度（占卡片宽 %）：34% 使封面 16:9 高度贴合单行标题
+     卡片高度、跨阈值切换无跳变（详见 PostList.astro 的 cover-fixed 块） */
+  --post-card-cover-width: 34%;
 
   --primary: oklch(0.7 0.14 var(--hue));
   --page-bg: oklch(0.95 0.01 var(--hue));

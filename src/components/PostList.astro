@@ -226,6 +226,41 @@ const { pagination = "posts" } = Astro.props;
     padding-left: 2.25rem !important;
   }
 
+  /* ===== 列表模式封面固定 16:9（coverRatio: fixed16x9）=====
+     混合策略（容器查询，阈值 63.75rem ≈ 内容列最大宽度 64rem 留 4px 余量）：
+     内容列满宽时封面撑满卡片高度（与「撑满」档一致），被压缩后改为固定 16:9、
+     垂直居中（避免越裁越多）。两态统一用显式 top + height 表达（不用 top/bottom
+     拉伸或 aspect-ratio 定高），使跨阈值切换可被 transition 平滑插值（否则
+     切换瞬间跳变）。
+     维护注意：cqw 与 --post-card-cover-width（34%）需同步（16:9 高 = 34cqw × 9/16 = 19.125cqw，
+     居中偏移 50% - 9.5625cqw）；阈值用 rem（内容列宽即 64rem）；容器挂
+     post-card-item（卡片有 1px 边框，挂卡片会误判）；仅桌面端生效 */
+  @media (min-width: 768px) {
+    #post-list-container.post-list-mode.cover-fixed .post-card-item {
+      container-type: inline-size;
+    }
+    /* 满宽态：显式高度等价于基础类的 top/bottom 拉伸（0.75rem 即 md:top-3 的 12px） */
+    #post-list-container.post-list-mode.cover-fixed .post-card-cover {
+      top: 0.75rem !important;
+      bottom: auto !important;
+      height: calc(100% - 1.5rem) !important;
+      transition:
+        top 0.08s ease-out,
+        height 0.08s ease-out !important;
+    }
+    @container (max-width: 63.75rem) {
+      #post-list-container.post-list-mode.cover-fixed .post-card-cover {
+        top: calc(50% - 9.5625cqw) !important;
+        height: 19.125cqw !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #post-list-container.post-list-mode.cover-fixed .post-card-cover {
+        transition: none !important;
+      }
+    }
+  }
+
   /* ===== 移动端（<768px）统一为网格式布局：封面居上、独立卡片 =====
      列表与网格在移动端呈现一致的卡片样式（封面在上、无封面用主题色按钮居右） */
   @media (max-width: 767px) {
