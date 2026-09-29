@@ -142,9 +142,9 @@ export function getStoredTheme(): LIGHT_DARK_MODE {
 }
 
 /* ── 访客样式切换（显示设置面板） ─────────────────────────────
- * localStorage 键：postListLayout / cardHoverLift / navbarBlur / postListMasonry /
- *   wallpaperOpacity / wallpaperBlur / wallpaperCardAlpha / bannerDisplay / bannerWave /
- *   sakuraEnabled
+ * localStorage 键：postListLayout / cardBorder / cardFollowTheme / navbarBlur /
+ *   postListMasonry / wallpaperOpacity / wallpaperBlur / wallpaperCardAlpha /
+ *   bannerDisplay / bannerWave / sakuraEnabled
  * 默认值链路：后台 theme.config → ConfigCarrier data 属性 → 本模块读取；
  * 开关为标签页级（外观/壁纸/特效），关闭时忽略并清理该标签页相关的 localStorage
  * （与 fixed 色调、__eecs 语义一致）。
@@ -272,20 +272,20 @@ export function setPostListLayout(mode: PostListLayoutMode): void {
   applyPostListLayout(mode);
 }
 
-/* ── 卡片样式（悬浮效果 / 高级材质） ── */
-
-export function getDefaultCardHoverLift(): boolean {
-  return carrierBool("cardHoverLift", true);
-}
+/* ── 卡片样式（边框和阴影 / 跟随主题色 / 高级材质） ── */
 
 export function getDefaultNavbarBlur(): boolean {
   return carrierBool("navbarBlur", false);
 }
 
-export function getStoredCardHoverLift(): boolean {
-  if (!getVisitorSwitches().appearance) return getDefaultCardHoverLift();
-  const stored = localStorage.getItem("cardHoverLift");
-  return stored == null ? getDefaultCardHoverLift() : stored === "true";
+/** 卡片边框和阴影默认值（后台「样式开关」下发） */
+export function getDefaultCardBorder(): boolean {
+  return carrierBool("cardBorder", false);
+}
+
+/** 卡片跟随主题色默认值（后台「样式开关」下发）；仅浅色模式有视觉变化 */
+export function getDefaultCardFollowTheme(): boolean {
+  return carrierBool("cardFollowTheme", false);
 }
 
 export function getStoredNavbarBlur(): boolean {
@@ -294,14 +294,31 @@ export function getStoredNavbarBlur(): boolean {
   return stored == null ? getDefaultNavbarBlur() : stored === "true";
 }
 
-export function setCardHoverLift(enabled: boolean): void {
-  localStorage.setItem("cardHoverLift", String(enabled));
-  document.body.classList.toggle("card-hover-lift-enabled", enabled);
+export function getStoredCardBorder(): boolean {
+  if (!getVisitorSwitches().appearance) return getDefaultCardBorder();
+  const stored = localStorage.getItem("cardBorder");
+  return stored == null ? getDefaultCardBorder() : stored === "true";
+}
+
+export function getStoredCardFollowTheme(): boolean {
+  if (!getVisitorSwitches().appearance) return getDefaultCardFollowTheme();
+  const stored = localStorage.getItem("cardFollowTheme");
+  return stored == null ? getDefaultCardFollowTheme() : stored === "true";
 }
 
 export function setNavbarBlur(enabled: boolean): void {
   localStorage.setItem("navbarBlur", String(enabled));
   document.body.classList.toggle("navbar-blur-enabled", enabled);
+}
+
+export function setCardBorder(enabled: boolean): void {
+  localStorage.setItem("cardBorder", String(enabled));
+  document.body.classList.toggle("card-border-enabled", enabled);
+}
+
+export function setCardFollowTheme(enabled: boolean): void {
+  localStorage.setItem("cardFollowTheme", String(enabled));
+  document.body.classList.toggle("card-follow-theme-enabled", enabled);
 }
 
 /* ── 瀑布流（仅网格布局下生效） ── */
@@ -652,12 +669,14 @@ export function resetPostListLayout(): void {
 }
 
 export function resetCardStyle(): void {
-  localStorage.removeItem("cardHoverLift");
+  localStorage.removeItem("cardBorder");
+  localStorage.removeItem("cardFollowTheme");
   localStorage.removeItem("navbarBlur");
   localStorage.removeItem("postListMasonry");
+  document.body.classList.toggle("card-border-enabled", getDefaultCardBorder());
   document.body.classList.toggle(
-    "card-hover-lift-enabled",
-    getDefaultCardHoverLift(),
+    "card-follow-theme-enabled",
+    getDefaultCardFollowTheme(),
   );
   document.body.classList.toggle("navbar-blur-enabled", getDefaultNavbarBlur());
   // 瀑布流默认值已生效时 applyPostListMasonry 内部会跳过

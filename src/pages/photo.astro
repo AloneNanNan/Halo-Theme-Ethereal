@@ -26,7 +26,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
         >
           <a
             th:href="@{${backUrl}}"
-            class="btn-card h-10 w-fit rounded-lg px-3 text-sm font-bold text-75"
+            class="btn-card no-card-border h-10 w-fit rounded-lg px-3 text-sm font-bold text-75"
           >
             <span
               class="icon-[material-symbols--arrow-back-rounded] mr-1 text-xl"
@@ -38,7 +38,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
             th:href="${photo.spec.url != null and (photo.spec.url.startsWith('http') or photo.spec.url.startsWith('//') or photo.spec.url.startsWith('/')) ? photo.spec.url : null}"
             target="_blank"
             rel="noopener"
-            class="btn-card h-10 w-fit rounded-lg px-3 text-sm font-bold text-75 sm:shrink-0"
+            class="btn-card no-card-border h-10 w-fit rounded-lg px-3 text-sm font-bold text-75 sm:shrink-0"
             th:aria-label="#{page.photos.openImage}"
           >
             <span
@@ -152,7 +152,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
           <a
             th:if="${prev != null}"
             th:href="@{${photoUrl.detail(prev)}}"
-            class="btn-card min-h-18 justify-start! gap-3 rounded-xl p-3 text-left"
+            class="btn-card no-card-border min-h-18 justify-start! gap-3 rounded-xl p-3 text-left"
           >
             <span
               class="icon-[material-symbols--chevron-left-rounded] text-2xl text-(--primary)"
@@ -189,7 +189,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
           <a
             th:if="${next != null}"
             th:href="@{${photoUrl.detail(next)}}"
-            class="btn-card min-h-18 justify-start! gap-3 rounded-xl p-3 text-left sm:justify-end! sm:text-right"
+            class="btn-card no-card-border min-h-18 justify-start! gap-3 rounded-xl p-3 text-left sm:justify-end! sm:text-right"
           >
             <div class="min-w-0 sm:order-1">
               <div

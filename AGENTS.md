@@ -203,7 +203,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 导航栏「显示设置」面板允许访客切换样式（参考 firefly）。后台开关在 `settings.yaml` 的 `layout.mobileMenu.visitorStyle` 子组，缺省视为开启；开关为**标签页级**（外观/壁纸/特效，一个开关对应面板一个标签页），仅在总开关 `enable` 开启时显示；标签页内的模式相关细分显隐（透明设置仅全屏透明等）仍由客户端按当前模式判断。面板 Tab 栏由「可见 Tab 收集」（`DisplaySettings.svelte` 的 `visibleTabs`）驱动：≥2 个显示 Tab 栏、=1 个直接渲染该分区。
 
-**localStorage 键清单（改键名需三处同步）**：`postListLayout`（list/grid）、`cardHoverLift`、`navbarBlur`（bool 字符串）、`postListMasonry`（bool 字符串，仅网格布局生效）、`wallpaperOpacity`（0–1）、`wallpaperBlur`（px 数值）、`wallpaperCardAlpha`（0–1）、`bannerDisplay`（disabled/banner/fullscreen/transparent）、`bannerWave`（bool 字符串）、`bannerTitle`（bool 字符串，首页壁纸标题）、`sakuraEnabled`（bool 字符串，樱花特效，切换后经 `sakuraToggle` 事件实时启停脚本）。开关关闭时对应键会被忽略并清理（与 `fixed` 固定色调、`__eecs` 语义一致）。
+**localStorage 键清单（改键名需三处同步）**：`postListLayout`（list/grid）、`cardBorder`（卡片边框和阴影）、`cardFollowTheme`（卡片跟随主题色）、`navbarBlur`（bool 字符串）、`postListMasonry`（bool 字符串，仅网格布局生效）、`wallpaperOpacity`（0–1）、`wallpaperBlur`（px 数值）、`wallpaperCardAlpha`（0–1）、`bannerDisplay`（disabled/banner/fullscreen/transparent）、`bannerWave`（bool 字符串）、`bannerTitle`（bool 字符串，首页壁纸标题）、`sakuraEnabled`（bool 字符串，樱花特效，切换后经 `sakuraToggle` 事件实时启停脚本）。开关关闭时对应键会被忽略并清理（与 `fixed` 固定色调、`__eecs` 语义一致）。**`cardHoverLift` 已退役**（卡片悬浮效果不再对访客开放、恒用后台默认），首帧脚本仅清理其残留键。
 
 **壁纸模式切换约定**：`#banner-wrapper` / `#scroll-down-indicator` / `#banner-credit` / 波浪容器恒渲染（已去 `th:if`），显隐与定位全由 `html[data-banner-display]` 门控（`components.css`），`applyBannerDisplay` 同时切 `body.enable-banner` 并按模式重算 `--banner-height-extend` px（全屏 65vh / 横幅 30vh，数值来自 `constants.ts`）。波浪关闭用 `body.wave-disabled`（CSS 隐藏），开启时由后台默认 + `wave.js` 的 desktop_only 守卫决定。
 

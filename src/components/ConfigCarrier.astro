@@ -14,6 +14,8 @@
   th:data-banner-title-default="${theme.config?.style?.bannerText?.enable != false and (!#strings.isEmpty(theme.config?.style?.bannerText?.title) or !#strings.isEmpty(theme.config?.style?.bannerText?.subtitles))}"
   th:data-wave-default="${theme.config?.style?.styleSwitches?.banner_wave != false and theme.config?.style?.styleSwitches?.banner_wave != 'disabled'}"
   th:data-card-hover-lift="${theme.config?.style?.styleSwitches?.card_hover_lift != false}"
+  th:data-card-border="${theme.config?.style?.styleSwitches?.card_border == true}"
+  th:data-card-follow-theme="${theme.config?.style?.styleSwitches?.card_follow_theme == true}"
   th:data-navbar-blur="${theme.config?.style?.styleSwitches?.navbar_blur == true}"
   th:data-wallpaper-opacity="${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}"
   th:data-wallpaper-blur="${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}"

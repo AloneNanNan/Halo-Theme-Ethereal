@@ -274,7 +274,13 @@ export interface StyleSwitches {
   // 保留 boolean 兼容旧版布尔配置（后台存量 true/false）
   banner_wave?: boolean | "enabled" | "disabled" | "desktop_only";
   navbar_blur?: boolean;
+  /** 卡片悬浮效果：全站默认值（不对访客开放、仅后台控制） */
   card_hover_lift?: boolean;
+  /** 卡片边框和阴影：全站默认值（默认关闭），访客可在显示设置面板中覆盖 */
+  card_border?: boolean;
+  /** 卡片跟随主题色：全站默认值（默认关闭），访客可在显示设置面板中覆盖；
+   *  仅浅色模式有视觉变化（浅色卡片从纯白变为带主题色色调的白，暗色卡片本就跟随色调） */
+  card_follow_theme?: boolean;
   /** 全局樱花特效：全站默认值（默认关闭），访客可在显示设置面板中覆盖 */
   sakura?: boolean;
 }

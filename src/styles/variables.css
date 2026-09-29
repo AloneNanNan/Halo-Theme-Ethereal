@@ -121,6 +121,15 @@
   --upvote-error: oklch(0.7 0.19 22);
 }
 
+/* 卡片跟随主题色（样式开关 → 访客可在显示设置面板覆盖）：浅色模式下把卡片
+   背景从纯白换成带主题色色调的白（与 --page-bg 同彩度，卡片与页面色调一致）。
+   暗色卡片 --card-bg 本就跟随 var(--hue)，无需处理。
+   注：全屏透明 / 高级材质场景下卡片背景被半透明覆盖规则接管（!important），
+   跟随在此场景不体现，属已知取舍 */
+:root:not(.dark) body.card-follow-theme-enabled {
+  --card-bg: oklch(1 0.01 var(--hue));
+}
+
 :root.dark {
   --primary: oklch(0.75 0.14 var(--hue));
   --page-bg: oklch(0.16 0.014 var(--hue));

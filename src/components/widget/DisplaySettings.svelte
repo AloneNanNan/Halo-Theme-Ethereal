@@ -7,11 +7,14 @@
     getVisitorSwitches,
     getStoredPostListLayout,
     setPostListLayout,
-    getDefaultCardHoverLift,
+    getDefaultCardBorder,
+    getDefaultCardFollowTheme,
     getDefaultNavbarBlur,
-    getStoredCardHoverLift,
+    getStoredCardBorder,
+    getStoredCardFollowTheme,
     getStoredNavbarBlur,
-    setCardHoverLift,
+    setCardBorder,
+    setCardFollowTheme,
     setNavbarBlur,
     getDefaultPostListMasonry,
     getStoredPostListMasonry,
@@ -144,7 +147,8 @@
   }
 
   let layout = $state<PostListLayoutMode>(currentLayout());
-  let cardHoverLift = $state(getStoredCardHoverLift());
+  let cardBorder = $state(getStoredCardBorder());
+  let cardFollowTheme = $state(getStoredCardFollowTheme());
   let navbarBlur = $state(getStoredNavbarBlur());
   let postListMasonry = $state(getStoredPostListMasonry());
   let sakura = $state(getStoredSakuraEnabled());
@@ -156,14 +160,16 @@
   // 各分区是否偏离默认（用于标题旁「恢复默认」按钮显隐）。
   // 判定与主题色一致：对比当前值与默认值，手动切回默认即自动隐藏。
   const defaultLayout = serverLayout();
-  const defaultCardHoverLift = getDefaultCardHoverLift();
+  const defaultCardBorder = getDefaultCardBorder();
+  const defaultCardFollowTheme = getDefaultCardFollowTheme();
   const defaultNavbarBlur = getDefaultNavbarBlur();
   const defaultPostListMasonry = getDefaultPostListMasonry();
   const defaultWallpaper = getDefaultWallpaperParams();
   const defaultSakura = getDefaultSakuraEnabled();
   const dirtyLayout = $derived(layout !== defaultLayout);
   const dirtyCard = $derived(
-    cardHoverLift !== defaultCardHoverLift ||
+    cardBorder !== defaultCardBorder ||
+      cardFollowTheme !== defaultCardFollowTheme ||
       navbarBlur !== defaultNavbarBlur ||
       postListMasonry !== defaultPostListMasonry,
   );
@@ -275,9 +281,14 @@
     layout = serverLayout();
   }
 
-  function toggleCardHoverLift() {
-    cardHoverLift = !cardHoverLift;
-    setCardHoverLift(cardHoverLift);
+  function toggleCardBorder() {
+    cardBorder = !cardBorder;
+    setCardBorder(cardBorder);
+  }
+
+  function toggleCardFollowTheme() {
+    cardFollowTheme = !cardFollowTheme;
+    setCardFollowTheme(cardFollowTheme);
   }
 
   function toggleNavbarBlur() {
@@ -297,7 +308,8 @@
 
   function resetCard() {
     resetCardStyle();
-    cardHoverLift = getDefaultCardHoverLift();
+    cardBorder = getDefaultCardBorder();
+    cardFollowTheme = getDefaultCardFollowTheme();
     navbarBlur = getDefaultNavbarBlur();
     postListMasonry = getDefaultPostListMasonry();
   }
@@ -406,10 +418,15 @@
             </div>
           </button>
         </div>
-        <button type="button" class="toggle-row" class:toggle-on={cardHoverLift} role="switch" aria-checked={cardHoverLift} on:click={toggleCardHoverLift}>
-          <span class="icon-[material-symbols--touch-app-rounded] toggle-icon"></span>
-          <span class="toggle-label">{t("display.cardHoverLift", "卡片悬浮效果")}</span>
-          <span class="toggle" class:toggle-on={cardHoverLift}><span class="toggle-knob"></span></span>
+        <button type="button" class="toggle-row" class:toggle-on={cardBorder} role="switch" aria-checked={cardBorder} on:click={toggleCardBorder}>
+          <span class="icon-[material-symbols--border-outer-rounded] toggle-icon"></span>
+          <span class="toggle-label">{t("display.cardBorder", "卡片边框和阴影")}</span>
+          <span class="toggle" class:toggle-on={cardBorder}><span class="toggle-knob"></span></span>
+        </button>
+        <button type="button" class="toggle-row" class:toggle-on={cardFollowTheme} role="switch" aria-checked={cardFollowTheme} on:click={toggleCardFollowTheme}>
+          <span class="icon-[material-symbols--palette-rounded] toggle-icon"></span>
+          <span class="toggle-label">{t("display.cardFollowTheme", "卡片跟随主题色")}</span>
+          <span class="toggle" class:toggle-on={cardFollowTheme}><span class="toggle-knob"></span></span>
         </button>
         <button type="button" class="toggle-row" class:toggle-on={navbarBlur} role="switch" aria-checked={navbarBlur} on:click={toggleNavbarBlur}>
           <span class="icon-[material-symbols--blur-on-rounded] toggle-icon"></span>

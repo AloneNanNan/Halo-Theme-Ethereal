@@ -54,7 +54,8 @@ const i18nInlineScript = `<script th:inline="javascript">
     "display.layoutList": \`[(#{display.layoutList})]\`,
     "display.layoutGrid": \`[(#{display.layoutGrid})]\`,
     "display.cardStyle": \`[(#{display.cardStyle})]\`,
-    "display.cardHoverLift": \`[(#{display.cardHoverLift})]\`,
+    "display.cardBorder": \`[(#{display.cardBorder})]\`,
+    "display.cardFollowTheme": \`[(#{display.cardFollowTheme})]\`,
     "display.navbarBlur": \`[(#{display.navbarBlur})]\`,
     "display.masonry": \`[(#{display.masonry})]\`,
     "display.wallpaper": \`[(#{display.wallpaper})]\`,
@@ -437,7 +438,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
        客户端 isHomePath（utils/banner-sync.ts）为权威，换页时由 syncHomeClass 纠正 -->
   <body
     class:list={["relative min-h-screen transition", { "is-home": isHomePage }]}
-    th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '') + (theme.config?.layout?.pageLayout?.layoutMode == 'two-column' and theme.config?.layout?.pageLayout?.rightSidebarMode ? ' layout-two-column-right' : '')}"
+    th:classappend="${(bannerHasMedia ? ' enable-banner' : '') + (theme.config?.style?.styleSwitches?.navbar_blur ? ' navbar-blur-enabled' : '') + (theme.config?.style?.styleSwitches?.card_hover_lift != false ? ' card-hover-lift-enabled' : '') + (theme.config?.style?.styleSwitches?.card_border ? ' card-border-enabled' : '') + (theme.config?.style?.styleSwitches?.card_follow_theme ? ' card-follow-theme-enabled' : '') + (theme.config?.layout?.pageLayout?.layoutMode == 'two-column' and theme.config?.layout?.pageLayout?.rightSidebarMode ? ' layout-two-column-right' : '')}"
     th:style="|--bannerOffset: ${theme.config?.style?.bannerStyle?.position == 'top' ? '30vh' : (theme.config?.style?.bannerStyle?.position == 'bottom' ? '0' : '15vh')}; --transparent-wallpaper-opacity: ${theme.config?.layout?.bannerLayout?.wallpaperOpacity ?: 0.8}; --transparent-wallpaper-blur: ${theme.config?.layout?.bannerLayout?.wallpaperBlur ?: 10}px; --transparent-card-alpha: ${theme.config?.layout?.bannerLayout?.cardOpacity ?: 0.6};|"
     data-overlayscrollbars-initialize
   >
@@ -461,18 +462,28 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         var effectsOn = enable && on(d.visitorEffects);
         var body = document.body;
 
-        // 卡片样式：悬浮效果 / 高级材质
+        // 卡片样式：边框和阴影 / 跟随主题色 / 高级材质
+        // （卡片悬浮效果已不对访客开放：恒用后台默认，仅清理历史残留键）
+        localStorage.removeItem("cardHoverLift");
         if (appearanceOn) {
-          var lift = localStorage.getItem("cardHoverLift");
-          if (lift != null) {
-            body.classList.toggle("card-hover-lift-enabled", lift === "true");
+          var cardBorder = localStorage.getItem("cardBorder");
+          if (cardBorder != null) {
+            body.classList.toggle("card-border-enabled", cardBorder === "true");
+          }
+          var followTheme = localStorage.getItem("cardFollowTheme");
+          if (followTheme != null) {
+            body.classList.toggle(
+              "card-follow-theme-enabled",
+              followTheme === "true",
+            );
           }
           var blur = localStorage.getItem("navbarBlur");
           if (blur != null) {
             body.classList.toggle("navbar-blur-enabled", blur === "true");
           }
         } else {
-          localStorage.removeItem("cardHoverLift");
+          localStorage.removeItem("cardBorder");
+          localStorage.removeItem("cardFollowTheme");
           localStorage.removeItem("navbarBlur");
         }
 

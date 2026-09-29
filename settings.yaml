@@ -81,7 +81,7 @@ spec:
               id: banner_displayMode
               label: 模式
               value: banner
-              help: "纯色：无横幅；横幅：非首页 35vh、首页 65vh；全屏：首页整屏，非首页同横幅，分经典/沉浸两种布局；全屏透明：整屏壁纸作背景，配合「高级材质」使卡片磨砂"
+              help: "纯色：无横幅；横幅：非首页 35vh、首页 65vh；全屏：首页整屏，非首页同横幅，分经典/沉浸两种布局；全屏透明：整屏壁纸作背景，配合「高级材质」使卡片磨砂；访客可在显示设置面板中覆盖"
               options:
                 - label: 关闭/纯色模式
                   value: disabled
@@ -157,7 +157,7 @@ spec:
               id: postList_defaultMode
               label: 默认布局
               value: list
-              help: "列表：单列布局，封面显示在卡片侧边；网格：多列布局，封面显示在卡片顶部"
+              help: "列表：单列布局，封面显示在卡片侧边；网格：多列布局，封面显示在卡片顶部；访客可在显示设置面板中覆盖"
               options:
                 - label: 列表
                   value: list
@@ -370,7 +370,7 @@ spec:
               key: welcome_enable
               label: 启用
               value: false
-              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key，在侧边栏设置中点击「天气」小组件,配置 Key 后生效。"
+              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key，在侧边栏设置的「天气小组件」分组中配置 Key 后生效。"
             - $formkit: select
               name: position
               id: welcome_position
@@ -607,7 +607,7 @@ spec:
               id: bannerText_enable
               label: 启用
               value: true
-              help: "在 Banner 上显示标题和副标题"
+              help: "在 Banner 上显示标题和副标题；访客可在显示设置面板中覆盖"
             - $formkit: text
               name: title
               if: "$get(bannerText_enable).value"
@@ -655,7 +655,7 @@ spec:
               step: 5
               label: 色调
               value: 250
-              help: "主题颜色的默认色调，从0到360。红色：0，蓝绿色：200，青色：250，粉红色：345"
+              help: "主题颜色的默认色调，从0到360，访客可在显示设置面板中覆盖；红色：0，蓝绿色：200，青色：250，粉红色：345"
         - $formkit: group
           name: colorScheme
           label: 配色方案
@@ -754,8 +754,10 @@ spec:
           value:
             # banner_wave 三选：disabled 关闭 / enabled 开启 / desktop_only 移动端关闭（触屏设备不加载动画）
             banner_wave: enabled
-            navbar_blur: true
             card_hover_lift: true
+            card_border: false
+            card_follow_theme: false
+            navbar_blur: true
             sakura: false
           children:
             # 三选开关（写法与 color_scheme 一致）：关闭 / 开启 / 移动端关闭
@@ -763,7 +765,7 @@ spec:
               name: banner_wave
               label: 底部波浪效果
               value: enabled
-              help: "在 Banner 底部显示波浪过渡效果；移动端关闭指触屏设备不显示动画，可降低性能开销和加载时间"
+              help: "在 Banner 底部显示波浪过渡效果；移动端关闭指触屏设备不显示动画，可降低性能开销和加载时间；访客可在显示设置面板中覆盖"
               options:
                 - label: 关闭
                   value: disabled
@@ -772,20 +774,30 @@ spec:
                 - label: 移动端关闭
                   value: desktop_only
             - $formkit: switch
-              name: navbar_blur
-              label: 高级材质
-              value: true
-              help: "启用后导航栏等元素变为半透明磨砂模糊效果；同时开启 banner「全屏透明」模式时，内容与组件卡片也会变为磨砂透明"
-            - $formkit: switch
               name: card_hover_lift
               label: 卡片悬浮效果
               value: true
               help: "卡片悬停时轻微上移并显示主题色阴影"
             - $formkit: switch
+              name: card_border
+              label: 卡片边框和阴影
+              value: false
+              help: "开启后卡片等元素带有细边框和浅阴影，增强立体层次感；访客可在显示设置面板中覆盖"
+            - $formkit: switch
+              name: card_follow_theme
+              label: 卡片跟随主题色
+              value: false
+              help: "开启后全站卡片默认跟随主题色（浅色模式下卡片背景带有主题色色调）；访客可在显示设置面板中覆盖"
+            - $formkit: switch
+              name: navbar_blur
+              label: 高级材质
+              value: true
+              help: "启用后导航栏等元素变为半透明磨砂模糊效果；同时开启 banner「全屏透明」模式时，内容与组件卡片也会变为磨砂透明；访客可在显示设置面板中覆盖"
+            - $formkit: switch
               name: sakura
               label: 全局樱花特效
               value: false
-              help: "开启后全站默认开启樱花飘落特效"
+              help: "开启后全站显示樱花飘落特效；访客可在显示设置面板中覆盖"
         - $formkit: group
           name: animationSpeed
           label: 动画速度

@@ -189,7 +189,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
             <div class="flex flex-1 items-center gap-3 min-w-0 md:gap-4">
               <button
                 id="post-like-btn"
-                class="btn-card group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg active:scale-95"
+                class="btn-card no-card-border group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg active:scale-95"
                 th:classappend="${theme.config?.post?.actionBar?.like == false ? ' pointer-events-none' : ''}"
                 th:attr="data-post=${post.metadata.name}"
                 th:data-count="${post.stats.upvote}"

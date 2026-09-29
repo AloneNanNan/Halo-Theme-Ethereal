@@ -34,7 +34,8 @@ const {
   size = "sm",
 } = Astro.props;
 
-const tabClass = `btn-card shrink-0 rounded-[10px] px-3 text-sm font-bold text-75 ${
+// no-card-border 标记：分组/筛选标签不是卡片，「卡片边框和阴影」开关按此类排除
+const tabClass = `btn-card no-card-border shrink-0 rounded-[10px] px-3 text-sm font-bold text-75 ${
   size === "lg" ? "h-10" : "h-9"
 }`;
 const activeAppend = activeExpr

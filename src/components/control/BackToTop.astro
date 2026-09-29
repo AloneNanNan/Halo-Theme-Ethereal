@@ -12,7 +12,7 @@ import { Icon } from "astro-icon/components";
     <button
       th:aria-label="#{fragment.layout.toTop}"
       aria-label="Back to Top"
-      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+      class="btn-card no-card-border h-[3.5rem] w-[3.5rem] rounded-2xl"
     >
       <Icon name="material-symbols:keyboard-arrow-up-rounded" class="mx-auto" />
     </button>
@@ -26,7 +26,7 @@ import { Icon } from "astro-icon/components";
   >
     <button
       aria-label="Back to Home"
-      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+      class="btn-card no-card-border h-[3.5rem] w-[3.5rem] rounded-2xl"
     >
       <Icon name="material-symbols:home-outline-rounded" class="mx-auto" />
     </button>
@@ -40,7 +40,7 @@ import { Icon } from "astro-icon/components";
   >
     <button
       aria-label="Jump to Comments"
-      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+      class="btn-card no-card-border h-[3.5rem] w-[3.5rem] rounded-2xl"
     >
       <Icon name="mdi:comment-text-outline" class="mx-auto" />
     </button>
@@ -58,7 +58,7 @@ import { Icon } from "astro-icon/components";
       aria-label="Table of Contents"
       aria-controls="toc-popup"
       aria-expanded="false"
-      class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl"
+      class="btn-card no-card-border h-[3.5rem] w-[3.5rem] rounded-2xl"
     >
       <!-- 弹窗展开时按钮切换为关闭图标（.toc-active 门控，CSS 交叉淡入 + 旋转） -->
       <Icon
@@ -83,7 +83,7 @@ import { Icon } from "astro-icon/components";
         th:aria-label="${btn.name}"
         target="_blank"
         rel="noopener"
-        class="btn-card h-[3.5rem] w-[3.5rem] rounded-2xl flex items-center justify-center pointer-events-auto"
+        class="btn-card no-card-border h-[3.5rem] w-[3.5rem] rounded-2xl flex items-center justify-center pointer-events-auto"
       >
         <span
           th:if="${btn.icon != null && btn.icon.value != null}"

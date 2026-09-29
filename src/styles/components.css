@@ -972,6 +972,16 @@
     background-color: var(--card-bg) !important;
   }
 
+  /* 卡片边框和阴影（样式开关）：导航栏仅在「高级材质关闭」的纯色卡片形态下
+     加边框（navbar-blur 恒挂载，磨砂态见上方，不叠加）。全屏首页「顶部透明」
+     态只存在于高级材质开启时（与本条 :not(.navbar-blur-enabled) 互斥），无需
+     额外防闪现；#navbar 的两层 .navbar-blur（延伸层 + 主层）同时命中，延伸层
+     位于视口上方负区域、常态不可见，两层相接处边框重合为一条线 */
+  body.card-border-enabled:not(.navbar-blur-enabled) .navbar-blur {
+    border: 1px solid var(--line-divider);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
   .submenu-panel {
     /* navbar_blur 关闭：纯色背景，无模糊 */
     background-color: var(--card-bg) !important;
@@ -1615,6 +1625,38 @@ body.pswp-transition #photo-detail-image {
     transform: translateY(-4px);
     box-shadow: 0 4px 20px color-mix(in oklab, var(--primary) 20%, transparent);
   }
+}
+
+/* ── 卡片边框和阴影（样式开关 → 访客可在显示设置面板覆盖；默认关闭）──
+   给「原本无边框」的卡片（.card-base）与按钮卡（.btn-card）补细边框 + 浅阴影
+   （同 Firefly 的 card border：1px --line-divider + shadow-xs），增强立体层次。
+   分页页码组（.pagination-pages，Pagination/Equipment/Photo/skills/timeline）
+   作为整体一张卡片参与（内部页码按钮反覆盖排除）；翻页箭头照常参与。
+   排除项（设计上已有专属描边/阴影语言或不是卡片，不归本开关管）：
+   - .btn-card-outline：主题色细描边条目卡（友链/瞬间/分类等，Firefly 口径）；
+   - .no-card-border：标记「不参与」的功能按钮（筛选标签、照片页按钮、点赞、
+     悬浮按钮内层等）——按钮本身不是卡片；
+   - .toc-popup-card / .welcome-card：浮层弹窗（已有自己的浮层阴影体系）；
+   - .is-pinned：置顶卡（主题色 outline + 光晕强化）。
+   ⚠️ 排除项用 :where(:not(...)) 包裹：归零特异性、不改匹配，保证悬停时
+   .card-hover-lift:hover (0,3,1) 的主题色阴影能压过本规则 (0,2,1) */
+body.card-border-enabled
+  .card-base:where(:not(.btn-card-outline)):where(:not(.toc-popup-card)):where(
+    :not(.welcome-card)
+  ):where(:not(.is-pinned)),
+body.card-border-enabled
+  .btn-card:where(:not(.btn-card-outline)):where(:not(.no-card-border)),
+body.card-border-enabled .pagination-pages {
+  border: 1px solid var(--line-divider);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+/* 分页页码组容器内部的页码按钮：反覆盖排除（边框只加在容器上、整组为一张
+   卡片，避免每个数字各自描边）。特异性 (0,3,1) 压过上方 .btn-card 命中
+   (0,2,1)；页码按钮不带 card-hover-lift，不受悬浮阴影规则干扰 */
+body.card-border-enabled .pagination-pages .btn-card {
+  border: none;
+  box-shadow: none;
 }
 
 /* 头像 hover 微交互 */
