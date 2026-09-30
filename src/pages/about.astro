@@ -1,9 +1,10 @@
 ---
 // 关于页面模板（Halo 自定义页面，自定义模板选 about），配置来自 extendPages.about。
 // 结构：身份卡 → 顶部导航 → 两栏（主列：个人简介 / 本人项目 / 最近提交；
-// 侧列：我的技能 / 我的朋友 / 保持联系）→ 页脚卡。
+// 侧列：我的技能 / 我的朋友 / 保持联系 / 订阅更新）→ 页脚卡。
 // 数据源：本人项目 =「项目集」插件；我的技能 = 技能页面设置；
-// 我的朋友 = 友链插件 linkFinder.random(N)；最近提交 = 本站文章 + 瞬间。
+// 我的朋友 = 友链插件 linkFinder.random(N)；最近提交 = 本站文章 + 瞬间；
+// 订阅卡片 = flow-post 插件（邮箱推送，自建表单直连其公开接口）。
 // 两栏按容器宽度分档（.about-cols-wrap）：阈值 880px 大于默认内容列宽（恒 872px），
 // 故分栏目前不会触发，属已知预期，待内容区加宽后自动生效。
 // 「个人简介」正文由服务端直出纯文本（无 JS 也可见），extend-pages.js 再重建成段落。
@@ -695,6 +696,60 @@ import "../styles/about.css";
               </a>
             </div>
           </section>
+
+          <!-- 订阅卡片：邮箱订阅推送（flow-post 插件，自建主题表单直连其公开接口，
+               接口地址与提交逻辑见 extend-pages.ts，样式见 about.css ⑫-B）。
+               插件缺失（或开关关闭）时整卡不渲染。 -->
+          <div
+            th:with="aboutSubscribe=${cfg?.subscribe},
+              followPlugin=${pluginFinder != null and pluginFinder.available('flow-post')}"
+            th:remove="tag"
+          >
+            <section
+              class="card-base onload-animation"
+              th:if="${aboutSubscribe?.enable != false and followPlugin}"
+            >
+              <div class="about-card-head">
+                <h2
+                  class="about-card-title text-90"
+                  th:text="#{page.about.subscribeTitle}"
+                >
+                  订阅更新
+                </h2>
+              </div>
+              <p
+                class="about-subscribe-desc"
+                th:text="#{page.about.subscribeDesc}"
+              >
+                订阅本站，第一时间收到文章更新
+              </p>
+              <!-- 邮箱订阅表单（提交逻辑与文案切换约束见 extend-pages.ts） -->
+              <form id="about-subscribe-form">
+                <div class="about-subscribe-row">
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    class="about-subscribe-input"
+                    th:placeholder="#{page.about.subscribePlaceholder}"
+                    th:aria-label="#{page.about.subscribePlaceholder}"
+                  />
+                  <button type="submit" class="about-subscribe-submit">
+                    <span
+                      class="icon-[material-symbols--send-rounded] text-sm"
+                      aria-hidden="true"></span>
+                    <span
+                      class="about-subscribe-submit-label"
+                      th:text="#{page.about.subscribeAction}">立即订阅</span
+                    >
+                  </button>
+                </div>
+                <!-- 提交结果（成功/失败），由 extend-pages.ts 填充与显隐 -->
+                <p class="about-subscribe-msg" hidden></p>
+              </form>
+            </section>
+          </div>
         </div>
       </div>
     </div>

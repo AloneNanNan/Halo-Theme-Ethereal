@@ -1,8 +1,10 @@
 // @ts-nocheck —— 与 timeline.js 同款：配合模板里 th:data-* 字段做客户端增强。
-// 只服务「关于页面」两件事：
+// 只服务「关于页面」三件事：
 //   1. 「个人简介」正文：按 data-lines 把多行文本拆成 <p> 段落（服务端已直出纯文本
 //      兜底，这里只把它换成与设计一致的段落版式）；
-//   2. 「最近提交」：按 data-time 归并文章 + 瞬间两组行，并按 data-count 截断。
+//   2. 「最近提交」：按 data-time 归并文章 + 瞬间两组行，并按 data-count 截断；
+//   3. 「订阅卡片」邮箱订阅：自建主题表单直连 flow-post 插件公开接口
+//      （匿名角色已放行 follows/submit，见插件 role-template-follow-anonymous）。
 // 其余字段均已服务端直出，不经过本文件。
 // Swup 换页由 SwupScriptsPlugin 重执行（DOM 已替换），data-rendered 守卫仅防重复。
 (function () {
@@ -83,6 +85,105 @@
       render(el);
     });
     sortTimeline();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+// 「订阅卡片」邮箱订阅：直连 flow-post 插件的公开提交接口
+// （POST，body 仅 email；200 空响应 = 成功〔待邮件确认〕；失败响应为 ProblemDetail，
+// 优先展示 detail 字段，取不到再回退本地文案）。
+// 匿名可用性由插件的 role-template-follow-anonymous 放行（follows/submit create）。
+// 表单 UI 是自建主题样式（about.css ⑫-B）：插件自带 follow-card 是 Shadow DOM，
+// 尺寸/字号无法主题化，故不复用。
+(function () {
+  var API_URL = "/apis/api.flow.post.kunkunyu.com/v1alpha1/follows/-/submit";
+  var t =
+    window.__etherealI18n ||
+    function (_key, fallback) {
+      return fallback;
+    };
+
+  function init() {
+    var form = document.getElementById("about-subscribe-form");
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = "true";
+
+    var input = form.querySelector("input[type='email']");
+    var button = form.querySelector("button[type='submit']");
+    var msg = form.querySelector(".about-subscribe-msg");
+    if (!input || !button) return;
+    // 按钮内是「图标 + 文案」两个子元素：提交中的文案切换只改 label，
+    // 不能整体覆写 textContent（会把图标一起清掉）
+    var label = button.querySelector(".about-subscribe-submit-label");
+    var defaultLabel = label ? label.textContent : button.textContent;
+
+    function setLabel(text) {
+      if (label) label.textContent = text;
+      else button.textContent = text;
+    }
+
+    function showMsg(text, isSuccess) {
+      if (!msg) return;
+      msg.hidden = false;
+      msg.textContent = text;
+      msg.classList.toggle("is-success", !!isSuccess);
+      msg.classList.toggle("is-error", !isSuccess);
+    }
+
+    function fail() {
+      showMsg(t("page.about.subscribeFail", "订阅失败，请稍后再试"), false);
+    }
+
+    // 重新输入时收起上一次的提交结果
+    input.addEventListener("input", function () {
+      if (msg && !msg.hidden) msg.hidden = true;
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      // 空值与格式由浏览器原生校验（required + type=email）拦截，这里只兜底
+      var email = input.value.trim();
+      if (!email || button.disabled) return;
+
+      button.disabled = true;
+      setLabel(t("page.about.subscribeSubmitting", "提交中…"));
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email }),
+      })
+        .then(function (res) {
+          if (res.ok) {
+            showMsg(
+              t("page.about.subscribeSuccess", "提交成功，收到邮件请确认订阅"),
+              true,
+            );
+            input.value = "";
+            return;
+          }
+          // 失败响应为 ProblemDetail（application/problem+json），优先展示 detail
+          return res
+            .json()
+            .then(function (data) {
+              var detail =
+                data && typeof data.detail === "string" ? data.detail : "";
+              if (detail) showMsg(detail, false);
+              else fail();
+            })
+            .catch(fail);
+        })
+        .catch(fail)
+        .then(function () {
+          button.disabled = false;
+          setLabel(defaultLabel);
+        });
+    });
   }
 
   if (document.readyState === "loading") {

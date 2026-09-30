@@ -1751,6 +1751,8 @@ spec:
                 title: "如果这篇文章对你有帮助，可以请我喝杯咖啡！"
                 wechat_qr: ""
                 alipay_qr: ""
+                page_enable: false
+                page_url: "/reward"
               children:
                 - $formkit: textarea
                   name: title
@@ -1773,6 +1775,18 @@ spec:
                   aspectRatio: "1/1"
                   value: ""
                   help: "上传支付宝收款二维码图片（建议 1:1 正方形）"
+                - $formkit: switch
+                  name: page_enable
+                  id: actionbar_reward_page_enable
+                  label: 显示「打赏页面」按钮
+                  value: false
+                  help: "在打赏弹窗底部显示跳转到打赏页面的按钮"
+                - $formkit: text
+                  name: page_url
+                  label: 打赏页面路径
+                  if: "$get(actionbar_reward_page_enable).value"
+                  value: "/reward"
+                  help: "打赏页面路径，如 /reward（需先在「页面 → 自定义页面」中创建对应页面）"
     - group: extendPages
       label: 扩展页面
       formSchema:
@@ -2276,7 +2290,19 @@ spec:
                   value: true
                   help: "关闭后不显示保持联系卡片；卡片数据取自「侧边栏 → 个人简介小组件 → 社交媒体」已设置的内容"
 
-            # ─────────── ⑨ 页脚卡片 ───────────
+            # ─────────── ⑨ 订阅更新卡片 ───────────
+            - $formkit: group
+              name: subscribe
+              label: 订阅更新卡片
+              children:
+                - $formkit: switch
+                  name: enable
+                  id: about_subscribe_enable
+                  label: 显示订阅更新卡片
+                  value: true
+                  help: "关闭后不显示订阅更新卡片；需要安装「文章订阅」插件，未安装时自动隐藏"
+
+            # ─────────── ⑩ 页脚卡片 ───────────
             - $formkit: group
               name: footer
               label: 页脚卡片
@@ -2322,6 +2348,47 @@ spec:
                       name: url
                       label: 链接
                       validation: required
+        - $formkit: group
+          name: reward
+          label: 打赏页面
+          help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
+          children:
+            - $formkit: text
+              name: subtitle
+              label: 副标题
+              value: "感谢你的每一份支持"
+              help: "显示在页面标题下方，留空则使用默认文案"
+            - $formkit: textarea
+              name: usage
+              label: 打赏用途说明
+              value: "您的打赏将用于服务器维护、内容创作和功能开发，帮助我持续提供优质内容。"
+              help: "显示在页面顶部的说明框，支持多行，留空则不显示该框"
+            - $formkit: array
+              name: sponsors
+              label: 打赏者名单
+              value: []
+              help: "留空则不显示打赏者名单卡片；头像留空显示昵称首字"
+              children:
+                - $formkit: text
+                  name: name
+                  label: 昵称
+                  validation: required
+                - $formkit: attachment
+                  name: avatar
+                  label: 头像
+                  accepts:
+                    - "image/*"
+                  aspectRatio: "1/1"
+                  value: ""
+                - $formkit: text
+                  name: amount
+                  label: 金额
+                  validation: required
+                  help: "填写金额，如 50 或 ¥50（前台显示自动补全 ¥）"
+                - $formkit: date
+                  name: date
+                  label: 日期
+                  validation: required
     - group: footer
       label: 页脚
       formSchema:

@@ -12,12 +12,14 @@ export interface ThemeConfig {
   external_link: ExternalLink;
 }
 
-/** 扩展页面设置：朋友圈 / 时间轴 / 技能 / 关于页面（后台未配置的子组可能缺失，均视为可选） */
+/** 扩展页面设置：朋友圈 / 时间轴 / 技能 / 关于页面 / 打赏页面（后台未配置的子组可能缺失，均视为可选） */
 export interface ExtendPages {
   friends?: Friends;
   timeline?: Timeline;
   skills?: Skills;
   about?: About;
+  /** 打赏页面（extendPages.reward） */
+  reward?: Reward;
 }
 
 /** 欢迎弹窗配置 */
@@ -402,6 +404,8 @@ export interface About {
   friends?: AboutFriends;
   /** 保持联系 */
   contact?: AboutContact;
+  /** 订阅更新卡片（邮箱订阅推送） */
+  subscribe?: AboutSubscribe;
   /** 页脚卡 */
   footer?: AboutFooter;
 }
@@ -529,6 +533,16 @@ export interface AboutContact {
   enable?: boolean;
 }
 
+/**
+ * 订阅更新卡片（extendPages.about.subscribe）：邮箱订阅 = 自建主题表单直连
+ * flow-post 插件的公开接口（见 about.astro 与 extend-pages.ts）；
+ * 插件缺失时整卡不渲染。
+ */
+export interface AboutSubscribe {
+  /** 卡片显隐开关（后台未配置时视为显示） */
+  enable?: boolean;
+}
+
 /** 页脚卡 */
 export interface AboutFooter {
   /** 卡片显隐开关（后台未配置时视为显示） */
@@ -545,6 +559,35 @@ export interface AboutFooterLinkItem {
   /** 图标：iconify + format: svg ⇒ 值形如 { value: '<svg …>' }；留空则只显示名称 */
   icon?: { value?: string };
   url?: string;
+}
+
+// ========== 「打赏页面」设置 ==========
+/**
+ * 「打赏页面」设置（对应 settings.yaml 的 extendPages.reward 组）。
+ * 收款二维码不在此组：与文章打赏模态框同源（post.actionBar.rewardSetting.wechat_qr / alipay_qr）。
+ */
+export interface Reward {
+  /** 页面副标题；留空回落到 i18n `page.reward.subtitle` */
+  subtitle?: string;
+  /** 打赏用途说明（textarea，多行）；留空则不显示说明框 */
+  usage?: string;
+  /** 打赏者名单（留空则整卡不渲染） */
+  sponsors?: RewardSponsor[];
+}
+
+/**
+ * 打赏者条目（后台昵称、金额、日期必填〔validation: required〕，头像可选）。
+ * 前台对空值仍分别兜底：头像缺失显示昵称首字，金额 / 日期为空则不渲染。
+ */
+export interface RewardSponsor {
+  /** 昵称；头像缺失时以首字兜底 */
+  name?: string;
+  /** 头像（attachment，URL 字符串）；留空显示昵称首字 */
+  avatar?: string;
+  /** 金额（自由文本，如 50 或 ¥50，前台自动补全 ¥） */
+  amount?: string;
+  /** 日期（$formkit: date，形如 2026-01-01） */
+  date?: string;
 }
 
 // ========== 侧边栏 ==========
@@ -712,6 +755,10 @@ export interface PostActionBar {
     title?: string;
     wechat_qr?: string;
     alipay_qr?: string;
+    /** 是否在打赏弹窗底部显示「打赏页面」跳转按钮（后台默认关） */
+    page_enable?: boolean;
+    /** 打赏页面路径（默认 /reward） */
+    page_url?: string;
   };
 }
 

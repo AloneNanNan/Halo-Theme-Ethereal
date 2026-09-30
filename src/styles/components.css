@@ -552,10 +552,12 @@
   }
 
   /* 内联 SVG（iconify）跟随按钮文字色：SVG 未声明 fill 时默认黑色，必须显式指定；
-     尺寸兜底 1em，与按钮 font-size 联动（后台不开放图标尺寸设置） */
+     尺寸固定 1.25rem（20px，同 .banner-link 的字号）——不能写 1em：1em 会跟随
+     .banner-link-text 的 0.9rem 字号缩小，导致「图标 + 名称」胶囊的图标比纯图标
+     按钮小一圈（后台不开放图标尺寸设置） */
   .banner-link svg {
-    width: 1em;
-    height: 1em;
+    width: 1.25rem;
+    height: 1.25rem;
     fill: currentColor;
   }
 

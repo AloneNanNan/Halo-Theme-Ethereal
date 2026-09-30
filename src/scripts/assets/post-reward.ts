@@ -27,6 +27,8 @@ var t =
     ).trim();
     var wechat = (rs.wechat_qr || "").trim();
     var alipay = (rs.alipay_qr || "").trim();
+    var pageEnable = rs.page_enable === true;
+    var pageUrl = (rs.page_url || "/reward").trim();
 
     if (!wechat && !alipay) {
       alert(t("post.noQrConfigured", "博主暂未配置收款二维码"));
@@ -129,6 +131,33 @@ var t =
       );
     }
 
+    // 「打赏页面」跳转按钮（后台「打赏设置 → 显示「打赏页面」按钮」开启时显示，
+    // 路径自定义、默认 /reward；样式对齐分享海报模态框的「复制链接」次要按钮，居中显示）
+    var pageLink: HTMLAnchorElement | null = null;
+    if (pageEnable && pageUrl) {
+      var link = document.createElement("a");
+      link.href = pageUrl;
+      link.className = "group";
+      link.style.cssText =
+        "display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border:none;border-radius:0.75rem;font-size:0.8125rem;font-weight:500;cursor:pointer;background:var(--btn-regular-bg,oklch(0.95 0.025 250));color:var(--btn-content,oklch(0.55 0.12 250));user-select:none;text-decoration:none;transition:background 0.2s";
+      link.onmouseenter = function () {
+        link.style.background =
+          "var(--btn-regular-bg-hover,oklch(0.9 0.05 250))";
+      };
+      link.onmouseleave = function () {
+        link.style.background = "var(--btn-regular-bg,oklch(0.95 0.025 250))";
+      };
+      link.innerHTML =
+        '<span class="icon-[material-symbols--volunteer-activism-rounded] text-base transition-transform group-hover:scale-110"></span><span>' +
+        t("post.rewardPage", "打赏页面") +
+        "</span>";
+      // 点击先收起模态框：Swup 只替换内容容器，遮罩留在 body 会造成残影
+      link.addEventListener("click", function () {
+        close();
+      });
+      pageLink = link;
+    }
+
     // 关闭按钮（右上角，无阴影；hover 图标旋转 90° + 变主题色）
     var closeBtn = document.createElement("button");
     closeBtn.style.cssText =
@@ -150,6 +179,7 @@ var t =
     body.appendChild(header);
     if (title) body.appendChild(desc);
     body.appendChild(qrRow);
+    if (pageLink) body.appendChild(pageLink);
     card.appendChild(closeBtn);
     card.appendChild(body);
 

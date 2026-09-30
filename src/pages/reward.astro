@@ -1,0 +1,253 @@
+---
+// 打赏页面模板（Halo 自定义页面，自定义模板选「打赏页面」/ reward）。
+// 结构：打赏主卡（页头 → 用途说明 → 收款码）→ 打赏者名单（可选）→ 评论（跟随页面「允许评论」）。
+// 数据源：
+//   · 收款码 = 文章打赏模态框同源（theme.config.post.actionBar.rewardSetting.wechat_qr /
+//     alipay_qr），仅读取、不受「文章操作栏」/「启用打赏」开关影响（数据常驻后台配置）；
+//   · 页面文案与打赏者名单 = 主题设置 extendPages.reward（名单留空则整卡不渲染）。
+// 纯服务端渲染，无页面脚本；评论区条件与默认 page 模板一致。
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import PageHeader from "../components/control/PageHeader.astro";
+---
+
+<MainGridLayout
+  title="${singlePage.spec.title + ' - ' + site.title}"
+  description="#{page.reward.description(${site.title})}"
+>
+  <Fragment slot="head">
+    <!-- 二维码白盒的静态阴影：取主题色（与 card-hover-lift 的悬浮阴影同款取值）。
+         用 is:global 样式而非 Tailwind 任意值类：color-mix 含逗号/空格，
+         塞进任意值里转义易踩坑（见 AGENTS「常见坑」） -->
+    <style is:global>
+      .reward-qr-box {
+        box-shadow: 0 4px 20px
+          color-mix(in oklab, var(--primary) 20%, transparent);
+      }
+    </style>
+  </Fragment>
+
+  <!-- ================= ① 打赏主卡 =================
+       cfg / rs / wechatQr / alipayQr / hasQr / hasBothQr 统一在本条 th:with 定义 -->
+  <section
+    class="card-base onload-animation relative z-10 mb-4 w-full px-6 py-6 md:px-9"
+    th:with="cfg=${theme.config?.extendPages?.reward},
+      rs=${theme.config?.post?.actionBar?.rewardSetting},
+      wechatQr=${rs?.wechat_qr ?: ''},
+      alipayQr=${rs?.alipay_qr ?: ''},
+      hasQr=${!#strings.isEmpty(wechatQr) or !#strings.isEmpty(alipayQr)},
+      hasBothQr=${!#strings.isEmpty(wechatQr) and !#strings.isEmpty(alipayQr)}"
+  >
+    <!-- 页头：h1 = 页面标题（Halo 自定义页面自带），副标题留空回落 i18n -->
+    <PageHeader
+      containerClass="mb-6 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      titleExpr="${singlePage.spec.title}"
+      title="打赏"
+      iconClass="icon-[material-symbols--volunteer-activism-rounded]"
+      labelExpr="#{page.reward.label}"
+      label="打赏支持"
+      subExpr="${cfg?.subtitle ?: #messages.msg('page.reward.subtitle')}"
+      sub="感谢你的每一份支持"
+    />
+
+    <!-- 用途说明（留空不显示；支持多行） -->
+    <div
+      th:if="${not #strings.isEmpty(cfg?.usage)}"
+      class="mb-6 flex items-start gap-2.5 rounded-xl border border-(--primary)/15 bg-(--primary)/8 px-4 py-3.5"
+    >
+      <span
+        class="icon-[material-symbols--info-outline] mt-0.5 shrink-0 text-lg text-(--primary)"
+      ></span>
+      <p
+        class="min-w-0 break-words text-sm leading-relaxed whitespace-pre-line text-75"
+        th:text="${cfg?.usage}"
+      >
+        您的打赏将用于服务器维护、内容创作和功能开发，帮助我持续提供优质内容。
+      </p>
+    </div>
+
+    <!-- 收款码（微信 / 支付宝，与打赏模态框同源；白底保证二维码识别）。
+         布局：两张卡满宽双列，只配一种时降级为单卡居中（见 th:classappend）；
+         卡片与标题沿用打赏模态框收款卡语言（白底 + 主题色描边 18% + 圆角，
+         标题文字纯色、图标主题色）；二维码外套带主题色阴影的白盒（.reward-qr-box）。
+         底侧内边距刻意比顶侧大 4px（pt-4 + pb-5）：抵消标题行高（text-xl）多出的
+         视觉空隙，使标题上方 / 白盒下方的留白一致。 -->
+    <div
+      th:if="${hasQr}"
+      class="grid grid-cols-1 gap-4"
+      th:classappend="${hasBothQr} ? 'sm:grid-cols-2' : 'sm:w-1/2 sm:mx-auto'"
+    >
+      <div
+        th:if="${!#strings.isEmpty(wechatQr)}"
+        class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-white px-4 pt-4 pb-5"
+      >
+        <!-- 标题：参考 Firefly（图标 text-2xl + 标题 text-xl font-semibold）。
+             文字色取恒定的 text-neutral-900（白卡明暗都是白底，不能挂 dark: 浅色变体）；
+             图标沿用模态框的主题色 text-(--primary) -->
+        <div class="flex items-center gap-3 text-neutral-900">
+          <span class="icon-[fa6-brands--weixin] text-2xl text-(--primary)"
+          ></span>
+          <span class="text-xl font-semibold" th:text="#{post.wechat}"
+            >微信</span
+          >
+        </div>
+        <p
+          class="text-center text-sm text-neutral-600"
+          th:text="#{page.reward.scanWechat}"
+        >
+          使用 微信 扫码打赏
+        </p>
+        <div
+          class="reward-qr-box aspect-square w-full max-w-50 rounded-(--radius-large) bg-white p-3"
+        >
+          <img
+            th:src="${wechatQr}"
+            th:alt="#{post.wechat}"
+            loading="lazy"
+            class="h-full w-full object-contain"
+          />
+        </div>
+      </div>
+      <div
+        th:if="${!#strings.isEmpty(alipayQr)}"
+        class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-white px-4 pt-4 pb-5"
+      >
+        <div class="flex items-center gap-3 text-neutral-900">
+          <span class="icon-[fa6-brands--alipay] text-2xl text-(--primary)"
+          ></span>
+          <span class="text-xl font-semibold" th:text="#{post.alipay}"
+            >支付宝</span
+          >
+        </div>
+        <p
+          class="text-center text-sm text-neutral-600"
+          th:text="#{page.reward.scanAlipay}"
+        >
+          使用 支付宝 扫码打赏
+        </p>
+        <div
+          class="reward-qr-box aspect-square w-full max-w-50 rounded-(--radius-large) bg-white p-3"
+        >
+          <img
+            th:src="${alipayQr}"
+            th:alt="#{post.alipay}"
+            loading="lazy"
+            class="h-full w-full object-contain"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- 未配置任何收款码时的占位提示 -->
+    <div
+      th:unless="${hasQr}"
+      class="flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-(--line-divider) px-6 py-10 text-center"
+    >
+      <span class="icon-[material-symbols--qr-code-rounded] text-3xl text-30"
+      ></span>
+      <p class="text-sm text-50" th:text="#{post.noQrConfigured}">
+        博主暂未配置收款二维码
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= ② 打赏者名单（可选） =================
+       sponsorItems 必须先在外层 th:with 算好，内层元素再写 th:if：
+       同元素上 th:if（优先级 3）先于 th:with（优先级 4）执行，写在一起会读到未定义变量。
+       选择器 .?[] 内部只引用 #this（引用上下文变量会抛 EL1008E）。 -->
+  <div
+    th:with="sponsorCfg=${theme.config?.extendPages?.reward},
+      sponsorItems=${sponsorCfg?.sponsors == null ? null : sponsorCfg?.sponsors.?[#this.name != null and #this.name != '']}"
+    th:remove="tag"
+  >
+    <section
+      th:if="${sponsorItems != null and not #lists.isEmpty(sponsorItems)}"
+      class="card-base onload-animation relative z-10 mb-4 w-full px-6 py-6 md:px-9"
+    >
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <div class="flex min-w-0 items-center gap-3">
+          <div
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--primary)/10"
+          >
+            <span
+              class="icon-[material-symbols--emoji-people-rounded] text-[1.25rem] text-(--primary)"
+            ></span>
+          </div>
+          <h2
+            class="truncate text-xl font-bold text-90"
+            th:text="#{page.reward.sponsorsTitle}"
+          >
+            打赏者名单
+          </h2>
+        </div>
+        <span
+          class="rounded-lg bg-(--btn-regular-bg) px-2.5 py-1 text-xs font-bold text-(--btn-content)"
+          th:text="${#lists.size(sponsorItems)}">0</span
+        >
+      </div>
+
+      <!-- 条目最小宽 240px，与友链页条目卡同档 -->
+      <div
+        class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
+      >
+        <div
+          th:each="sponsor : ${sponsorItems}"
+          class="card-hover-lift flex items-center gap-3 rounded-xl border border-(--line-divider) p-3 transition hover:border-(--primary)/40"
+        >
+          <img
+            th:if="${not #strings.isEmpty(sponsor.avatar)}"
+            th:src="${sponsor.avatar}"
+            th:alt="${sponsor.name}"
+            loading="lazy"
+            class="h-10 w-10 shrink-0 rounded-full object-cover"
+          />
+          <!-- 无头像时以昵称首字兜底（同技能页取首字写法） -->
+          <div
+            th:if="${#strings.isEmpty(sponsor.avatar)}"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--btn-regular-bg) text-sm font-bold text-(--primary)"
+            th:text="${#strings.substring(sponsor.name ?: '?', 0, 1)}"
+          >
+            A
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span
+                class="min-w-0 truncate text-sm font-bold text-90"
+                th:text="${sponsor.name}">昵称</span
+              >
+              <!-- 金额：已自带 ¥ 的原样显示，否则自动补全 ¥（后台金额为纯文本） -->
+              <span
+                th:if="${not #strings.isEmpty(sponsor.amount)}"
+                class="shrink-0 text-xs font-bold text-(--primary)"
+                th:text="${#strings.startsWith(sponsor.amount ?: '', '¥') ? sponsor.amount : '¥' + (sponsor.amount ?: '')}"
+                >¥50</span
+              >
+            </div>
+            <span
+              th:if="${not #strings.isEmpty(sponsor.date)}"
+              class="text-[0.65rem] text-50"
+              th:text="${sponsor.date}">2026-01-01</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= ③ 评论区 =================
+       跟随 Halo 页面自带的「允许评论」（同默认 page 模板） -->
+  <div
+    class="card-base relative z-10 w-full px-6 pb-4 pt-6 md:px-9"
+    id="comment"
+    th:if="${haloCommentEnabled && (singlePage.spec.allowComment != false)}"
+  >
+    <h2
+      class="mb-2 text-base font-medium text-gray-900 dark:text-slate-50"
+      th:text="#{common.comment}"
+    >
+      评论
+    </h2>
+    <Fragment
+      set:html={'<halo:comment group="content.halo.run" kind="SinglePage" th:attr="name=${singlePage.metadata.name}" />'}
+    />
+  </div>
+</MainGridLayout>

@@ -762,6 +762,104 @@
   transform: translate(0.1rem, -0.1rem);
 }
 
+/* ================= ⑫-B 订阅卡片（邮箱订阅） =================
+   自建主题表单（直连 flow-post 插件公开接口，提交逻辑在 extend-pages.ts）。
+   UI 走本主题控件：输入框对齐友链申请模态框的 .link-apply-field input、
+   按钮对齐 .link-apply-btn-submit；消息条沿用友链申请结果条的配色语言
+   （成功绿 / 失败红 + 10% 同色底），显隐由脚本切 hidden。 */
+.about-subscribe-desc {
+  margin: 0 0 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--content-meta);
+}
+.about-subscribe-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.about-subscribe-input {
+  flex: 1;
+  min-width: 0;
+  /* 与提交按钮同高（2.75rem）：显式锁定高度，不依赖 stretch / 行高换算 */
+  height: 2.75rem;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 4%, transparent);
+  color: var(--deep-text);
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  outline: none;
+  font-family: inherit;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+}
+.about-subscribe-input::placeholder {
+  opacity: 0.4;
+}
+.about-subscribe-input:hover {
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+.about-subscribe-input:focus {
+  border-color: var(--primary);
+  background: var(--card-bg);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+.about-subscribe-submit {
+  flex: none;
+  /* 与输入框同高（2.75rem），对齐由显式高度保证 */
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 28%, transparent);
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s,
+    opacity 0.2s;
+}
+.about-subscribe-submit:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 38%, transparent);
+}
+.about-subscribe-submit:active {
+  transform: scale(0.97);
+}
+.about-subscribe-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.about-subscribe-msg {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.about-subscribe-msg.is-success {
+  color: oklch(0.6 0.15 150);
+  background: color-mix(in oklab, oklch(0.6 0.15 150) 10%, transparent);
+}
+.about-subscribe-msg.is-error {
+  color: oklch(0.55 0.18 25);
+  background: color-mix(in oklab, oklch(0.55 0.18 25) 10%, transparent);
+}
+
 /* ================= ⑬ 最近提交：时间轴 = 参考 时间轴页 .timeline-list/.timeline-node
    ＋ 朋友圈 .friends-timeline ＋ 归档页 .dash-line =================
    三套的取法：轴线用「朋友圈 / 归档页」的 2px 虚线基调；节点用「时间轴页」的实心圆点
