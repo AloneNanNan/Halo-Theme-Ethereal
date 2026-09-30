@@ -86,6 +86,23 @@ export interface BannerText {
   subtitles?: string;
   subtitleFontSize?: string;
   subtitleEffect?: string;
+  /** Banner 链接（标题/副标题下方的链接图标行） */
+  links?: BannerTextLinks;
+}
+
+/** Banner 链接设置组：theme.config.style.bannerText.links */
+export interface BannerTextLinks {
+  /** 链接条目列表；留空时不渲染链接行 */
+  items?: BannerLinkItem[];
+}
+
+export interface BannerLinkItem {
+  /** Iconify 图标（format: svg，取 value 内联输出 SVG）；留空则只渲染名称文字 */
+  icon?: { value?: string };
+  /** 名称：填写后按钮为「图标 + 名称」胶囊样式并作悬停提示；留空则仅圆形图标按钮 */
+  name?: string;
+  /** 跳转地址：网址 / mailto: / 站内路径 */
+  url?: string;
 }
 
 export interface Credit {

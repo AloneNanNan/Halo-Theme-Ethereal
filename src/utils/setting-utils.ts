@@ -605,7 +605,8 @@ export function applyBannerTitle(enabled: boolean): void {
     // 否则 CSS 入场动画无法重新触发
     const title = document.getElementById("banner-title");
     const sub = document.getElementById("banner-subtitle-wrapper");
-    for (const el of [title, sub]) {
+    const links = document.getElementById("banner-links");
+    for (const el of [title, sub, links]) {
       if (el) {
         el.style.opacity = "";
         el.style.animation = "";

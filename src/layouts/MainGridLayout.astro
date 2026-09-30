@@ -296,11 +296,15 @@ const {
       class="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-4 text-center"
       style={isHomePage ? "" : "display:none"}
     >
+      <!-- 字号不写内联 font-size，只输出 CSS 变量（components.css 消费）：
+           移动端收窄由媒体查询在首帧完成，不依赖 banner-responsive.js 的执行时机
+           （旧实现先以桌面内联字号渲染、defer 脚本执行后才收窄，移动端首屏会
+           "大字号闪变"）；内联 font-size 会盖过媒体查询，故绝对不能写回内联 -->
       <h1
         id="banner-title"
         th:if="${theme.config?.style?.bannerText?.title != null}"
         class="font-bold text-white"
-        th:style="'font-size: ' + (${theme.config?.style?.bannerText?.titleFontSize ?: '3.5rem'}) + '; text-shadow: 0 2px 15px rgba(0,0,0,0.5)'"
+        th:style="'--banner-title-size: ' + (${theme.config?.style?.bannerText?.titleFontSize ?: '3.5rem'}) + '; text-shadow: 0 2px 15px rgba(0,0,0,0.5)'"
         th:text="${theme.config?.style?.bannerText?.title}"
       >
       </h1>
@@ -308,19 +312,18 @@ const {
         id="banner-subtitle-wrapper"
         th:if="${theme.config?.style?.bannerText?.subtitles != null}"
         class="mt-3 flex items-center gap-1"
+        th:style="'--banner-subtitle-size: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'})"
       >
         <span
           id="banner-subtitle"
           class="text-white/90"
-          th:style="'font-size: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'}) + '; text-shadow: 0 1px 8px rgba(0,0,0,0.4)'"
-          >&nbsp;</span
+          style="text-shadow: 0 1px 8px rgba(0,0,0,0.4)">&nbsp;</span
         >
+        <!-- 光标高度跟随副标题字号：CSS 从 wrapper 上的 --banner-subtitle-size 取值 -->
         <span
           id="banner-cursor"
           th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect != 'drop'}"
-          class="inline-block w-[2px] bg-white/80"
-          th:style="'height: ' + (${theme.config?.style?.bannerText?.subtitleFontSize ?: '1.5rem'})"
-        ></span>
+          class="inline-block w-[2px] bg-white/80"></span>
         <div
           id="banner-subtitles-data"
           style="display:none"
@@ -328,6 +331,36 @@ const {
           th:text="${theme.config?.style?.bannerText?.subtitles}"
         >
         </div>
+      </div>
+      <!-- 标题/副标题下方的链接图标行（bannerText.links，仅首页可见——非首页整个
+           #banner-overlay 被隐藏）。#banner-overlay 自身 pointer-events:none，本行的
+           可点性由 components.css 的 #banner-links 规则恢复，并在三类隐藏态（访客关闭
+           标题 / 非首页淡出 / hero 滚动淡化）下一并禁用，避免不可见却可点。
+           注意：th:each 与 th:if 写在同一元素（th:each 优先级 200 更高，先例见 Footer.astro
+           的社媒图标）；iconify 图标是内联 SVG，必须 th:utext 注入（同 Profile.astro） -->
+      <div
+        id="banner-links"
+        th:if="${theme.config?.style?.bannerText?.links?.items != null and not #lists.isEmpty(theme.config?.style?.bannerText?.links?.items)}"
+        class="mt-5 flex flex-wrap items-center justify-center gap-3"
+      >
+        <a
+          th:each="link : ${theme.config?.style?.bannerText?.links?.items}"
+          th:if="${not #strings.isEmpty(link.url) and ((link.icon != null and not #strings.isEmpty(link.icon.value)) or not #strings.isEmpty(link.name))}"
+          th:href="${link.url}"
+          th:title="${link.name}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="banner-link social-btn-lift"
+          th:classappend="${not #strings.isEmpty(link.name) ? 'banner-link-text' : ''}"
+        >
+          <span
+            th:if="${link.icon != null and not #strings.isEmpty(link.icon.value)}"
+            th:utext="${link.icon.value}"></span>
+          <span
+            th:if="${not #strings.isEmpty(link.name)}"
+            th:text="${link.name}">Link</span
+          >
+        </a>
       </div>
     </div>
     <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区。

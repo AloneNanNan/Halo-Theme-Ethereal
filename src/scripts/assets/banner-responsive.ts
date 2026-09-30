@@ -1,21 +1,12 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// Banner 叠加层：首页可见 + 居中 + 响应式字号 + 空间不足隐藏
+// Banner 叠加层：首页可见 + 居中 + 空间不足隐藏。
+// 注：标题/副标题的响应式字号已迁至 components.css 的媒体查询（SSR 首帧即生效，
+// 修复旧实现「先以桌面内联字号渲染、本脚本 defer 执行后才收窄」造成的移动端首屏
+// 大字号闪变）。本脚本不再读写任何元素字号——勿在此处加回字号逻辑（内联 font-size
+// 会盖过媒体查询，详见 components.css 字号块注释）。
 (function () {
-  // ── Banner 响应式常量 ──
+  // ── Banner 常量 ──
   var MIN_BANNER_HEIGHT = 180;
-  var BP_TABLET = 768;
-  var TITLE_MIN_REM = 1.8;
-  var TITLE_MAX_REM = 3.5;
-  var TITLE_VW_FACTOR = 0.007;
-  var SUB_SIZE_480 = 1.0;
-  var SUB_SIZE_640 = 1.125;
-  var SUB_SIZE_767 = 1.25;
-  var SUB_SIZE_DEFAULT = 1.5;
-
-  // 保存 th:style 原始字号，PC 端原样还原
-  var origTitleSize = null;
-  var origSubSize = null;
-  var origCursorH = null;
 
   function getEl(id) {
     return document.getElementById(id);
@@ -29,47 +20,6 @@
         .replace(/\/index\.html$/, "")
         .replace(/\/index$/, "") || "/") === "/"
     );
-  }
-
-  function saveOriginals() {
-    var t = getEl("banner-title");
-    var s = getEl("banner-subtitle");
-    var c = getEl("banner-cursor");
-    if (t && origTitleSize === null) origTitleSize = t.style.fontSize || "";
-    if (s && origSubSize === null) origSubSize = s.style.fontSize || "";
-    if (c && origCursorH === null) origCursorH = c.style.height || "";
-  }
-
-  function applyResponsive() {
-    saveOriginals();
-    var title = getEl("banner-title");
-    var sub = getEl("banner-subtitle");
-    var cursor = getEl("banner-cursor");
-
-    if (window.innerWidth <= BP_TABLET) {
-      // 标题：min(userSize, vw%) 响应式策略
-      // 10vw / 14px(移动端 root) → 乘数 0.007，上限 3.5rem，下限 1.8rem
-      var w = window.innerWidth;
-      var ts = Math.max(
-        TITLE_MIN_REM,
-        Math.min(TITLE_MAX_REM, w * TITLE_VW_FACTOR),
-      );
-
-      // 副标题：按断点逐级缩放
-      var ss;
-      if (w <= 480) ss = SUB_SIZE_480;
-      else if (w <= 640) ss = SUB_SIZE_640;
-      else if (w <= 767) ss = SUB_SIZE_767;
-      else ss = SUB_SIZE_DEFAULT;
-      if (title) title.style.fontSize = ts.toFixed(2) + "rem";
-      if (sub) sub.style.fontSize = ss.toFixed(2) + "rem";
-      if (cursor) cursor.style.height = ss.toFixed(2) + "rem";
-    } else {
-      // PC：还原 th:style 原始值
-      if (title && origTitleSize) title.style.fontSize = origTitleSize;
-      if (sub && origSubSize) sub.style.fontSize = origSubSize;
-      if (cursor && origCursorH) cursor.style.height = origCursorH;
-    }
   }
 
   function positionOverlay() {
@@ -113,7 +63,6 @@
 
   function fullUpdate() {
     updateVisibility();
-    applyResponsive();
     positionOverlay();
   }
 

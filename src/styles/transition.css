@@ -77,6 +77,14 @@ html.swup-visited #right-sidebar .onload-animation {
   animation-delay: min(130ms, var(--dur-entry-max, 400ms));
 }
 
+/* 首页 banner 链接行（bannerText.links）：副标题之后 */
+#banner-links {
+  opacity: 0;
+  animation: var(--dur-entry, 300ms) fade-in-up;
+  animation-fill-mode: forwards;
+  animation-delay: min(210ms, var(--dur-entry-max, 400ms));
+}
+
 #sidebar,
 #right-sidebar {
   animation-delay: min(100ms, var(--dur-entry-max, 400ms));
@@ -148,7 +156,8 @@ html.swup-visited #right-sidebar .onload-animation {
 
 html[data-speed="snappy"] .onload-animation,
 html[data-speed="snappy"] #banner-title,
-html[data-speed="snappy"] #banner-subtitle-wrapper {
+html[data-speed="snappy"] #banner-subtitle-wrapper,
+html[data-speed="snappy"] #banner-links {
   opacity: 1;
   animation-name: slide-in-up;
   animation-duration: var(--dur-entry, 120ms);

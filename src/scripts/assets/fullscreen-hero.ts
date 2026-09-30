@@ -1,8 +1,8 @@
 // 全屏沉浸（hero）布局：滚动模糊斜坡 + 首页标题上移淡出 + 箭头滚动隐藏 +
 // 状态切换时的模糊过渡。
 //   首页：下滑 300px 内模糊 0 → 最大值（--wallpaper-blur-max，即后台「背景模糊度」，
-//         2px 量化避免逐帧重栅格化）；标题 translateY(-scrollY) 抵消滚动（视觉静止）
-//         + opacity 淡出，半个视口高内完成；
+//         2px 量化避免逐帧重栅格化）；标题 translateY(-scrollY) 随滚动上移 + opacity
+//         淡出，半个视口高内完成（壁纸钉视口，上移模拟标题随内容滚出）；
 //   非首页：模糊恒为最大值（CSS fallback 兜底首帧，脚本负责与滑块联动）；
 //   箭头：hero 下壁纸钉视口，箭头不会随内容滚出，改滚动超过 100px 加 .hide；
 //   过渡：只在状态切换（首页⇄非首页、进出 hero）瞬间挂 filter 过渡窗口，与内容
@@ -20,6 +20,9 @@ import { readDurBannerMs } from "../../utils/dur-banner";
   const BLUR_RAMP_SCROLL = 300; // px：首页下滑该距离后模糊达到最大值
   const BLUR_QUANTIZE_STEP = 2; // px：模糊量化步长
   const TITLE_FADE_RATIO = 0.5; // 半个视口高内标题完全淡出
+  // 标题区透明度低于该值即挂 hero-title-faded（components.css 据此禁用 #banner-links
+  // 的指针事件，防止"淡到看不见却仍可点"的隐形热区；保持 0.5 使"还看得清时可点"）
+  const TITLE_LINK_FADE_THRESHOLD = 0.5;
   const INDICATOR_HIDE_SCROLL = 100; // px：hero 首页滚动超过该距离隐藏向下箭头
   const SMOOTH_TAIL = 100; // ms：过渡窗口比 --dur-banner 多留的余量
 
@@ -28,6 +31,7 @@ import { readDurBannerMs } from "../../utils/dur-banner";
   let lastWrittenBlur = "";
   let lastTitleTransform = "";
   let lastTitleOpacity = "";
+  let lastTitleFaded = false;
   let indicatorHidden = false;
   let smoothTimer: number | null = null;
   let lastState = ""; // "" | "off" | "hero-home" | "hero-other"
@@ -73,17 +77,27 @@ import { readDurBannerMs } from "../../utils/dur-banner";
     if (opacity !== lastTitleOpacity) {
       lastTitleOpacity = opacity;
       el.style.opacity = opacity;
+      // 淡到阈值以下 → 挂 hero-title-faded，由 components.css 禁用 #banner-links 的
+      // 指针事件（opacity 关不掉指针事件）。本函数滚动时逐帧调用，类切换必须记忆化
+      const faded = parseFloat(opacity) < TITLE_LINK_FADE_THRESHOLD;
+      if (faded !== lastTitleFaded) {
+        lastTitleFaded = faded;
+        el.classList.toggle("hero-title-faded", faded);
+      }
     }
   }
 
   function resetTitle(): void {
-    if (lastTitleTransform === "" && lastTitleOpacity === "") return;
+    if (lastTitleTransform === "" && lastTitleOpacity === "" && !lastTitleFaded)
+      return;
     lastTitleTransform = "";
     lastTitleOpacity = "";
+    lastTitleFaded = false;
     const el = document.getElementById("banner-overlay");
     if (!el) return;
     el.style.removeProperty("transform");
     el.style.removeProperty("opacity");
+    el.classList.remove("hero-title-faded");
   }
 
   function syncIndicator(shouldHide: boolean): void {

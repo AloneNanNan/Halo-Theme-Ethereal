@@ -87,9 +87,9 @@
     @apply flex items-center justify-center bg-(--btn-regular-bg) text-(--btn-content) transition hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) dark:text-white/75;
   }
 
-  /* 社交图标按钮（个人简介小组件 / 页脚卡片）的悬浮上移 + 轻放大：接入「样式开关 →
-     卡片悬浮效果」，桌面端（≥768px）生效。:not(:active) 让按下的 active:scale-90
-     单独生效——两者都落在 transform 上，同时匹配会相乘（1.05 × 0.9）缩不到位。 */
+  /* 社交图标按钮（个人简介小组件 / 页脚卡片 / Banner 链接）的悬浮上移 + 轻放大：
+     接入「样式开关 → 卡片悬浮效果」，桌面端（≥768px）生效。:not(:active) 让按下的
+     active 缩放单独生效——两者都落在 transform 上，同时匹配会相乘缩不到位。 */
   @media (min-width: 768px) {
     body.card-hover-lift-enabled .social-btn-lift:hover:not(:active) {
       transform: translateY(-2px) scale(1.05);
@@ -439,15 +439,138 @@
     pointer-events: none;
   }
 
+  /* 首页 Banner 标题/副标题字号：模板把后台配置值输出到 CSS 变量（--banner-title-size 挂
+     #banner-title 自身；--banner-subtitle-size 挂 #banner-subtitle-wrapper，供副标题与
+     光标共用），这里消费。移动端收窄由下方媒体查询在**首帧**生效——旧实现靠
+     banner-responsive.js 在 defer 执行后才收窄，首帧会先按桌面内联字号渲染，造成
+     移动端首屏「大字号闪变」。数值与旧 JS 逐档一致：移动端（<768px）root 字号为 14px，
+     视口宽×0.007 rem ≡ 9.8vw（标题 clamp 1.8–3.5rem，≥500px 触顶、≤257px 触底；
+     副标题 480/640/767.98 三档 rem 值与旧 JS 一致，随 root 联动）。
+     ⚠️ 勿把 font-size 写回模板内联：内联会盖过媒体查询，把闪变问题带回来 */
+  #banner-title {
+    font-size: var(--banner-title-size, 3.5rem);
+  }
+
+  #banner-subtitle {
+    font-size: var(--banner-subtitle-size, 1.5rem);
+  }
+
+  #banner-cursor {
+    height: var(--banner-subtitle-size, 1.5rem);
+  }
+
+  @media (max-width: 767.98px) {
+    #banner-title {
+      font-size: clamp(1.8rem, 9.8vw, 3.5rem);
+    }
+
+    #banner-subtitle {
+      font-size: 1.25rem;
+    }
+
+    #banner-cursor {
+      height: 1.25rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #banner-subtitle {
+      font-size: 1.125rem;
+    }
+
+    #banner-cursor {
+      height: 1.125rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #banner-subtitle {
+      font-size: 1rem;
+    }
+
+    #banner-cursor {
+      height: 1rem;
+    }
+  }
+
   /* 首页壁纸标题访客关闭：opacity 过渡渐隐（替代原 display:none，支持平滑过渡） */
   body.banner-title-disabled #banner-overlay {
     opacity: 0 !important;
     pointer-events: none;
   }
 
+  /* 首页 Banner 链接行（bannerText.links）：#banner-overlay 整体是 pointer-events:none，
+     本行单独恢复可点击。三种「隐藏态」（访客关闭标题 / 非首页淡出 / hero 滚动淡到半透明
+     以下）必须一并禁用——overlay 隐藏只改 opacity，元素仍占位，否则会出现"看不见却可点"
+     的热区（hero 淡化态由 fullscreen-hero.js 按透明度阈值切换 hero-title-faded 类） */
+  #banner-links {
+    pointer-events: auto;
+  }
+
+  body.banner-title-disabled #banner-links,
+  #banner-overlay.banner-text-hidden #banner-links,
+  #banner-overlay.hero-title-faded #banner-links {
+    pointer-events: none;
+  }
+
+  /* 条目全部被过滤（都缺 url 或既无图标又无名称）时容器不占位，避免残留 mt-5 间距 */
+  #banner-links:empty {
+    display: none;
+  }
+
+  /* 链接按钮：半透明白底 + 毛玻璃圆钮，深色壁纸上自然融合；填了名称时由下方
+     .banner-link-text 改为「图标 + 名称」胶囊。极轻 box-shadow 兜底浅色/白色壁纸下的
+     轮廓辨识（深色壁纸上几乎不可见）。悬浮上浮复用 .social-btn-lift（接入「卡片悬浮
+     效果」开关、桌面端生效），此处只管外观与悬停变色 */
+  .banner-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.2s ease;
+  }
+
+  .banner-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  .banner-link:active {
+    transform: scale(0.95);
+  }
+
+  /* 内联 SVG（iconify）跟随按钮文字色：SVG 未声明 fill 时默认黑色，必须显式指定；
+     尺寸兜底 1em，与按钮 font-size 联动（后台不开放图标尺寸设置） */
+  .banner-link svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+
+  /* 带名称时的胶囊形态（图标 + 文字）：名称填了即显示 */
+  .banner-link-text {
+    width: auto;
+    padding: 0 1rem;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+
   /* 壁纸标题开关重新开启时的入场动画（fade-in-up，与首载一致） */
   .banner-title-enter #banner-title,
-  .banner-title-enter #banner-subtitle-wrapper {
+  .banner-title-enter #banner-subtitle-wrapper,
+  .banner-title-enter #banner-links {
     animation-name: fade-in-up;
     animation-duration: var(--dur-entry, 300ms);
     animation-timing-function: ease;
@@ -458,6 +581,9 @@
   }
   .banner-title-enter #banner-subtitle-wrapper {
     animation-delay: min(130ms, var(--dur-entry-max, 400ms));
+  }
+  .banner-title-enter #banner-links {
+    animation-delay: min(210ms, var(--dur-entry-max, 400ms));
   }
 
   /* 向下滚动箭头仅全屏模式显示（原 th:if fullscreen，改 CSS 门控） */
@@ -533,8 +659,7 @@
        ① 壁纸容器钉住视口，内容与组件在其上滚动；
        ② 壁纸模糊由 --hero-wallpaper-blur 驱动（首页由 fullscreen-hero 脚本按滚动
           写入、非首页恒为最大值，最大值即 --wallpaper-blur-max）；
-       ③ 首页标题透明度由 --hero-title-opacity 驱动（脚本逐帧写，配合内联
-          transform 做上移淡出）；
+       ③ 首页标题透明度由脚本逐帧写内联 opacity（配合内联 transform 做上移淡出）；
        ④ 非首页无标题、无波浪，内容贴导航栏下方；
        ⑤ 卡片磨砂复用「全屏透明」的规则（见下方 transparent 段）。
      注意：模糊必须配合放大 —— 纯 blur 会让图片四边采样到容器底色形成暗边，
@@ -623,8 +748,10 @@
     transform: scale(1.05);
   }
 
-  /* ③ 首页标题：透明度由脚本逐帧写入，禁用类驱动的 opacity 过渡避免相互打架
-     （访客关闭标题用的 body.banner-title-disabled 带 !important，仍优先生效） */
+  /* ③ 首页标题：透明度由脚本逐帧写内联 opacity（优先于本规则）；本规则仅兜底脚本
+     未运行时的首帧——--hero-title-opacity 无任何写入方、恒回退 1。transition: none
+     禁用类驱动的 opacity 过渡，避免与逐帧写入相互打架（访客关闭标题用的
+     body.banner-title-disabled 带 !important，仍优先生效） */
   html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     body.is-home
     #banner-overlay {

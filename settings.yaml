@@ -665,6 +665,37 @@ spec:
                   label: 打字机效果
                 - value: drop
                   label: 文字下坠
+            - $formkit: group
+              name: links
+              if: "$get(bannerText_enable).value"
+              label: Banner 链接
+              help: "在标题与副标题下方显示一排链接按钮；下方列表留空则不显示"
+              children:
+                - $formkit: array
+                  name: items
+                  label: 链接
+                  value: []
+                  help: "未选图标的条目将按名称渲染为文字按钮，图标与名称都留空的条目不显示"
+                  itemLabels:
+                    - type: text
+                      label: $value.name
+                    - type: text
+                      label: $value.url
+                  children:
+                    - $formkit: iconify
+                      name: icon
+                      label: 图标
+                      format: svg
+                      help: "链接按钮的图标，留空则只显示名称文字"
+                    - $formkit: text
+                      name: name
+                      label: 名称
+                      help: "填写后按钮显示为「图标 + 名称」的胶囊样式；留空则仅显示圆形图标按钮"
+                    - $formkit: text
+                      name: url
+                      label: 链接
+                      validation: "required"
+                      help: "支持完整网址（https://example.com）、邮箱（mailto:you@example.com）或站内路径（/about）"
         - $formkit: group
           name: themeColor
           label: 主题颜色

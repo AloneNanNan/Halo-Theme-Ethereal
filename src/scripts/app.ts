@@ -118,7 +118,7 @@ function initCustomScrollbar() {
 // 浏览器会因元素移动（滚动容器包裹等）/样式重算重建 CSS 动画对象，使入场动画
 // 从头重放。用 document 级事件委托在动画结束/取消后清理：
 //  - .onload-animation 类元素：移除类（回到静态可见状态，重放无动画可播）
-//  - banner 标题/副标题（动画由 CSS 选择器定义，无类可移除）：内联固化终态
+//  - banner 标题/副标题/链接行（动画由 CSS 选择器定义，无类可移除）：内联固化终态
 //    （opacity: 1 + animation: none）
 function removeOnloadAnimation(e: AnimationEvent) {
   const el = e.target as Element | null;
@@ -126,7 +126,11 @@ function removeOnloadAnimation(e: AnimationEvent) {
   if (el.classList.contains("onload-animation")) {
     el.classList.remove("onload-animation");
   }
-  if (el.id === "banner-title" || el.id === "banner-subtitle-wrapper") {
+  if (
+    el.id === "banner-title" ||
+    el.id === "banner-subtitle-wrapper" ||
+    el.id === "banner-links"
+  ) {
     const style = (el as HTMLElement).style;
     style.opacity = "1";
     style.animation = "none";
