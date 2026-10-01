@@ -74,9 +74,14 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${not #lists.isEmpty(allItems.items)}"
         id="friends-timeline"
         class="friends-timeline"
-        th:attr="data-batch-size=${theme.config?.extendPages?.friends?.pageSize ?: 30}, data-blacklist=${theme.config?.extendPages?.friends?.blacklist ?: ''}"
+        th:attr="data-batch-size=${theme.config?.extendPages?.friends?.pageSize ?: 30}"
       >
-        <div th:remove="tag" th:each="item, iterStat : ${allItems.items}">
+        <!-- 每条动态一个 group（日期头 + 卡片）：加载更多 / 合并以整组为
+             单位增删显隐，避免「日期头孤儿」 -->
+        <div
+          class="friends-timeline-group"
+          th:each="item, iterStat : ${allItems.items}"
+        >
           <div
             th:remove="tag"
             th:with="curDate = ${item.publishedAt != null ? #dates.format(item.publishedAt, 'yyyy-MM-dd') : ''}, prevItem = ${iterStat.index > 0 ? allItems.items[iterStat.index - 1] : null}, prevDate = ${prevItem != null && prevItem.publishedAt != null ? #dates.format(prevItem.publishedAt, 'yyyy-MM-dd') : ''}"
@@ -108,81 +113,68 @@ import PageHeader from "../components/control/PageHeader.astro";
                   class="card-base btn-card-outline rounded-xl p-5 onload-animation friends-card card-hover-lift"
                   th:style="'animation-delay: min(calc(var(--content-delay) + ' + ${iterStat.index} + ' * var(--dur-entry-step)), var(--dur-entry-max, 400ms))'"
                 >
-                  <div class="flex gap-4">
-                    <!-- 头像 -->
+                  <!-- 头部：头像 + 昵称 / 日期时间（同瞬间动态卡片：信息列与头像两端对齐） -->
+                  <div class="flex items-start gap-4">
                     <div class="relative shrink-0">
                       <img
                         th:if="${not #strings.isEmpty(item.authorLogo)}"
                         th:src="${item.authorLogo != null and (item.authorLogo.startsWith('http') or item.authorLogo.startsWith('//') or item.authorLogo.startsWith('/')) ? item.authorLogo : null}"
                         th:alt="${item.author}"
-                        class="friends-avatar h-12 w-12 rounded-xl bg-(--btn-regular-bg) object-cover"
+                        class="friends-avatar h-13 w-13 rounded-xl bg-(--btn-regular-bg) object-cover"
                       />
                       <div
                         th:unless="${not #strings.isEmpty(item.authorLogo)}"
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
+                        class="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
                       >
                         <span
-                          class="icon-[material-symbols--account-circle] text-[2rem]"
+                          class="icon-[material-symbols--account-circle] text-3xl"
                         ></span>
                       </div>
                     </div>
 
-                    <!-- 内容区 -->
-                    <div class="min-w-0 flex-1">
-                      <!-- 作者 + 时间 -->
-                      <div
-                        class="flex items-center gap-2 min-w-0 friends-item-header"
+                    <div
+                      class="flex min-h-[3.25rem] min-w-0 flex-1 flex-col justify-between"
+                    >
+                      <a
+                        href="#"
+                        class="friend-author truncate text-base font-bold text-(--primary) transition hover:text-(--primary)"
+                        th:attr="data-site=${item.url}"
                       >
-                        <a
-                          href="#"
-                          class="friend-author truncate text-[15px] font-semibold text-(--primary) transition hover:text-(--primary)"
-                          th:attr="data-site=${item.url}"
-                        >
-                          <span th:text="${item.author}">Author</span>
-                        </a>
-                        <span class="text-30 select-none">&middot;</span>
+                        <span th:text="${item.author}">Author</span>
+                      </a>
+                      <div
+                        class="friends-item-time mt-1.5 flex flex-wrap items-center gap-2"
+                      >
                         <time
-                          class="shrink-0 text-xs text-30"
+                          class="inline-flex items-center gap-1 text-sm text-50"
                           th:datetime="${item.publishedAt}"
-                          th:text="${item.publishedAt != null ? #dates.format(item.publishedAt, 'HH:mm') : ''}"
-                          >14:30</time
+                          th:title="${item.publishedAt != null ? #dates.format(item.publishedAt, 'yyyy-MM-dd HH:mm') : null}"
+                          th:text="${item.publishedAt != null ? #dates.format(item.publishedAt, 'MM-dd HH:mm') : ''}"
+                          >09-21 14:30</time
                         >
                       </div>
+                    </div>
+                  </div>
 
-                      <!-- 文章标题 -->
-                      <a
-                        th:href="${item.url != null and (item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/')) ? item.url : null}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="mt-2 block line-clamp-2 text-[15px] font-semibold text-90 leading-snug transition hover:text-(--primary) friends-item-title"
-                      >
-                        <span th:text="${item.title}">Article Title</span>
-                        <span
-                          class="icon-[fa6-solid--arrow-up-right-from-square] ml-1 inline-block align-middle text-[10px] text-30"
-                        ></span>
-                      </a>
-
-                      <!-- 文章摘要 -->
-                      <div
-                        th:if="${not #strings.isEmpty(item.summary)}"
-                        class="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-50 friends-item-summary"
-                        th:text="${item.summary}"
-                      >
-                        Summary text here...
-                      </div>
-
-                      <!-- 来源链接 -->
-                      <a
-                        th:href="${item.url != null and (item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/')) ? item.url : null}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="friends-source-link mt-2.5 inline-flex items-center gap-1 text-xs text-30 transition hover:text-(--primary)"
-                      >
-                        <span
-                          class="icon-[material-symbols--link-rounded] shrink-0 text-[13px]"
-                        ></span>
-                        <span th:text="#{page.friends.source}">来自朋友圈</span>
-                      </a>
+                  <!-- 内容：桌面缩进对齐昵称、移动端全宽（同瞬间卡片的缩进轨道） -->
+                  <div class="friends-card-body mt-3.5 md:ml-[4.25rem]">
+                    <a
+                      th:href="${item.url != null and (item.url.startsWith('http') or item.url.startsWith('//') or item.url.startsWith('/')) ? item.url : null}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="friends-item-title block line-clamp-2 text-[15px] font-semibold text-90 leading-snug transition hover:text-(--primary)"
+                    >
+                      <span th:text="${item.title}">Article Title</span>
+                      <span
+                        class="icon-[fa6-solid--arrow-up-right-from-square] ml-1 inline-block align-middle text-[10px] text-30"
+                      ></span>
+                    </a>
+                    <div
+                      th:if="${not #strings.isEmpty(item.summary)}"
+                      class="friends-item-summary mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-50"
+                      th:text="${item.summary}"
+                    >
+                      Summary text here...
                     </div>
                   </div>
                 </article>
@@ -214,7 +206,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       </div>
     </section>
 
-    <!-- 朋友圈脚本（I27）：由原 4 个脚本合并（friend-authors/blacklist/group/load-more），
+    <!-- 朋友圈脚本（I27）：由 friend-authors / group / load-more 三个脚本合并，
          置于 allItems 作用域内，列表为空时整体不加载（各脚本空列表下均无用）；
          Swup 换页由 SwupScriptsPlugin 重执行，IIFE 内守卫防重复绑定 -->
     <script

@@ -42,6 +42,108 @@ import PageHeader from "../components/control/PageHeader.astro";
         color: var(--primary);
         text-decoration: underline;
       }
+
+      /* 搜索框：全宽横在内容卡顶部（列表上方），只过滤当前页已渲染的卡片
+         （分组跳转仍走服务端）。视觉沿用主题输入框语言（= 申请友链模态框
+         .link-apply-field input：1.5px 主题色 18% 边框 + 4% 淡底 + 0.75rem
+         圆角）；padding 撑出的高度（≈42px）作为舒展的工具条。focus 不做
+         表单那套「底变实色」（全宽实底视觉过重），只加强边框与光环。
+         行为（输入即过滤 / 整组隐藏 / 空态）见 links.bundle.js 末尾 IIFE */
+      .links-search {
+        position: relative;
+      }
+      .links-search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        translate: 0 -50%;
+        font-size: 1rem;
+        color: color-mix(in oklab, var(--deep-text) 45%, transparent);
+        pointer-events: none;
+      }
+      .links-search-input {
+        width: 100%;
+        border: 1.5px solid color-mix(in oklab, var(--primary) 18%, transparent);
+        border-radius: 0.75rem;
+        background: color-mix(in oklab, var(--primary) 4%, transparent);
+        color: var(--deep-text);
+        padding: 0.625rem 2.25rem 0.625rem 2.125rem;
+        font-size: 0.8125rem;
+        line-height: 1.5;
+        outline: none;
+        font-family: inherit;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .links-search-input::placeholder {
+        opacity: 0.4;
+      }
+      .links-search-input:hover {
+        border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+      }
+      .links-search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px
+          color-mix(in oklab, var(--primary) 15%, transparent);
+      }
+      /* 清空按钮：搜索框内部右侧，SSR 带 hidden，有输入时由脚本摘掉 hidden 显示。
+         按压内凹走主题按钮惯例（active:scale-95 类 + 下方 scale 过渡，
+         过渡参数同池项 .seg-item；active 底色 20% 同 .act-outline） */
+      .links-search-clear {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        translate: 0 -50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 0;
+        border-radius: 0.5rem;
+        background: none;
+        color: color-mix(in oklab, var(--deep-text) 55%, transparent);
+        cursor: pointer;
+        transition:
+          background-color 0.15s ease,
+          color 0.15s ease,
+          scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      /* (0,2,0) 稳定压过 Tailwind .hidden（同属性胜负不依赖产物顺序） */
+      .links-search-clear.hidden {
+        display: none;
+      }
+      .links-search-clear:hover {
+        background: color-mix(in oklab, var(--primary) 12%, transparent);
+        color: var(--primary);
+      }
+      .links-search-clear:active {
+        background: color-mix(in oklab, var(--primary) 20%, transparent);
+      }
+
+      /* 搜索结果入场动画：脚本给「由隐藏变显示」的卡片加 .link-card-enter，
+         内联 animation-delay 承载错峰（与列表首屏错峰同款 min(…, --dur-entry-max)）。
+         :root 前缀提高特异性——卡片同时带 .onload-animation（首屏入场），
+         两条 animation 简写同特异性时胜负取决于构建后的样式表顺序，不可靠 */
+      @keyframes links-card-in {
+        from {
+          opacity: 0;
+          translate: 0 0.75rem;
+        }
+        to {
+          opacity: 1;
+          translate: 0 0;
+        }
+      }
+      :root .link-card-enter {
+        animation: links-card-in var(--dur-entry, 300ms) ease both;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        :root .link-card-enter {
+          animation: none;
+        }
+      }
     </style>
   </Fragment>
 
@@ -116,12 +218,47 @@ import PageHeader from "../components/control/PageHeader.astro";
     </div>
   </div>
 
-  <!-- 内容卡：友链列表 + 空态 -->
+  <!-- 内容卡：搜索 + 友链列表 + 空态。搜索框全宽横在列表上方：
+       只过滤当前页已渲染的卡片（换组跳转后在新页面内搜），视觉见上方
+       <style> 的 .links-search 段，行为见 links.bundle.js 末尾 IIFE -->
   <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <div th:if="${not #lists.isEmpty(groups)}" class="space-y-8">
+    <div
+      th:if="${not #lists.isEmpty(groups) and theme.config?.links?.features?.enable_search != false}"
+      class="links-search mb-4"
+    >
+      <span
+        class="links-search-icon icon-[material-symbols--search-rounded]"
+        aria-hidden="true"></span>
+      <input
+        id="links-search"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        th:placeholder="#{page.links.searchPlaceholder}"
+        th:aria-label="#{page.links.searchPlaceholder}"
+        placeholder="搜索友链..."
+        class="links-search-input"
+      />
+      <button
+        type="button"
+        id="links-search-clear"
+        class="links-search-clear active:scale-95 hidden"
+        th:aria-label="#{page.links.searchClear}"
+        th:title="#{page.links.searchClear}"
+      >
+        <span class="icon-[material-symbols--close-rounded] text-base"></span>
+      </button>
+    </div>
+
+    <div
+      th:if="${not #lists.isEmpty(groups)}"
+      id="links-grid"
+      class="space-y-8"
+    >
       <section
         th:each="group, groupStat : ${groups}"
         th:if="${(#lists.isEmpty(param.group) or #lists.contains(param.group, group.spec.displayName)) and not #lists.isEmpty(group.links)}"
+        th:attr="data-link-section=${group.spec.displayName}"
         th:style="|animation-delay: min(calc(var(--content-delay) + ${groupStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         class="onload-animation"
       >
@@ -198,6 +335,23 @@ import PageHeader from "../components/control/PageHeader.astro";
           </a>
         </div>
       </section>
+    </div>
+
+    <!-- 搜索无结果（JS 控制显隐；与下方「暂无友情链接」是两件事）。
+         role=status：由隐藏变显示时播报，读屏可感知结果变化（同申请结果条先例） -->
+    <div
+      id="links-empty"
+      th:if="${not #lists.isEmpty(groups)}"
+      role="status"
+      aria-live="polite"
+      class="hidden py-12 text-center"
+    >
+      <span
+        class="icon-[material-symbols--search-off-rounded] text-4xl text-30"
+        aria-hidden="true"></span>
+      <p class="mt-3 text-sm text-50" th:text="#{page.links.noResult}">
+        找不到相关结果
+      </p>
     </div>
 
     <div th:if="${#lists.isEmpty(groups)}" class="py-12 text-center text-50">
@@ -565,8 +719,8 @@ import PageHeader from "../components/control/PageHeader.astro";
     </div>
   </div>
 
-  <!-- 友链页脚本（I27）：由 requirements/collapse/copy/link-apply/random-visit 五个脚本
-       合并为单请求；link-apply 与 random-visit 的原 th:if 门控改由脚本内部守卫
+  <!-- 友链页脚本（I27）：由 requirements/collapse/copy/link-apply/random-visit/search
+       六个脚本合并为单请求；link-apply 与 random-visit 的原 th:if 门控改由脚本内部守卫
        （按钮/模态框不存在即不绑定，行为等价，见 links.bundle.js 各 IIFE 注释） -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/links.bundle.js?v=${ASSET_VERSION}`}

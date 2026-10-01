@@ -1816,21 +1816,11 @@ spec:
               label: 显示随机钓鱼按钮
               value: true
               help: "在朋友圈页面标题右侧显示随机钓鱼按钮，点击随机跳转到一个朋友圈文章"
-            - $formkit: textarea
-              name: blacklist
-              label: 屏蔽列表
-              value: ""
-              help: "要屏蔽的博主名称，每行一个。匹配到的动态将不会在朋友圈显示"
         - $formkit: group
           name: timeline
           label: 时间轴页面
           help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
           children:
-            - $formkit: text
-              name: subtitle
-              label: 副标题
-              value: "我的成长历程和重要里程碑"
-              help: "显示在时间轴页面标题下方，留空则使用默认文案"
             - $formkit: number
               name: pageSize
               label: 每页数量
@@ -1917,11 +1907,6 @@ spec:
           label: 技能页面
           help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
           children:
-            - $formkit: text
-              name: subtitle
-              label: 副标题
-              value: "我的技术技能和专业知识"
-              help: "显示在技能页面标题下方，留空则使用默认文案"
             - $formkit: number
               name: pageSize
               label: 每页数量
@@ -2353,11 +2338,6 @@ spec:
           label: 打赏页面
           help: "请先在「页面 → 自定义页面」中创建对应的页面，然后在此配置页面内容"
           children:
-            - $formkit: text
-              name: subtitle
-              label: 副标题
-              value: "感谢你的每一份支持"
-              help: "显示在页面标题下方，留空则使用默认文案"
             - $formkit: textarea
               name: usage
               label: 打赏用途说明
@@ -2560,6 +2540,7 @@ spec:
             enable_apply_btn: true
             enable_random_visit: true
             random_visit_groups: ""
+            enable_search: true
           children:
             - $formkit: switch
               name: enable_comment
@@ -2585,6 +2566,12 @@ spec:
               label: 随机访问分组
               value: ""
               help: "限制随机访问的友链分组，每行输入一个分组名称。留空则表示所有分组都参与随机访问"
+
+            - $formkit: switch
+              name: enable_search
+              value: true
+              label: 显示搜索框
+              help: "在友链列表上方显示搜索框，输入关键词即时筛选当前页的友链"
         - $formkit: group
           name: ownerInfo
           label: 我的博客信息

@@ -1,5 +1,5 @@
 // 友链页脚本合并（构建产物：public/assets/links.bundle.js，源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
-// 由 requirements / collapse / copy / link-apply / random-visit 合并，各 IIFE 守卫独立保留；
+// 由 requirements / collapse / copy / link-apply / random-visit / search 合并，各 IIFE 守卫独立保留；
 // link-apply 与 random-visit 的原 th:if 门控移除，改由内部守卫（元素不存在即不绑定/不执行）
 
 // 渲染友链须知和免责申明列表
@@ -592,5 +592,105 @@
     startSpin(btn, function () {
       doRandomVisit(btn);
     });
+  });
+})();
+
+// 友链搜索 - 在当前页面已渲染的卡片中即时过滤（分组筛选仍由服务端跳转处理）。
+// 事件委托，不受 Swup 无刷新切换影响；换页后输入框随 DOM 重建为空、卡片由
+// SSR 全量渲染，天然回到初始态，无需额外重置逻辑。
+(function () {
+  // 只绑定一次：同 random-visit，SwupScriptsPlugin 换页重执行会克隆重跑本脚本，
+  // 不守卫则换页 N 次后累积 N 个委托，一次输入触发 N 次全量过滤。
+  if (window.__linksSearchBound) return;
+  window.__linksSearchBound = true;
+
+  // 减弱动效偏好查询只建一次（.matches 实时反映系统设置，无需每次重建）
+  var reduceMotionQuery = window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+
+  function apply() {
+    var input = document.getElementById("links-search");
+    var grid = document.getElementById("links-grid");
+    if (!input || !grid) return;
+
+    var query = (input.value || "").trim().toLowerCase();
+    var sections = grid.querySelectorAll("[data-link-section]");
+    var visibleTotal = 0;
+    var entering = [];
+
+    for (var s = 0; s < sections.length; s++) {
+      var section = sections[s];
+      var cards = section.querySelectorAll("a[data-link-group]");
+      var shown = 0;
+
+      for (var c = 0; c < cards.length; c++) {
+        var card = cards[c];
+        // 命中范围 = 卡片全文（名称/描述/URL）+ 所属分组名
+        // （搜分组名可整组保留，与参考实现一致）
+        var haystack = (
+          (card.textContent || "") +
+          " " +
+          (card.getAttribute("data-link-group") || "")
+        ).toLowerCase();
+        var match = !query || haystack.indexOf(query) !== -1;
+        // 只在「由隐藏变显示」时收入场队列：连续输入时不会整片闪烁重播
+        if (match && card.style.display === "none") entering.push(card);
+        card.style.display = match ? "" : "none";
+        if (match) shown++;
+      }
+
+      // 组内无命中时整区隐藏（含标题与计数），避免留下空网格
+      section.style.display = shown > 0 ? "" : "none";
+      visibleTotal += shown;
+    }
+
+    playEnter(entering, grid);
+    syncClear(input);
+
+    var empty = document.getElementById("links-empty");
+    if (empty) empty.classList.toggle("hidden", visibleTotal > 0);
+  }
+
+  // 新出现卡片错峰入场：先批量移除动画类并强制回流一次（保证重播从头开始），
+  // 再逐张设错峰延迟并加类；延迟用内联值，收敛上限跟随主题速度档
+  // （--dur-entry-max，疾速档为 0）。弱动效偏好直接跳过（CSS 侧同样兜底）
+  function playEnter(cards, grid) {
+    if (!cards.length) return;
+    if (reduceMotionQuery && reduceMotionQuery.matches) return;
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].classList.remove("link-card-enter");
+    }
+    void grid.offsetWidth; // 批量回流一次，替代逐卡强制布局
+    for (var j = 0; j < cards.length; j++) {
+      cards[j].style.animationDelay =
+        "min(" + j * 40 + "ms, var(--dur-entry-max, 400ms))";
+      cards[j].classList.add("link-card-enter");
+    }
+  }
+
+  // 清空按钮：有输入才显示
+  function syncClear(input) {
+    var btn = document.getElementById("links-search-clear");
+    if (btn) btn.classList.toggle("hidden", !input.value);
+  }
+
+  document.addEventListener("input", function (e) {
+    var target = e.target;
+    if (!target || target.id !== "links-search") return;
+    apply();
+  });
+
+  // 清空按钮：清空输入、恢复列表、焦点回输入框
+  document.addEventListener("click", function (e) {
+    var target = e.target;
+    if (!target || !target.closest) return;
+    if (!target.closest("#links-search-clear")) return;
+    var input = document.getElementById("links-search");
+    if (!input) return;
+    e.preventDefault();
+    input.value = "";
+    apply();
+    input.focus();
   });
 })();

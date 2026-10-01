@@ -335,7 +335,6 @@ export interface Friends {
 
 // ========== 时间轴设置 ==========
 export interface Timeline {
-  subtitle?: string;
   /** 每页条目数量，0 或不设置则不分页 */
   pageSize?: number;
   entries?: TimelineEntries;
@@ -364,7 +363,6 @@ export interface TimelineItem {
 
 // ========== 技能设置 ==========
 export interface Skills {
-  subtitle?: string;
   /** 每页卡片数量，0 或不设置则不分页 */
   pageSize?: number;
   entries?: SkillEntries;
@@ -567,8 +565,6 @@ export interface AboutFooterLinkItem {
  * 收款二维码不在此组：与文章打赏模态框同源（post.actionBar.rewardSetting.wechat_qr / alipay_qr）。
  */
 export interface Reward {
-  /** 页面副标题；留空回落到 i18n `page.reward.subtitle` */
-  subtitle?: string;
   /** 打赏用途说明（textarea，多行）；留空则不显示说明框 */
   usage?: string;
   /** 打赏者名单（留空则整卡不渲染） */
@@ -896,6 +892,7 @@ export interface LinksFeatures {
   enable_apply_btn: boolean;
   enable_random_visit: boolean;
   random_visit_groups: string;
+  enable_search: boolean;
 }
 
 export interface LinksOwnerInfo {
