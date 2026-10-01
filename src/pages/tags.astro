@@ -8,19 +8,27 @@ import PageHeader from "../components/control/PageHeader.astro";
   description="#{page.tags.description(${site.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 内容卡分离 -->
+  <div class="card-base page-head-card onload-animation mb-4">
     <PageHeader
-      containerClass="mb-6"
+      containerClass=""
       titleExpr="#{page.tags.title}"
       title="标签"
-      iconClass="icon-[material-symbols--tag-rounded]"
-      labelExpr="#{page.tags.subtitle}"
-      label="文章标签"
-      sepShowIfExpr="${true}"
-      subExpr="#{page.tags.subtitleCount(${#lists.size(tags)})}"
-      sub="0 个标签"
-      subShowIfExpr="${tags != null}"
+      iconClass="icon-[mingcute--hashtag-fill]"
+      eyebrow="TAGS"
+      stats={[
+        {
+          valueExpr: "${#lists.size(tags)}",
+          value: "0",
+          labelExpr: "#{common.stat.tags}",
+          label: "标签",
+        },
+      ]}
     />
+  </div>
+
+  <!-- 内容卡：标签云 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <div class="flex flex-wrap gap-3">
       <a
         th:each="tag, stat : ${tags}"

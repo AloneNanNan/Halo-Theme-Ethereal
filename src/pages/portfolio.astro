@@ -18,58 +18,101 @@ import PortfolioCard from "../components/PortfolioCard.astro";
              type=${#strings.isEmpty(param.type) ? '' : param.type},
              projects=${projectFinder.listBy('', platform, type, '', 1, 999)}"
   >
-    <section class="card-base mb-4 px-6 py-6 md:px-9 onload-animation">
+    <!-- 头部卡：新版页头（modern，含图标水印）+ 平台/类型两条胶囊池——
+         氛围渐变由卡片级 .page-head-card 承载（页头与池之间无缝）；
+         两行都为空时池区不渲染；页头自带内距，卡不再包 px/py -->
+    <div class="card-base page-head-card onload-animation mb-4">
       <!-- 标题区域 -->
       <PageHeader
-        containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+        containerClass=""
         titleExpr="${projectFinder.setting().seoTitle ?: #messages.msg('page.portfolio.seoTitle')}"
         title="作品集"
-        iconClass="icon-[material-symbols--inventory-2-rounded]"
-        labelExpr="#{page.portfolio.subtitle}"
-        label="我的项目"
-        subExpr="#{page.portfolio.subtitleCount(${projects.total})}"
-        subShowIfExpr="${projects != null}"
-        sub="0 个项目"
+        iconClass="icon-[material-symbols--storefront-outline-rounded]"
+        eyebrow="PORTFOLIO"
         filteredExpr="${not #strings.isEmpty(platform) or not #strings.isEmpty(type)}"
+        filteredClearExpr="@{/portfolio}"
+        stats={[
+          {
+            valueExpr: "${projects.total}",
+            value: "0",
+            labelExpr: "#{common.stat.projects}",
+            label: "项目",
+          },
+          {
+            valueExpr: "${platformLabels.size()}",
+            value: "0",
+            labelExpr: "#{common.stat.platforms}",
+            label: "平台",
+          },
+          {
+            valueExpr: "${typeLabels.size()}",
+            value: "0",
+            labelExpr: "#{common.stat.types}",
+            label: "类型",
+          },
+        ]}
       />
 
-      <!-- 平台筛选 -->
-      <FilterTabs
-        showIfExpr="${platformLabels != null and not platformLabels.isEmpty()}"
-        class="mb-4 flex flex-wrap gap-2"
-        allHrefExpr="@{/portfolio(type=${type})}"
-        allActiveExpr="#strings.isEmpty(platform)"
-        allLabelExpr="#{page.portfolio.allPlatforms}"
-        allLabel="全部平台"
-        eachExpr="entry : ${platformLabels.entrySet()}"
-        tabTemplate={{
-          hrefExpr: "@{/portfolio(platform=${entry.key}, type=${type})}",
-          activeExpr: "#strings.equals(platform, entry.key)",
-          labelExpr: "${entry.value}",
-          countExpr: "${platformCount.total}",
-          withExpr:
-            "platformCount=${projectFinder.listByPlatform(entry.key, 1, 1)}",
-        }}
-      />
+      <div class="flex flex-col gap-2.5 px-6 pb-5 md:px-9">
+        <!-- 平台筛选 -->
+        <div
+          class="seg-scroll"
+          th:if="${platformLabels != null and not platformLabels.isEmpty()}"
+        >
+          <div class="seg" data-filter-seg>
+            <span class="seg-thumb" aria-hidden="true"></span>
+            <FilterTabs
+              segmented
+              showIfExpr="${platformLabels != null and not platformLabels.isEmpty()}"
+              allHrefExpr="@{/portfolio(type=${type})}"
+              allActiveExpr="#strings.isEmpty(platform)"
+              allLabelExpr="#{page.portfolio.allPlatforms}"
+              allLabel="全部平台"
+              eachExpr="entry : ${platformLabels.entrySet()}"
+              tabTemplate={{
+                hrefExpr: "@{/portfolio(platform=${entry.key}, type=${type})}",
+                activeExpr: "#strings.equals(platform, entry.key)",
+                labelExpr: "${entry.value}",
+                countExpr: "${platformCount.total}",
+                withExpr:
+                  "platformCount=${projectFinder.listByPlatform(entry.key, 1, 1)}",
+              }}
+            />
+          </div>
+        </div>
 
-      <!-- 类型筛选 -->
-      <FilterTabs
-        showIfExpr="${typeLabels != null and not typeLabels.isEmpty()}"
-        class="mb-6 flex flex-wrap gap-2"
-        allHrefExpr="@{/portfolio(platform=${platform})}"
-        allActiveExpr="#strings.isEmpty(type)"
-        allLabelExpr="#{page.portfolio.allTypes}"
-        allLabel="全部类型"
-        eachExpr="entry : ${typeLabels.entrySet()}"
-        tabTemplate={{
-          hrefExpr: "@{/portfolio(platform=${platform}, type=${entry.key})}",
-          activeExpr: "#strings.equals(type, entry.key)",
-          labelExpr: "${entry.value}",
-          countExpr: "${typeCount.total}",
-          withExpr: "typeCount=${projectFinder.listByType(entry.key, 1, 1)}",
-        }}
-      />
+        <!-- 类型筛选 -->
+        <div
+          class="seg-scroll"
+          th:if="${typeLabels != null and not typeLabels.isEmpty()}"
+        >
+          <div class="seg" data-filter-seg>
+            <span class="seg-thumb" aria-hidden="true"></span>
+            <FilterTabs
+              segmented
+              showIfExpr="${typeLabels != null and not typeLabels.isEmpty()}"
+              allHrefExpr="@{/portfolio(platform=${platform})}"
+              allActiveExpr="#strings.isEmpty(type)"
+              allLabelExpr="#{page.portfolio.allTypes}"
+              allLabel="全部类型"
+              eachExpr="entry : ${typeLabels.entrySet()}"
+              tabTemplate={{
+                hrefExpr:
+                  "@{/portfolio(platform=${platform}, type=${entry.key})}",
+                activeExpr: "#strings.equals(type, entry.key)",
+                labelExpr: "${entry.value}",
+                countExpr: "${typeCount.total}",
+                withExpr:
+                  "typeCount=${projectFinder.listByType(entry.key, 1, 1)}",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- 内容卡：推荐项目 + 全部项目 + 空态 -->
+    <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <!-- 推荐项目（仅首页无筛选时展示） -->
       <div
         th:remove="tag"
@@ -139,4 +182,11 @@ import PortfolioCard from "../components/PortfolioCard.astro";
       </div>
     </section>
   </div>
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
 </MainGridLayout>

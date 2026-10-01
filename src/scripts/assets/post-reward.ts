@@ -148,7 +148,7 @@ var t =
         link.style.background = "var(--btn-regular-bg,oklch(0.95 0.025 250))";
       };
       link.innerHTML =
-        '<span class="icon-[material-symbols--volunteer-activism-rounded] text-base transition-transform group-hover:scale-110"></span><span>' +
+        '<span class="icon-[material-symbols--volunteer-activism-rounded] text-base"></span><span>' +
         t("post.rewardPage", "打赏页面") +
         "</span>";
       // 点击先收起模态框：Swup 只替换内容容器，遮罩留在 body 会造成残影

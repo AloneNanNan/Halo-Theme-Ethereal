@@ -87,6 +87,22 @@
     @apply flex items-center justify-center bg-(--btn-regular-bg) text-(--btn-content) transition hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) dark:text-white/75;
   }
 
+  /* 统一按压反馈（对齐导航菜单按钮的观感：按下底色平滑过渡到主题色，无阴影）：
+     btn-regular / btn-card 已内置各自的 active 底色（保持不动），这里为透明底的
+     动作钮 / 池 / about 按钮补主题色淡底。选择器加 :root 提高特异性——按下态与
+     hover 底色同属性，必须压过源码里更靠后的 hover 规则才看得见。缩放沿用各按钮
+     自带的 active:scale-*；about 页头按钮没有该 Tailwind 类，单独补同幅度缩放。
+     （分类导航栏 .category-pill 的过渡在其组件样式表内维护，不在此重复声明） */
+  :root .act-outline:active,
+  :root .seg-item:not(.seg-active):active,
+  :root .about-btn:active,
+  :root .category-pill:not([data-active]):active {
+    background: color-mix(in oklab, var(--primary) 20%, transparent);
+  }
+  :root .about-btn:active {
+    scale: 0.95;
+  }
+
   /* 社交图标按钮（个人简介小组件 / 页脚卡片 / Banner 链接）的悬浮上移 + 轻放大：
      接入「样式开关 → 卡片悬浮效果」，桌面端（≥768px）生效。:not(:active) 让按下的
      active 缩放单独生效——两者都落在 transform 上，同时匹配会相乘缩不到位。 */
@@ -1813,4 +1829,341 @@ body.card-border-enabled .pagination-pages .btn-card {
 /* 同博主文章条目（分组后追加的） */
 .friends-article-item .friends-article-time {
   margin-bottom: 0.125rem;
+}
+
+/* ==========================================================================
+   分组筛选「胶囊池」（segmented）：轨道 + 滑动浮块 + 滚动两端渐隐
+   —— 新版页头（.page-head-modern）的配套设计（见 PageHeader.astro
+   与 FilterTab/FilterTabs.astro 的 segmented 模式；滑块脚本 src/scripts/assets/filter-seg.ts）。
+   结构契约（池外壳由页面手写，组件只输出条目，这样 archives 的「未分类」这类
+   池外条目可以共用同一条轨道）：
+     <div class="seg-scroll">               横滚容器：溢出时两端渐隐（JS 切换类）
+       <div class="seg" data-filter-seg>    轨道（JS 初始化后挂 data-seg-ready）
+         <span class="seg-thumb"></span>    浮块：承载激活底色与滑动动画
+         <a class="seg-item …">…</a>        条目（激活项加 .seg-active）
+       </div>
+     </div>
+   ========================================================================== */
+.seg-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  --seg-mask-w: 1.5rem;
+}
+.seg-scroll::-webkit-scrollbar {
+  display: none;
+}
+.seg-scroll.can-scroll-left {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--seg-mask-w)
+  );
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--seg-mask-w));
+}
+.seg-scroll.can-scroll-right {
+  -webkit-mask-image: linear-gradient(
+    to left,
+    transparent 0,
+    #000 var(--seg-mask-w)
+  );
+  mask-image: linear-gradient(to left, transparent 0, #000 var(--seg-mask-w));
+}
+.seg-scroll.can-scroll-left.can-scroll-right {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--seg-mask-w),
+    #000 calc(100% - var(--seg-mask-w)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--seg-mask-w),
+    #000 calc(100% - var(--seg-mask-w)),
+    transparent 100%
+  );
+}
+
+.seg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  /* inline-flex 在横滚容器里防收缩（分类很多时保持一行、由容器横向滚动） */
+  min-width: max-content;
+  padding: 4px;
+  border-radius: 14px;
+  /* 轨道 = 主色 7% 透明层：浅色下是淡主题灰、深色下比卡片略亮，随主题色自适应 */
+  background: color-mix(in oklab, var(--primary) 7%, transparent);
+}
+
+/* 浮块：激活项的主题色底 + 滑动动画均由它承载（条目自身只剩文字）。
+   初始 opacity:0 且不参与过渡——JS 就绪（data-seg-ready）后瞬时显示，
+   配合 .seg-item.seg-active 的兜底底色无叠影（见下） */
+.seg-thumb {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 0;
+  z-index: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  /* 无任何阴影：纯色圆角块，贴合主题的扁平轻量语言。
+     外部投影曾因滚动容器（overflow-x:auto ⇒ overflow-y 计算为 auto）
+     裁剪出现"右下角直角溢出"（设计评审 #1）；顶部内高光是多余的拟物
+     立体感（设计评审 #2）。两者均移除，勿随手补回 */
+  opacity: 0;
+  transition:
+    transform 0.26s cubic-bezier(0.32, 0.72, 0.24, 1),
+    width 0.26s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.seg[data-seg-ready] .seg-thumb {
+  opacity: 1;
+}
+
+.seg-item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 10px;
+  /* 池项既有 <a>（FilterTabs 导航）也有 <button>（心愿墙客户端筛选）：
+     显式重置按钮默认底/边框/字族，两类元素外观一致 */
+  background: none;
+  font-family: inherit;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:root.dark .seg-item {
+  color: rgba(255, 255, 255, 0.6);
+}
+.seg-item:hover {
+  color: var(--primary);
+}
+/* dark 下基础色规则为 (0,3,0)，须同特异性补 hover（否则被基础色压住） */
+:root.dark .seg-item:hover {
+  color: var(--primary);
+}
+.seg-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+/* 激活项：JS 就绪前自带底色兜底（无脚本时也能看出选中项）；
+   就绪后底色交给 .seg-thumb（否则点击预移动时会出现两个色块） */
+.seg-item.seg-active {
+  background: var(--primary);
+  color: #fff;
+}
+:root.dark .seg-item.seg-active {
+  color: rgb(0 0 0 / 0.72);
+}
+.seg[data-seg-ready] .seg-item.seg-active {
+  background: transparent;
+}
+
+/* 计数小徽标（FilterTab 在 segmented 模式给 count span 挂 .seg-cnt）：
+   覆盖页面 countClass 的 ml-1（间距由 .seg-item 的 gap 统一提供）；
+   激活时颜色继承（白 / 深色黑） */
+.seg-item .seg-cnt {
+  margin-left: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.55;
+}
+.seg-item.seg-active .seg-cnt {
+  opacity: 0.9;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-thumb {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   新版页头（modern）：eyebrow 上移 + 标题去竖条 + meta 行 + 大图标水印
+   （与 eyebrow 共用 iconClass，同图标两种尺寸）。
+   - 由 PageHeader.astro 输出；自带内边距，页面头部卡
+     不再包 px/py。
+   - 渐变不在这里：由页面头部卡的 .page-head-card 承担（铺满「页头 + 分组池」
+     整卡）。曾经写在页头区上，页头/池交界处会出现一条可见的背景色带
+     （设计评审发现的"分割层"），已移出。
+   - 刻意不设 position:relative：水印的定位祖先要穿透到 .page-head-card，
+     让水印锚「头部卡右下角」（有分组池的页面即池区右下；无池页面即页头
+     区右下——卡的边界）。曾经的锚定落在页头区右下，在有池卡片里视觉上
+     是"右侧中部"而非角落装饰。
+   - 不裁剪（无 overflow:hidden）：水印可跨过页头/池接缝完整显示，
+     越出卡片的部分由 card-base 的 overflow:hidden 兜底。
+   ========================================================================== */
+.page-head-modern {
+  padding: 1.5rem 1.5rem 1.25rem;
+}
+/* 标题竖线（classic 元素的现代回归）：悬于标题左侧空白处，不占布局、眉题与
+   标题不让位、垂直居中于标题。两处尺寸随环境等比缩放：
+   - 距标题距离随卡片内距（移动 24px 内距 → 12px，桌面 36px → 18px），
+     保证移动端竖线左侧仍有呼吸空间、不贴卡边；
+   - 高度随标题字号（桌面 31.2px 字号用旧版原值 20px，移动 27.2px 等比 → 17px）。
+   h1 的 ::before 不受 th:text 覆盖影响 */
+.page-head-modern h1 {
+  position: relative;
+}
+.page-head-modern h1::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 17px;
+  border-radius: 4px;
+  background: var(--primary);
+}
+@media (min-width: 768px) {
+  .page-head-modern h1::before {
+    left: -18px;
+    height: 20px;
+  }
+}
+
+/* 头部卡（页头 + 分组池同卡）：氛围渐变铺在卡片级，页头与池无缝衔接；
+   position:relative 为 .ph-watermark 提供「卡右下角」的定位上下文
+   （⚠️ 勿删——缺失时水印会穿透到更外层祖先定位） */
+.page-head-card {
+  position: relative;
+  background-image: linear-gradient(
+    118deg,
+    color-mix(in oklab, var(--primary) 7%, transparent),
+    transparent 58%
+  );
+}
+@media (min-width: 768px) {
+  .page-head-modern {
+    padding-left: 2.25rem;
+    padding-right: 2.25rem;
+  }
+}
+/* 大图标水印：锚定「头部卡右下角」——定位上下文来自 .page-head-card 的
+   relative（页头区 .page-head-modern 刻意无定位，见上） */
+.ph-watermark {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -1.6rem;
+  /* 尺寸随字号（iconify 图标遮罩为 1em 见方），line-height 1 防撑高 */
+  font-size: 8rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--primary) 9%, transparent);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   V3 页头组件（设计实验室定稿）：
+   - .stat：统计方片（数字 + 词条），页头右侧与动作钮同排、贴底对齐
+   - .act-outline：描边胶囊动作钮（随机访问 / RSS 等），比 btn-regular 轻一档
+   色彩语言与池（.seg）/ 徽章一致：primary 淡色 + 描边，深色模式自动适配
+   ========================================================================== */
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 13px;
+  border-radius: 12px;
+  white-space: nowrap;
+  background: color-mix(in oklab, var(--primary) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--primary) 13%, transparent);
+}
+.stat b {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
+}
+.stat span {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(0, 0, 0, 0.5);
+}
+:root.dark .stat span {
+  color: rgba(255, 255, 255, 0.5);
+}
+/* 心愿墙「在一起 N 天」纪念日片里的爱心：固定红色（.stat span 的灰色词条色
+   特异性更高，用双类选择器盖回；仅该图标受影响，其它统计片不变） */
+.stat .wish-days-icon {
+  color: #ef4444;
+}
+
+.act-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
+  background: transparent;
+  color: var(--btn-content);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.act-outline:hover {
+  background: color-mix(in oklab, var(--primary) 9%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 36%, transparent);
+}
+.act-outline:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* 「已筛选」清除钮：锚定头部卡右上角（.page-head-card 提供定位上下文；
+   页头区 .page-head-modern 刻意无定位）。点击回无参地址清除筛选。 */
+.ph-filter-chip {
+  position: absolute;
+  top: 1.4rem;
+  right: 1.5rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  transition: background-color 0.18s ease;
+}
+.ph-filter-chip:hover {
+  background: var(--btn-regular-bg-hover);
+}
+.ph-filter-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (min-width: 768px) {
+  .ph-filter-chip {
+    right: 2.25rem;
+  }
 }

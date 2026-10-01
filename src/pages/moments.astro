@@ -11,49 +11,66 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="${title + ' - ' + site.title}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <section
-    class="card-base onload-animation mb-4 overflow-hidden px-6 py-6 md:px-9"
-  >
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 胶囊池分组——氛围渐变由
+       卡片级 .page-head-card 承载（页头与池之间无缝）；无标签时池区不渲染 -->
+  <div class="card-base page-head-card onload-animation mb-4">
     <PageHeader
-      containerClass="mb-5 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      containerClass=""
       titleExpr="${title}"
       title="瞬间"
-      iconClass="icon-[material-symbols--update-rounded]"
-      labelExpr="#{page.moments.subtitle}"
-      label="我的动态"
-      subExpr="#{page.moments.subtitleCount(${moments.total})}"
-      sub="共 0 条动态"
+      iconClass="icon-[material-symbols--bolt-outline-rounded]"
+      eyebrow="MOMENTS"
       filteredExpr="${not #lists.isEmpty(param.tag)}"
+      filteredClearExpr="@{/moments}"
+      stats={[
+        {
+          valueExpr: "${moments.total}",
+          value: "0",
+          labelExpr: "#{common.stat.moments}",
+          label: "瞬间",
+        },
+      ]}
     >
       <a
         th:href="@{/moments/rss.xml}"
         data-no-swup
         target="_blank"
         rel="noopener noreferrer"
-        class="btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
+        class="act-outline group w-fit active:scale-95"
         slot="right"
       >
-        <span
-          class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+        <span class="icon-[material-symbols--rss-feed-rounded] text-base"
         ></span>
         <span>RSS</span>
       </a>
     </PageHeader>
 
-    <FilterTabs
-      showIfExpr="${not #lists.isEmpty(tags)}"
-      class="mb-5 flex flex-wrap gap-2"
-      allHrefExpr="@{/moments}"
-      allActiveExpr="#lists.isEmpty(param.tag)"
-      eachExpr="tag : ${tags}"
-      tabTemplate={{
-        hrefExpr: "@{/moments(tag=${tag.name})}",
-        activeExpr: "#lists.contains(param.tag, tag.name)",
-        labelExpr: "${tag.name}",
-        countExpr: "${tag.momentCount}",
-      }}
-    />
+    <div class="px-6 pb-5 md:px-9" th:if="${not #lists.isEmpty(tags)}">
+      <div class="seg-scroll">
+        <div class="seg" data-filter-seg>
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <FilterTabs
+            segmented
+            showIfExpr="${not #lists.isEmpty(tags)}"
+            allHrefExpr="@{/moments}"
+            allActiveExpr="#lists.isEmpty(param.tag)"
+            eachExpr="tag : ${tags}"
+            tabTemplate={{
+              hrefExpr: "@{/moments(tag=${tag.name})}",
+              activeExpr: "#lists.contains(param.tag, tag.name)",
+              labelExpr: "${tag.name}",
+              countExpr: "${tag.momentCount}",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- 内容卡：瞬间列表 + 空态 -->
+  <section
+    class="card-base onload-animation mb-4 overflow-hidden px-6 py-6 md:px-9"
+  >
     <div th:if="${not #lists.isEmpty(moments.items)}" class="moment-list">
       <article
         th:each="moment, momentStat : ${moments.items}"
@@ -196,6 +213,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
        之后会被产出到 </html> 外面、不在容器内，换页到本页时不会执行 → 点赞点不动 -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/upvote.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
     is:inline></script>
 </MainGridLayout>

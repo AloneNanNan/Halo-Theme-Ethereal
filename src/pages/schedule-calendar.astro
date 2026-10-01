@@ -6,6 +6,7 @@
 //   - view   WeekViewResponse  周视图数据（weekStart/currentWeekStart/previousWeekStart/nextWeekStart/days/summary/serverTime/zoneId）
 // 未安装插件或主题未提供模板时，插件自动回退内置模板，不会影响本站。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <MainGridLayout
@@ -13,48 +14,32 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="${title + ' - ' + site.title}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-    <!-- 页头 -->
-    <div
-      class="mb-6 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+  <!-- 头部卡：新版页头（modern，含图标水印） -->
+  <div class="card-base page-head-card onload-animation mb-4">
+    <PageHeader
+      containerClass=""
+      titleExpr="${title}"
+      title="日程日历"
+      iconClass="icon-[material-symbols--event-note-outline-rounded]"
+      eyebrow="SCHEDULE"
     >
-      <div class="min-w-0">
-        <h1
-          class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-          th:text="${title}"
-        >
-          日程日历
-        </h1>
-        <div class="flex flex-wrap items-center gap-1.5 text-sm">
-          <span
-            class="icon-[material-symbols--event-note-outline-rounded] text-base text-(--primary)"
-          ></span>
-          <span
-            class="font-bold text-(--primary)"
-            th:text="#{page.schedule.subtitle}"
-          >
-            我的日程
-          </span>
-          <span class="text-30">·</span>
-          <span class="text-50" th:text="#{page.schedule.description}">
-            看看最近的日程安排
-          </span>
-        </div>
-      </div>
       <a
         th:href="@{/schedule-calendar.ics}"
         data-no-swup
         target="_blank"
         rel="noopener noreferrer"
-        class="btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
+        class="act-outline group w-fit active:scale-95"
+        slot="right"
       >
-        <span
-          class="icon-[material-symbols--rss-feed-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+        <span class="icon-[material-symbols--rss-feed-rounded] text-base"
         ></span>
         <span th:text="#{page.schedule.ical}">iCal 订阅</span>
       </a>
-    </div>
+    </PageHeader>
+  </div>
 
+  <!-- 内容卡：状态摘要 + 日历 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <!-- 状态摘要：scheduleSummary 来自 scheduleCalendarFinder.summary()（未来 90 天范围）。
          说明：路由注入的 view.summary.next 仅在当前浏览的周内查找下一事项，跨周的未来
          事项（如节假日）会显示"暂无"，故改用 Finder 的 summary() 获取更准确的下一事项 -->

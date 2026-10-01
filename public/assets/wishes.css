@@ -1,16 +1,20 @@
 /* ===== 视框 ===== */
+/* 便签画布卡：拆分后仅承载画布（标题区与筛选池已移至上方头部卡）。
+   高度 = 原 90vh 视框减去头部卡的大致高度；clamp 保证小屏可用。 */
 .wish-board {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 90vh;
-  min-height: 660px;
+  height: clamp(520px, 74vh, 920px);
   overflow: hidden;
   border-radius: var(--radius-large);
   background: var(--card-bg);
 }
 
-/* 标题区（固定，不参与画布；padding 由 Tailwind 类 px-6 py-6 md:px-9 控制，与其他页面标题一致） */
+/* 标题区（头部卡内；内距由新版页头 .page-head-modern 自带）。
+   拆分后不再有独立氛围底（由头部卡 .page-head-card 的 118deg 卡级渐变
+   承担，与其他页一致）；亦不再提供定位上下文——水印现在锚定头部卡
+   右下（与全站一致）。 */
 .wish-board-header {
   flex-shrink: 0;
 }
@@ -183,89 +187,32 @@
 }
 
 /* ===== 主题页头纪念日徽章 ===== */
-.wish-days-badge-static {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
-  border-radius: 0.75rem;
-  background: var(--btn-regular-bg);
-  padding: 0.5rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--btn-content);
+/* 页头纪念日片（V3 仪表条样式）：容器复用全局 .stat；数字由 wishes.js
+   写入 #wishDaysContent 内的 .wish-days-num，文本沿用 .stat 标签观感 */
+#wishDaysBadge .wish-days-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
-.wish-days-badge-static .wish-days-num {
+#wishDaysBadge .wish-days-num {
   font-size: 1rem;
   font-weight: 800;
+  line-height: 1;
   color: var(--primary);
-  margin: 0 0.15rem;
+  margin: 0 0.1rem;
 }
 
-/* ===== 筛选标签（顶部居中悬浮） ===== */
-.wish-tabs {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 4px;
-  padding: 5px 8px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  z-index: 40;
-  max-width: calc(100% - 140px);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.wish-tabs::-webkit-scrollbar {
-  display: none;
-}
-/* 心愿墙筛选 tab：视觉对齐分组页 FilterTab（src/components/control/FilterTab.astro）。
-   对应 Tailwind 类：h-9 / rounded-[10px] / text-sm(font-size:14px) / font-bold(font-weight:700)
-   / text-75(color:rgba(0,0,0,.75))；active 对应 bg-(--primary) text-white dark:text-black/70。
-   此处为静态 CSS（不经 Tailwind 编译），后续改 tab 尺寸/圆角/激活色时务必两处同步。 */
-.wish-tab {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.75);
-  background: var(--card-bg);
-  border: none;
-  font-family: inherit;
-  transition: all 0.25s;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-.wish-tab:hover {
-  color: rgba(0, 0, 0, 0.9);
-  background: var(--btn-card-bg-hover);
-}
-.wish-tab.active {
-  background: var(--primary);
+/* ===== 筛选池（已上移至头部卡，视觉复用全局 .seg / .seg-item / .seg-thumb；
+   旧「顶部居中悬浮」样式于 2026-09 页头统一时移除）。
+   .wish-tab 仅作为 wishes.js 的选择器钩子（querySelectorAll(".wish-tab")），
+   不再定义视觉；激活外观由 .seg-thumb 滑块承担（由页尾内联脚本驱动）。 ===== */
+/* 激活态字色：其它页由服务端 .seg-active 驱动，心愿墙是客户端切换
+   （wishes.js 只维护 .active），故此处以 .active 为准——避免两类不同步
+   导致「全部」残留白字。深色模式下与全局 .seg-item.seg-active 同色。 */
+#wishTabs .wish-tab.active {
   color: #fff;
 }
-:root.dark .wish-tabs {
-  background: rgba(30, 30, 30, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-:root.dark .wish-tab {
-  color: rgba(255, 255, 255, 0.75);
-}
-:root.dark .wish-tab:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.1);
-}
-:root.dark .wish-tab.active {
-  background: var(--primary);
-  color: rgb(0 0 0 / 0.7);
+:root.dark #wishTabs .wish-tab.active {
+  color: rgb(0 0 0 / 0.72);
 }
 
 /* ===== 空状态 ===== */
@@ -551,10 +498,6 @@
     width: 100%;
     justify-content: center;
     padding-top: 4px;
-  }
-  .wish-tabs {
-    top: 12px;
-    max-width: calc(100% - 24px);
   }
 }
 /* 超窄屏：卡片退化为单列 */

@@ -37,71 +37,95 @@ const stats = [
   title="|#{page.bangumi.title} - ${site.title}|"
   description="#{page.bangumi.description(${site.title})}"
 >
-  <section
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 类型/状态两条胶囊池——
+       氛围渐变由卡片级 .page-head-card 承载（页头与池之间无缝）。
+       curType/curStatus 供两条池的链接拼接与激活判定（原定义在 section 上，
+       拆分后随头部卡走） -->
+  <div
     th:with="
       curType=${bangumis.typeNum},
       curStatus=${bangumis.status}"
-    class="card-base onload-animation mb-4 px-6 py-6 md:px-9"
+    class="card-base page-head-card onload-animation mb-4"
   >
     <PageHeader
-      containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+      containerClass=""
       titleExpr="#{page.bangumi.title}"
       title="追番"
-      iconClass="icon-[mingcute--bilibili-fill]"
-      labelExpr="#{page.bangumi.subtitle}"
-      label="我的追番"
-      subExpr="#{page.bangumi.subtitleCount(${bangumis.total})}"
-      subShowIfExpr="${bangumis != null}"
-      sub="0 部"
+      iconClass="icon-[mingcute--bilibili-line]"
+      eyebrow="BANGUMI"
       filteredExpr="${bangumis != null and (bangumis.typeNum != 1 or bangumis.status != 0)}"
-    />
-
-    <!-- 类型筛选：追番 / 追剧 -->
-    <FilterTabs
-      class="mb-4 flex flex-wrap gap-2"
-      allHrefExpr="@{/bangumis(typeNum=1, status=${curStatus})}"
-      allActiveExpr="curType == 1"
-      allLabelExpr="#{page.bangumi.typeAnime}"
-      allLabel="追番"
-      items={[
+      filteredClearExpr="@{/bangumis(typeNum=1, status=0)}"
+      stats={[
         {
-          hrefExpr: "@{/bangumis(typeNum=2, status=${curStatus})}",
-          activeExpr: "curType == 2",
-          labelExpr: "#{page.bangumi.typeDrama}",
-          label: "追剧",
+          valueExpr: "${bangumis.total}",
+          value: "0",
+          labelExpr: "#{common.stat.bangumi}",
+          label: "追番",
         },
       ]}
     />
 
-    <!-- 状态筛选：全部 / 想看 / 在看 / 已看 -->
-    <FilterTabs
-      class="mb-6 flex flex-wrap gap-2"
-      allHrefExpr="@{/bangumis(typeNum=${curType}, status=0)}"
-      allActiveExpr="curStatus == 0"
-      allLabelExpr="#{common.all}"
-      allLabel="全部"
-      items={[
-        {
-          hrefExpr: "@{/bangumis(typeNum=${curType}, status=1)}",
-          activeExpr: "curStatus == 1",
-          labelExpr: "#{page.bangumi.statusWant}",
-          label: "想看",
-        },
-        {
-          hrefExpr: "@{/bangumis(typeNum=${curType}, status=2)}",
-          activeExpr: "curStatus == 2",
-          labelExpr: "#{page.bangumi.statusWatching}",
-          label: "在看",
-        },
-        {
-          hrefExpr: "@{/bangumis(typeNum=${curType}, status=3)}",
-          activeExpr: "curStatus == 3",
-          labelExpr: "#{page.bangumi.statusWatched}",
-          label: "已看",
-        },
-      ]}
-    />
+    <div class="flex flex-col gap-2.5 px-6 pb-5 md:px-9">
+      <!-- 类型筛选：追番 / 追剧 -->
+      <div class="seg-scroll">
+        <div class="seg" data-filter-seg>
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <FilterTabs
+            segmented
+            allHrefExpr="@{/bangumis(typeNum=1, status=${curStatus})}"
+            allActiveExpr="curType == 1"
+            allLabelExpr="#{page.bangumi.typeAnime}"
+            allLabel="追番"
+            items={[
+              {
+                hrefExpr: "@{/bangumis(typeNum=2, status=${curStatus})}",
+                activeExpr: "curType == 2",
+                labelExpr: "#{page.bangumi.typeDrama}",
+                label: "追剧",
+              },
+            ]}
+          />
+        </div>
+      </div>
 
+      <!-- 状态筛选：全部 / 想看 / 在看 / 已看 -->
+      <div class="seg-scroll">
+        <div class="seg" data-filter-seg>
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <FilterTabs
+            segmented
+            allHrefExpr="@{/bangumis(typeNum=${curType}, status=0)}"
+            allActiveExpr="curStatus == 0"
+            allLabelExpr="#{common.all}"
+            allLabel="全部"
+            items={[
+              {
+                hrefExpr: "@{/bangumis(typeNum=${curType}, status=1)}",
+                activeExpr: "curStatus == 1",
+                labelExpr: "#{page.bangumi.statusWant}",
+                label: "想看",
+              },
+              {
+                hrefExpr: "@{/bangumis(typeNum=${curType}, status=2)}",
+                activeExpr: "curStatus == 2",
+                labelExpr: "#{page.bangumi.statusWatching}",
+                label: "在看",
+              },
+              {
+                hrefExpr: "@{/bangumis(typeNum=${curType}, status=3)}",
+                activeExpr: "curStatus == 3",
+                labelExpr: "#{page.bangumi.statusWatched}",
+                label: "已看",
+              },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 内容卡：追番网格 + 空态 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <!-- 追番卡片网格 -->
     <div
       th:if="${bangumis != null and not #lists.isEmpty(bangumis.items)}"
@@ -210,4 +234,11 @@ const stats = [
   </section>
 
   <Pagination context="bangumis" class="mb-4 onload-animation" />
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
 </MainGridLayout>

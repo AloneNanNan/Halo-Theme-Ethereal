@@ -31,46 +31,71 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <div th:remove="tag" th:with={topWith}>
-    <div class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-      <!-- 标题区域 -->
+    <!-- 头部卡：新版页头（modern，含图标水印）+ 胶囊池分组——氛围渐变由
+         卡片级 .page-head-card 承载（页头与池之间无缝）。池外壳由页面手写
+         以容纳池外追加的「未分类」条目；页头自带内距，卡不再包 px/py -->
+    <div class="card-base page-head-card onload-animation mb-4">
       <PageHeader
-        containerClass="mb-6"
+        containerClass=""
         titleExpr="#{page.archives.title}"
         title="归档"
-        iconClass="icon-[material-symbols--library-books-outline-rounded]"
-        labelExpr="#{page.archives.subtitle}"
-        label="文章归档"
-        sepShowIfExpr="${true}"
-        subExpr="#{page.archives.subtitleCount(${totalPosts})}"
-        sub="共 0 篇文章"
+        iconClass="icon-[material-symbols--archive-outline-rounded]"
+        eyebrow="ARCHIVES"
+        filteredExpr="${filterActive}"
+        filteredClearExpr="@{/archives}"
+        stats={[
+          {
+            valueExpr: "${totalPosts}",
+            value: "0",
+            labelExpr: "#{common.stat.posts}",
+            label: "文章",
+          },
+          {
+            valueExpr: "${#lists.size(categoryFinder.listAll())}",
+            value: "0",
+            labelExpr: "#{common.stat.categories}",
+            label: "分类",
+          },
+        ]}
       />
 
-      <!-- 分类选择器（moment 同款 FilterTabs）：分类切换 + “全部” + 未分类。
+      <!-- 分类选择器（胶囊池）：分类切换 + “全部” + 未分类。
            激活判定/标签/计数均由 service 端表达式完成，无额外脚本；
-           计数挂在 countClass=archive-cat-count 供筛选态脚本读取 -->
-      <div id="archive-filter-tabs" class="mb-5 flex flex-wrap gap-2">
-        <FilterTabs
-          class="flex flex-wrap gap-2"
-          showIfExpr="${not #lists.isEmpty(categoryFinder.listAll())}"
-          allHrefExpr="@{/archives}"
-          allActiveExpr="#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)"
-          countClass="archive-cat-count ml-1 text-30"
-          eachExpr="category : ${categoryFinder.listAll()}"
-          tabTemplate={{
-            hrefExpr: "@{/archives(category=${category.spec.slug})}",
-            activeExpr: "#lists.contains(param.category, category.spec.slug)",
-            labelExpr: "${category.spec.displayName}",
-            countExpr: "${category.postCount}",
-          }}
-        />
-        <FilterTab
-          hrefExpr="@{/archives?uncategorized}"
-          activeExpr="not #lists.isEmpty(param.uncategorized)"
-          labelExpr="#{page.archives.uncategorized}"
-          label="未分类"
-        />
+           计数挂在 countClass=archive-cat-count 供筛选态脚本读取；
+           轨道保留 id，筛选脚本用 getElementById 读取分类名与计数 -->
+      <div class="px-6 pb-5 md:px-9">
+        <div class="seg-scroll">
+          <div class="seg" id="archive-filter-tabs" data-filter-seg>
+            <span class="seg-thumb" aria-hidden="true"></span>
+            <FilterTabs
+              segmented
+              showIfExpr="${not #lists.isEmpty(categoryFinder.listAll())}"
+              allHrefExpr="@{/archives}"
+              allActiveExpr="#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)"
+              countClass="archive-cat-count text-30"
+              eachExpr="category : ${categoryFinder.listAll()}"
+              tabTemplate={{
+                hrefExpr: "@{/archives(category=${category.spec.slug})}",
+                activeExpr:
+                  "#lists.contains(param.category, category.spec.slug)",
+                labelExpr: "${category.spec.displayName}",
+                countExpr: "${category.postCount}",
+              }}
+            />
+            <FilterTab
+              segmented
+              hrefExpr="@{/archives?uncategorized}"
+              activeExpr="not #lists.isEmpty(param.uncategorized)"
+              labelExpr="#{page.archives.uncategorized}"
+              label="未分类"
+            />
+          </div>
+        </div>
       </div>
+    </div>
 
+    <!-- 内容卡：归档列表 + 空态 -->
+    <div class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
       <div class="contents" th:each="archive : ${archives.items}">
         <!-- th:attr 赋值序列不支持裸布尔项，须为 k=v 对 -->
         <div
@@ -218,50 +243,6 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         if (empty) {
           empty.hidden = !(active && rows.length === 0);
         }
-
-        // 页头副标题：筛选态显示「分类名 · 共 N 篇文章」。分类名与文章数取自
-        // 页面内分类选择器（#archive-filter-tabs）的 FilterTab：
-        // href 的 category 参数匹配 → label span 为分类名、
-        // .archive-cat-count 为 category.postCount（服务端数据）；
-        // 未分类无计数值，回退为当前页可见行数（多数站点未分类单页可容）。
-        if (active) {
-          var catName = null;
-          var catCount = null;
-          if (params.has("category")) {
-            var slug = params.get("category");
-            var tabBox = document.getElementById("archive-filter-tabs");
-            var tab = null;
-            if (tabBox) {
-              var links = tabBox.querySelectorAll("a");
-              for (var i3 = 0; i3 < links.length; i3++) {
-                var u = new URL(links[i3].href, window.location.origin);
-                if (u.searchParams.get("category") === slug) {
-                  tab = links[i3];
-                  break;
-                }
-              }
-            }
-            if (tab) {
-              var labelSpan = tab.querySelector("span");
-              catName = labelSpan ? labelSpan.textContent : slug;
-              var cc = tab.querySelector(".archive-cat-count");
-              catCount = cc ? cc.textContent : null;
-            }
-            if (catName == null) catName = slug;
-          } else if (params.has("uncategorized")) {
-            catName = tr("page.archives.uncategorized", "Uncategorized");
-            catCount = String(rows.length);
-          }
-          var subs = document.querySelectorAll(".page-header-sub");
-          if (subs.length && catName) {
-            var displayCount =
-              catCount != null && catCount !== "" ? catCount : "0";
-            subs[0].textContent =
-              catName +
-              " · " +
-              fmt(tr("page.archives.subtitleCount", "{0} posts"), displayCount);
-          }
-        }
       }
 
       if (document.readyState === "loading") {
@@ -272,4 +253,11 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
       document.addEventListener("astro:page-load", run);
     })();
   </script>
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
 </MainGridLayout>

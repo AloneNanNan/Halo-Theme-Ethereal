@@ -72,7 +72,7 @@ function buildGlobeIcon(): SVGSVGElement {
   return svg;
 }
 
-/** 返回按钮图标（关闭叉，hover 随按钮放大） */
+/** 返回按钮图标（关闭叉） */
 function buildCloseIcon(): SVGSVGElement {
   const svg = svgEl("svg", {
     width: "15",
@@ -81,14 +81,13 @@ function buildCloseIcon(): SVGSVGElement {
     fill: "none",
     stroke: "currentColor",
     "stroke-width": "2",
-    class: "transition-transform duration-200 group-hover:scale-110",
   }) as SVGSVGElement;
   svg.appendChild(svgEl("line", { x1: "18", y1: "6", x2: "6", y2: "18" }));
   svg.appendChild(svgEl("line", { x1: "6", y1: "6", x2: "18", y2: "18" }));
   return svg;
 }
 
-/** 继续访问图标（右箭头，hover 随按钮放大） */
+/** 继续访问图标（右箭头） */
 function buildArrowIcon(): SVGSVGElement {
   const svg = svgEl("svg", {
     width: "15",
@@ -97,7 +96,6 @@ function buildArrowIcon(): SVGSVGElement {
     fill: "none",
     stroke: "currentColor",
     "stroke-width": "2",
-    class: "transition-transform duration-200 group-hover:scale-110",
   }) as SVGSVGElement;
   svg.appendChild(svgEl("line", { x1: "5", y1: "12", x2: "19", y2: "12" }));
   svg.appendChild(svgEl("polyline", { points: "12 5 19 12 12 19" }));

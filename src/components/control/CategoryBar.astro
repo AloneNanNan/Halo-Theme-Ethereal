@@ -171,7 +171,13 @@
     gap: 0.375rem;
     text-decoration: none;
     position: relative;
-    transition: color 0.2s ease;
+    /* 按压反馈：颜色 / 背景 / 缩放与全站按钮同参（背景 0.18s、缩放 0.15s 缓动）。
+       不能只写 color——按压缩放会瞬跳（曾出现按压生硬）；本表是 .category-pill
+       过渡的唯一来源，全局样式表不再重复声明（同特异性会互相覆盖）。 */
+    transition:
+      color 0.2s ease,
+      background-color 0.18s ease,
+      scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .category-pill:hover {

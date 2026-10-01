@@ -1,31 +1,46 @@
 ---
-// 分组页页头统一组件（标题 + 副标题行 + 已筛选徽章 + 右侧 slot）。
-// 结构固定、差异参数化，样式与迁移前逐页保持一致：
+// 分组页页头统一组件（眉题 + 标题 + 已筛选徽章 + 统计片 + 右侧 slot）。
+//
+// 结构（V3 仪表条，全站页头统一形态）：
+// - 眉题行：图标 + 英文大写设计词（props.eyebrow，如 ARCHIVES / MOMENTS，静态词不走 i18n）
+// - 「已筛选」徽章：锚头部卡右上角（.ph-filter-chip），点击回 filteredClearExpr
+//   清除筛选（filteredExpr 条件显示）
+// - 大标题：左侧悬空主题色竖线装饰（.page-head-modern h1::before，不占布局）
+// - 右侧 = 统计方片组（stats）+ 动作槽（slot="right"），贴底对齐
+// - 大图标水印（与眉题共用 iconClass，.ph-watermark）
+// 容器自带内边距（样式见 components.css 的 .page-head-modern），页面头部卡
+// 不再包 px/py。
 //
 // 约定（Thymeleaf 表达式字符串传 props，与 FilterTab 一致）：
-// - titleExpr/labelExpr/subExpr/subShowIfExpr/filteredExpr/sepShowIfExpr
-//     完整表达式（含 ${} 或 #{}），如 `${linksTitle}` / `#{common.filtered}`
+// - titleExpr/filteredExpr/filteredClearExpr 传完整表达式（含 ${} 或 #{}），
+//   如 `${linksTitle}` / `#{common.filtered}` / `@{/links}`
 // - titleExpr 缺省时 h1 内容改由默认 slot 渲染（wishes 用嵌套 span）
 // - iconClass 只传 icon-[...] 名字面量（如 `icon-[material-symbols--psychology]`），
-//     组件统一追加 `text-base text-(--primary)`。名字面量留在各页源码，
-//     Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${icon}]` 动态拼接
+//   eyebrow 内用 0.9rem、水印由 .ph-watermark 控制 8rem。名字面量留在各页源码，
+//   Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${icon}]` 动态拼接
 // - filteredExpr 缺省则整个徽章不渲染（wishes 为客户端筛选无 URL 参数）
-// - sepShowIfExpr 缺省则 `·` 恒显（与迁移前一致）；wishes 用它条件显隐。
-//     注意：不能默认跟随 subShowIfExpr——links/equipments/portfolio 的 `·`
-//     恒显而 sub 条件显，两者语义不同，必须显式传
-// - 右侧按钮/徽章放 `slot="right"`（links 随机访问 / moments RSS / wishes 纪念日）
+// - 右侧按钮/徽章放 slot="right"（links 随机访问 / moments RSS / wishes 纪念日）
+// - 统计方片组 stats：数值 + 词条，与 slot 动作钮同排、贴底对齐；无数字可展示的
+//   页面不传。valueExpr 传数值表达式（含 ${}），labelExpr 传词条表达式（#{}）；
+//   value / label 为 SSR 占位内容。
+export interface HeaderStat {
+  valueExpr: string;
+  value: string;
+  labelExpr: string;
+  label: string;
+}
+
 interface Props {
   containerClass: string;
   titleExpr?: string;
   title?: string;
   iconClass: string;
-  labelExpr: string;
-  label: string;
-  sepShowIfExpr?: string;
-  subExpr?: string;
-  subShowIfExpr?: string;
-  sub?: string;
+  /** 英文大写眉题：静态设计词（如 ARCHIVES / MOMENTS），不走 i18n */
+  eyebrow?: string;
   filteredExpr?: string;
+  /** 「已筛选」徽章的清除链接（Thymeleaf @{} 表达式，点击回无参/默认地址） */
+  filteredClearExpr?: string;
+  stats?: HeaderStat[];
 }
 
 const {
@@ -33,52 +48,61 @@ const {
   titleExpr,
   title = "",
   iconClass,
-  labelExpr,
-  label,
-  sepShowIfExpr,
-  subExpr,
-  subShowIfExpr,
-  sub = "",
+  eyebrow,
   filteredExpr,
+  filteredClearExpr,
+  stats,
 } = Astro.props;
+
+// 右侧区（统计片 + 动作槽）是否有内容渲染：都没有时整个右区不输出
+const hasRight = Astro.slots.has("right");
 ---
 
-<div class={containerClass}>
-  <div class="min-w-0">
-    <h1
-      class="relative mb-2 text-3xl font-bold text-90 before:absolute before:-left-4.5 before:top-3 before:h-5 before:w-1 before:rounded-md before:bg-(--primary) md:text-4xl"
-      th:text={titleExpr}
-    >
-      {titleExpr ? title : <slot />}
-    </h1>
-    <div class="flex flex-wrap items-center gap-1.5 text-sm">
-      <span class={`${iconClass} text-base text-(--primary)`}></span>
-      <span class="font-bold text-(--primary)" th:text={labelExpr}>{label}</span
+<div class={`page-head-modern ${containerClass}`.trim()}>
+  <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+    <div class="min-w-0">
+      <div
+        class="inline-flex items-center gap-1.5 text-[0.72rem] font-extrabold tracking-[0.12em] text-(--primary)"
       >
-      <span th:if={sepShowIfExpr} class="text-30">·</span>
-      {
-        subExpr && (
-          <span
-            th:if={subShowIfExpr}
-            class="text-50 page-header-sub"
-            th:text={subExpr}
-          >
-            {sub}
-          </span>
-        )
-      }
-      {
-        filteredExpr && (
-          <span
-            th:if={filteredExpr}
-            class="rounded-md bg-(--btn-regular-bg) px-2 py-1 text-xs font-bold text-(--btn-content)"
-            th:text="#{common.filtered}"
-          >
-            已筛选
-          </span>
-        )
-      }
+        <span class={`${iconClass} text-[0.9rem]`}></span>
+        <span>{eyebrow}</span>
+      </div>
+      <h1
+        class="mt-1.5 text-[1.7rem] leading-[1.2] font-extrabold tracking-tight text-90 md:text-[1.95rem]"
+        th:text={titleExpr}
+      >
+        {titleExpr ? title : <slot />}
+      </h1>
     </div>
+    {
+      (stats && stats.length > 0) || hasRight ? (
+        <div class="flex flex-wrap items-end gap-2.5">
+          {stats?.map((st) => (
+            <div class="stat">
+              <b th:text={st.valueExpr}>{st.value}</b>
+              <span th:text={st.labelExpr}>{st.label}</span>
+            </div>
+          ))}
+          <slot name="right" />
+        </div>
+      ) : null
+    }
   </div>
-  <slot name="right" />
+  {
+    filteredExpr && (
+      <a
+        th:if={filteredExpr}
+        th:href={filteredClearExpr}
+        th:title="#{common.clearFilter}"
+        class="ph-filter-chip"
+      >
+        <span th:text="#{common.filtered}">已筛选</span>
+        <span
+          class="icon-[material-symbols--close-rounded] text-[0.8rem]"
+          aria-hidden="true"
+        />
+      </a>
+    )
+  }
+  <span class={`ph-watermark ${iconClass}`} aria-hidden="true"></span>
 </div>

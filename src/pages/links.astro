@@ -45,31 +45,45 @@ import PageHeader from "../components/control/PageHeader.astro";
     </style>
   </Fragment>
 
-  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 胶囊池分组——氛围渐变由
+       卡片级 .page-head-card 承载（页头与池之间无缝）。无分组时池区不渲染
+       （头部卡保留）；页头自带内距，卡不再包 px/py -->
+  <div class="card-base page-head-card onload-animation mb-4">
     <PageHeader
-      containerClass="mb-6 flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between"
+      containerClass=""
       titleExpr="${linksTitle}"
       title="友情链接"
-      iconClass="icon-[material-symbols--diversity-3-rounded]"
-      labelExpr="#{page.links.subtitle}"
-      label="朋友们"
-      subExpr="#{page.links.subtitleCount(${#aggregates.sum(groups.![links.size()])})}"
-      subShowIfExpr="${groups != null and not #lists.isEmpty(groups)}"
-      sub="0 个链接"
+      iconClass="icon-[material-symbols--handshake-outline-rounded]"
+      eyebrow="LINKS"
       filteredExpr="${not #lists.isEmpty(param.group)}"
+      filteredClearExpr="@{/links}"
+      stats={[
+        {
+          valueExpr: "${#aggregates.sum(groups.![links.size()])}",
+          value: "0",
+          labelExpr: "#{common.stat.friends}",
+          label: "朋友",
+        },
+        {
+          valueExpr: "${#lists.size(groups)}",
+          value: "0",
+          labelExpr: "#{common.stat.groups}",
+          label: "分组",
+        },
+      ]}
     >
       <button
         th:if="${theme.config?.links?.features?.enable_random_visit != false && not #lists.isEmpty(groups)}"
         type="button"
         id="random-visit-btn"
         th:attr="data-random-groups=${theme.config?.links?.features?.random_visit_groups}"
-        class="random-visit-btn btn-regular group h-11 w-fit rounded-xl px-4 text-sm font-bold active:scale-95"
+        class="random-visit-btn act-outline group w-fit active:scale-95"
         title="随机访问一个友链"
         th:title="#{page.links.randomVisitTitle}"
         slot="right"
       >
         <span
-          class="random-visit-icon icon-[material-symbols--shuffle-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+          class="random-visit-icon icon-[material-symbols--shuffle-rounded] text-base"
         ></span>
         <span class="random-visit-label" th:text="#{page.links.randomVisit}"
           >随机访问</span
@@ -77,20 +91,32 @@ import PageHeader from "../components/control/PageHeader.astro";
       </button>
     </PageHeader>
 
-    <FilterTabs
-      showIfExpr="${not #lists.isEmpty(groups)}"
-      allHrefExpr="@{/links}"
-      allActiveExpr="#lists.isEmpty(param.group)"
-      eachExpr="group : ${groups}"
-      tabTemplate={{
-        hrefExpr: "@{/links(group=${group.spec.displayName})}",
-        activeExpr: "#lists.contains(param.group, group.spec.displayName)",
-        labelExpr: "${group.spec.displayName}",
-        countExpr: "${#lists.size(group.links)}",
-        showIfExpr: "${not #lists.isEmpty(group.links)}",
-      }}
-    />
+    <div class="px-6 pb-5 md:px-9" th:if="${not #lists.isEmpty(groups)}">
+      <div class="seg-scroll">
+        <div class="seg" data-filter-seg>
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <FilterTabs
+            segmented
+            showIfExpr="${not #lists.isEmpty(groups)}"
+            allHrefExpr="@{/links}"
+            allActiveExpr="#lists.isEmpty(param.group)"
+            eachExpr="group : ${groups}"
+            tabTemplate={{
+              hrefExpr: "@{/links(group=${group.spec.displayName})}",
+              activeExpr:
+                "#lists.contains(param.group, group.spec.displayName)",
+              labelExpr: "${group.spec.displayName}",
+              countExpr: "${#lists.size(group.links)}",
+              showIfExpr: "${not #lists.isEmpty(group.links)}",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- 内容卡：友链列表 + 空态 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <div th:if="${not #lists.isEmpty(groups)}" class="space-y-8">
       <section
         th:each="group, groupStat : ${groups}"
@@ -420,7 +446,7 @@ import PageHeader from "../components/control/PageHeader.astro";
               class="btn-regular group h-11 rounded-xl px-5 text-sm font-bold active:scale-95"
             >
               <span
-                class="icon-[material-symbols--rocket-launch-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+                class="icon-[material-symbols--rocket-launch-rounded] mr-1.5 text-base"
               ></span>
               <span th:text="#{page.links.applyButton}">申请友链</span>
             </button>
@@ -543,6 +569,13 @@ import PageHeader from "../components/control/PageHeader.astro";
        （按钮/模态框不存在即不绑定，行为等价，见 links.bundle.js 各 IIFE 注释） -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/links.bundle.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
     is:inline></script>
 

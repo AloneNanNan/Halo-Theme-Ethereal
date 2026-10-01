@@ -232,9 +232,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 aria-label="分享文章"
                 th:aria-label="#{post.shareTitle}"
               >
-                <span
-                  class="icon-[tabler--share] mr-1.5 text-base transition-transform group-hover:scale-110"
-                ></span>
+                <span class="icon-[tabler--share] mr-1.5 text-base"></span>
                 <span th:text="#{post.share}">分享</span>
               </button>
               <button
@@ -246,7 +244,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 th:aria-label="#{post.rewardTitle}"
               >
                 <span
-                  class="icon-[material-symbols--volunteer-activism-rounded] mr-1.5 text-base transition-transform group-hover:scale-110"
+                  class="icon-[material-symbols--volunteer-activism-rounded] mr-1.5 text-base"
                 ></span>
                 <span th:text="#{post.reward}">打赏</span>
               </button>

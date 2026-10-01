@@ -6,8 +6,14 @@
 // - activeExpr     裸布尔表达式（不含 ${}），组件注入三元追加激活样式，如 `#lists.contains(param.group, group.spec.displayName)`
 // - labelExpr/countExpr   完整表达式（含 ${} 或 #{}），如 `${group.spec.displayName}` / `${#lists.size(group.links)}`
 // - showIfExpr/withExpr/countShowIfExpr   完整表达式（含 ${}），如 `${frontendCount > 0}`
-// - size           默认 `sm`（h-9）；`lg`（h-10）。两者均带 shrink-0，适配 photos 横向滚动容器
+// - size           默认 `sm`（h-9）；`lg`（h-10）。经典模式才用（池式统一 34px）
 // - countClass     计数 span 样式，默认 `ml-1 text-30`；photos 传 `ml-2 text-xs opacity-70`
+//                  （池式下自动附挂 .seg-cnt，ml-1 会被样式覆盖、间距交给轨道 gap）
+// - segmented      胶囊池条目模式：输出透明条目（.seg-item），激活只加 .seg-active，
+//                  激活底色由页面的 .seg-thumb 浮块承载（样式见 components.css）。
+//                  池外壳（.seg-scroll/.seg/thumb）由页面手写，组件不产出。
+// - attrs          额外透传到 <a> 的原生属性（如 `{ "data-no-swup": "1" }`，告诉 Swup 别接管
+//                  本次点击，交给就地筛选脚本）。默认空对象 ⇒ 不影响既有页面输出。
 interface Props {
   hrefExpr?: string;
   activeExpr?: string;
@@ -19,6 +25,8 @@ interface Props {
   label?: string;
   countClass?: string;
   size?: "sm" | "lg";
+  segmented?: boolean;
+  attrs?: Record<string, string>;
 }
 
 const {
@@ -32,14 +40,22 @@ const {
   label,
   countClass = "ml-1 text-30",
   size = "sm",
+  segmented = false,
+  attrs = {},
 } = Astro.props;
 
-// no-card-border 标记：分组/筛选标签不是卡片，「卡片边框和阴影」开关按此类排除
-const tabClass = `btn-card no-card-border shrink-0 rounded-[10px] px-3 text-sm font-bold text-75 ${
-  size === "lg" ? "h-10" : "h-9"
-}`;
+// 经典模式：按钮卡形态（btn-card，非卡片，卡片边框开关按 no-card-border 排除）；
+// 池式模式：透明条目，视觉全部交给 .seg-item / .seg-thumb
+const tabClass = segmented
+  ? "seg-item shrink-0"
+  : `btn-card no-card-border shrink-0 rounded-[10px] px-3 text-sm font-bold text-75 ${
+      size === "lg" ? "h-10" : "h-9"
+    }`;
+const activeCls = segmented
+  ? " seg-active"
+  : " bg-(--primary) text-white dark:text-black/70";
 const activeAppend = activeExpr
-  ? `\${${activeExpr} ? ' bg-(--primary) text-white dark:text-black/70' : ''}`
+  ? `\${${activeExpr} ? '${activeCls}' : ''}`
   : undefined;
 ---
 
@@ -49,11 +65,16 @@ const activeAppend = activeExpr
   th:href={hrefExpr}
   th:classappend={activeAppend}
   class={tabClass}
+  {...attrs}
 >
   <span th:text={labelExpr}>{label}</span>
   {
     countExpr && (
-      <span th:if={countShowIfExpr} class={countClass} th:text={countExpr}>
+      <span
+        th:if={countShowIfExpr}
+        class={segmented ? `seg-cnt ${countClass}` : countClass}
+        th:text={countExpr}
+      >
         0
       </span>
     )

@@ -10,35 +10,59 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="#{page.equipments.description(${site.title})}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 胶囊池分组——氛围渐变由
+       卡片级 .page-head-card 承载（页头与池之间无缝）；无分组时池区不渲染 -->
+  <div class="card-base page-head-card onload-animation mb-4">
     <!-- 标题区域 -->
     <PageHeader
-      containerClass="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"
+      containerClass=""
       titleExpr="${title}"
       title="装备管理"
-      iconClass="icon-[material-symbols--devices-rounded]"
-      labelExpr="#{page.equipments.subtitle}"
-      label="我的装备"
-      subExpr="#{page.equipments.subtitleCount(${equipments.total})}"
-      subShowIfExpr="${equipments != null}"
-      sub="0 个装备"
+      iconClass="icon-[material-symbols--devices-outline-rounded]"
+      eyebrow="EQUIPMENTS"
       filteredExpr="${not #lists.isEmpty(param.group)}"
+      filteredClearExpr="@{/equipments}"
+      stats={[
+        {
+          valueExpr: "${equipments.total}",
+          value: "0",
+          labelExpr: "#{common.stat.gear}",
+          label: "装备",
+        },
+        {
+          valueExpr: "${#lists.size(groups)}",
+          value: "0",
+          labelExpr: "#{common.stat.groups}",
+          label: "分组",
+        },
+      ]}
     />
 
     <!-- 分组标签 -->
-    <FilterTabs
-      showIfExpr="${not #lists.isEmpty(groups)}"
-      allHrefExpr="@{/equipments}"
-      allActiveExpr="#lists.isEmpty(param.group)"
-      eachExpr="group : ${groups}"
-      tabTemplate={{
-        hrefExpr: "@{/equipments(group=${group.metadata.name})}",
-        activeExpr: "#lists.contains(param.group, group.metadata.name)",
-        labelExpr: "${group.spec.displayName}",
-        countExpr: "${group.status.equipmentCount}",
-      }}
-    />
+    <div class="px-6 pb-5 md:px-9" th:if="${not #lists.isEmpty(groups)}">
+      <div class="seg-scroll">
+        <div class="seg" data-filter-seg>
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <FilterTabs
+            segmented
+            showIfExpr="${not #lists.isEmpty(groups)}"
+            allHrefExpr="@{/equipments}"
+            allActiveExpr="#lists.isEmpty(param.group)"
+            eachExpr="group : ${groups}"
+            tabTemplate={{
+              hrefExpr: "@{/equipments(group=${group.metadata.name})}",
+              activeExpr: "#lists.contains(param.group, group.metadata.name)",
+              labelExpr: "${group.spec.displayName}",
+              countExpr: "${group.status.equipmentCount}",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- 内容卡：装备网格 + 空态 -->
+  <section class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
     <!-- 装备卡片网格（统一分页） -->
     <div
       th:if="${equipments != null and not #lists.isEmpty(equipments.items)}"
@@ -124,4 +148,11 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   </section>
 
   <EquipmentPagination context="equipments" class="mb-4 onload-animation" />
+
+  <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
+       Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
 </MainGridLayout>

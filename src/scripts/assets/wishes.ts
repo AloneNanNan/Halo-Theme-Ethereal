@@ -168,7 +168,12 @@
     });
   }
 
-  /* ===== 筛选 ===== */
+  /* ===== 筛选 =====
+     切换分组时重播卡片入场动画（照搬 theme-Serenity / 作者站点实现）：
+     先清掉旧动画并显式置透明 → 强制回流 → 重新赋 wishCardIn（按可见序号
+     40ms 错峰淡入）。解决此前 display 恢复触发的原生重播缺陷——旧动画
+     只有 forwards（无 backwards），delay 期间会先按自然态闪现一下再消失
+     淡入（用户反馈的「闪一下」）。首次初始化同样走此函数，与切换同节奏。 */
   function filterCards() {
     var body = el.body;
     if (!body) return;
@@ -177,8 +182,17 @@
     cards.forEach(function (card) {
       var type = card.getAttribute("data-wish-type");
       var show = currentFilter === "all" || type === currentFilter;
-      card.style.display = show ? "" : "none";
-      if (show) visible++;
+      if (!show) {
+        card.style.display = "none";
+        return;
+      }
+      card.style.display = "";
+      card.style.animation = "none";
+      card.style.opacity = "0";
+      void card.offsetWidth; // 强制回流：确保动画重播从 0% 开始
+      card.style.animation =
+        "wishCardIn 0.4s ease " + visible * 40 + "ms forwards";
+      visible++;
     });
     if (el.filterEmpty) {
       el.filterEmpty.style.display = visible === 0 ? "block" : "none";

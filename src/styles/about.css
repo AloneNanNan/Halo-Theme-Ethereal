@@ -30,11 +30,30 @@
 }
 
 /* ================= ② 页头：身份卡 =================
-   卡面保持纯净：不加顶部柔光（早前的 ::after 渐隐高光已移除）。 */
+   卡面与全站页头卡（.page-head-card）同款氛围渐变：主题色自左上散开
+   （118deg、7% → 58% 处透明），与右下角水印同族；早前的 ::after
+   渐隐高光不做（渐变已承担"光感"）。 */
 .about-hero-card {
   position: relative;
   overflow: hidden;
   padding: clamp(1.1rem, 2.5vw, 1.65rem);
+  background-image: linear-gradient(
+    118deg,
+    color-mix(in oklab, var(--primary) 7%, transparent),
+    transparent 58%
+  );
+}
+/* 右下角大图标水印：参数与各页页头 .ph-watermark 一致（本卡为自定义身份卡）。
+   内容行自带 relative z-1 压在水印上；越出卡片的部分由 overflow:hidden 裁剪 */
+.about-hero-watermark {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -1.6rem;
+  font-size: 8rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--primary) 9%, transparent);
+  transform: rotate(-8deg);
+  pointer-events: none;
 }
 /* 头像 = 主色描边相框 + 内层留白 + 圆角图 */
 .about-avatar {
@@ -133,7 +152,10 @@
 }
 
 /* ================= ③ 页头按钮 =================
-   按钮样式刻意与「心愿墙」页 .wish-bar-btn 逐属性一致。 */
+   V3 仪表条适配：视觉语言对齐各页页头的动作钮 / 统计片（components.css 的
+   .act-outline / .stat）——38px 高、12px 圆角、主题色淡描边；第 1 颗
+   （--primary）用统计片配方（6% 底 + 13% 描边 + 主题色文字），其余
+   （--ghost）走描边胶囊配方。竖排布局保持不变。 */
 /* 移动端并排等宽两个、≥640px 回到纵向堆叠（只动容器布局，.about-btn 自身不变） */
 /* 按钮列：条目竖排（数量上限由设置项的 max: 3 管）。
    它是身份卡行（.about-hero-card 的首个 div）的第三个 flex item，与头像、文字列并列：
@@ -156,15 +178,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 9px 18px;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
   border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1;
   white-space: nowrap;
   text-decoration: none;
-  transition: all 0.25s ease;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .about-ico {
   width: 1.05em;
@@ -180,32 +208,22 @@
   height: 1.12em;
 }
 .about-btn--primary {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 8px color-mix(in oklab, var(--primary) 40%, transparent);
-}
-:root.dark .about-btn--primary {
-  color: rgb(0 0 0 / 0.7);
+  background: color-mix(in oklab, var(--primary) 6%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 13%, transparent);
+  color: var(--primary);
 }
 .about-btn--primary:hover {
-  background: color-mix(in oklab, var(--primary) 85%, #000);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 50%, transparent);
-}
-:root.dark .about-btn--primary:hover {
-  background: color-mix(in oklab, var(--primary) 85%, #fff);
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 30%, transparent);
 }
 .about-btn--ghost {
-  background: var(--btn-regular-bg);
+  background: transparent;
+  border-color: color-mix(in oklab, var(--primary) 22%, transparent);
   color: var(--btn-content);
-  border: 1px solid var(--line-color);
 }
 .about-btn--ghost:hover {
-  background: var(--btn-regular-bg-hover);
-  color: var(--primary);
-  border-color: color-mix(in oklab, var(--primary) 45%, transparent);
-  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--primary) 9%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 36%, transparent);
 }
 
 /* ================= ④ 顶部导航（长条菜单） =================
@@ -611,6 +629,21 @@
     transform: translateY(-1px);
     box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 14%, transparent);
   }
+}
+/* 点击按压反馈（与全站按钮一致：底色加深 + 轻缩、按下不再上浮）。两条带
+   body.card-hover-lift-enabled 的选择器与上方 hover 上浮规则同特异性，靠源码
+   顺序在按下时接管（transform 由 translateY 变为 scale）；transform 有卡片自身
+   的 0.18s 过渡，缩放平滑。 */
+.about-proj:active,
+.about-friend:active,
+body.card-hover-lift-enabled .about-proj:active,
+body.card-hover-lift-enabled .about-friend:active {
+  box-shadow: none;
+  transform: scale(0.98);
+}
+.about-proj:active,
+.about-friend:active {
+  background: color-mix(in srgb, var(--primary) 15%, var(--card-bg));
 }
 .about-friend-logo,
 .about-friend-logo-ph {
