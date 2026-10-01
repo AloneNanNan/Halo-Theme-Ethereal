@@ -16,6 +16,9 @@ const MOBILE_BREAKPOINT = 1024;
 // 滚动方向感知死区（px）：小于该位移不翻转显隐。触控板微动、滚动惯性回弹、
 // 移动端橡皮筋都会产生 1~2px 的反向 delta，无死区会让导航栏高频闪烁
 const SCROLL_DIRECTION_DEADZONE_PX = 8;
+// 程序化定位锁 TTL（ms）：<html data-navbar-lock="<时间戳>"> 超时自动失效（自愈，
+// 页面脚本异常未释放时不会把导航栏永久锁死）
+const NAVBAR_LOCK_TTL_MS = 8000;
 
 // 缓存 DOM 引用，避免每次 scroll 帧重复 getElementById
 // 使用 isConnected 自动检测 Swup 页面切换后的失效引用
@@ -92,6 +95,14 @@ function scrollFunction() {
     !!navbar &&
     document.documentElement.dataset.navbarFixed !== "true";
 
+  // 程序化定位锁（<html data-navbar-lock>，见 pages/moment.astro 的 #comment 落点校正）：
+  // 定位期间换页后文档瞬时变矮被浏览器钳到顶、锚点先滚一小段，都会产生与用户意图
+  // 无关的反向位移；不加锁会「导航栏先展开、内容随吸顶让位量下移 72px、随后又被
+  // 收起」，观感上就是顿一下。锁存期间不响应这类反向位移（深层照常收起）
+  const navbarLockRaw = document.documentElement.dataset.navbarLock;
+  const navbarLocked =
+    !!navbarLockRaw && Date.now() - Number(navbarLockRaw) < NAVBAR_LOCK_TTL_MS;
+
   if (navDynamic) {
     // threshold = bannerHeightPx - navbarHeight - panelOverlap(rem→px) - baseSpacing
     const threshold =
@@ -99,7 +110,11 @@ function scrollFunction() {
       NAVBAR_HEIGHT_PX -
       MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * BASE_SPACING_PX -
       BASE_SPACING_PX;
-    if (scrollY <= threshold) {
+    if (navbarLocked) {
+      // 定位中：忽略方向判定（瞬时回顶展开是抖动来源），只做「已滚出顶部区 → 收起」
+      if (scrollY > threshold) navbarHidden = true;
+      lastScrollY = scrollY;
+    } else if (scrollY <= threshold) {
       // 顶部区恒显示（不受死区约束，回顶立即出现）
       navbarHidden = false;
       lastScrollY = scrollY;

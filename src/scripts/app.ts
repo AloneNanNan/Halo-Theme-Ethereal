@@ -810,6 +810,17 @@ function setupSwup() {
         );
         return;
       }
+      // 页面级定位接管：<html data-scroll-owner="<时间戳>"> 由瞬间详情页的内联脚本
+      // 在 content:replace 时置位（见 pages/moment.astro 的 #comment 落点校正）。
+      // 置位即跳过插件的锚点滚动——插件用 scrl 引擎做动画、页面脚本要做落点校正，
+      // 两个驱动同时写滚动位置会互相抢；交给页面脚本独占后落位一次到位、不再抖动。
+      // 一次性消费 + TTL：旗标过期即忽略，不影响其它 hash 跳转的默认锚点滚动。
+      const SCROLL_OWNER_TTL_MS = 2000;
+      const scrollOwner = document.documentElement.dataset.scrollOwner;
+      if (scrollOwner) {
+        delete document.documentElement.dataset.scrollOwner;
+        if (Date.now() - Number(scrollOwner) < SCROLL_OWNER_TTL_MS) return;
+      }
       defaultHandler?.(visit, _args);
     },
   );

@@ -18,6 +18,54 @@
   --content-meta: color-mix(in srgb, var(--deep-text) 68%, transparent);
 }
 
+/* ================= ⓪ 卡片级入场错峰 =================
+   卡片堆叠页：错峰落在卡片之间（身份卡 → 导航 → 左右两列 → 页脚），卡内条目不再逐项延迟。
+   延迟公式与列表页 inline 写法同源（content-delay + n × step，收敛到 --dur-entry-max，
+   疾速档自动归零）；静态区块没有 th:each 索引可用，故用 nth-of-type 排延迟
+   （避免插入非 section 兄弟节点时序号错位，同 #post-container 阶梯）。两列并行，各从 +2 起。 */
+.about-hero-card {
+  animation-delay: min(var(--content-delay), var(--dur-entry-max, 400ms));
+}
+.about-subnav {
+  animation-delay: min(
+    calc(var(--content-delay) + 1 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+.about-col-main > section:nth-of-type(1),
+.about-col-side > section:nth-of-type(1) {
+  animation-delay: min(
+    calc(var(--content-delay) + 2 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+.about-col-main > section:nth-of-type(2),
+.about-col-side > section:nth-of-type(2) {
+  animation-delay: min(
+    calc(var(--content-delay) + 3 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+.about-col-main > section:nth-of-type(3),
+.about-col-side > section:nth-of-type(3) {
+  animation-delay: min(
+    calc(var(--content-delay) + 4 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+.about-col-side > section:nth-of-type(4) {
+  animation-delay: min(
+    calc(var(--content-delay) + 5 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+.about-footer-card {
+  animation-delay: min(
+    calc(var(--content-delay) + 6 * var(--dur-entry-step)),
+    var(--dur-entry-max, 400ms)
+  );
+}
+
 /* ================= ① 卡级外壳 =================
    ⚠️ 刻意不加边框、不加阴影：卡片直接融进页面背景，只靠间距分隔。
    加壳不符合本主题设计语言，改动前勿擅自补回。 */
@@ -152,7 +200,7 @@
 }
 
 /* ================= ③ 页头按钮 =================
-   V3 仪表条适配：视觉语言对齐各页页头的动作钮 / 统计片（components.css 的
+   与各页页头的动作钮 / 统计片同语言（components.css 的
    .act-outline / .stat）——38px 高、12px 圆角、主题色淡描边；第 1 颗
    （--primary）用统计片配方（6% 底 + 13% 描边 + 主题色文字），其余
    （--ghost）走描边胶囊配方。竖排布局保持不变。 */

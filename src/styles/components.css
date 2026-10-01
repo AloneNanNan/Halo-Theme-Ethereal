@@ -94,11 +94,16 @@
      自带的 active:scale-*；about 页头按钮没有该 Tailwind 类，单独补同幅度缩放。
      （分类导航栏 .category-pill 的过渡在其组件样式表内维护，不在此重复声明） */
   :root .act-outline:active,
-  :root .seg-item:not(.seg-active):active,
+  :root .seg-item:not(.seg-active):not(.active):active,
   :root .about-btn:active,
   :root .category-pill:not([data-active]):active {
     background: color-mix(in oklab, var(--primary) 20%, transparent);
   }
+  /* 池项按压内凹（缩小）：与页头动作钮（.act-outline 的 active:scale-95）、
+     分类导航栏（.category-pill）同参。排除激活项与心愿墙 .active 项——它们压在
+     .seg-thumb 浮块上，条目缩小会与浮块错位；缩放过渡已在 .seg-item 上声明，
+     缩写在布局外的 scale 属性，不影响 filter-seg.js 量取的 offsetWidth/offsetLeft */
+  :root .seg-item:not(.seg-active):not(.active):active,
   :root .about-btn:active {
     scale: 0.95;
   }
@@ -1673,6 +1678,96 @@ audio.moment-media-nonphoto {
   display: none;
 }
 
+/* ===== 瞬间卡片（MomentCard.astro，moments / moment 两页共用） =====
+   - 外壳：card-base（边框 / 阴影跟随「卡片边框与阴影」开关，与页头卡同口径），无描边底；
+   - 缩进轨道（模板 md:ml-[4.25rem]）：正文 / 媒体 / 操作栏对齐作者名，移动端归零；
+   - 操作栏胶囊 .moment-action：点赞「已投」高亮走 .is-upvoted（upvote.js 切换），
+     文字色只用单一类控制，避免与 .btn-regular 的 dark:text-white/75 打特异性官司；
+   - 复制按钮：默认隐藏，卡片 hover / 键盘聚焦才渐现（触屏常显）；
+   - 水印：右下角 bolt，与页头水印同族（位置 / 大小 / 浓度三处参数可微调）。 */
+
+/* 复制链接按钮（模板里位于昵称行内 ml-auto + -my-2：不撑高昵称行；
+   .moment-card 在这里只作「卡片 hover 渐现」的作用域钩子） */
+.moment-copy-btn {
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+
+.moment-card:hover .moment-copy-btn,
+.moment-card:focus-within .moment-copy-btn {
+  opacity: 1;
+}
+
+/* 触屏没有 hover：常显 */
+@media (hover: none) {
+  .moment-copy-btn {
+    opacity: 1;
+  }
+}
+
+/* 复制成功反馈：链接图标切对勾（moment-copy.js 加 .is-copied，1.5s 后移除） */
+.moment-copy-btn .moment-copy-check {
+  display: none;
+}
+
+.moment-copy-btn.is-copied .moment-copy-icon {
+  display: none;
+}
+
+.moment-copy-btn.is-copied .moment-copy-check {
+  display: grid;
+  color: var(--primary);
+}
+
+.moment-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding-inline: 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--btn-regular-bg);
+  color: var(--btn-content);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.15s;
+}
+
+.moment-action:hover {
+  background: var(--btn-regular-bg-hover);
+}
+
+.moment-action:active {
+  background: var(--btn-regular-bg-active);
+  transform: scale(0.95);
+}
+
+/* 已点赞（upvote.js 切换）：主题色高亮 + 禁用点击（状态全在类上，脚本不写内联样式，
+   失败回滚只需移除本类）。加一层淡主题色底：暗色下 --btn-content 与 --primary
+   太接近，只换文字色看不出变化 */
+.moment-action.is-upvoted {
+  pointer-events: none;
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+.moment-card-watermark {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.85rem;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--primary) 13%, transparent);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
 /* PhotoSwipe 打开/关闭动画期间：缩略图复位（清除 hover 放大的 transform 与过渡），
    保证 zoom 过渡采样到真实的缩略图矩形（由 content-photoswipe.ts 切换 body 类）。
    !important 用于覆盖模板上的 Tailwind hover 放大工具类（位于 utilities 层） */
@@ -2072,7 +2167,7 @@ body.card-border-enabled .pagination-pages .btn-card {
 }
 
 /* ==========================================================================
-   V3 页头组件（设计实验室定稿）：
+   页头组件（全站统一形态）：
    - .stat：统计方片（数字 + 词条），页头右侧与动作钮同排、贴底对齐
    - .act-outline：描边胶囊动作钮（随机访问 / RSS 等），比 btn-regular 轻一档
    色彩语言与池（.seg）/ 徽章一致：primary 淡色 + 描边，深色模式自动适配
@@ -2137,33 +2232,59 @@ body.card-border-enabled .pagination-pages .btn-card {
   outline-offset: 2px;
 }
 
-/* 「已筛选」清除钮：锚定头部卡右上角（.page-head-card 提供定位上下文；
-   页头区 .page-head-modern 刻意无定位）。点击回无参地址清除筛选。 */
+/* 「已筛选」清除钮：排在统计片左侧、与统计片/动作钮同排贴底对齐。
+   外形沿用统计方片语言（38px 高 / 12px 圆角 / 同字号层级），但取主题色淡底 +
+   主题色描边 + 圆底 ✕——比统计片（6% 底 / 13% 描边）重一档，
+   一眼是「可点的筛选状态」而非静态数字。点击回无参地址清除筛选。 */
 .ph-filter-chip {
-  position: absolute;
-  top: 1.4rem;
-  right: 1.5rem;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--btn-regular-bg);
-  color: var(--btn-content);
-  font-size: 0.6875rem;
+  gap: 7px;
+  height: 38px;
+  padding: 0 11px 0 13px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--primary) 13%, transparent);
+  border: 1px solid color-mix(in oklab, var(--primary) 32%, transparent);
+  color: var(--primary);
+  font-size: 0.75rem;
   font-weight: 700;
-  transition: background-color 0.18s ease;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    scale 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .ph-filter-chip:hover {
-  background: var(--btn-regular-bg-hover);
+  background: color-mix(in oklab, var(--primary) 19%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 48%, transparent);
+}
+.ph-filter-chip:active {
+  scale: 0.96;
 }
 .ph-filter-chip:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
-@media (min-width: 768px) {
-  .ph-filter-chip {
-    right: 2.25rem;
-  }
+/* 圆底 ✕：静止态用 --deep-text（浅色模式近黑 / 深色模式近白，自带一点主题色调），
+   比 --btn-content 再深一档，在淡主题色圆底上清晰可辨；hover 时反相成实心主题色
+   （明确「点它清除」） */
+.ph-filter-chip .ph-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  margin-left: 1px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 22%, transparent);
+  color: var(--deep-text);
+  font-size: 0.8rem;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.ph-filter-chip:hover .ph-filter-clear {
+  background: var(--primary);
+  color: var(--card-bg);
 }

@@ -200,8 +200,9 @@ import PageHeader from "../components/control/PageHeader.astro";
         class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
       >
         <div
-          th:each="sponsor : ${sponsorItems}"
-          class="card-hover-lift flex items-center gap-3 rounded-xl border border-(--line-divider) p-3 transition hover:border-(--primary)/40"
+          th:each="sponsor, sponsorStat : ${sponsorItems}"
+          th:style="|animation-delay: min(calc(var(--content-delay) + ${sponsorStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+          class="card-hover-lift onload-animation flex items-center gap-3 rounded-xl border border-(--line-divider) p-3 transition hover:border-(--primary)/40"
         >
           <img
             th:if="${not #strings.isEmpty(sponsor.avatar)}"

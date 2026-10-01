@@ -1,12 +1,11 @@
 ---
 // 分组页页头统一组件（眉题 + 标题 + 已筛选徽章 + 统计片 + 右侧 slot）。
 //
-// 结构（V3 仪表条，全站页头统一形态）：
+// 结构（全站页头统一形态：眉题 + 标题 + 已筛选钮 + 统计片 + 动作槽）：
 // - 眉题行：图标 + 英文大写设计词（props.eyebrow，如 ARCHIVES / MOMENTS，静态词不走 i18n）
-// - 「已筛选」徽章：锚头部卡右上角（.ph-filter-chip），点击回 filteredClearExpr
-//   清除筛选（filteredExpr 条件显示）
 // - 大标题：左侧悬空主题色竖线装饰（.page-head-modern h1::before，不占布局）
-// - 右侧 = 统计方片组（stats）+ 动作槽（slot="right"），贴底对齐
+// - 右侧 = 「已筛选」清除钮（filteredExpr 条件显示，位于统计片左侧）
+//   + 统计方片组（stats）+ 动作槽（slot="right"），一条基线贴底对齐
 // - 大图标水印（与眉题共用 iconClass，.ph-watermark）
 // 容器自带内边距（样式见 components.css 的 .page-head-modern），页面头部卡
 // 不再包 px/py。
@@ -18,16 +17,20 @@
 // - iconClass 只传 icon-[...] 名字面量（如 `icon-[material-symbols--psychology]`），
 //   eyebrow 内用 0.9rem、水印由 .ph-watermark 控制 8rem。名字面量留在各页源码，
 //   Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${icon}]` 动态拼接
-// - filteredExpr 缺省则整个徽章不渲染（wishes 为客户端筛选无 URL 参数）
+// - filteredExpr 缺省则整个清除钮不渲染（wishes 为客户端筛选无 URL 参数）
 // - 右侧按钮/徽章放 slot="right"（links 随机访问 / moments RSS / wishes 纪念日）
 // - 统计方片组 stats：数值 + 词条，与 slot 动作钮同排、贴底对齐；无数字可展示的
 //   页面不传。valueExpr 传数值表达式（含 ${}），labelExpr 传词条表达式（#{}）；
-//   value / label 为 SSR 占位内容。
+//   value / label 为 SSR 占位内容。key（可选）渲染成 .stat 的 data-stat，
+//   供筛选态脚本定位改写数值（计数无法用聚合表达式表达的 archives / links / wishes）。
 export interface HeaderStat {
   valueExpr: string;
   value: string;
   labelExpr: string;
   label: string;
+  /** 可选定位钩子：渲染成 .stat 上的 data-stat，供页面脚本在筛选态改写数值。
+   *  计数只能在行级求值、无法用聚合成聚合表达式的页面用（archives / links / wishes）。 */
+  key?: string;
 }
 
 interface Props {
@@ -54,7 +57,7 @@ const {
   stats,
 } = Astro.props;
 
-// 右侧区（统计片 + 动作槽）是否有内容渲染：都没有时整个右区不输出
+// 右侧区（已筛选钮 + 统计片 + 动作槽）是否有内容渲染：都没有时整个右区不输出
 const hasRight = Astro.slots.has("right");
 ---
 
@@ -67,18 +70,35 @@ const hasRight = Astro.slots.has("right");
         <span class={`${iconClass} text-[0.9rem]`}></span>
         <span>{eyebrow}</span>
       </div>
-      <h1
-        class="mt-1.5 text-[1.7rem] leading-[1.2] font-extrabold tracking-tight text-90 md:text-[1.95rem]"
-        th:text={titleExpr}
-      >
-        {titleExpr ? title : <slot />}
-      </h1>
+      <!-- 标题行：只留大标题（「已筛选」清除钮在右侧统计区，见组件头文档） -->
+      <div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <h1
+          class="text-[1.7rem] leading-[1.2] font-extrabold tracking-tight text-90 md:text-[1.95rem]"
+          th:text={titleExpr}
+        >
+          {titleExpr ? title : <slot />}
+        </h1>
+      </div>
     </div>
     {
-      (stats && stats.length > 0) || hasRight ? (
+      filteredExpr || (stats && stats.length > 0) || hasRight ? (
         <div class="flex flex-wrap items-end gap-2.5">
+          {filteredExpr && (
+            <a
+              th:if={filteredExpr}
+              th:href={filteredClearExpr}
+              th:title="#{common.clearFilter}"
+              class="ph-filter-chip"
+            >
+              <span th:text="#{common.filtered}">已筛选</span>
+              <span
+                class="ph-filter-clear icon-[material-symbols--close-rounded]"
+                aria-hidden="true"
+              />
+            </a>
+          )}
           {stats?.map((st) => (
-            <div class="stat">
+            <div class="stat" data-stat={st.key}>
               <b th:text={st.valueExpr}>{st.value}</b>
               <span th:text={st.labelExpr}>{st.label}</span>
             </div>
@@ -88,21 +108,5 @@ const hasRight = Astro.slots.has("right");
       ) : null
     }
   </div>
-  {
-    filteredExpr && (
-      <a
-        th:if={filteredExpr}
-        th:href={filteredClearExpr}
-        th:title="#{common.clearFilter}"
-        class="ph-filter-chip"
-      >
-        <span th:text="#{common.filtered}">已筛选</span>
-        <span
-          class="icon-[material-symbols--close-rounded] text-[0.8rem]"
-          aria-hidden="true"
-        />
-      </a>
-    )
-  }
   <span class={`ph-watermark ${iconClass}`} aria-hidden="true"></span>
 </div>

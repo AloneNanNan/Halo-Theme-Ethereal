@@ -2,7 +2,7 @@
 import Pagination from "../components/control/Pagination.astro";
 import FilterTabs from "../components/control/FilterTabs.astro";
 import PageHeader from "../components/control/PageHeader.astro";
-import MomentMedia from "../components/MomentMedia.astro";
+import MomentCard from "../components/MomentCard.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -67,144 +67,27 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     </div>
   </div>
 
-  <!-- 内容卡：瞬间列表 + 空态 -->
-  <section
-    class="card-base onload-animation mb-4 overflow-hidden px-6 py-6 md:px-9"
-  >
-    <div th:if="${not #lists.isEmpty(moments.items)}" class="moment-list">
-      <article
-        th:each="moment, momentStat : ${moments.items}"
-        th:with="content=${moment.spec.content}"
-        class="card-base btn-card-outline mb-4 rounded-xl p-5 onload-animation card-hover-lift relative"
+  <!-- 卡片流：一条瞬间一张独立卡（不再套大卡）——容器只负责间距与入场错峰；
+       与 PostList 同款模式：flex 容器上不能挂 th:each（会整容器复制），
+       用 .contents 包装层让卡片仍是容器的 flex 子项 -->
+  <div class="mb-4 flex flex-col gap-4">
+    <div class="contents" th:each="moment, momentStat : ${moments.items}">
+      <div
+        class="onload-animation"
         th:style="|animation-delay: min(calc(var(--content-delay) + ${momentStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
       >
-        <span
-          aria-hidden="true"
-          class="icon-[material-symbols--format-quote-rounded] pointer-events-none absolute right-5 top-4 text-[2.5rem] leading-none text-(--primary)/15 transition"
-        ></span>
-        <div class="flex items-start gap-4">
-          <div class="shrink-0">
-            <img
-              alt=""
-              th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.avatar)}"
-              th:src="${moment.owner.avatar}"
-              th:alt="${moment.owner.displayName}"
-              class="h-13 w-13 rounded-xl object-cover bg-(--btn-regular-bg)"
-            />
-          </div>
-          <div
-            th:unless="${moment.owner != null and not #strings.isEmpty(moment.owner.avatar)}"
-            class="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
-          >
-            <span class="icon-[material-symbols--account-circle] text-3xl"
-            ></span>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex min-w-0 items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div
-                  class="truncate text-base font-bold text-(--primary)"
-                  th:text="${moment.owner != null ? moment.owner.displayName : #messages.msg('page.moments.title')}"
-                >
-                  Ethereal
-                </div>
-                <time
-                  class="mt-0.5 block text-sm text-50"
-                  th:datetime="${moment.spec.releaseTime}"
-                  th:text="${moment.spec.releaseTime != null ? #dates.format(moment.spec.releaseTime, 'MM-dd') : ''}"
-                  >04-25</time
-                >
-              </div>
-            </div>
-
-            <div
-              th:if="${content != null and not #strings.isEmpty(content.html)}"
-              class="moment-feed-content custom-md markdown-content prose prose-base mt-4 max-w-none! text-75 dark:prose-invert!"
-              th:utext="${content.html}"
-            >
-            </div>
-
-            <MomentMedia />
-
-            <div
-              th:if="${not #lists.isEmpty(moment.spec.tags)}"
-              class="mt-4 flex flex-wrap gap-x-2 gap-y-1 text-base"
-            >
-              <a
-                th:each="tagName : ${moment.spec.tags}"
-                th:href="@{/moments(tag=${tagName})}"
-                class="link font-medium text-(--primary)"
-                th:text="${'#' + tagName}">#Tag</a
-              >
-            </div>
-
-            <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-50">
-              <!-- 点赞按钮：原为不可聚焦的 span，改为 button 以支持键盘操作与可访问名称 -->
-              <button
-                type="button"
-                aria-label="点赞"
-                th:aria-label="#{page.moments.upvote}"
-                th:if="${moment.stats != null}"
-                class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
-                th:attr="data-moment=${moment.metadata.name}"
-                th:data-count="${moment.stats.upvote}"
-              >
-                <span
-                  class="icon-[material-symbols--thumb-up-outline-rounded] text-xl"
-                ></span>
-                <span
-                  class="moment-upvote-count"
-                  th:text="${moment.stats.upvote}">0</span
-                >
-              </button>
-              <button
-                type="button"
-                aria-label="点赞"
-                th:aria-label="#{page.moments.upvote}"
-                th:unless="${moment.stats != null}"
-                class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
-                th:attr="data-moment=${moment.metadata.name}"
-                th:data-count="0"
-              >
-                <span
-                  class="icon-[material-symbols--thumb-up-outline-rounded] text-xl"
-                ></span>
-                <span class="moment-upvote-count">0</span>
-              </button>
-              <a
-                th:href="'/moments/' + ${moment.metadata.name} + '#comment'"
-                class="link flex h-10 items-center gap-1.5 text-50"
-              >
-                <span
-                  class="icon-[material-symbols--chat-bubble-outline-rounded] text-xl"
-                ></span>
-                <span
-                  th:if="${moment.stats != null}"
-                  th:text="${moment.stats.approvedComment}">0</span
-                >
-                <span th:unless="${moment.stats != null}">0</span>
-              </a>
-              <a
-                th:href="@{/moments/{name}(name=${moment.metadata.name})}"
-                class="link flex h-10 items-center gap-1.5 text-50"
-              >
-                <span class="icon-[material-symbols--chevron-right] text-xl"
-                ></span>
-                <span th:text="#{common.more}">More</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </article>
+        <MomentCard />
+      </div>
     </div>
+  </div>
 
-    <div
-      th:if="${#lists.isEmpty(moments.items)}"
-      class="py-12 text-center text-50"
-    >
-      <span th:text="#{page.moments.empty}">暂无瞬间</span>
-    </div>
-  </section>
+  <!-- 空态：独立卡片（列表为空时才渲染） -->
+  <div
+    th:if="${#lists.isEmpty(moments.items)}"
+    class="card-base onload-animation mb-4 px-6 py-12 text-center text-50"
+  >
+    <span th:text="#{page.moments.empty}">暂无瞬间</span>
+  </div>
 
   <Pagination context="moments" class="mb-4 onload-animation" />
 
@@ -213,6 +96,13 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
        之后会被产出到 </html> 外面、不在容器内，换页到本页时不会执行 → 点赞点不动 -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/upvote.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
+
+  <!-- 卡片「复制链接」（moment-copy.js，.moment-copy-btn）：同样必须在容器内，
+       换页进来时才会重新绑定（脚本靠 data-copy-bound 幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/moment-copy.js?v=${ASSET_VERSION}`}
     defer
     is:inline></script>
 

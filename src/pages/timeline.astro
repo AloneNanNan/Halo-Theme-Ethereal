@@ -86,6 +86,8 @@ import PageHeader from "../components/control/PageHeader.astro";
 
   <!-- 注：类型计数用字面量投影（type == 'literal'），勿在 items.![...] 投影内引用
        param（Map 条目会遮蔽上下文变量导致 #lists.contains(null,...) 抛异常）。
+       filteredCount 由同一限制而来：只能写成 contains 链取当前类型的预计算数，
+       未筛选时回落 totalSize——表达式偏长但不是可合并的重复。
        拆分后 th:with 挂在包装 div 上：头部卡（页头+池）与内容卡共用这些变量 -->
   <div
     th:remove="tag"
@@ -96,6 +98,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       achCount=${items != null ? #aggregates.sum(items.![type == 'achievement' ? 1 : 0]) : 0},
       pageSize=${theme.config?.extendPages?.timeline?.pageSize != null ? #conversions.convert(theme.config?.extendPages?.timeline?.pageSize, 'java.lang.Integer') : 10},
       totalSize=${items != null ? #lists.size(items) : 0},
+      filteredCount=${#lists.contains(param.type, 'education') ? edCount : (#lists.contains(param.type, 'work') ? workCount : (#lists.contains(param.type, 'project') ? projCount : (#lists.contains(param.type, 'achievement') ? achCount : totalSize)))},
       hasFilter=${not #lists.isEmpty(param.type)},
       totalPages=${not hasFilter and pageSize > 0 ? (totalSize + pageSize - 1) / pageSize : 1},
       rawPage=${param.page != null and param.page.length > 0 and param.page[0] matches '\d+' ? #conversions.convert(param.page[0], 'java.lang.Integer') : 1},
@@ -118,7 +121,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         filteredClearExpr="@{${singlePage.status.permalink}}"
         stats={[
           {
-            valueExpr: "${totalSize}",
+            valueExpr: "${filteredCount}",
             value: "0",
             labelExpr: "#{common.stat.items}",
             label: "条目",

@@ -85,6 +85,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           eyebrow="WISH WALL"
           stats={[
             {
+              key: "wish-notes",
               valueExpr: "${#lists.size(wishes)}",
               value: "0",
               labelExpr: "#{common.stat.notes}",
@@ -93,7 +94,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           ]}
         >
           <span th:text="${wishesTitle}">心愿便签</span>
-          <!-- 纪念日片（V3 仪表条样式，容器复用全局 .stat；天数由 JS 写入） -->
+          <!-- 纪念日片（与页头统计片同款，容器复用全局 .stat；天数由 JS 写入） -->
           <div
             th:if="${wishesDays}"
             class="stat"
@@ -329,6 +330,21 @@ import PageHeader from "../components/control/PageHeader.astro";
           animate,
         );
       }
+      // 页头「x 便签」统计片：类型筛选是客户端行为，服务端给的是全部已通过张数，
+      // 需要按当前可见卡片重算。放在内联脚本而非 wishes.js：外部脚本 URL 带
+      // 固定 ?v=<主题版本>，版本未升时浏览器可能命中旧缓存（本项曾因此不生效），
+      // 内联脚本始终随模板更新。
+      function syncNotesStat() {
+        var stat = document.querySelector('[data-stat="wish-notes"] b');
+        if (!stat) return;
+        var cards = document.querySelectorAll(".wish-card");
+        if (cards.length === 0) return;
+        var visible = 0;
+        cards.forEach(function (card) {
+          if (card.style.display !== "none") visible++;
+        });
+        stat.textContent = String(visible);
+      }
       function bind() {
         var seg = document.getElementById("wishTabs");
         if (!seg || seg.dataset.wishSegBound === "1") return;
@@ -342,6 +358,7 @@ import PageHeader from "../components/control/PageHeader.astro";
             placeTo(btn, true);
             setTimeout(function () {
               place(true);
+              syncNotesStat();
             }, 0);
           }
         });

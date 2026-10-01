@@ -59,6 +59,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       filteredClearExpr="@{/links}"
       stats={[
         {
+          key: "links-friends",
           valueExpr: "${#aggregates.sum(groups.![links.size()])}",
           value: "0",
           labelExpr: "#{common.stat.friends}",
@@ -782,4 +783,27 @@ import PageHeader from "../components/control/PageHeader.astro";
       set:html={'<halo:comment group="plugin.halo.run" kind="Plugin" th:attr="name=${pluginName}" />'}
     />
   </div>
+
+  <!-- 筛选态补丁：URL 带分组参数时「x 朋友」应显示该分组的链接数（服务端给的是
+       全部链接总数——分组过滤在行级 th:if 完成，无法用聚合表达式求和）。
+       非筛选态零副作用；Swup 换页后由 SwupScriptsPlugin 重执行。 -->
+  <script is:inline>
+    // @ts-nocheck 浏览器运行时脚本
+    (function () {
+      function run() {
+        if (!new URL(window.location.href).searchParams.has("group")) return;
+        var stat = document.querySelector('[data-stat="links-friends"] b');
+        if (!stat) return;
+        stat.textContent = String(
+          document.querySelectorAll("[data-link-group]").length,
+        );
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", run);
+      } else {
+        run();
+      }
+    })();
+  </script>
 </MainGridLayout>

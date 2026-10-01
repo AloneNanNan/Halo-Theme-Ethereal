@@ -1,5 +1,5 @@
 ---
-import MomentMedia from "../components/MomentMedia.astro";
+import MomentCard from "../components/MomentCard.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
@@ -8,129 +8,12 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   description="${moment.spec.content != null and not #strings.isEmpty(moment.spec.content.raw) ? #strings.abbreviate(moment.spec.content.raw, 120) : #messages.msg('page.moment.description', site.title)}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <article
-    class="card-base relative z-10 mb-4 w-full overflow-hidden px-6 py-6 md:px-9"
-    th:with="content=${moment.spec.content}"
-  >
-    <div class="flex items-start gap-4">
-      <div class="shrink-0">
-        <img
-          alt=""
-          th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.avatar)}"
-          th:src="${moment.owner.avatar}"
-          th:alt="${moment.owner.displayName}"
-          class="h-13 w-13 rounded-xl object-cover bg-(--btn-regular-bg)"
-        />
-      </div>
-      <div
-        th:unless="${moment.owner != null and not #strings.isEmpty(moment.owner.avatar)}"
-        class="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
-      >
-        <span class="icon-[material-symbols--account-circle] text-3xl"></span>
-      </div>
-      <div class="min-w-0 flex-1">
-        <div class="flex min-w-0 items-start justify-between gap-3">
-          <div class="min-w-0">
-            <h1
-              class="truncate text-base font-bold text-(--primary)"
-              th:text="${moment.owner != null ? moment.owner.displayName : #messages.msg('page.moments.title')}"
-            >
-              Moment
-            </h1>
-            <time
-              class="mt-0.5 block text-sm text-50"
-              th:datetime="${moment.spec.releaseTime}"
-              th:text="${moment.spec.releaseTime != null ? #dates.format(moment.spec.releaseTime, 'MM-dd') : ''}"
-              >04-25</time
-            >
-          </div>
-        </div>
-
-        <div
-          th:if="${content != null and not #strings.isEmpty(content.html)}"
-          id="content"
-          class="moment-feed-content custom-md markdown-content prose prose-base mt-4 max-w-none! text-75 dark:prose-invert!"
-          th:utext="${content.html}"
-        >
-        </div>
-
-        <div
-          th:if="${not #lists.isEmpty(moment.spec.tags)}"
-          class="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-base"
-        >
-          <a
-            th:each="tagName : ${moment.spec.tags}"
-            th:href="@{/moments(tag=${tagName})}"
-            class="link font-medium text-(--primary)"
-            th:text="${'#' + tagName}">#Tag</a
-          >
-        </div>
-
-        <MomentMedia />
-
-        <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-50">
-          <!-- 点赞按钮：原为不可聚焦的 span，改为 button 以支持键盘操作与可访问名称 -->
-          <button
-            type="button"
-            aria-label="点赞"
-            th:aria-label="#{page.moments.upvote}"
-            th:if="${moment.stats != null}"
-            class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
-            th:attr="data-moment=${moment.metadata.name}"
-            th:data-count="${moment.stats.upvote}"
-          >
-            <span
-              class="icon-[material-symbols--thumb-up-outline-rounded] text-xl"
-            ></span>
-            <span class="moment-upvote-count" th:text="${moment.stats.upvote}"
-              >0</span
-            >
-          </button>
-          <button
-            type="button"
-            aria-label="点赞"
-            th:aria-label="#{page.moments.upvote}"
-            th:unless="${moment.stats != null}"
-            class="moment-upvote-btn flex h-10 items-center gap-1.5 transition hover:text-(--primary) active:scale-95"
-            th:attr="data-moment=${moment.metadata.name}"
-            th:data-count="0"
-          >
-            <span
-              class="icon-[material-symbols--thumb-up-outline-rounded] text-xl"
-            ></span>
-            <span class="moment-upvote-count">0</span>
-          </button>
-          <a
-            th:if="${moment.stats != null}"
-            href="#comment"
-            class="link flex h-10 items-center gap-1.5 text-50"
-          >
-            <span
-              class="icon-[material-symbols--chat-bubble-outline-rounded] text-xl"
-            ></span>
-            <span th:text="${moment.stats.approvedComment}">0</span>
-          </a>
-          <a
-            th:unless="${moment.stats != null}"
-            href="#comment"
-            class="link flex h-10 items-center gap-1.5 text-50"
-          >
-            <span
-              class="icon-[material-symbols--chat-bubble-outline-rounded] text-xl"
-            ></span>
-            <span>0</span>
-          </a>
-          <a
-            th:href="@{/moments}"
-            class="link flex h-10 items-center gap-1.5 text-50"
-          >
-            <span class="icon-[material-symbols--chevron-left] text-xl"></span>
-            <span th:text="#{common.back}">返回</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </article>
+  <!-- 单条瞬间卡片：与列表页共用 MomentCard（variant=detail —— 无「更多」入口、
+       footer 为 点赞 / 评论锚点 / 返回列表；评论锚点走本页 #comment 与下方脚本）。
+       入场动画：卡片本体与列表页同款（translate 不占布局，不影响评论锚点落位） -->
+  <div class="mb-4 onload-animation">
+    <MomentCard variant="detail" />
+  </div>
 
   <div
     class="card-base relative z-10 w-full px-6 pb-4 pt-6 md:px-9"
@@ -156,45 +39,113 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
     defer
     is:inline></script>
 
-  <!-- 同理写在 Layout 内：换页进来时 SwupScriptsPlugin 会重执行，#comment 锚点的
-       偏移补偿与「等评论组件渲染后再滚动」才能生效；写在 Layout 外则换页后失效 -->
+  <!-- 卡片「复制链接」（moment-copy.js，.moment-copy-btn）：同样必须在容器内，
+       换页进来时才会重新绑定（脚本靠 data-copy-bound 幂等） -->
+  <script
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/moment-copy.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline></script>
+
+  <!-- 同理写在 Layout 内：换页进来时 SwupScriptsPlugin 会重执行，「等版面稳定再落位」
+       才会生效；写在 Layout 外则换页后不执行 -->
   <script>
-    // 统一处理 #comment 锚点定位（兼容 Halo 评论组件异步渲染）
+    // #comment 锚点定位：
+    // - 详细页内点按评论按钮：布局已稳定，直接平滑滚动；
+    // - 从列表页跨页跳进来：等版面稳定后落一次位，落完不再跟随布局变化
+    //   （评论区晚加载只会让页面可滚，不会推动落点，所以不需要反复补位）。
     (function () {
       const NAV_OFFSET = 6 * 16; // 6rem
 
-      const scrollToComment = () => {
-        const el = document.getElementById("comment");
-        if (!el) return;
-        const top =
-          el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
-        window.scrollTo({ top, behavior: "smooth" });
-      };
+      const target = () => document.getElementById("comment");
 
-      // 从列表页跳转：等 Halo 评论组件渲染完成后重新定位
-      if (window.location.hash === "#comment") {
-        const el = document.getElementById("comment");
-        if (el) {
-          const observer = new MutationObserver(() => {
-            observer.disconnect();
-            scrollToComment();
-          });
-          observer.observe(el, { childList: true, subtree: true });
-          // 兜底：1.5s 后无论如何滚动一次
-          setTimeout(() => {
-            observer.disconnect();
-            scrollToComment();
-          }, 1500);
-        }
-      }
+      const targetTop = (el: HTMLElement) =>
+        Math.max(
+          0,
+          Math.round(
+            el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET,
+          ),
+        );
 
-      // 详细页内点击 #comment：阻止默认行为，统一用 scrollToComment
+      // 页内点按评论按钮：平滑滚动到评论区
       document.querySelectorAll('a[href="#comment"]').forEach((a) => {
         a.addEventListener("click", (e) => {
           e.preventDefault();
-          scrollToComment();
+          const el = target();
+          if (el) window.scrollTo({ top: targetTop(el), behavior: "smooth" });
         });
       });
+
+      if (window.location.hash !== "#comment") return;
+
+      // 落位前做两件事：① 锁住导航栏显隐（scroll-manager 消费），避免落位的瞬时位移
+      // 让导航栏展开、把内容顶下去；② 标记脚本独占滚动（app.ts 一次性消费），否则
+      // Swup 的 scrl 锚点动画会按「图片加载前」的位置再滚一次，和落位叠成两次移动。
+      const root = document.documentElement;
+      root.dataset.navbarLock = String(Date.now());
+      root.dataset.scrollOwner = String(Date.now());
+
+      // 落位期间可用的可滚动上限：扣除 Swup 换页期的 300vh 撑高（#page-height-extend
+      // 换页收尾才收起）。若按当前 scrollHeight 落位，它一收起可滚动高度骤降，
+      // 浏览器会把页面钳回去——看起来就是又动了一次。
+      const maxScrollTop = () => {
+        const spacer = document.getElementById("page-height-extend");
+        const spacerH =
+          spacer && !spacer.classList.contains("hidden")
+            ? spacer.offsetHeight
+            : 0;
+        return (
+          document.documentElement.scrollHeight - spacerH - window.innerHeight
+        );
+      };
+
+      // 版面就绪判定：① 卡片内图片/视频就位（它们不占位，加载完会把评论区往下推，
+      // 不等就会二次修正落点）；② 落点可达（Halo 评论组件异步撑高，页面还不够高时
+      // 会被可滚动上限封顶，落点比页内点按低一截）。
+      const ready = () => {
+        const card = document.querySelector(".moment-card");
+        if (card) {
+          for (const img of card.querySelectorAll("img")) {
+            if (!img.complete) return false;
+          }
+          for (const video of card.querySelectorAll("video")) {
+            if (video.readyState < 1) return false; // 1 = 元数据（尺寸）已就绪
+          }
+        }
+        const el = target();
+        if (el && maxScrollTop() < targetTop(el) - 2) return false;
+        return true;
+      };
+
+      const land = () => {
+        delete root.dataset.navbarLock;
+        const el = target();
+        if (!el) return;
+        const top = Math.min(targetTop(el), Math.max(0, maxScrollTop()));
+        window.scrollTo({ top, behavior: "auto" });
+      };
+
+      // 用户抢先操作（滚轮 / 触摸 / 点击 / 按键）就放弃落位，不抢滚动条
+      let stopped = false;
+      const stop = () => {
+        stopped = true;
+        delete root.dataset.navbarLock;
+      };
+      ["wheel", "touchstart", "pointerdown", "keydown"].forEach((ev) =>
+        window.addEventListener(ev, stop, { passive: true, once: true }),
+      );
+
+      // 就绪即落位；最长等 1.2s（慢网 / 懒加载兜底，落点取当时的最优值）
+      const deadline = Date.now() + 1200;
+      const tick = () => {
+        if (stopped) return;
+        if (ready() || Date.now() > deadline) {
+          land();
+          return;
+        }
+        setTimeout(tick, 80);
+      };
+      // 双 rAF：让 Swup 换入的新内容先完成首次布局，再开始轮询
+      requestAnimationFrame(() => requestAnimationFrame(tick));
     })();
   </script>
 </MainGridLayout>

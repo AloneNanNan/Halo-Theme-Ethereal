@@ -45,6 +45,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         filteredClearExpr="@{/archives}"
         stats={[
           {
+            key: "archives-posts",
             valueExpr: "${totalPosts}",
             value: "0",
             labelExpr: "#{common.stat.posts}",
@@ -96,26 +97,32 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
 
     <!-- 内容卡：归档列表 + 空态 -->
     <div class="card-base onload-animation mb-4 px-6 py-6 md:px-9">
-      <div class="contents" th:each="archive : ${archives.items}">
-        <!-- th:attr 赋值序列不支持裸布尔项，须为 k=v 对 -->
+      <div class="contents" th:each="archive, archiveStat : ${archives.items}">
+        <!-- th:attr 赋值序列不支持裸布尔项，须为 k=v 对。
+             行级入场错峰：每年一组（父索引 × 8），年行先于组内条目 -->
         <div
           th:attr="data-archive-year-row=${archive.year}, data-year=${archive.year}"
+          th:style="|animation-delay: min(calc(var(--content-delay) + ${archiveStat.index * 8} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+          class="onload-animation"
         >
           <div class="flex h-15 w-full flex-row items-center">
+            <!-- 年份列：窄定宽（4rem）+ 右对齐——列宽从 15%/10% 收窄后，年份右缘
+                 距卡片内缘只剩个位数像素（原来的左侧大片空隙消失），同时右缘与
+                 下方日期对齐、紧邻右侧时间轴，保留「贴轴」的原有节奏 -->
             <div
-              class="w-[15%] text-right text-2xl font-bold text-75 transition md:w-[10%]"
+              class="w-16 shrink-0 text-right text-2xl font-bold text-75 transition"
               th:text="${archive.year}"
             >
               2026
             </div>
-            <div class="w-[15%] md:w-[10%]">
+            <div class="w-[15%] shrink-0 md:w-[10%]">
               <div
                 class="z-50 mx-auto h-3 w-3 rounded-full bg-none outline-3 -outline-offset-2 outline-(--primary)"
               >
               </div>
             </div>
             <div
-              class="w-[70%] text-left text-50 transition md:w-[80%]"
+              class="flex-1 text-left text-50 transition"
               th:with={yearCountThWith}
               th:attr="data-archive-year-count=${archive.year}"
               th:text={`#{page.archives.count(\${postCount})}`}
@@ -124,24 +131,27 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
             </div>
           </div>
 
-          <div class="contents" th:each="month : ${archive.months}">
+          <div class="contents" th:each="month, monthStat : ${archive.months}">
             <a
-              th:each="post : ${month.posts}"
+              th:each="post, postStat : ${month.posts}"
               th:if={`\${${postMatchRow}}`}
               th:href="@{${post.status.permalink}}"
               th:attr="aria-label=${post.spec.title}, data-archive-row=${post.spec.slug}, data-year=${archive.year}"
-              class="group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
+              th:style="|animation-delay: min(calc(var(--content-delay) + ${archiveStat.index * 8 + monthStat.index * 4 + postStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+              class="group btn-plain onload-animation block! h-10 w-full rounded-lg hover:text-[initial]"
             >
               <div class="flex h-full flex-row items-center justify-start">
+                <!-- 日期列与年份列同宽（4rem）且同为右对齐：右缘对齐、紧贴时间轴
+                     （与旧版观感一致），收窄列宽后不再有「离轴太远」的空档 -->
                 <div
-                  class="w-[15%] text-right text-sm text-50 transition md:w-[10%]"
+                  class="w-16 shrink-0 text-right text-sm text-50 transition"
                   th:text="${#dates.format(post.spec.publishTime, 'MM-dd')}"
                 >
                   04-29
                 </div>
 
                 <div
-                  class="dash-line relative flex h-full w-[15%] items-center md:w-[10%]"
+                  class="dash-line relative flex h-full w-[15%] shrink-0 items-center md:w-[10%]"
                 >
                   <div
                     class="z-50 mx-auto h-1 w-1 rounded bg-(--btn-regular-bg) outline-4 outline-(--card-bg) transition-all group-hover:h-5 group-hover:bg-(--primary) group-hover:outline-(--btn-plain-bg-hover) group-active:outline-(--btn-plain-bg-active)"
@@ -150,14 +160,14 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
                 </div>
 
                 <div
-                  class="w-[70%] overflow-hidden overflow-ellipsis whitespace-nowrap pr-8 text-left font-bold text-75 transition-all group-hover:translate-x-1 group-hover:text-(--primary) md:w-[65%] md:max-w-[65%]"
+                  class="min-w-0 flex-1 overflow-hidden overflow-ellipsis whitespace-nowrap pr-8 text-left font-bold text-75 transition-all group-hover:translate-x-1 group-hover:text-(--primary)"
                   th:text="${post.spec.title}"
                 >
                   Post
                 </div>
 
                 <div
-                  class="hidden overflow-hidden overflow-ellipsis whitespace-nowrap text-left text-sm text-30 transition md:block md:w-[15%]"
+                  class="hidden shrink-0 overflow-hidden overflow-ellipsis whitespace-nowrap text-left text-sm text-30 transition md:block md:w-[15%]"
                 >
                   <span
                     th:each="tag : ${post.tags}"
@@ -201,7 +211,8 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
     <Pagination context="archives" class="mb-4 onload-animation" />
   </div>
 
-  <!-- 筛选态补丁（行级过滤后）：按已渲染行重新统计各年可见数、隐藏空年份、显隐筛选空态。
+  <!-- 筛选态补丁（行级过滤后）：按已渲染行重新统计各年可见数、隐藏空年份、显隐筛选空态，
+       并同步页头「x 文章」（服务端给的是全站总数，行级过滤无法用聚合表达式求和）。
        非筛选态为零副作用；Swup 换页后由 SwupScriptsPlugin 重执行。 -->
   <script is:inline>
     // @ts-nocheck 浏览器运行时脚本
@@ -242,6 +253,13 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         var empty = document.getElementById("archive-empty-filter");
         if (empty) {
           empty.hidden = !(active && rows.length === 0);
+        }
+
+        // 页头「x 文章」同筛：筛选态显示当前分类的可见文章数（服务端给的是全站
+        // 总数——分类过滤在行级 th:if 完成，无法用聚合表达式求和）
+        if (active) {
+          var stat = document.querySelector('[data-stat="archives-posts"] b');
+          if (stat) stat.textContent = String(rows.length);
         }
       }
 

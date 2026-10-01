@@ -14,7 +14,8 @@ import PageHeader from "../components/control/PageHeader.astro";
   description="${title + ' - ' + site.title}"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
-  <!-- 头部卡：新版页头（modern，含图标水印） -->
+  <!-- 头部卡：新版页头（modern，含图标水印）+ 周导航（题下按钮行 + 右区周范围）
+       —— 与其它页「分组池」同位，见下方两处注释 -->
   <div class="card-base page-head-card onload-animation mb-4">
     <PageHeader
       containerClass=""
@@ -23,6 +24,14 @@ import PageHeader from "../components/control/PageHeader.astro";
       iconClass="icon-[material-symbols--event-note-outline-rounded]"
       eyebrow="SCHEDULE"
     >
+      <!-- 当前周范围（状态、不可点）：排在订阅钮左侧，同排贴底、同高同圆角 -->
+      <span
+        slot="right"
+        class="inline-flex h-9.5 shrink-0 items-center whitespace-nowrap rounded-xl bg-(--btn-regular-bg) px-3.5 text-sm font-bold text-(--btn-content)"
+        th:text="${view.weekStart + ' ~ ' + view.weekEnd}"
+      >
+        2026-07-21 ~ 2026-07-27
+      </span>
       <a
         th:href="@{/schedule-calendar.ics}"
         data-no-swup
@@ -36,6 +45,39 @@ import PageHeader from "../components/control/PageHeader.astro";
         <span th:text="#{page.schedule.ical}">iCal 订阅</span>
       </a>
     </PageHeader>
+
+    <!-- 周切换按钮：标题下方一行（与其它页「分组池」同位同内距），左对齐；
+         按钮取页头动作钮规格（38px / rounded-xl）。原位置（内容卡顶部、
+         状态摘要之后）已移除，避免两处重复 -->
+    <div class="px-6 pb-5 md:px-9">
+      <div class="flex flex-wrap items-center gap-2">
+        <a
+          th:href="@{/schedule-calendar(start=${view.previousWeekStart})}"
+          class="btn-regular h-9.5 w-9.5 rounded-xl active:scale-95"
+          th:aria-label="#{page.schedule.prevWeek}"
+        >
+          <span class="icon-[material-symbols--chevron-left-rounded] text-xl"
+          ></span>
+        </a>
+        <a
+          th:href="@{/schedule-calendar}"
+          th:classappend="${view.weekStart == view.currentWeekStart} ? 'pointer-events-none opacity-40' : ''"
+          th:aria-disabled="${view.weekStart == view.currentWeekStart}"
+          class="btn-regular h-9.5 rounded-xl px-3 text-sm font-bold active:scale-95"
+        >
+          <span class="icon-[material-symbols--refresh-rounded] mr-1 text-base"
+          ></span>
+          <span th:text="#{page.schedule.backToThisWeek}">回到本周</span>
+        </a>
+        <a
+          th:href="@{/schedule-calendar(start=${view.nextWeekStart})}"
+          class="btn-regular h-9.5 w-9.5 rounded-xl active:scale-95"
+          th:aria-label="#{page.schedule.nextWeek}"
+        >
+          <span class="icon-[material-symbols--chevron-right] text-xl"></span>
+        </a>
+      </div>
+    </div>
   </div>
 
   <!-- 内容卡：状态摘要 + 日历 -->
@@ -112,43 +154,6 @@ import PageHeader from "../components/control/PageHeader.astro";
         >
           暂无待办事项
         </p>
-      </div>
-    </div>
-
-    <!-- 周导航：左侧本周时间范围，右侧上一周/回到本周/下一周按钮组 -->
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div
-        class="text-sm font-bold text-75"
-        th:text="${view.weekStart + ' ~ ' + view.weekEnd}"
-      >
-        2026-07-21 ~ 2026-07-27
-      </div>
-      <div class="flex items-center gap-2">
-        <a
-          th:href="@{/schedule-calendar(start=${view.previousWeekStart})}"
-          class="btn-regular h-10 w-10 rounded-lg active:scale-95"
-          th:aria-label="#{page.schedule.prevWeek}"
-        >
-          <span class="icon-[material-symbols--chevron-left-rounded] text-xl"
-          ></span>
-        </a>
-        <a
-          th:href="@{/schedule-calendar}"
-          th:classappend="${view.weekStart == view.currentWeekStart} ? 'pointer-events-none opacity-40' : ''"
-          th:aria-disabled="${view.weekStart == view.currentWeekStart}"
-          class="btn-regular h-10 rounded-lg px-3 text-sm font-bold active:scale-95"
-        >
-          <span class="icon-[material-symbols--refresh-rounded] mr-1 text-base"
-          ></span>
-          <span th:text="#{page.schedule.backToThisWeek}">回到本周</span>
-        </a>
-        <a
-          th:href="@{/schedule-calendar(start=${view.nextWeekStart})}"
-          class="btn-regular h-10 w-10 rounded-lg active:scale-95"
-          th:aria-label="#{page.schedule.nextWeek}"
-        >
-          <span class="icon-[material-symbols--chevron-right] text-xl"></span>
-        </a>
       </div>
     </div>
 
