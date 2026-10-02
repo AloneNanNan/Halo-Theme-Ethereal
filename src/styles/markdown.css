@@ -1,17 +1,63 @@
 @reference "./global.css";
 
+/* 长 URL / 无空格长串会撑破正文卡片*/
+.custom-md {
+  overflow-wrap: break-word;
+}
+
 .custom-md img,
 #post-cover img {
   @apply cursor-zoom-in;
+}
+
+/* 正文图片圆角：与表格半径、文章封面（rounded-xl）一致 */
+.custom-md img {
+  border-radius: var(--md-img-radius);
+}
+
+/* 视频/iframe 防溢出兜底：Halo 编辑器输出的宽高是 HTML 属性（默认 width="100%"），
+   本身不溢出；用户手改 px 宽时靠 max-width 兜底。不做 aspect-ratio 强比例——
+   iframe 高度是用户在编辑器里显式设置的值，强改会让非 16:9 的嵌入变形 */
+.custom-md :is(video, iframe) {
+  max-width: 100%;
+}
+
+.custom-md video {
+  height: auto;
+}
+
+/* iframe 与图片统一观感：圆角 + 居中。编辑器输出带内联 style="display: inline-block"，
+   需 !important 覆盖为块级，margin auto 才能居中 */
+.custom-md iframe {
+  display: block !important;
+  margin-block: 1.25em;
+  margin-inline: auto;
+  border-radius: var(--md-img-radius);
 }
 
 .custom-md :is(h1, h2, h3, h4, h5, h6) {
   scroll-margin-top: 6rem;
 }
 
+/* 分隔线：默认 1px 太细、与正文分段语气不匹配；改为 3px 主题色圆头线 */
+.custom-md hr {
+  height: 3px;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+/* typography 变量覆盖：本文件规则 unlayered，优先于 @plugin 的 :where() 规则。
+   深色模式走 prose-invert，typography 会把 --tw-prose-* 切换成 --tw-prose-invert-*，
+   故深浅两套都要覆盖 */
 .custom-md {
   --tw-prose-links: var(--primary);
   --tw-prose-invert-links: var(--primary);
+  /* 列表 marker：无序圆点=主题色点缀；有序数字=深主题色（同行内代码文字，可读性优先） */
+  --tw-prose-bullets: var(--primary);
+  --tw-prose-invert-bullets: var(--primary);
+  --tw-prose-counters: var(--btn-content);
+  --tw-prose-invert-counters: var(--btn-content);
 }
 
 .custom-md a:not(.no-styling) {
@@ -39,6 +85,60 @@
   background: var(--btn-plain-bg-hover);
   border-bottom: 1px dashed var(--link-hover);
   text-decoration: none;
+}
+
+/* 嵌套子列表：typography 默认上下 margin 0.75em（prose-base），与父项贴得偏开，收紧到 0.5em */
+.custom-md :is(ul, ol) :is(ul, ol) {
+  margin-block: 0.5em;
+}
+
+/* 任务列表（Halo 富文本编辑器输出：ul[data-type=taskList] > li[data-type=taskItem]
+   > label > input[type=checkbox] + div > p）。typography 默认会给 ul 画圆点 marker，
+   与复选框重复，故整体重排：去 marker/缩进、复选框与内容横排、与首行垂直居中、
+   已完成项淡化 */
+.custom-md ul[data-type="taskList"] {
+  padding-inline-start: 0;
+  list-style: none;
+}
+
+.custom-md li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  padding-inline-start: 0;
+}
+
+.custom-md li[data-type="taskItem"] > label {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 1em;
+  /* 与首行垂直居中：正文行高 1.75em（首行中心 0.875em）− 复选框半高 0.5em */
+  margin-top: 0.375em;
+}
+
+.custom-md li[data-type="taskItem"] input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+/* li 内段落收紧（typography 默认 0.75em 上下），首末段贴边，行距由 li 自身承担 */
+.custom-md li[data-type="taskItem"] > div > p {
+  margin-block: 0.25em;
+}
+
+.custom-md li[data-type="taskItem"] > div > p:first-child {
+  margin-top: 0;
+}
+
+.custom-md li[data-type="taskItem"] > div > p:last-child {
+  margin-bottom: 0;
+}
+
+.custom-md li[data-type="taskItem"][data-checked="true"] > div {
+  opacity: 0.6;
 }
 
 .custom-md code:not(pre code) {
@@ -271,4 +371,82 @@
 
 .custom-md tfoot :is(th, td) {
   border-top: 1px solid var(--md-table-cell-rule);
+}
+
+/* 磨砂卡片场景（全屏透明 / 全屏 hero + 高级材质）：卡片变半透明后，表格实心
+   底色会与卡片断层。三个底色变量改为同族半透明：单元格与卡片用同一透明度
+   变量，表头/斑马纹取原色的调淡版（深色下 cell-bg 换深灰半透明） */
+html[data-banner-display="transparent"] body.navbar-blur-enabled .custom-md,
+html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+  body.navbar-blur-enabled
+  .custom-md {
+  --md-table-cell-bg: rgb(255 255 255 / var(--transparent-card-alpha, 0.6));
+  --md-table-head-bg: color-mix(
+    in oklab,
+    var(--btn-regular-bg) 72%,
+    transparent
+  );
+  --md-table-cell-stripe: color-mix(
+    in oklab,
+    var(--btn-plain-bg-active) 68%,
+    transparent
+  );
+}
+
+:root.dark[data-banner-display="transparent"]
+  body.navbar-blur-enabled
+  .custom-md,
+:root.dark[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+  body.navbar-blur-enabled
+  .custom-md {
+  --md-table-cell-bg: rgb(23 23 23 / var(--transparent-card-alpha, 0.6));
+}
+
+/* 折叠块（details/summary，Markdown/HTML 手写元素）：轻卡片，描边同表格外框
+   （15% 主色）、圆角同正文图片；summary 加粗、指针、主题色三角 */
+.custom-md details {
+  border: 1px solid var(--md-details-border);
+  border-radius: var(--md-details-radius);
+  margin-block: 1.25em;
+  padding: 0.625em 1em;
+}
+
+/* 展开后内容末元素贴卡片底：p/列表的 margin 会与 padding 叠加出过大空白 */
+.custom-md details > :last-child {
+  margin-bottom: 0;
+}
+
+.custom-md summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  cursor: pointer;
+  font-weight: 600;
+  /* 去掉浏览器默认三角，改用下面的圆角三角 */
+  list-style: none;
+}
+
+/* 旧版 Safari 的默认三角走这个伪元素 */
+.custom-md summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 圆角三角：SVG 描边 linejoin round 打磨棱角，mask 上主题色（mask 值与
+   components.css 的 .round-triangle 同源，见 variables.css --triangle-mask）；
+   展开时旋转 90° */
+.custom-md summary::before {
+  content: "";
+  flex: none;
+  width: 0.7em;
+  height: 0.7em;
+  background: var(--primary);
+  mask-image: var(--triangle-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  transition: transform 0.15s ease;
+}
+
+.custom-md details[open] > summary::before {
+  transform: rotate(90deg);
 }

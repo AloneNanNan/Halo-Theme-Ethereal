@@ -124,10 +124,19 @@ import PortfolioCard from "../components/PortfolioCard.astro";
             class="mb-8"
           >
             <!-- 分区标题：与友情链接页的分组标题同款（text-xl + font-bold + text-90），
-                 不再另加主题色竖线/图标；「全部项目」用同一套，改动两处同步 -->
-            <h2 class="mb-4 text-xl font-bold text-90">
-              <span th:text="#{page.portfolio.featuredProjects}">推荐项目</span>
-            </h2>
+                 前置主题色图标盒（样式同打赏者名单）；「全部项目」用同一套，改动两处同步 -->
+            <div class="mb-4 flex items-center gap-3">
+              <div class="title-icon" aria-hidden="true">
+                <span
+                  class="icon-[material-symbols--star-rounded] text-[1.25rem] text-(--primary)"
+                ></span>
+              </div>
+              <h2 class="text-xl font-bold text-90">
+                <span th:text="#{page.portfolio.featuredProjects}"
+                  >推荐项目</span
+                >
+              </h2>
+            </div>
             <!-- 卡片最小宽 240px（与下方「全部项目」网格同值，改动两处同步；
                  取值范围 (226, 248] 的推导见下方注释） -->
             <div
@@ -147,14 +156,21 @@ import PortfolioCard from "../components/PortfolioCard.astro";
                单卡被压到 226px）
              · min ≤ 248px ⇒ 容器 776px（三栏 + 视口≈1600）时仍能排 3 列
            ⚠️ 推荐项目区用同一个网格（见文件上方），改动务必两处同步。 -->
-      <!-- 全部项目分区标题：与「推荐项目」同款（text-xl + font-bold + text-90）
+      <!-- 全部项目分区标题：与「推荐项目」同款（text-xl + font-bold + text-90 + 前置图标盒）
            ⚠️ th:if 与下方网格同条件（Thymeleaf 两处无法共享），改动务必同步 -->
-      <h2
+      <div
         th:if="${projects != null and not projects.items.isEmpty()}"
-        class="mb-4 text-xl font-bold text-90"
+        class="mb-4 flex items-center gap-3"
       >
-        <span th:text="#{page.portfolio.allProjects}">全部项目</span>
-      </h2>
+        <div class="title-icon" aria-hidden="true">
+          <span
+            class="icon-[material-symbols--grid-view-rounded] text-[1.25rem] text-(--primary)"
+          ></span>
+        </div>
+        <h2 class="text-xl font-bold text-90">
+          <span th:text="#{page.portfolio.allProjects}">全部项目</span>
+        </h2>
+      </div>
       <div
         th:if="${projects != null and not projects.items.isEmpty()}"
         class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"

@@ -24,8 +24,10 @@ import PageHeader from "../components/control/PageHeader.astro";
           transform: rotate(360deg);
         }
       }
+      /* 折叠面板展开指示：形状来自公共 .round-triangle（components.css），
+         这里只负责展开态旋转（▶ → ▼） */
       .collapse-icon.is-expanded {
-        transform: rotate(180deg);
+        transform: rotate(90deg);
       }
       .collapse-inner ul,
       .step-desc ul {
@@ -263,9 +265,16 @@ import PageHeader from "../components/control/PageHeader.astro";
         class="onload-animation"
       >
         <div class="mb-4 flex items-center justify-between gap-4">
-          <h2 class="text-xl font-bold text-90">
-            <span th:text="${group.spec.displayName}">Group</span>
-          </h2>
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="title-icon" aria-hidden="true">
+              <span
+                class="icon-[material-symbols--link-rounded] text-[1.25rem] text-(--primary)"
+              ></span>
+            </div>
+            <h2 class="text-xl font-bold text-90">
+              <span th:text="${group.spec.displayName}">Group</span>
+            </h2>
+          </div>
           <span
             class="rounded-lg bg-(--btn-regular-bg) px-2.5 py-1 text-xs font-bold text-(--btn-content)"
             th:text="${#lists.size(group.links)}">0</span
@@ -630,6 +639,7 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:attr="data-collapse-target='accordion-'+${itemStat.index}"
           >
             <div class="flex items-center gap-2">
+              <span class="collapse-icon round-triangle"></span>
               <span
                 class="text-lg text-(--primary)"
                 th:if="${item.icon != null && item.icon.value != null}"
@@ -638,9 +648,6 @@ import PageHeader from "../components/control/PageHeader.astro";
                 th:text="${item.title}">面板标题</span
               >
             </div>
-            <span
-              class="collapse-icon icon-[material-symbols--expand-more-rounded] text-lg text-50 transition-transform duration-200"
-            ></span>
           </button>
           <div
             th:attr="id='accordion-'+${itemStat.index}"
@@ -670,11 +677,9 @@ import PageHeader from "../components/control/PageHeader.astro";
             data-collapse-target="accordion-0"
           >
             <div class="flex items-center gap-2">
+              <span class="collapse-icon round-triangle"></span>
               <span class="text-sm font-medium text-90">友链须知</span>
             </div>
-            <span
-              class="collapse-icon icon-[material-symbols--expand-more-rounded] text-lg text-50 transition-transform duration-200"
-            ></span>
           </button>
           <div id="accordion-0" class="collapse-content">
             <div class="collapse-inner px-3 pb-3">
@@ -695,11 +700,9 @@ import PageHeader from "../components/control/PageHeader.astro";
             data-collapse-target="accordion-1"
           >
             <div class="flex items-center gap-2">
+              <span class="collapse-icon round-triangle"></span>
               <span class="text-sm font-medium text-90">免责申明</span>
             </div>
-            <span
-              class="collapse-icon icon-[material-symbols--expand-more-rounded] text-lg text-50 transition-transform duration-200"
-            ></span>
           </button>
           <div id="accordion-1" class="collapse-content">
             <div class="collapse-inner px-3 pb-3">

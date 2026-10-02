@@ -113,6 +113,16 @@
   --md-table-cell-padding-x: 0.875em;
   --md-table-cell-min-width: 5rem;
 
+  /* 正文图片圆角：与表格半径、文章封面（rounded-xl）一致 */
+  --md-img-radius: var(--md-table-radius);
+  /* 折叠块（details）：圆角同图片，描边同表格外框（15% 主色） */
+  --md-details-radius: var(--md-img-radius);
+  --md-details-border: color-mix(in oklab, var(--primary) 15%, transparent);
+
+  /* 圆角三角指示器（components.css .round-triangle 与 markdown.css details
+     summary 共用同一形状）：SVG 描边圆角，mask 上主题色 */
+  --triangle-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='black' stroke='black' stroke-width='3' stroke-linejoin='round'%3E%3Cpath d='M4.5 3.5 11.5 8 4.5 12.5z'/%3E%3C/svg%3E");
+
   --admonitions-color-tip: oklch(0.7 0.14 180);
   --admonitions-color-note: oklch(0.7 0.14 250);
   --admonitions-color-important: oklch(0.7 0.14 310);

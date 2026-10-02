@@ -137,9 +137,9 @@ var t =
     if (pageEnable && pageUrl) {
       var link = document.createElement("a");
       link.href = pageUrl;
-      link.className = "group";
+      link.className = "group post-modal-btn";
       link.style.cssText =
-        "display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border:none;border-radius:0.75rem;font-size:0.8125rem;font-weight:500;cursor:pointer;background:var(--btn-regular-bg,oklch(0.95 0.025 250));color:var(--btn-content,oklch(0.55 0.12 250));user-select:none;text-decoration:none;transition:background 0.2s";
+        "display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border:none;border-radius:0.75rem;font-size:0.8125rem;font-weight:500;cursor:pointer;background:var(--btn-regular-bg,oklch(0.95 0.025 250));color:var(--btn-content,oklch(0.55 0.12 250));user-select:none;text-decoration:none;transition:background 0.2s,transform 0.1s";
       link.onmouseenter = function () {
         link.style.background =
           "var(--btn-regular-bg-hover,oklch(0.9 0.05 250))";
@@ -158,20 +158,23 @@ var t =
       pageLink = link;
     }
 
-    // 关闭按钮（右上角，无阴影；hover 图标旋转 90° + 变主题色）
+    // 关闭按钮（右上角，无阴影；hover 内部图标旋转 90° + 变主题色；按下按钮内凹——
+    // 旋转挂在图标上、缩放挂在按钮上，两个 transform 互不覆盖）
     var closeBtn = document.createElement("button");
+    closeBtn.className = "post-modal-close";
     closeBtn.style.cssText =
-      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.25s ease,color 0.25s ease,background 0.25s ease;z-index:2";
+      "position:absolute;top:12px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:0.5rem;background:transparent;color:var(--text-50,#999);cursor:pointer;transition:transform 0.12s ease,color 0.25s ease,background 0.25s ease;z-index:2";
     closeBtn.setAttribute("aria-label", t("common.close", "关闭"));
     closeBtn.innerHTML =
-      '<span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>';
+      '<span class="icon-[material-symbols--close-rounded] text-xl leading-none" style="transition:transform 0.25s ease"></span>';
+    var closeIcon = closeBtn.querySelector("span");
     closeBtn.onmouseenter = function () {
-      closeBtn.style.transform = "rotate(90deg)";
+      if (closeIcon) closeIcon.style.transform = "rotate(90deg)";
       closeBtn.style.color = "var(--primary)";
       closeBtn.style.background = "var(--btn-regular-bg,rgba(0,0,0,0.06))";
     };
     closeBtn.onmouseleave = function () {
-      closeBtn.style.transform = "";
+      if (closeIcon) closeIcon.style.transform = "";
       closeBtn.style.color = "var(--text-50,#999)";
       closeBtn.style.background = "transparent";
     };

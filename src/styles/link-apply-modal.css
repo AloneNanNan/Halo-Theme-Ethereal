@@ -328,3 +328,33 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* 出场动画（关闭时由 links.bundle.js 短暂挂上 .is-closing，动画结束后再移除
+   .is-open 真正隐藏）：与入场对称的反向动画，避免生硬消失 */
+.link-apply-modal.is-closing .link-apply-backdrop {
+  animation: link-apply-fade-out 0.18s ease both;
+}
+
+.link-apply-modal.is-closing .link-apply-card {
+  animation: link-apply-slide-down 0.18s ease both;
+}
+
+@keyframes link-apply-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes link-apply-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}

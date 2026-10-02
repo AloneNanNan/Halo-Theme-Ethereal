@@ -215,7 +215,12 @@ import PageHeader from "../components/control/PageHeader.astro";
       th:remove="tag"
       th:with="upcomingItems=${scheduleCalendarFinder.upcoming(6)}"
     >
-      <div class="mt-8 mb-4 flex items-center gap-2 text-lg font-bold text-90">
+      <div class="mt-8 mb-4 flex items-center gap-3 text-lg font-bold text-90">
+        <div class="title-icon" aria-hidden="true">
+          <span
+            class="icon-[material-symbols--upcoming-rounded] text-[1.25rem] text-(--primary)"
+          ></span>
+        </div>
         <span th:text="#{page.schedule.upcoming}">即将开始</span>
       </div>
 

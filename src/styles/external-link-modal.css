@@ -107,7 +107,10 @@
   font-size: 0.65rem;
   color: var(--btn-content);
   background: color-mix(in oklab, var(--primary) 10%, transparent);
-  transition: all 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    transform 0.1s;
   white-space: nowrap;
   line-height: 1.4;
 }
@@ -157,12 +160,18 @@
   cursor: pointer;
   background: var(--btn-regular-bg, #eceafb);
   color: var(--btn-content, #6d5ae6);
-  transition: background 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
   line-height: 1;
 }
 
 #ext-link-card .ext-btn-back:hover {
   background: var(--btn-regular-bg-hover, #ddd8fa);
+}
+
+#ext-link-card .ext-btn-back:active {
+  transform: scale(0.95);
 }
 
 #ext-link-card .ext-btn-go {
@@ -179,12 +188,18 @@
   cursor: pointer;
   background: var(--primary, #8b5cf6);
   color: #fff;
-  transition: filter 0.2s;
+  transition:
+    filter 0.2s,
+    transform 0.1s;
   line-height: 1;
 }
 
 #ext-link-card .ext-btn-go:hover {
   filter: brightness(1.1);
+}
+
+#ext-link-card .ext-btn-go:active {
+  transform: scale(0.95);
 }
 
 #ext-link-card .ext-countdown {

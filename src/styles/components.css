@@ -1,6 +1,21 @@
 @reference "./global.css";
 
 @layer components {
+  /* 圆角三角指示器（当前使用方：友链页折叠面板，.is-expanded 旋转 ▶ → ▼；
+     形状与正文 details 的 summary 三角同源，mask 值见 variables.css
+     --triangle-mask）。本文件经过 Tailwind 管线，-webkit- 前缀自动补齐 */
+  .round-triangle {
+    flex: none;
+    width: 0.7em;
+    height: 0.7em;
+    background: var(--primary);
+    mask-image: var(--triangle-mask);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    transition: transform 0.15s ease;
+  }
+
   .card-base {
     @apply overflow-hidden rounded-(--radius-large) bg-(--card-bg) transition;
   }
@@ -105,6 +120,16 @@
     scale: 0.95;
   }
 
+  /* 弹窗内由脚本动态创建的按钮（post-share.ts / post-reward.ts）：操作钮按下
+     内凹（同 ext-btn 家族），关闭钮对齐其它弹窗关闭按钮的 0.9 */
+  .post-modal-btn:active {
+    transform: scale(0.95);
+  }
+
+  .post-modal-close:active {
+    transform: scale(0.9);
+  }
+
   /* 社交图标按钮（个人简介小组件 / 页脚卡片 / Banner 链接）的悬浮上移 + 轻放大：
      接入「样式开关 → 卡片悬浮效果」，桌面端（≥768px）生效。:not(:active) 让按下的
      active 缩放单独生效——两者都落在 transform 上，同时匹配会相乘缩不到位。 */
@@ -133,7 +158,14 @@
   }
 
   .meta-icon {
-    @apply mr-2 flex h-8 w-8 items-center justify-center rounded-md bg-(--btn-regular-bg) text-(--btn-content) transition;
+    @apply mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-(--btn-regular-bg) text-(--btn-content) transition;
+  }
+
+  /* 分区标题前置图标盒（打赏者名单 / 友链分组 / 即将开始 / 推荐·全部项目共用同一套）：
+     纯装饰，使用处带 aria-hidden；背景 = 主色 10% */
+  .title-icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg;
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
   }
 
   /* 卡片图标盒：内联 SVG（后台自定义图标）按字号 1em 渲染，与 mask 图标/首字母大小一致 */
@@ -385,11 +417,13 @@
     transform: translateX(-50%);
     color: rgb(255 255 255 / 0.85);
     cursor: pointer;
-    /* opacity/visibility 的过渡供全屏沉浸（hero）滚动隐藏用（.hide 类） */
+    /* opacity/visibility 的过渡供全屏沉浸（hero）滚动隐藏用（.hide 类）；
+       transform 供按下内凹 */
     transition:
       color 0.3s ease,
       opacity 0.35s ease,
-      visibility 0.35s ease;
+      visibility 0.35s ease,
+      transform 0.1s ease;
   }
 
   body:not(.is-home) #scroll-down-indicator {
@@ -398,6 +432,11 @@
 
   #scroll-down-indicator:hover {
     color: rgb(255 255 255 / 1);
+  }
+
+  /* 按下内凹：保留 translateX(-50%) 水平居中，再叠缩放 */
+  #scroll-down-indicator:active {
+    transform: translateX(-50%) scale(0.95);
   }
 
   #scroll-down-indicator .scroll-down-icon {

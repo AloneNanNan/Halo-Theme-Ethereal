@@ -236,6 +236,9 @@
       captchaLoaded: false,
     });
 
+  // 关闭动画定时器：出场动画（约 180ms）结束后再隐藏模态框；再次打开时取消
+  var closeTimer = null;
+
   function getModal() {
     return document.getElementById("link-apply-modal");
   }
@@ -314,6 +317,10 @@
   function openModal() {
     var modal = getModal();
     if (!modal || state.submitting) return;
+    // 若处于关闭动画中：取消未完成的关闭并去掉 is-closing（防止它随后把
+    // 刚打开的面板又关掉），重新走入场
+    clearTimeout(closeTimer);
+    modal.classList.remove("is-closing");
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -331,9 +338,17 @@
   function closeModal() {
     var modal = getModal();
     if (!modal || state.submitting) return;
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    // 防重复触发（连点 / Esc 与点击同帧）：已在出场动画中则忽略
+    if (modal.classList.contains("is-closing")) return;
+    // 出场动画（.is-closing 对应的反向动画，见 link-apply-modal.css）：结束后
+    // 再移除 .is-open 真正隐藏（display:none）并复位滚动与 aria，避免生硬消失
+    modal.classList.add("is-closing");
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(function () {
+      modal.classList.remove("is-open", "is-closing");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }, 200);
     // 保留验证码与挑战 ID：再次打开时直接沿用，不重新请求；点击图片刷新才更新
   }
 

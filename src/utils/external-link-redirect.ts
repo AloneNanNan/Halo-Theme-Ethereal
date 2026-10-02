@@ -146,14 +146,12 @@ function buildModal(): HTMLElement {
   const copyBtn = document.createElement("button");
   copyBtn.className = "ext-copy";
   copyBtn.id = "ext-copy-btn";
-  copyBtn.title = t("external_link.copy_link", "复制");
+  copyBtn.title = t("common.copy", "复制");
   const copyIcon = document.createElement("span");
   copyIcon.className = "icon-[material-symbols--content-copy-outline-rounded]";
   copyIcon.style.cssText = "font-size:13px;line-height:1";
   copyBtn.appendChild(copyIcon);
-  copyBtn.appendChild(
-    document.createTextNode(t("external_link.copy_link", "复制")),
-  );
+  copyBtn.appendChild(document.createTextNode(t("common.copy", "复制")));
   urlBox.appendChild(copyBtn);
   card.appendChild(urlBox);
 
@@ -312,7 +310,7 @@ function bindStaticListeners(modal: HTMLElement) {
           if (icon)
             icon.className =
               "icon-[material-symbols--content-copy-outline-rounded]";
-          if (label) label.textContent = t("external_link.copy_link", "复制");
+          if (label) label.textContent = t("common.copy", "复制");
           copyBtn.style.color = "";
           copyBtn.disabled = false;
         }, 2000);
@@ -323,7 +321,7 @@ function bindStaticListeners(modal: HTMLElement) {
           if (icon)
             icon.className =
               "icon-[material-symbols--content-copy-outline-rounded]";
-          if (label) label.textContent = t("external_link.copy_link", "复制");
+          if (label) label.textContent = t("common.copy", "复制");
           copyBtn.style.color = "";
           copyBtn.disabled = false;
         }, 2000);

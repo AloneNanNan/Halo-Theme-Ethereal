@@ -379,6 +379,9 @@
 :root.dark .wish-bar-type:hover {
   background: rgba(255, 255, 255, 0.18);
 }
+.wish-bar-type:active {
+  transform: scale(0.95);
+}
 
 .wish-bar-btn {
   padding: 9px 18px;
@@ -408,7 +411,7 @@
   background: color-mix(in oklab, var(--primary) 85%, #fff);
 }
 .wish-bar-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.95);
 }
 .wish-bar-btn:disabled {
   opacity: 0.5;
