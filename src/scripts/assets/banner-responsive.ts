@@ -37,6 +37,13 @@
   function updateVisibility() {
     var overlay = getEl("banner-overlay");
     if (!overlay) return;
+    // 全屏换页（home-switch）期间保持隐藏：标题的显现时机统一交给 app.ts 在
+    // 换入落位后接管（见其 syncBannerOverlay 守卫），这里提前摘类会让标题在
+    // 内容位移途中就冒出来（hero 下 is-home 先于内容过渡切换）
+    if (document.documentElement.classList.contains("home-switch")) {
+      overlay.classList.add("banner-text-hidden");
+      return;
+    }
     if (!isHomepage()) {
       // 非首页：淡出
       overlay.classList.add("banner-text-hidden");

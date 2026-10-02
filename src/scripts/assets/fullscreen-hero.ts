@@ -4,13 +4,16 @@
 //         2px 量化避免逐帧重栅格化）；标题 translateY(-scrollY) 随滚动上移 + opacity
 //         淡出，半个视口高内完成（壁纸钉视口，上移模拟标题随内容滚出）；
 //   非首页：模糊恒为最大值（CSS fallback 兜底首帧，脚本负责与滑块联动）；
+//         标题原地淡出：只清内联 opacity、保留上移位移（见 releaseTitleToCss）；
+//   换页：非首页 → 首页（html.home-switch）期间不写标题，出现时机交给 app.ts 的
+//         revealBannerTitleOnSwitchEnd（落位后淡入）；
 //   箭头：hero 下壁纸钉视口，箭头不会随内容滚出，改滚动超过 100px 加 .hide；
 //   过渡：只在状态切换（首页⇄非首页、进出 hero）瞬间挂 filter 过渡窗口，与内容
 //         卡片下移同源同缓动；滚动斜坡期间绝不挂（否则模糊拖尾）。
 // 变量链：body 的 --transparent-wallpaper-blur → variables.css 的 --wallpaper-blur-max
 //   → 脚本读最大值写 --hero-wallpaper-blur 与标题内联样式（components.css 消费）。
-// 边界：非首页标题隐藏由 banner-text-hidden 类负责（脚本不碰 display，清内联值让其
-//   生效）；访客关闭标题的 opacity:0 !important 优先，无需判断。
+// 边界：非首页标题隐藏由 CSS 规则 / banner-text-hidden 类负责（脚本不碰 display，
+//   只清内联 opacity 让其生效）；访客关闭标题的 opacity:0 !important 优先，无需判断。
 import { readDurBannerMs } from "../../utils/dur-banner";
 
 (() => {
@@ -87,6 +90,7 @@ import { readDurBannerMs } from "../../utils/dur-banner";
     }
   }
 
+  /** 完整复位标题内联样式（退出 hero 布局时用） */
   function resetTitle(): void {
     if (lastTitleTransform === "" && lastTitleOpacity === "" && !lastTitleFaded)
       return;
@@ -98,6 +102,17 @@ import { readDurBannerMs } from "../../utils/dur-banner";
     el.style.removeProperty("transform");
     el.style.removeProperty("opacity");
     el.classList.remove("hero-title-faded");
+  }
+
+  /** 首页 → 非首页：只把透明度交回 CSS（触发原地淡出），保留内联 transform 与
+   *  hero-title-faded —— 标题此刻停在「随滚动上移」的位置渐隐，清 transform 会
+   *  让它瞬跳回视口中央再淡出（观感上「标题跑到中间」）。残留值由下次进入首页的
+   *  writeTitle 覆盖、或退出 hero 布局时 resetTitle 清除；渐隐中保持 faded 使
+   *  #banner-links 继续不可点 */
+  function releaseTitleToCss(): void {
+    if (lastTitleOpacity === "") return;
+    lastTitleOpacity = "";
+    document.getElementById("banner-overlay")?.style.removeProperty("opacity");
   }
 
   function syncIndicator(shouldHide: boolean): void {
@@ -153,9 +168,10 @@ import { readDurBannerMs } from "../../utils/dur-banner";
     }
 
     if (!home) {
-      // 非首页：固定最大模糊（与 CSS fallback 同值），标题交回既有隐藏逻辑
+      // 非首页：固定最大模糊（与 CSS fallback 同值），标题原地淡出
+      // （只交回透明度、保留上移位移，见 releaseTitleToCss）
       writeBlur(wrapper, `${readMaxBlur(wrapper)}px`);
-      resetTitle();
+      releaseTitleToCss();
       return;
     }
 
@@ -166,6 +182,11 @@ import { readDurBannerMs } from "../../utils/dur-banner";
       wrapper,
       `${Math.floor((ratio * max) / BLUR_QUANTIZE_STEP) * BLUR_QUANTIZE_STEP}px`,
     );
+
+    // 非首页 → 首页的换页（home-switch）期间不写标题：此时标题由
+    // banner-text-hidden 保持隐藏，出现时机交给换页落位后的淡入（app.ts），
+    // 若按 scrollY 直写内联 opacity 会把隐藏态提前顶掉
+    if (document.documentElement.classList.contains("home-switch")) return;
 
     const fade = window.innerHeight * TITLE_FADE_RATIO;
     const titleRatio = fade > 0 ? Math.min(scrollY / fade, 1) : 0;
@@ -207,12 +228,32 @@ import { readDurBannerMs } from "../../utils/dur-banner";
     attributeFilter: ["style", "class"],
   });
 
-  // Swup 换页：content:replace 时 is-home 未必已切换（横幅模式刻意延后到
-  // page:view 才整体滑动），三个钩子都挂一遍，靠记忆化写入避免重复开销
-  const hooks = window.swup?.hooks;
-  hooks?.on("content:replace", refresh);
-  hooks?.on("page:view", refresh);
-  hooks?.on("animation:in:end", refresh);
+  // Swup 换页：三个钩子都挂一遍（content:replace 时 is-home 未必已切换，横幅
+  // 模式刻意延后到 page:view 才整体滑动），靠记忆化写入避免重复开销。
+  // ⚠️ swup 实例由 @swup/astro 在 load 后经 requestIdleCallback + 动态 import
+  // 才创建，本脚本执行时（defer）必然拿不到 —— 必须像 app.ts / navbar.js 一样
+  // 用 swup:enable 兜底，否则钩子静默丢失（症状：切回首页后标题停在上一轮滚动
+  // 遗留的位置，要滚动一下才归位）
+  const bindSwupHooks = (): void => {
+    const hooks = window.swup?.hooks;
+    if (!hooks) return;
+    hooks.on("content:replace", refresh);
+    hooks.on("page:view", refresh);
+    hooks.on("animation:in:end", refresh);
+  };
+  if (window.swup?.hooks) {
+    bindSwupHooks();
+  } else {
+    document.addEventListener("swup:enable", bindSwupHooks, { once: true });
+  }
+
+  // 标题由隐藏变可见时（banner:visible：app.ts 的标题显现 / syncBannerOverlay、
+  // banner-responsive 的滚动兜底都会派发）立即同步：标题 translateY 须按当前滚动
+  // 位置归位 —— 吃 rAF 节流的 refresh 晚一帧，标题会先出现在上一轮遗留的位置
+  document.addEventListener("banner:visible", () => {
+    cachedMaxBlur = null;
+    sync();
+  });
 
   sync(); // 初始同步（浏览器可能恢复了上次的滚动位置）
 })();

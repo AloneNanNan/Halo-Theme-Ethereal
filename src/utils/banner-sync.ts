@@ -40,6 +40,14 @@ function isHomePath(pathname = window.location.pathname): boolean {
   return normalizedPath === "/" || normalizedPath === "/index";
 }
 
+/** 即将发生的换页是否会改变 is-home（调用时机敏感）：横幅模式的 is-home 延后到
+ *  page:view 才切换，URL 已更新的换页途中用「路径 vs 当前 body 类」比对可预判；
+ *  全屏模式已在 content:replace 提前切换，此后调用恒为 false（此时只能认
+ *  home-switch 类，见 app.ts 的换页回顶判定） */
+function isHomeSwitching(): boolean {
+  return isHomePath() !== document.body.classList.contains("is-home");
+}
+
 // 同步 body.is-home。波浪位置不再由 JS 计算——完全由 CSS 驱动（body.is-home +
 // html[data-banner-display] + --banner-height-extend，见 components.css
 // #wave-container 系列规则），与网格/横幅同 --dur-banner、同缓动、同帧切换，
@@ -87,4 +95,4 @@ window.addEventListener("resize", () => {
   }, 200);
 });
 
-export { syncHomeClass, isHomePath };
+export { syncHomeClass, isHomePath, isHomeSwitching };

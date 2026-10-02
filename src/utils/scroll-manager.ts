@@ -1,4 +1,4 @@
-// 滚动 & 窗口调整处理（back-to-top、TOC、导航栏）。
+// 滚动 & 窗口调整处理（back-to-top、TOC、导航栏、换页回顶）。
 // banner/波浪/is-home 同步逻辑在 banner-sync.ts（含 resize 重算延伸高度）。
 import {
   BANNER_HEIGHT,
@@ -6,6 +6,7 @@ import {
   cssVhViewportHeight,
 } from "../constants/constants";
 import { bannerHomeHeight } from "./banner-sync";
+import { readDurBannerMs } from "./dur-banner";
 
 // 语义化常量，替代硬编码魔法数字
 // 导航栏高度（4.5rem × 16px），与 CSS 变量 --navbar-height 对应（variables.css）
@@ -189,5 +190,87 @@ window.addEventListener("scroll", function () {
 // 目录显隐：切到横幅/全屏模式且视口在顶部时需补挂隐藏（toc-hide + 无
 // toc-revealed），切到 disabled/transparent 时清除隐藏状态
 window.addEventListener("bannerModeChange", scrollFunction);
+
+// ── 换页回顶（与 is-home 位移锁步）──
+// 首页↔非首页（横幅 / 全屏：内容区随 is-home 位移）的换页里，滚动回顶与 grid
+// translate / panel top 的 --dur-banner 位移是两段反向运动：原生平滑滚动的时长
+// 与曲线不可控，异步叠加会形成「先下后上」的往复。此处改为 rAF 逐帧插值，与位移
+// 同曲线 cubic-bezier(0.4,0,0.2,1)、同时长（--dur-banner），合成位移恢复单调；
+// 仅换页时由 app.ts 在 content:scroll 接管处调用（纯色 / 全屏透明无位移，保持
+// 原生平滑）。
+
+let lockstepToken = 0;
+
+/** 打断进行中的锁步回顶（新一轮导航、用户主动滚动时让位） */
+export function cancelLockstepScrollToTop(): void {
+  lockstepToken++;
+}
+
+/** cubic-bezier(x1,y1,x2,y2) 的 JS 求值（牛顿迭代，二分兜底），与 CSS 过渡同曲线 */
+function createBezierEasing(x1: number, y1: number, x2: number, y2: number) {
+  const cx = 3 * x1;
+  const bx = 3 * (x2 - x1) - cx;
+  const ax = 1 - cx - bx;
+  const cy = 3 * y1;
+  const by = 3 * (y2 - y1) - cy;
+  const ay = 1 - cy - by;
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t;
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t;
+  const sampleDX = (t: number) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x: number): number => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const dx = sampleX(t) - x;
+      if (Math.abs(dx) < 1e-6) return sampleY(t);
+      const d = sampleDX(t);
+      if (Math.abs(d) < 1e-6) break;
+      t -= dx / d;
+    }
+    let lo = 0;
+    let hi = 1;
+    t = x;
+    for (let i = 0; i < 24; i++) {
+      const dx = sampleX(t);
+      if (Math.abs(dx - x) < 1e-6) break;
+      if (dx < x) lo = t;
+      else hi = t;
+      t = (lo + hi) / 2;
+    }
+    return sampleY(t);
+  };
+}
+
+const PAGE_SWITCH_EASE = createBezierEasing(0.4, 0, 0.2, 1);
+
+/** 与 is-home 位移动画锁步的换页回顶。用户主动滚动（滚轮/触摸）即取消让位 */
+export function lockstepScrollToTop(): void {
+  const startY = window.scrollY;
+  if (startY <= 0) return;
+  const duration = readDurBannerMs(document.documentElement);
+  const token = ++lockstepToken;
+  const startTime = performance.now();
+  // 包一层刻意为之：每次调用持有独立的监听器引用，unbind 只摘自己注册的
+  // 这一对（监听器注册去重 / 移除都按引用判定，直接引用多轮之间会互相误摘）
+  const cancelOnUserInput = () => cancelLockstepScrollToTop();
+  const unbindUserInputGuard = () => {
+    window.removeEventListener("wheel", cancelOnUserInput);
+    window.removeEventListener("touchstart", cancelOnUserInput);
+  };
+  window.addEventListener("wheel", cancelOnUserInput, { passive: true });
+  window.addEventListener("touchstart", cancelOnUserInput, { passive: true });
+  const step = (now: number) => {
+    if (token !== lockstepToken) {
+      unbindUserInputGuard();
+      return;
+    }
+    const progress = Math.min((now - startTime) / duration, 1);
+    window.scrollTo(0, Math.round(startY * (1 - PAGE_SWITCH_EASE(progress))));
+    if (progress < 1) requestAnimationFrame(step);
+    else unbindUserInputGuard();
+  };
+  requestAnimationFrame(step);
+}
 
 export { scrollFunction };

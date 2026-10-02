@@ -819,12 +819,35 @@
   /* ③ 首页标题：透明度由脚本逐帧写内联 opacity（优先于本规则）；本规则仅兜底脚本
      未运行时的首帧——--hero-title-opacity 无任何写入方、恒回退 1。transition: none
      禁用类驱动的 opacity 过渡，避免与逐帧写入相互打架（访客关闭标题用的
-     body.banner-title-disabled 带 !important，仍优先生效） */
+     body.banner-title-disabled 带 !important，仍优先生效）。
+     :not(.banner-text-hidden)：非首页 → 首页的换页期间标题由该类保持隐藏（is-home
+     先于内容位移切换），本规则不得在隐藏态把它覆盖回 1 —— 摘类时机见 app.ts 的
+     revealBannerTitleOnSwitchEnd（换入动画结束） */
   html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     body.is-home
-    #banner-overlay {
+    #banner-overlay:not(.banner-text-hidden) {
     opacity: var(--hero-title-opacity, 1);
     transition: none !important;
+  }
+
+  /* 换页落位后的标题淡入窗口（app.ts 挂 html.hero-title-revealing、500ms 后摘）：
+     hero 平时禁了 overlay 的 opacity 过渡（见上，防滚动逐帧写入拖尾），仅这一次
+     放开，让标题随内容落位淡入。
+     ⚠️ 必须留在 hero ③ 之后：两条 specificity 相同、同带 !important，靠书写顺序
+     取胜，移到前面会让淡入静默退化为瞬现 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"].hero-title-revealing
+    body.is-home
+    #banner-overlay {
+    transition: opacity var(--dur-entry, 300ms) ease !important;
+  }
+
+  /* hero 非首页：标题恒隐藏（首页 → 非首页时随 #banner-overlay 的 700ms 过渡淡出）。
+     不能只靠 banner-text-hidden —— 首页滚动时 banner-responsive 会按 wrapper 位置
+     摘类，容易出现"无类且内联 opacity 已清"的可见间隙 */
+  html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
+    body:not(.is-home)
+    #banner-overlay {
+    opacity: 0;
   }
 
   /* ④ 非首页：壁纸是整屏背景，「横幅底边」不存在，内容直接贴导航栏下方 */

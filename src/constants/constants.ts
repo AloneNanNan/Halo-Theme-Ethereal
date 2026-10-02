@@ -109,3 +109,11 @@ export const BANNER_SUBTITLE_DEFAULT = 1.5;
 
 // Swup visit:end 恢复延迟（ms）
 export const SWUP_VISIT_END_DELAY = 200;
+
+// 滚动结束信号（scrollend / swup scroll:end）异常缺失时的兜底时长（ms）：
+// app.ts 的 visit:end 用它兜底恢复目录与收起撑高
+export const SWUP_SCROLL_END_FALLBACK_MS = 2000;
+
+// hero 标题落位淡入的过渡窗口时长（ms）：--dur-entry 最长档（舒缓 400ms）之上
+// 留余量，app.ts 用它到时摘掉 html.hero-title-revealing
+export const HERO_TITLE_REVEAL_WINDOW_MS = 500;
