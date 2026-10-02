@@ -167,10 +167,12 @@ jobs:
       # 不指定 version，自动按 package.json 的 packageManager 字段安装 pnpm@10.33.0
       - uses: pnpm/action-setup@v6
 
+      # 不使用 pnpm 依赖缓存：Runner 复用旧 store 会解析出与 lockfile 不一致的
+      # 依赖树（如 @astrojs/check 0.9.4 / TypeScript 5.9.3），导致 astro check
+      # 找不到 @astrojs/check 模块；改为每次全新安装以保证与 lockfile 一致
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
