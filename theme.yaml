@@ -34,7 +34,7 @@ spec:
         file: "reward.html"
   settingName: "Ethereal-setting"
   configMapName: "Ethereal-configMap"
-  version: "1.2.4"
+  version: "2.0.0"
   requires: ">=2.25.0"
   license:
     - name: "MIT"
