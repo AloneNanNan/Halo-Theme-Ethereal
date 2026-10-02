@@ -35,7 +35,7 @@
     "@halo-dev/api-client": "^2.26.0",
     "@swup/astro": "^1.8.0",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.2.8",
+    "astro": "^7.3.2",
     "astro-icon": "^1.2.0",
     "axios": "^1.20.0",
     "overlayscrollbars": "^2.16.0",
