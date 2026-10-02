@@ -53,19 +53,10 @@ if (!window.__navbarPanelToggleBound) {
       // 若同帧"移动 DOM + 触发 CSS 动画"，浏览器对刚插入的子树会延迟启动
       // 动画（首次打开生硬无动画、二次正常）。root 已在 body 时无副作用。
       ensureNavPanelInBody();
-    }
-    document.body.classList.toggle("nav-menu-open", open);
-    if (open) {
+      document.body.classList.add("nav-menu-open");
       document.body.style.overflow = "hidden";
-      // 打开瞬间为菜单项设置递增 animation-delay，配合 CSS 渐入动画逐项浮现
-      var panel = document.getElementById("nav-menu-panel");
-      if (panel) {
-        var links = panel.querySelectorAll(".nav-drawer-link");
-        links.forEach(function (link, i) {
-          link.style.animationDelay = i * 35 + "ms";
-        });
-      }
     } else {
+      document.body.classList.remove("nav-menu-open");
       document.body.style.overflow = "";
     }
   }

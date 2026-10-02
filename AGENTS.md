@@ -36,6 +36,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 ```
 
 - **`src/scripts/assets/` 是全部经典脚本源码（含 `// @ts-nocheck` 的 legacy 脚本），`public/assets/` 是纯产物目录，勿手改**。legacy 脚本（wave/navbar/wishes/upvote/banner-* 等）迁入后统一 `.ts` 后缀（兼容 nodemon watch，esbuild 照常编译）。
+- **`public/assets/*.js` 已从 git 移除跟踪**（`public/assets/*.js` 忽略规则生效中）：新克隆的仓库在首次构建前目录里没有这些 js，属正常现象、跑一次构建即可生成；不要把它们重新 `git add` 回来。
 - `src/scripts/vendor/` 存放第三方 vendored 资产（如 qrcode.bundle.js UMD），构建期原样拷贝、不经过 esbuild 编译。
 - `_` 前缀文件（如 `_theme-config.ts`）是被 import 的共享模块，不是独立入口，esbuild 会内联进各入口。
 - 产物带 `/*__ETHEMEAL_MINIFIED__*/` 标记；build:done 只压缩白名单内 public 产物，不碰 Astro/Vite 的 hashed module 文件。
@@ -207,6 +208,10 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 **壁纸模式切换约定**：`#banner-wrapper` / `#scroll-down-indicator` / `#banner-credit` / 波浪容器恒渲染（已去 `th:if`），显隐与定位全由 `html[data-banner-display]` 门控（`components.css`），`applyBannerDisplay` 同时切 `body.enable-banner` 并按模式重算 `--banner-height-extend` px（全屏 65vh / 横幅 30vh，数值来自 `constants.ts`）。波浪关闭用 `body.wave-disabled`（CSS 隐藏），开启时由后台默认 + `wave.js` 的 desktop_only 守卫决定。
 
+**模式切换过渡（性能治理，改动过渡/层化规则前必读）**：切换窗口由 `applyBannerDisplay` 临时挂 `html.banner-mode-transitioning` 开、结束移除，`components.css` 内规则分四组：①窗口过渡（panel / grid / wrapper / 媒体层，时长 `--dur-banner`）；②层化清单（grid、moments、侧栏吸顶块临时 `translateZ(0)`，含移动端）；③移动端瞬时化清单（<768px 一律 `transition: none`）；④媒体层桌面专属（≥768px 推拉镜头）。三个同步点：窗口内**新增带过渡的元素**要同步加进瞬时化清单（移动端唯一剔除机制）；层化容器内**新增 fixed 元素**要移出（层化期定位基准变化）；两处 **768px 断点**（瞬时化 / 桌面媒体层）联动修改。规则细节与「勿再删除」警告见 `components.css` 对应注释块——勿凭直觉改动（曾误判「无过渡 = 层化无用」撤掉移动端层化、实测回归卡顿）。
+
+**Banner 高度体系（`constants.ts` 为权威定义）**：`--banner-height-extend` 的 px 换算基准是 `cssVhViewportHeight()`（与 CSS 100vh 同基准），**不能**用 `window.innerHeight`（动态视口，动态地址栏浏览器上会露缝）；写入统一走 `writeBannerHeightExtend()`（含写守卫）。同步点：`variables.css` 默认值、`Layout.astro` 两处内联脚本（探针手写拷贝）、`banner-sync.ts`。
+
 **默认值传递链路**：后台 `theme.config` → `src/components/ConfigCarrier.astro` 的 `th:data-*` 属性 → `src/utils/setting-utils.ts` 读取。重置默认值时也从 ConfigCarrier 读，勿依赖 body 内联变量（被 JS 覆盖后原值丢失）。
 
 **入口条件同步约定**：`Navbar.astro` 中显示设置按钮的 `th:if` 会枚举 visitorStyle 标签页开关（外观/壁纸/特效），与 `ConfigCarrier.astro` 的 `th:data-visitor-*` 一一对应——**新增/删除标签页开关时两处必须同步修改**（Thymeleaf 无法从 data 属性推导，只能手写枚举）。
@@ -226,6 +231,30 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **樱花特效**：`sakura.js` 在 `Layout.astro` 尾部按 `styleSwitches.sakura == true or (visitorStyle.enable != false and visitorStyle.effects != false)` 门控（两者都不成立时樱花永不显示、不输出脚本标签）；默认值走 ConfigCarrier `data-sakura-default`，「访客样式切换 → 特效切换」关闭时忽略 `sakuraEnabled`（Layout 启动脚本负责清理）；图片 / Worker 路径从脚本自身 `src` 推导（`sakura-worker.js` 由主脚本按经典 Worker 加载，不支持 OffscreenCanvas 时回退主线程绘制）；参数集中在 `_sakura-config.ts`、绘制核心 `_sakura-core.ts` 两套实现共享。
 
 **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处，缺一会回退到组件内的中文兜底。
+
+## 注释规范
+
+注释密度高是本项目有意为之（坑位警告、同步点、反直觉因果都要写清），但表达必须收敛——**只描述「当前代码为什么是这样」，不写日期、不写过程叙事**。标准如下：
+
+**不写的**：
+
+- **日期 / 阶段标注**：「（2026-10）」「（I27 引入）」这类一律删——版本信息 git 历史里有，注释只留结论。
+- **过程叙事**：「曾经写在页头区上…已移出」「一度误判…」这类发现问题 → 修复的故事不写；教训有防错价值时压成一句警示（如「曾误判『无过渡 = 层化无用』撤掉、实测回归卡顿，勿再删除」）。
+- **重复表述**：同一信息多处出现时只留一处（靠近定义处 / 更权威的那处）。
+- **展开的举例清单**：能压成一行就压成一行；读代码就懂的解释不写。
+
+**必须保留的**：
+
+- ⚠️ 同步点（如「改这里必须同步 variables.css / Layout.astro 内联脚本」）与成对断点的同步提示；
+- ⚠️ 防错警告（「勿再删除」「勿改回 X」并说明后果）；
+- 反直觉因果（「不能用 A，因为会 B」）；
+- 数值依据（换算关系、阈值来源）与结构契约（ASCII 结构图、表达式契约）。
+
+**格式**：
+
+- 一律中文说明；引用变量 / 选择器直接写标识符，沿用「」引号，不用 Markdown `**` 强调（在代码注释里没有渲染意义）。
+- 长注释块（>10 行）须有明确理由（结构契约 / 多步约定），否则压到 3~8 行。
+- 改代码时顺手修正或删除被改处的过时注释，不留待下轮。
 
 ## 提交规范
 

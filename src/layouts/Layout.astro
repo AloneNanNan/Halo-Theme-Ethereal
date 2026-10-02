@@ -329,13 +329,24 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
 
         // 与 constants.ts 的 calcBannerHeightExtend 保持同式；延伸量 =
         // 首页高度(全屏 100vh / 横幅 65vh) − 基础 35vh。数值来自注入的
-        // 常量（勿硬编码），确保与 constants.ts / variables.css 不脱节
+        // 常量（勿硬编码），确保与 constants.ts / variables.css 不脱节。
+        // 基准必须与 CSS vh 一致：移动端 Chrome/Safari 的 vh 按「大视口」解析，
+        // window.innerHeight 是动态视口（地址栏显示时更小），用后者换算会让
+        // 波浪底边与 banner 底边错位露缝（constants.ts 的 cssVhViewportHeight
+        // 注释详述）。探针不能 import，此处为内联拷贝（与 constants.ts 及下方
+        // 访客覆盖脚本中的同款探针保持同步）：
+        const __vhProbe = document.createElement("div");
+        __vhProbe.style.cssText =
+          "position:fixed;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none";
+        document.documentElement.appendChild(__vhProbe);
+        const __vhHeight = __vhProbe.offsetHeight || window.innerHeight;
+        __vhProbe.parentNode.removeChild(__vhProbe);
         const __homeVh =
           document.documentElement.dataset.bannerDisplay === "fullscreen"
             ? BANNER_HEIGHT_HOME_FULLSCREEN
             : BANNER_HEIGHT_HOME;
         let offset = Math.floor(
-          window.innerHeight * ((__homeVh - BANNER_HEIGHT) / 100),
+          __vhHeight * ((__homeVh - BANNER_HEIGHT) / 100),
         );
         offset = offset - (offset % BANNER_EXTEND_ROUNDING);
         document.documentElement.style.setProperty(
@@ -532,7 +543,15 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
             mode = d.bannerDisplayDefault || "banner";
           }
           var extendVh = mode === "fullscreen" ? 65 : 30;
-          var offset = Math.floor(window.innerHeight * (extendVh / 100));
+          // 基准同 head 脚本 / constants.ts 的 cssVhViewportHeight：内联探针
+          // （与 CSS vh 一致；用 innerHeight 会在动态地址栏浏览器上错位露缝）
+          var __vhProbe = document.createElement("div");
+          __vhProbe.style.cssText =
+            "position:fixed;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none";
+          document.documentElement.appendChild(__vhProbe);
+          var __vhHeight = __vhProbe.offsetHeight || window.innerHeight;
+          __vhProbe.parentNode.removeChild(__vhProbe);
+          var offset = Math.floor(__vhHeight * (extendVh / 100));
           offset = offset - (offset % 4);
           document.documentElement.setAttribute("data-banner-display", mode);
           document.documentElement.style.setProperty(

@@ -501,7 +501,7 @@ const {
           class="col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2 flex flex-col gap-4"
         >
           <div
-            th:if="${theme.config?.layout?.pageLayout?.categoryBar == null or theme.config?.layout?.pageLayout?.categoryBar}"
+            th:if="${theme.config?.layout?.pageLayout?.categoryNav?.enable == true}"
           >
             <CategoryBar />
           </div>

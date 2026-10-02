@@ -87,12 +87,9 @@
     @apply flex items-center justify-center bg-(--btn-regular-bg) text-(--btn-content) transition hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active) dark:text-white/75;
   }
 
-  /* 统一按压反馈（对齐导航菜单按钮的观感：按下底色平滑过渡到主题色，无阴影）：
-     btn-regular / btn-card 已内置各自的 active 底色（保持不动），这里为透明底的
-     动作钮 / 池 / about 按钮补主题色淡底。选择器加 :root 提高特异性——按下态与
-     hover 底色同属性，必须压过源码里更靠后的 hover 规则才看得见。缩放沿用各按钮
-     自带的 active:scale-*；about 页头按钮没有该 Tailwind 类，单独补同幅度缩放。
-     （分类导航栏 .category-pill 的过渡在其组件样式表内维护，不在此重复声明） */
+  /* 统一按压反馈（对齐导航菜单按钮）：btn-regular / btn-card 已内置 active 底色，
+     这里只为透明底的动作钮 / 池 / about 按钮补主题色淡底。加 :root 提高特异性
+     以压过更靠后的 hover 规则；缩放沿用自带 active:scale-*（about 页头按钮单独补） */
   :root .act-outline:active,
   :root .seg-item:not(.seg-active):not(.active):active,
   :root .about-btn:active,
@@ -239,15 +236,11 @@
     top: calc(var(--banner-height) - var(--panel-overlap));
   }
 
-  /* 全屏模式首页：banner 占满整屏，内容区从 100vh 之下开始（不交叠）。
-     top = 100vh − 延伸像素，与 #main-grid 的 translate-y-(--banner-height-extend)
-     抵消后精确落在 100vh，避免延伸像素取整导致的顶部残留露白。
-     +--banner-home-content-gap：首页内容区顶部留出的页面背景间距（原
-     #main-grid padding-top）。折进 panel top 而非 padding——该 top 在首页↔
-     其他页切换时由 home-switch 过渡（html.home-switch #main-panel-wrapper
-     transition: top）平滑变化，padding 需单独补 transition-property 且易
-     失步/闪烁，折进来则天然无闪烁。
-     全屏标记统一读 <html data-banner-display>（与 JS 同源，无 body class） */
+  /* 全屏模式首页：内容区从 100vh 之下开始。top = 100vh − 延伸像素，与
+     #main-grid 的 translate 抵消后精确落在 100vh，避免取整残留露白。
+     内容间距 +--banner-home-content-gap 折进 top 而非 padding：该 top 由
+     home-switch 过渡（padding 需单独补 transition 且易失步/闪烁）。
+     全屏标记统一读 <html data-banner-display>（与 JS 同源） */
   html[data-banner-display="fullscreen"] body.is-home #main-panel-wrapper {
     top: calc(
       var(--banner-height-home) - var(--banner-height-extend) +
@@ -296,18 +289,15 @@
     animation-delay: min(var(--content-delay), var(--dur-entry-max, 400ms));
   }
 
-  /* 波浪位置完全由 CSS 驱动：
+  /* 波浪位置完全由 CSS 驱动（避免 JS 首帧读延伸量的时序问题）：
        基值 —— 底边盖过 banner 底边（35vh）+ 4px 覆盖量（--wave-cover-offset）；
-       首页（body.is-home）—— 再加延伸量 --banner-height-extend（px，head 脚本 /
-       banner-sync 写入），波浪底边落到首页 banner 底边（65vh / 100vh）；
+       首页（body.is-home）—— 再加延伸量 --banner-height-extend（px，JS 写入），
+         波浪底边落到首页 banner 底边（65vh / 100vh）；
        全屏首页 —— 再整体下移 20%（translateY 的 % 即元素自身高度，各断点
-       h-28/32/36 等比下移，只露出波峰层，实心底部移出视口）。
-      使用 transform 而非 translate 属性：与 1.1.0 一致（该版本在 Edge 下无
-      "波浪与页面顶部边缘"合成缝隙）。translate 属性层在非整数 devicePixelRatio
-      （如 1.5）下栅格化边界处理不同，动画时会在波浪边界露 1px 缝；transform
-      走独立合成路径无此问题。锁步不依赖属性——同 --dur-banner、同缓动、
-      同帧切换（body.is-home）即可严格同步。CSS 驱动保留：修复 Safari 首帧
-      getComputedStyle 读不到延伸量的时序问题 */
+         h-28/32/36 等比下移，只露出波峰层）。
+       必须用 transform 而非 translate 属性：后者在非整数 devicePixelRatio
+       （如 1.5）下动画会在波浪边界露 1px 缝，transform 走独立合成路径无此问题；
+       锁步靠同 --dur-banner、同缓动、同帧切换，不依赖属性 */
   #wave-container {
     top: var(--banner-height);
     transform: translateY(calc(-100% + var(--wave-cover-offset)));
@@ -460,14 +450,12 @@
     pointer-events: none;
   }
 
-  /* 首页 Banner 标题/副标题字号：模板把后台配置值输出到 CSS 变量（--banner-title-size 挂
-     #banner-title 自身；--banner-subtitle-size 挂 #banner-subtitle-wrapper，供副标题与
-     光标共用），这里消费。移动端收窄由下方媒体查询在**首帧**生效——旧实现靠
-     banner-responsive.js 在 defer 执行后才收窄，首帧会先按桌面内联字号渲染，造成
-     移动端首屏「大字号闪变」。数值与旧 JS 逐档一致：移动端（<768px）root 字号为 14px，
-     视口宽×0.007 rem ≡ 9.8vw（标题 clamp 1.8–3.5rem，≥500px 触顶、≤257px 触底；
-     副标题 480/640/767.98 三档 rem 值与旧 JS 一致，随 root 联动）。
-     ⚠️ 勿把 font-size 写回模板内联：内联会盖过媒体查询，把闪变问题带回来 */
+  /* 首页 Banner 标题/副标题字号：模板输出后台配置值到 CSS 变量（--banner-title-size
+     挂 #banner-title；--banner-subtitle-size 挂 #banner-subtitle-wrapper），这里消费。
+     移动端收窄由下方媒体查询在首帧生效（改为 JS 收窄会让首屏先按桌面字号渲染、闪变）。
+     数值：视口宽×0.007 rem ≡ 9.8vw，标题 clamp 1.8–3.5rem（≥500px 触顶、≤257px 触底）；
+     副标题 480/640/767.98 三档随 root 联动。
+     ⚠️ 勿把 font-size 写回模板内联：内联会盖过媒体查询、闪变复现 */
   #banner-title {
     font-size: var(--banner-title-size, 3.5rem);
   }
@@ -624,27 +612,30 @@
     opacity: 0;
   }
 
-  /* 壁纸模式切换过渡：panel top / grid min-height·translate 随模式变化平滑过渡
-     （复用 --dur-banner）。由 applyBannerDisplay 临时加 html.banner-mode-transitioning
-     启用，过渡结束后移除恢复默认 */
-  html.banner-mode-transitioning #main-panel-wrapper,
-  html.banner-mode-transitioning #main-grid {
-    transition:
-      top var(--dur-banner, 700ms)
-        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
-      min-height var(--dur-banner, 700ms)
-        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
-      translate var(--dur-banner, 700ms)
-        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+  /* 壁纸模式切换过渡：panel top / grid translate 随模式变化平滑过渡（复用
+     --dur-banner），由 applyBannerDisplay 临时加 html.banner-mode-transitioning
+     启用、结束移除。min-height 不参与过渡：它只影响内容下方留白与滚动范围
+     （逐帧变化会拖动滚动范围、弱内核每帧更新），内容位置由 panel top 决定，
+     瞬时到位无可见位移。top 与 translate 必须同窗同速：全屏首页 panel top
+     多减了延伸量、由 grid 的 translate 补回，错速会形成「内容先移后归位」的摆动。
+     移动端不参与：由下方「移动端瞬时化」的 transition: none 覆盖 */
+  html.banner-mode-transitioning #main-panel-wrapper {
+    transition: top var(--dur-banner, 700ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
-  /* 壁纸容器与媒体元素参与过渡：只列「height + opacity」两项。
-     height：--banner-height-home 在「横幅 65vh ↔ 全屏 100vh」切换（img 是 100%，
-     父级逐帧过渡自动跟随）；opacity：全屏 ↔ 全屏透明的壁纸透明度差异。
+  html.banner-mode-transitioning #main-grid {
+    transition: translate var(--dur-banner, 700ms)
+      var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
+  }
+
+  /* 壁纸容器与媒体元素参与过渡：只列 height + opacity。
+     height：--banner-height-home 在「横幅 65vh ↔ 全屏 100vh」切换（img 100%、
+     自动跟随）；opacity：全屏 ↔ 透明 的壁纸透明度差异。
      不列 top / translate：classic/横幅 与 hero/透明 的视觉位置靠「top:-extend +
-     translate:+extend」一负一正相消拼出，两项各走各的过渡会在不同步的帧错位
-     （观感即「壁纸上下摆动」）；两侧净位置相同，瞬时到位即零位移。
-     窗口由 applyBannerDisplay 临时挂 .banner-mode-transitioning，结束即恢复 */
+     translate:+extend」一负一正相消拼出，各走各的过渡会帧间错位（观感即「壁纸
+     上下摆动」）；两侧净位置相同，瞬时到位即零位移。
+     移动端不参与：由下方「移动端瞬时化」的 transition: none 覆盖 */
   html.banner-mode-transitioning #banner-wrapper {
     transition:
       height var(--dur-banner, 700ms)
@@ -659,31 +650,85 @@
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
   }
 
-  /* 媒体层的推拉镜头：切换窗口内 img / video 的缩放与模糊平滑过渡 —— 横幅 img
-     无缩放、全屏/透明的 img 带 scale(1.05~1.06)，切换时该差异即为一记轻微推拉。
-     两者必须同窗口：从横幅（清晰、scale 1）切到透明（blur 10px、scale 1.06）时，
-     若模糊瞬时到位而缩放还在路上，起手几帧模糊会采样到容器外、四边露窄暗边
-     （scale 放大正是为模糊采样留边距）。不影响 hero 的滚动模糊斜坡
-     （走 .hero-blur-transitioning，逐帧直写） */
-  html.banner-mode-transitioning #banner img,
-  html.banner-mode-transitioning #banner-mobile img,
-  html.banner-mode-transitioning #banner video,
-  html.banner-mode-transitioning #banner-mobile video {
-    transition:
-      transform var(--dur-banner, 700ms)
-        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)),
-      filter var(--dur-banner, 700ms)
-        var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)) !important;
+  /* 切换窗口内把「位移中的大块内容」提升为合成层：X5/旧 WebView 不做自动层
+     提升，top/translate 变化 = 每帧重绘整块内容，是切换卡顿的主因。层化后位移
+     由合成器承担（层位图复用），窗口结束随类移除（层解散，避免长期内存占用与
+     包含块副作用）；translateZ(0) 立即强制层，will-change 提示预分配（部分旧
+     内核忽略它）。含移动端：瞬时跳变同样要重新布局+合成，层化让重绘范围缩到
+     真正变化的位图——曾误判「无过渡 = 层化无用」撤掉、实测回归卡顿，勿再删除。
+     ⚠️ 不层化 #main-panel-wrapper：其内 fixed 后代（BackToTop 等）会被 transform
+     创建的包含块改变定位基准；panel 无背景绘制、可见后代已层化，不层化近乎零成本。
+     ⚠️ 这些容器内新增 fixed 元素需移出（层化窗口期内定位基准会变） */
+  html.banner-mode-transitioning #main-grid,
+  html.banner-mode-transitioning #home-moments-wrap,
+  html.banner-mode-transitioning #sidebar-sticky,
+  html.banner-mode-transitioning #right-sidebar-sticky {
+    will-change: transform, translate;
+    transform: translateZ(0);
+  }
+
+  /* wave 自身的 transform 是定位声明（translateY 系列基值 / is-home 变体），
+     不能写 translateZ 覆盖，只做 will-change 提示 */
+  html.banner-mode-transitioning #wave-container {
+    will-change: transform;
+  }
+
+  /* ── 移动端瞬时化（<768px）──
+     关键机制是 transition: none 而非「时长归零」：有过渡声明的元素在属性变化时
+     仍走「过渡准备」路径（快照 + 调度），旧内核上每次切换约 50~100ms 长帧。
+     ⚠️ 窗口内新增带过渡的元素需同步加入下方清单（移动端唯一的过渡剔除机制）。
+     桌面端动画完整保留；换页（home-switch）/hero 斜坡等窗口外动画不受影响 */
+  @media (max-width: 767.98px) {
+    html.banner-mode-transitioning #main-panel-wrapper,
+    html.banner-mode-transitioning #main-grid,
+    html.banner-mode-transitioning #banner-wrapper,
+    html.banner-mode-transitioning #banner,
+    html.banner-mode-transitioning #banner-mobile,
+    html.banner-mode-transitioning #banner img,
+    html.banner-mode-transitioning #banner-mobile img,
+    html.banner-mode-transitioning #banner video,
+    html.banner-mode-transitioning #banner-mobile video,
+    html.banner-mode-transitioning #wave-container,
+    html.banner-mode-transitioning #sidebar-sticky,
+    html.banner-mode-transitioning #right-sidebar-sticky,
+    html.banner-mode-transitioning #home-moments-wrap,
+    html.banner-mode-transitioning #top-row {
+      transition: none !important;
+    }
+  }
+
+  /* 媒体层（img / video）切换窗口内的过渡 —— 桌面专属（≥768px）：
+     恢复「推拉镜头」——transform（横幅无缩放 ↔ 全屏/透明 scale 1.05~1.06）
+     与 filter（0 ↔ 10px 模糊）同窗过渡。两项必须同窗口：blur 若瞬时到位而
+     scale 还在路上，起手几帧模糊会采样到容器外、四边露窄暗边（scale 放大
+     正是为模糊采样留边距）。移动端不匹配本媒体查询：由「瞬时化」none 剔除
+     （弱内核每帧对全屏大图重算高斯模糊必掉帧）——两处断点（768px）需同步。
+     hero 换页软化窗（.hero-blur-transitioning，见下方）切换期间让路给本规则 */
+  @media (min-width: 768px) {
+    html.banner-mode-transitioning #banner img,
+    html.banner-mode-transitioning #banner-mobile img,
+    html.banner-mode-transitioning #banner video,
+    html.banner-mode-transitioning #banner-mobile video {
+      transition:
+        transform var(--dur-banner, 700ms)
+          var(
+            --default-transition-timing-function,
+            cubic-bezier(0.4, 0, 0.2, 1)
+          ),
+        filter var(--dur-banner, 700ms)
+          var(
+            --default-transition-timing-function,
+            cubic-bezier(0.4, 0, 0.2, 1)
+          ) !important;
+    }
   }
 
   /* ── 全屏模式 · 沉浸（hero）布局（data-fullscreen-layout == 'hero'）──
-     classic 保持既有行为（壁纸在文档流内、随页面滚出首屏、不模糊、标题静态），
-     hero 只在其上覆盖：
+     classic 保持既有行为（壁纸随页面滚出、不模糊、标题静态），hero 在其上覆盖：
        ① 壁纸容器钉住视口，内容与组件在其上滚动；
-       ② 壁纸模糊由 --hero-wallpaper-blur 驱动（首页由 fullscreen-hero 脚本按滚动
-          写入、非首页恒为最大值，最大值即 --wallpaper-blur-max）；
-       ③ 首页标题透明度由脚本逐帧写内联 opacity（配合内联 transform 做上移淡出）；
-       ④ 非首页无标题、无波浪，内容贴导航栏下方；
+       ② 壁纸模糊由 --hero-wallpaper-blur 驱动（首页由 fullscreen-hero 脚本按
+          滚动写入、非首页恒为最大值 --wallpaper-blur-max）；
+       ③ 首页标题由脚本逐帧写内联 opacity 淡出；④ 非首页无标题、无波浪；
        ⑤ 卡片磨砂复用「全屏透明」的规则（见下方 transparent 段）。
      注意：模糊必须配合放大 —— 纯 blur 会让图片四边采样到容器底色形成暗边，
      scale(1.05) 保证采样区落在图片内部（与透明模式同机制） */
@@ -816,16 +861,20 @@
     translate: 0 -0.75rem;
   }
 
-  /* ⑧ 换页 / 模式切换时的模糊过渡：滚动斜坡要求逐帧直写（有过渡会拖尾），
-     但换页瞬间 0 ⇄ 最大值的跳变太生硬 —— 由脚本在状态切换的瞬间临时挂
-     .hero-blur-transitioning 开一段过渡窗口。时长与缓动必须与内容卡片的下移
-     （html.home-switch #main-panel-wrapper 用 --dur-banner + 同一条缓动）完全
-     一致：两者同时起、同时落，才不会出现"卡片落在还糊着的壁纸上"
-     （或反过来"壁纸先清晰、卡片还在飘"） */
-  html.hero-blur-transitioning #banner img,
-  html.hero-blur-transitioning #banner-mobile img,
-  html.hero-blur-transitioning #banner video,
-  html.hero-blur-transitioning #banner-mobile video {
+  /* ⑧ 换页 / 模式切换时的模糊过渡：滚动斜坡逐帧直写，换页瞬间 0 ⇄ 最大值的
+     跳变太生硬——由脚本临时挂 .hero-blur-transitioning 开一段过渡窗。时长与
+     缓动必须与卡片下移（html.home-switch #main-panel-wrapper）完全同步，否则
+     会出现「卡片落在还糊着的壁纸上」。
+     :not(.banner-mode-transitioning) 门控：模式切换时两窗同开，无门控会整条
+     夺走媒体层规则的过渡声明（桌面丢 transform 推拉、移动端复活 filter 过渡） */
+  html.hero-blur-transitioning:not(.banner-mode-transitioning) #banner img,
+  html.hero-blur-transitioning:not(.banner-mode-transitioning)
+    #banner-mobile
+    img,
+  html.hero-blur-transitioning:not(.banner-mode-transitioning) #banner video,
+  html.hero-blur-transitioning:not(.banner-mode-transitioning)
+    #banner-mobile
+    video {
     transition: filter var(--dur-banner, 700ms)
       var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
   }
@@ -874,18 +923,14 @@
     transform: scale(1.06);
   }
 
-  /* 卡片磨砂：需同时开启 banner「全屏透明」与「高级材质」两个开关。
-     作用于文章卡（.post-card）、页面级大容器、侧边栏组件卡、浮层面板、
-     导航栏（.navbar-blur）、悬浮按钮（.floating-btn），以及列表条目卡
-     （.btn-card-outline：瞬间/分类/装备/友链/日程/项目集等）。
-     仅 .btn-regular（标签卡）保持纯色。
-     实现方式：卡片只做半透明背景（不透出壁纸），不加 backdrop-filter——
-     磨砂感来自壁纸自身的模糊透过卡片透出。若给卡片加 backdrop-filter，
-     换页/入场动画中祖先 opacity<1 会形成 backdrop root，挡掉卡片对壁纸的
-     采样，磨砂会在过渡动画期间暂时消失（淡入结束才"啪"地出现）。
-     注意：不可用 .bg-(--card-bg) 通配——会命中 #post-list-container 等
-     包装容器使其成为 backdrop root，内层卡片失效；也不可覆盖
-     .bg-(--primary)（分组控件选中态的主题色高亮） */
+  /* 卡片磨砂：需同时开启「全屏透明」与「高级材质」两个开关。作用于文章卡
+     （.post-card）、页面级容器、侧栏组件卡、浮层面板、导航栏（.navbar-blur）、
+     悬浮按钮（.floating-btn）、列表条目卡（.btn-card-outline）；仅 .btn-regular
+     保持纯色。实现：卡片只做半透明背景，不加 backdrop-filter——磨砂感来自壁纸
+     自身的模糊透过卡片透出；若加 backdrop-filter，换页/入场动画中祖先 opacity<1
+     会形成 backdrop root、挡掉对壁纸的采样（磨砂在动画期间消失）。
+     注意：不可用 .bg-(--card-bg) 通配（会命中 #post-list-container 等包装容器
+     使其成为 backdrop root、内层卡片失效）；也不可覆盖 .bg-(--primary)（选中态高亮） */
   html[data-banner-display="transparent"]
     body.navbar-blur-enabled
     .card-base:not(.btn-regular):not(.bg-\(--primary\)),
@@ -961,22 +1006,17 @@
     ) !important;
   }
 
-  /* 全屏模式（经典 / 沉浸）：banner 署名胶囊不再显示——
-     两种全屏布局下内容区直接压在壁纸上，署名胶囊失去「压在横幅下沿」的
-     定位语境（会悬浮在页面中部、与波浪/内容重叠），故隐藏。
-     注：此处用 display:none 隐藏，不做服务端条件渲染，因为布局属性在
-     访客切换壁纸模式时是运行时变更的，需要随之即时显隐。
-     必须 !important：胶囊自带 .flex（display:flex，utilities 层），
-     未加 important 的声明会被其打败（同 disabled / transparent 两条的处理） */
+  /* 全屏模式（经典 / 沉浸）：署名胶囊隐藏——内容区直接压在壁纸上，胶囊失去
+     「压在横幅下沿」的定位语境（会悬浮在页面中部、与波浪/内容重叠）。
+     用 display:none 而非服务端条件渲染：布局属性在访客切换模式时运行时变更。
+     必须 !important：胶囊自带 .flex（utilities 层）会打败未加 important 的声明 */
   html[data-banner-display="fullscreen"] #banner-credit {
     display: none !important;
   }
 
-  /* 全局模糊开关：按钮磨砂放在自身会淡入淡出的外层 .floating-btn 上
-     （任务栏式）。元素自身的 opacity<1 不会挡掉它自己的 backdrop-filter
-     （backdrop root 只作用于后代），因此淡入淡出时磨砂始终存在、不闪失；
-     内层 .btn-card 透明以露出外层的磨砂面。
-     透明模式的配色覆写在上方"卡片磨砂"选择器里；非透明模式保持固定值 */
+  /* 按钮磨砂放在会淡入淡出的外层 .floating-btn 上：元素自身 opacity<1 不影响
+     自己的 backdrop-filter（backdrop root 只作用于后代），淡入淡出磨砂不闪失；
+     内层 .btn-card 透明以露出磨砂面。透明模式的配色覆写见上方「卡片磨砂」 */
   body.navbar-blur-enabled .floating-btn {
     background-color: rgb(255 255 255 / 0.62);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -991,9 +1031,8 @@
     background-color: transparent !important;
   }
 
-  /* 目录弹窗卡片随「高级材质」磨砂（同悬浮按钮/浮层面板）。弹窗淡入淡出
-     动画发生在卡片自身 opacity 上，不形成 backdrop root，磨砂不闪失；
-     全屏透明模式下由上方的 .card-base 卡片磨砂选择器覆盖（含卡片透明度） */
+  /* 目录弹窗卡片随「高级材质」磨砂；淡入淡出在卡片自身 opacity 上、不形成
+     backdrop root。全屏透明下由上方 .card-base 规则覆盖 */
   body.navbar-blur-enabled .toc-popup-card {
     background-color: rgb(255 255 255 / 0.62) !important;
     -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
@@ -1054,9 +1093,7 @@
     text-decoration-color: var(--link-active);
   }
 
-  /* 高级材质开启：导航栏模糊（同 submenu-panel / floating-btn，由
-     body.navbar-blur-enabled 单一控制——后台关闭或访客关闭都会移除该 class，
-     保证菜单栏与二级面板/悬浮按钮行为一致） */
+  /* 导航栏模糊（由 body.navbar-blur-enabled 单一控制，与二级面板/悬浮按钮一致） */
   body.navbar-blur-enabled .navbar-blur {
     transition: none !important;
     background-color: rgb(255 255 255 / 0.62) !important;
@@ -1074,12 +1111,10 @@
     border-bottom: 1px solid rgb(255 255 255 / 0.08);
   }
 
-  /* 全屏模式首页：导航栏「顶部透明、下滑玻璃」——
-     顶部（未滚过阈值，html 无 .navbar-scrolled）时背景、模糊、投影、描边全部归零，
-     壁纸完整露出；滚过阈值后恢复为标准玻璃底（.navbar-scrolled 由 navbar.ts 在
-     滚动 > 50px 时挂到 <html>）。
-     仅在「全屏模式 + 首页 + 高级材质开启」三者同时满足时生效；非首页上方是内容卡
-     （无壁纸），保持玻璃。过渡时长与卡片磨砂同源（--dur-banner） */
+  /* 全屏模式首页：导航栏「顶部透明、下滑玻璃」——顶部（html 无 .navbar-scrolled）
+     背景/模糊/投影/描边全部归零、壁纸完整露出；滚动 > 50px（navbar.ts 挂类）后
+     恢复标准玻璃底。仅在「全屏 + 首页 + 高级材质」同时满足时生效（非首页上方是
+     内容卡、保持玻璃）。过渡时长与卡片磨砂同源（--dur-banner） */
   html[data-banner-display="fullscreen"]
     body.is-home.navbar-blur-enabled
     .navbar-blur {
@@ -1215,12 +1250,11 @@
   }
 
   /* ── 移动端抽屉菜单（NavMenuPanel）──
-     结构完全复刻外链跳转模态框（#ext-link-modal / #ext-link-backdrop）：
-     root 是 fixed 全屏容器，遮罩用 absolute + backdrop-filter（不是 fixed），
-     面板 absolute 定位于容器内。整个 root 由 navbar.js 动态 append 到 body
-     直接子级（模态框同款），脱离 OverlayScrollbars 滚动容器与 navbar 的
-     backdrop-filter 合成层，保证模糊按真实视口采样、与滚动位置一致。
-     开关由 body.nav-menu-open 驱动。 */
+     root 是 fixed 全屏容器，整个 root 由 navbar.js 动态 append 到 body 直接
+     子级（脱离 OverlayScrollbars 滚动容器）；开关由 body.nav-menu-open 驱动。
+     ⚠️ 遮罩为纯色（无 backdrop-filter）：全屏 backdrop 模糊在弱内核（X5/旧
+     WebView）上每帧重算整屏模糊，是抽屉开关卡顿的主因；磨砂改由卡片自身承担
+     且跟随「高级材质」（见下方面板磨砂规则） */
   #nav-menu-root {
     position: fixed;
     inset: 0;
@@ -1232,8 +1266,6 @@
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 0.4);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     opacity: 0;
     pointer-events: none;
     transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -1261,23 +1293,33 @@
     background-color: var(--card-bg);
     box-shadow: 0 20px 50px rgb(0 0 0 / 0.2);
     translate: 110% 0;
-    opacity: 0;
     pointer-events: none;
-    transition:
-      translate 250ms cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* 只过渡 translate（对齐 Firefly）：滑入自带「从右侧进入」的方向感，
+       淡入（opacity）为冗余属性——少一个逐帧重绘项。藏匿靠 110% 平移
+       （平移量 22rem > 面板宽 20rem + 右距 0.5rem，完全移出视口） */
+    transition: translate 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   :root.dark #nav-menu-root #nav-menu-panel {
     box-shadow: 0 20px 50px rgb(0 0 0 / 0.5);
   }
 
-  /* 注：抽屉背景固定为不透明 var(--card-bg)（见上方主规则），
-     不再套用 navbar_blur 磨砂——避免与遮罩模糊叠加造成"双层模糊"过度透明 */
+  /* 抽屉卡片磨砂：跟随「高级材质」开关（对齐导航栏/浮层的玻璃参数，
+     明暗配色同源）。遮罩已去全屏模糊，磨砂由卡片自身承担、不再有
+     「双层模糊」问题——静止态零成本，仅开合滑动期间采样重算（面板尺寸，
+     远小于原全屏遮罩）。关闭高级材质时保持主规则的不透明 var(--card-bg) */
+  body.navbar-blur-enabled #nav-menu-root #nav-menu-panel {
+    background-color: rgb(255 255 255 / 0.62);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  :root.dark body.navbar-blur-enabled #nav-menu-root #nav-menu-panel {
+    background-color: rgb(0 0 0 / 0.65);
+  }
 
   body.nav-menu-open #nav-menu-root #nav-menu-panel {
     translate: 0 0;
-    opacity: 1;
     pointer-events: auto;
   }
 
@@ -1302,23 +1344,8 @@
     @apply relative flex items-center justify-between gap-3 rounded-lg pl-[1.1875rem] pr-3 py-2.5 font-bold text-black/75 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-[1.375rem] hover:text-(--primary) active:scale-[0.97] active:bg-(--btn-plain-bg-active) dark:text-white/75 dark:hover:text-(--primary);
   }
 
-  /* 打开抽屉时菜单项从右往左淡入：由 navbar.js 在打开瞬间为每个
-     .nav-drawer-link 设置递增 animation-delay，配合本动画逐项浮现；
-     仅作用于 drawer 打开态 */
-  @keyframes nav-menu-link-in {
-    from {
-      opacity: 0;
-      translate: 8px 0;
-    }
-    to {
-      opacity: 1;
-      translate: 0 0;
-    }
-  }
-
-  body.nav-menu-open #nav-menu-root #nav-menu-panel .nav-drawer-link {
-    animation: nav-menu-link-in 300ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
-  }
+  /* 注：菜单项错峰入场动画已移除（打开瞬间 N 个元素各自播动画，与面板滑动叠加
+     成额外逐帧成本）——勿再添加 */
 
   /* 组间分割线：仅在抽屉内生效 */
   #nav-menu-root #nav-menu-panel .nav-drawer-divider {
@@ -1578,13 +1605,12 @@
   display: none;
 }
 
-/* ===== 瞬间媒体区：朋友圈式布局（MomentMedia.astro，moments / moment 两页共用） =====
-   - 单图（moment-media-count-1）：等比完整展示，高度上限 18rem；
-     仅超长图裁下方、超宽图裁右侧（阈值见下方单图规则）
-   - 多图（moment-media-count-N，N>=2）：统一 1:1 方形宫格 cover 裁剪，
-     2/4 张为两列、其余为三列（朋友圈式，行尾不满自然左对齐）
-   - 非 PHOTO 媒体（视频/音频/引用链接，.moment-media-nonphoto）独占整行，不裁剪
-   mediaCount 由模板 th:classappend 注入的 moment-media-count-N 类驱动。 */
+/* ===== 瞬间媒体区：朋友圈式布局（MomentMedia.astro，moments / moment 共用） =====
+   - 单图（moment-media-count-1）：等比完整展示、高上限 18rem，仅超长图裁下 /
+     超宽图裁右（阈值见下方单图规则）
+   - 多图（N>=2）：1:1 方形宫格 cover 裁剪（2/4 张两列、其余三列，行尾左对齐）
+   - 非 PHOTO 媒体（.moment-media-nonphoto）独占整行，不裁剪
+   mediaCount 由模板 th:classappend 注入的 moment-media-count-N 驱动 */
 .moment-media {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1627,15 +1653,13 @@
 }
 
 /* 单图：宽度撑满容器、高度受 18rem 上限约束（替换元素约束算法自动等比求解）。
-   不要用 height + max-width 组合：宽度被钳制后盒子比例会偏离图片原比例，基类
-   object-fit: cover 会裁掉两侧，导致 PhotoSwipe 过渡起点与预览不一致。
-   兜底阈值（裁切临界高宽比 = 18rem / min-width）：
-   - min-width 10rem → 高宽比 > 1.8 才裁下方并展示顶部，即 9:19 及以上的手机长截图
-     算长图；3:4 / 2:3 / 9:16 等普通竖图保持完整，不被误判为长图；
-   - min-height 10rem → 宽高比 > 3:1 的超宽图才裁右侧（16:9、21:9 不受影响）。
-   object-position: left top 保证裁切后展示的是图片起始区域（长图顶部 / 宽图左侧）。
-   坑：min-width 不能写成 min(10rem, 100%)——父级是 width: fit-content，百分比会
-   与之循环依赖而被浏览器丢弃，超长图会缩成 81px 细条且不裁切。 */
+   不要用 height + max-width 组合：宽度被钳制后盒子比例偏离图片原比例，基类
+   object-fit: cover 会裁掉两侧，PhotoSwipe 过渡起点与预览不一致。
+   裁切阈值（临界比 = 18rem / min 10rem）：高宽比 > 1.8（9:19 及以上的手机长截图）
+   裁下方、宽高比 > 3:1（16:9、21:9 不受影响）裁右侧；object-position: left top
+   保证展示图片起始区域（长图顶部 / 宽图左侧）。
+   坑：min-width 不能写 min(10rem, 100%)——父级 width: fit-content 时百分比会
+   循环依赖被浏览器丢弃，超长图缩成细条且不裁切。 */
 .moment-media-count-1 .moment-media-item img {
   display: block;
   width: 100%;
@@ -1678,13 +1702,12 @@ audio.moment-media-nonphoto {
   display: none;
 }
 
-/* ===== 瞬间卡片（MomentCard.astro，moments / moment 两页共用） =====
-   - 外壳：card-base（边框 / 阴影跟随「卡片边框与阴影」开关，与页头卡同口径），无描边底；
-   - 缩进轨道（模板 md:ml-[4.25rem]）：正文 / 媒体 / 操作栏对齐作者名，移动端归零；
-   - 操作栏胶囊 .moment-action：点赞「已投」高亮走 .is-upvoted（upvote.js 切换），
-     文字色只用单一类控制，避免与 .btn-regular 的 dark:text-white/75 打特异性官司；
-   - 复制按钮：默认隐藏，卡片 hover / 键盘聚焦才渐现（触屏常显）；
-   - 水印：右下角 bolt，与页头水印同族（位置 / 大小 / 浓度三处参数可微调）。 */
+/* ===== 瞬间卡片（MomentCard.astro，moments / moment 共用） =====
+   - 外壳 card-base（边框/阴影跟随开关）；缩进轨道对齐作者名（移动端归零）
+   - 操作栏胶囊 .moment-action：点赞「已投」走 .is-upvoted（upvote.js 切换），
+     文字色单一类控制，避免与 .btn-regular 打特异性官司
+   - 复制按钮默认隐藏、卡片 hover / 键盘聚焦渐现（触屏常显）
+   - 水印：右下角 bolt，与页头水印同族（位置 / 大小 / 浓度可微调） */
 
 /* 复制链接按钮（模板里位于昵称行内 ml-auto + -my-2：不撑高昵称行；
    .moment-card 在这里只作「卡片 hover 渐现」的作用域钩子） */
@@ -1867,19 +1890,14 @@ body.pswp-transition #photo-detail-image {
   }
 }
 
-/* ── 卡片边框和阴影（样式开关 → 访客可在显示设置面板覆盖；默认关闭）──
-   给「原本无边框」的卡片（.card-base）与按钮卡（.btn-card）补细边框 + 浅阴影
-   （同 Firefly 的 card border：1px --line-divider + shadow-xs），增强立体层次。
-   分页页码组（.pagination-pages，Pagination/Equipment/Photo/skills/timeline）
-   作为整体一张卡片参与（内部页码按钮反覆盖排除）；翻页箭头照常参与。
-   排除项（设计上已有专属描边/阴影语言或不是卡片，不归本开关管）：
-   - .btn-card-outline：主题色细描边条目卡（友链/瞬间/分类等，Firefly 口径）；
-   - .no-card-border：标记「不参与」的功能按钮（筛选标签、照片页按钮、点赞、
-     悬浮按钮内层等）——按钮本身不是卡片；
-   - .toc-popup-card / .welcome-card：浮层弹窗（已有自己的浮层阴影体系）；
-   - .is-pinned：置顶卡（主题色 outline + 光晕强化）。
-   ⚠️ 排除项用 :where(:not(...)) 包裹：归零特异性、不改匹配，保证悬停时
-   .card-hover-lift:hover (0,3,1) 的主题色阴影能压过本规则 (0,2,1) */
+/* ── 卡片边框和阴影（样式开关，默认关闭 → 访客可在显示设置覆盖）──
+   给原本无边框的 .card-base / .btn-card 补细边框 + 浅阴影（1px --line-divider +
+   shadow-xs）；分页页码组（.pagination-pages）整体算一张卡片（内部按钮反覆盖排除）。
+   排除项（有专属描边/阴影语言或不是卡片）：.btn-card-outline（主题色描边条目卡）、
+   .no-card-border（功能按钮）、.toc-popup-card / .welcome-card（浮层弹窗）、
+   .is-pinned（置顶卡）。
+   ⚠️ 排除项用 :where(:not(...)) 包裹：归零特异性，保证悬停时 .card-hover-lift:hover
+   的主题色阴影（0,3,1）能压过本规则（0,2,1） */
 body.card-border-enabled
   .card-base:where(:not(.btn-card-outline)):where(:not(.toc-popup-card)):where(
     :not(.welcome-card)
@@ -1922,11 +1940,11 @@ body.card-border-enabled .pagination-pages .btn-card {
 
 /* ==========================================================================
    分组筛选「胶囊池」（segmented）：轨道 + 滑动浮块 + 滚动两端渐隐
-   —— 新版页头（.page-head-modern）的配套设计（见 PageHeader.astro
-   与 FilterTab/FilterTabs.astro 的 segmented 模式；滑块脚本 src/scripts/assets/filter-seg.ts）。
-   结构契约（池外壳由页面手写，组件只输出条目，这样 archives 的「未分类」这类
-   池外条目可以共用同一条轨道）：
-     <div class="seg-scroll">               横滚容器：溢出时两端渐隐（JS 切换类）
+   （见 PageHeader.astro 与 FilterTab/FilterTabs.astro 的 segmented 模式；
+   滑块脚本 src/scripts/assets/filter-seg.ts）。
+   结构契约（池外壳由页面手写，组件只输出条目，archives 的「未分类」等
+   池外条目可共用同一条轨道）：
+     <div class="seg-scroll">               横滚容器：溢出时两端渐隐（JS 切类）
        <div class="seg" data-filter-seg>    轨道（JS 初始化后挂 data-seg-ready）
          <span class="seg-thumb"></span>    浮块：承载激活底色与滑动动画
          <a class="seg-item …">…</a>        条目（激活项加 .seg-active）
@@ -2086,27 +2104,20 @@ body.card-border-enabled .pagination-pages .btn-card {
 
 /* ==========================================================================
    新版页头（modern）：eyebrow 上移 + 标题去竖条 + meta 行 + 大图标水印
-   （与 eyebrow 共用 iconClass，同图标两种尺寸）。
-   - 由 PageHeader.astro 输出；自带内边距，页面头部卡
-     不再包 px/py。
-   - 渐变不在这里：由页面头部卡的 .page-head-card 承担（铺满「页头 + 分组池」
-     整卡）。曾经写在页头区上，页头/池交界处会出现一条可见的背景色带
-     （设计评审发现的"分割层"），已移出。
-   - 刻意不设 position:relative：水印的定位祖先要穿透到 .page-head-card，
-     让水印锚「头部卡右下角」（有分组池的页面即池区右下；无池页面即页头
-     区右下——卡的边界）。曾经的锚定落在页头区右下，在有池卡片里视觉上
-     是"右侧中部"而非角落装饰。
-   - 不裁剪（无 overflow:hidden）：水印可跨过页头/池接缝完整显示，
-     越出卡片的部分由 card-base 的 overflow:hidden 兜底。
+   （与 eyebrow 共用 iconClass）。由 PageHeader.astro 输出，自带内边距
+   （页面头部卡不再包 px/py）。
+   - 渐变由 .page-head-card 承担（铺满「页头 + 分组池」整卡）——写在页头区上
+     会在交界处出现可见的背景色带（分割层）。
+   - 刻意不设 position:relative：水印定位祖先要穿透到 .page-head-card（锚
+     「头部卡右下角」）；不裁剪（无 overflow:hidden）——水印可跨过页头/池
+     接缝完整显示，越出卡片的部分由 card-base 的 overflow:hidden 兜底。
    ========================================================================== */
 .page-head-modern {
   padding: 1.5rem 1.5rem 1.25rem;
 }
-/* 标题竖线（classic 元素的现代回归）：悬于标题左侧空白处，不占布局、眉题与
-   标题不让位、垂直居中于标题。两处尺寸随环境等比缩放：
-   - 距标题距离随卡片内距（移动 24px 内距 → 12px，桌面 36px → 18px），
-     保证移动端竖线左侧仍有呼吸空间、不贴卡边；
-   - 高度随标题字号（桌面 31.2px 字号用旧版原值 20px，移动 27.2px 等比 → 17px）。
+/* 标题竖线（classic 元素的现代回归）：悬于标题左侧空白处，不占布局、垂直居中。
+   两处尺寸随环境等比缩放：距标题距离随卡片内距（移动 12px / 桌面 18px，保证
+   移动端左侧有呼吸空间）；高度随标题字号（移动 17px / 桌面 20px）。
    h1 的 ::before 不受 th:text 覆盖影响 */
 .page-head-modern h1 {
   position: relative;

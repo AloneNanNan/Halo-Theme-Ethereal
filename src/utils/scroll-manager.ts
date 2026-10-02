@@ -3,6 +3,7 @@
 import {
   BANNER_HEIGHT,
   MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
+  cssVhViewportHeight,
 } from "../constants/constants";
 import { bannerHomeHeight } from "./banner-sync";
 
@@ -57,8 +58,12 @@ function scrollFunction() {
   const currentBannerHeight = document.body.classList.contains("is-home")
     ? bannerHomeHeight()
     : BANNER_HEIGHT;
-  const bannerHeightPx = window.innerHeight * (currentBannerHeight / 100);
-  const tocRevealHeightPx = window.innerHeight * (BANNER_HEIGHT / 100);
+  // 基准与 CSS 100vh 一致（cssVhViewportHeight 带缓存，滚动帧零探测成本）：
+  // 阈值的比较对象是 banner 在文档中的实际像素高度（按 vh 渲染），用
+  // window.innerHeight 会在有动态地址栏的浏览器上偏小、阈值提前触发
+  const vhViewport = cssVhViewportHeight();
+  const bannerHeightPx = vhViewport * (currentBannerHeight / 100);
+  const tocRevealHeightPx = vhViewport * (BANNER_HEIGHT / 100);
 
   // 先读后写分离：所有布局读取（scrollY）在脚本最前一次性完成，之后仅写
   // class/属性——避免每帧「读 scrollTop → 写 class → 再读」的交错强制重排。

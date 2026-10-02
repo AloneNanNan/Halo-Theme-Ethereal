@@ -5,6 +5,8 @@ import {
   LIGHT_MODE,
   bannerExtendVh,
   calcBannerHeightExtend,
+  cssVhViewportHeight,
+  writeBannerHeightExtend,
 } from "../constants/constants.ts";
 import type { LIGHT_DARK_MODE } from "../types/config";
 import { readDurBannerMs } from "./dur-banner";
@@ -453,13 +455,11 @@ export function getStoredBannerDisplay(): BannerDisplayMode {
  *  来源 constants.ts，勿硬编码）。disabled/transparent 模式不使用延伸量
  *  （横幅隐藏 / 固定定位覆写），按横幅值写入即可 */
 function applyBannerExtend(mode: BannerDisplayMode): void {
-  const offset = calcBannerHeightExtend(
-    window.innerHeight,
-    bannerExtendVh(mode === "fullscreen"),
-  );
-  document.documentElement.style.setProperty(
-    "--banner-height-extend",
-    `${offset}px`,
+  writeBannerHeightExtend(
+    calcBannerHeightExtend(
+      cssVhViewportHeight(),
+      bannerExtendVh(mode === "fullscreen"),
+    ),
   );
 }
 

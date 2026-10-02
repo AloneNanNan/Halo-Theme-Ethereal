@@ -184,13 +184,21 @@ export interface PageLayout {
    * 并把两栏的悬浮目录镜像到左侧空白槽。仅 layoutMode === 'two-column' 时生效。
    */
   rightSidebarMode?: boolean;
-  /** 分类导航栏 */
-  categoryBar?: boolean;
-  /** 瞬间预览条（全站内容区顶部） */
+  /** 分类导航栏（设置组，见 CategoryNav。旧布尔字段 categoryBar 已废弃：
+   *  换名 categoryNav 避免旧布尔值在 SpEL 取 .enable 时报错） */
+  categoryNav?: CategoryNav;
+  /** 瞬间预览条（全站内容区顶部，仅大屏端显示） */
   momentsBar?: MomentsBar;
 }
 
-/** 瞬间预览条：内容区顶部的「瞬间」横向滚动预览条（需安装瞬间插件） */
+/** 分类导航栏：内容区上方的首页 / 归档 / 分类入口条（设置组，默认关闭） */
+export interface CategoryNav {
+  /** 总开关，默认关闭 */
+  enable?: boolean;
+}
+
+/** 瞬间预览条：内容区顶部的「瞬间」横向滚动预览条（需安装瞬间插件；
+ *  仅大屏端 ≥768px 显示，移动端在 HomeMoments 根元素上 hidden md:block 隐藏） */
 export interface MomentsBar {
   /** 总开关，默认关闭 */
   enable?: boolean;

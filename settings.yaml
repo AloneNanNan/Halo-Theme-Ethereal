@@ -30,19 +30,26 @@ spec:
               label: 右栏模式
               value: false
               help: "两栏布局下将侧栏放到右侧。「左侧边栏小组件」列表的内容会显示在右侧，悬浮目录镜像到左侧空白槽"
-            - $formkit: switch
-              name: categoryBar
-              id: categoryBar_enable
-              key: categoryBar_enable
-              label: 启用分类导航栏
-              value: false
-              help: "开启后将在内容区上方显示分类导航栏，包含首页、归档、文章分类及全部分类入口"
+            - $formkit: group
+              name: categoryNav
+              id: pageLayout_categoryNav
+              key: pageLayout_categoryNav
+              label: 分类导航栏
+              value:
+                enable: false
+              children:
+                - $formkit: switch
+                  name: enable
+                  id: categoryNav_enable
+                  key: categoryNav_enable
+                  value: false
+                  label: 启用分类导航栏
+                  help: "开启后将在内容区上方显示分类导航栏，包含首页、归档、文章分类及全部分类入口"
             - $formkit: group
               name: momentsBar
               id: pageLayout_momentsBar
               key: pageLayout_momentsBar
               label: 瞬间预览条
-              help: "内容区顶部的「瞬间」横向滚动预览条，全站生效"
               value:
                 enable: false
                 count: 10
@@ -53,7 +60,7 @@ spec:
                   key: momentsBar_enable
                   value: false
                   label: 启用瞬间预览条
-                  help: "开启后所有页面内容区顶部显示「瞬间」横向滚动预览条。需安装瞬间插件"
+                  help: "开启后所有页面内容区顶部显示瞬间横向滚动预览条，移动端不显示；需安装瞬间插件"
                 - $formkit: number
                   name: count
                   id: momentsBar_count
