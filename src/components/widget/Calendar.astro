@@ -1,0 +1,671 @@
+---
+// 站点日历小组件（对标 Firefly 的 Calendar 小组件）：日/月/年三视图 + 年度文章热力图
+// + 当月/单日文章列表。
+// - 数据来源：postFinder.listAll() 服务端按请求渲染 data-* 行（仅已发布、非私有），
+//   客户端脚本一次性读入，非构建期静态快照、无 fetch；文章增删改即时生效
+// - 后台可配置：年度热力图（sidebar.calendar.showHeatmap，缺省 true，在「站点日历小组件」分组里）
+// - 侧栏不是 Swup 容器：脚本生命周期内只跑一次，月份/视图状态跨页保留（与 Firefly 的
+//   swup:contentReplaced 重初始化不同，勿加回）；移动端独立列表经 template 挂载后脚本才
+//   执行，实例作用域取法对桌面/移动两份都成立
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<WidgetLayout
+  nameKey="widget.calendar.title"
+  id="calendar"
+  class={"relative" + (className ? " " + className : "")}
+>
+  <!-- 数据源容器：th:each 放在内层 .contents（不产生盒子）逐篇复制，外层只有一份；
+       data-* 值由 th:attr 输出，HTML 转义由 Thymeleaf 处理，客户端按属性读取即得原文 -->
+  <div class="calendar-posts-src hidden">
+    <div
+      class="contents"
+      th:each="post : ${postFinder.listAll()}"
+      th:if="${post.spec.publish == true and post.spec.visible != 'PRIVATE' and post.spec.publishTime != null}"
+      th:attr="data-title=${post.spec.title}, data-permalink=${post.status.permalink}, data-date=${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
+    ></div>
+  </div>
+
+  <div class="calendar-container">
+    <!-- 导航行：上/下月、回今天、当前标题（点击逐层切换 日→月→年） -->
+    <div class="mb-2 flex items-center justify-between">
+      <button
+        type="button"
+        class="btn-plain cal-prev h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
+        aria-label="Previous month"
+      >
+        <span class="icon-[material-symbols--keyboard-arrow-left] text-sm" />
+      </button>
+      <div class="cal-month-display text-lg font-bold text-neutral-900 cursor-pointer transition-colors select-none hover:text-(--primary) dark:text-neutral-100">
+        <span th:text="#{calendar.year}">Year</span>
+      </div>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          class="btn-plain cal-reset h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
+          aria-label="Back to today"
+        >
+          <span class="icon-[material-symbols--replay] text-sm" />
+        </button>
+        <button
+          type="button"
+          class="btn-plain cal-next h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
+          aria-label="Next month"
+        >
+          <span class="icon-[material-symbols--keyboard-arrow-right] text-sm" />
+        </button>
+      </div>
+    </div>
+
+    <!-- 日视图：星期表头 + 日历格子（客户端脚本填充） -->
+    <div class="cal-view cal-view-day">
+      <div class="cal-weekdays mb-2 grid grid-cols-7 gap-1"></div>
+      <div class="cal-grid pb-1 grid grid-cols-7 gap-1"></div>
+    </div>
+
+    <!-- 年度文章热力图：12 月 × 4 周；格子/提示由脚本填充；showHeatmap 关闭时整块不渲染 -->
+    <div
+      class="cal-heatmap mb-2"
+      th:if="${theme.config?.sidebar?.calendar?.showHeatmap != false}"
+    >
+      <div
+        class="cal-heatmap-months mb-1 grid gap-0.5"
+        style="grid-template-columns: repeat(12, 1fr);"
+      ></div>
+      <div
+        class="cal-heatmap-grid grid"
+        style="grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(4, 1fr); row-gap: 0.125rem;"
+      ></div>
+    </div>
+
+    <!-- 月视图 / 年视图（客户端脚本填充） -->
+    <div
+      class="cal-view cal-view-month grid grid-cols-3 gap-2"
+      style="display: none;"
+    ></div>
+    <div
+      class="cal-view cal-view-year grid grid-cols-3 gap-2"
+      style="display: none;"
+    ></div>
+
+    <!-- 当月/单日文章列表（客户端脚本填充） -->
+    <div class="cal-posts mt-3">
+      <div
+        class="cal-posts-divider mb-2 border-t border-neutral-200 dark:border-neutral-700"
+        style="display: none;"
+      ></div>
+      <div class="cal-posts-list flex max-h-48 flex-col gap-1 overflow-y-auto custom-scrollbar"></div>
+    </div>
+  </div>
+</WidgetLayout>
+
+<script is:inline>
+  (function () {
+    // 实例作用域：脚本 is:inline、每实例各跑一份，重复配置（如左栏 + 右栏）时只操作本实例——
+    // currentScript 取本实例所在条目容器再查元素，否则 querySelector 永远命中文档第一个实例
+    var widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+    var card = widgetRoot.querySelector('[data-id="calendar"]');
+    if (!card) return;
+
+    var t =
+      window.__etherealI18n ||
+      function (_key, fb) {
+        return fb;
+      };
+    var monthNames = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ].map(function (m, i) {
+      return t(
+        "calendar." + m,
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ][i],
+      );
+    });
+    var weekDays = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ].map(function (d, i) {
+      return t(
+        "calendar." + d,
+        ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i],
+      );
+    });
+    var yearText = t("calendar.year", "Year");
+    var heatmapWeekTemplate = t(
+      "calendar.heatmapWeek",
+      "Week {1} of {0}, {2} posts",
+    );
+    var emptyText = t("calendar.empty", "No posts yet");
+    // 语言标签归一化：zh* 用「YYYY年M月」，其余用「Month YYYY」
+    var isCJK =
+      (window.__etherealLangTag &&
+        window.__etherealLangTag(document.documentElement.lang) !== "en") ||
+      document.documentElement.lang.indexOf("zh") === 0;
+
+    var q = function (sel) {
+      return card.querySelector(sel);
+    };
+    var qq = function (sel) {
+      return card.querySelectorAll(sel);
+    };
+
+    // ---- 数据：读服务端内嵌的 data-* 行（非 fetch）----
+    var posts = [];
+    qq(".calendar-posts-src [data-date]").forEach(function (el) {
+      posts.push({
+        title: el.getAttribute("data-title") || "",
+        permalink: el.getAttribute("data-permalink") || "",
+        date: el.getAttribute("data-date") || "",
+      });
+    });
+    var postsByDate = {};
+    var yearSet = {};
+    posts.forEach(function (p) {
+      if (!p.date) return;
+      (postsByDate[p.date] = postsByDate[p.date] || []).push(p);
+      yearSet[p.date.slice(0, 4)] = true;
+    });
+    var availableYears = Object.keys(yearSet).sort(function (a, b) {
+      return b - a;
+    });
+
+    var now = new Date();
+    var displayYear = now.getFullYear();
+    var displayMonth = now.getMonth();
+    var currentView = "day";
+
+    var pad = function (n) {
+      return String(n).padStart(2, "0");
+    };
+
+    // ---- 热力图提示框：本实例专属（挂 card 上 absolute 定位，勿用 body 级 fixed——
+    //      侧栏 hover 时 card 带 transform，fixed 会随包含块漂移；勿用全局 id 多实例抢占）----
+    var tip = q(".cal-tip");
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.className = "cal-tip";
+      card.appendChild(tip);
+    }
+
+    function showTip(text, x, y) {
+      tip.textContent = text;
+      tip.style.opacity = "1";
+      tip.style.left = x + "px";
+      tip.style.top = y + "px";
+    }
+    function hideTip() {
+      tip.style.opacity = "0";
+    }
+
+    function renderHeatmap() {
+      var wrap = q(".cal-heatmap");
+      if (!wrap) return; // 后台关闭热力图时整块未渲染
+      wrap.style.display = currentView === "day" ? "block" : "none";
+      if (currentView !== "day") return;
+
+      var monthsEl = q(".cal-heatmap-months");
+      var gridEl = q(".cal-heatmap-grid");
+
+      monthsEl.innerHTML = Array.from({ length: 12 }, function (_, i) {
+        return (
+          '<span class="text-[10px] text-neutral-400 text-center dark:text-neutral-500">' +
+          (i + 1) +
+          "</span>"
+        );
+      }).join("");
+
+      // 按「年-月」预分桶：heatmapData[month][week] = count（4 周 × 12 月，row-major）
+      var monthCount = {};
+      posts.forEach(function (p) {
+        if (p.date.slice(0, 4) !== String(displayYear)) return;
+        var m = parseInt(p.date.slice(5, 7), 10) - 1;
+        var day = parseInt(p.date.slice(8, 10), 10);
+        var week = Math.min(Math.floor((day - 1) / 7), 3);
+        monthCount[m] = monthCount[m] || [0, 0, 0, 0];
+        monthCount[m][week]++;
+      });
+
+      // 离散透明度档：低计数也保持可见（0/1/2/3/4+ 五档）
+      var opacityLevels = [0, 0.45, 0.65, 0.85, 1];
+      var cells = "";
+      for (var week = 0; week < 4; week++) {
+        for (var month = 0; month < 12; month++) {
+          var count = monthCount[month] ? monthCount[month][week] : 0;
+          var level = Math.min(count, 4);
+          var bg =
+            count === 0
+              ? "background-color: var(--btn-plain-bg-hover)"
+              : "background-color: var(--primary); opacity: " +
+                opacityLevels[level];
+          var tooltip = heatmapWeekTemplate
+            .replace("{0}", String(month + 1))
+            .replace("{1}", String(week + 1))
+            .replace("{2}", String(count));
+          cells +=
+            '<div class="heatmap-cell rounded-sm" style="' +
+            bg +
+            '" data-heat-month="' +
+            month +
+            '" data-heat-tip="' +
+            tooltip.replace(/"/g, "&quot;") +
+            '"></div>';
+        }
+      }
+      gridEl.innerHTML = cells;
+
+      qq(".cal-heatmap-cell, .heatmap-cell[data-heat-month]").forEach(
+        function (cell) {
+          cell.addEventListener("click", function () {
+            displayMonth = parseInt(cell.getAttribute("data-heat-month"), 10);
+            currentView = "day";
+            renderCalendar();
+          });
+          cell.addEventListener("mouseenter", function () {
+            var cellRect = cell.getBoundingClientRect();
+            var cardRect = card.getBoundingClientRect();
+            var left =
+              cellRect.left -
+              cardRect.left +
+              cellRect.width / 2 -
+              tip.offsetWidth / 2;
+            // 提示框夹在卡内不越界
+            var maxLeft = cardRect.width - tip.offsetWidth - 8;
+            left = Math.max(8, Math.min(left, maxLeft));
+            var top = cellRect.top - cardRect.top - tip.offsetHeight - 6;
+            showTip(cell.getAttribute("data-heat-tip"), left, Math.max(4, top));
+          });
+          cell.addEventListener("mouseleave", hideTip);
+        },
+      );
+    }
+
+    function renderCalendar() {
+      var dayView = q(".cal-view-day");
+      var monthView = q(".cal-view-month");
+      var yearView = q(".cal-view-year");
+
+      // 星期表头只填充一次（内容与视图无关）
+      var weekdaysEl = q(".cal-weekdays");
+      if (weekdaysEl && !weekdaysEl.hasChildNodes()) {
+        weekdaysEl.innerHTML = weekDays
+          .map(function (d) {
+            return (
+              '<div class="text-center font-medium text-xs text-neutral-500 dark:text-neutral-400">' +
+              d +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      if (dayView)
+        dayView.style.display = currentView === "day" ? "block" : "none";
+      if (monthView)
+        monthView.style.display = currentView === "month" ? "grid" : "none";
+      if (yearView)
+        yearView.style.display = currentView === "year" ? "grid" : "none";
+
+      updateHeader();
+
+      if (currentView === "day") renderDayView();
+      else if (currentView === "month") renderMonthView();
+      else if (currentView === "year") renderYearView();
+
+      renderHeatmap();
+    }
+
+    function updateHeader() {
+      var navDisplay = q(".cal-month-display");
+      var resetBtn = q(".cal-reset");
+      var prevBtn = q(".cal-prev");
+      var nextBtn = q(".cal-next");
+
+      if (navDisplay) {
+        if (currentView === "day") {
+          navDisplay.textContent = isCJK
+            ? displayYear + yearText + monthNames[displayMonth]
+            : monthNames[displayMonth] + " " + displayYear;
+        } else if (currentView === "month") {
+          navDisplay.textContent = displayYear + yearText;
+        } else {
+          navDisplay.textContent = yearText;
+        }
+      }
+      if (resetBtn) {
+        var isCurrent =
+          displayYear === now.getFullYear() && displayMonth === now.getMonth();
+        resetBtn.style.display =
+          currentView === "day" && isCurrent ? "none" : "flex";
+      }
+      // 年视图显示全部年份，无需翻页
+      if (prevBtn)
+        prevBtn.style.visibility =
+          currentView === "year" ? "hidden" : "visible";
+      if (nextBtn)
+        nextBtn.style.visibility =
+          currentView === "year" ? "hidden" : "visible";
+    }
+
+    function renderDayView() {
+      var firstDay = new Date(displayYear, displayMonth, 1).getDay();
+      var daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
+      var isCurrentMonth =
+        displayYear === now.getFullYear() && displayMonth === now.getMonth();
+
+      var grid = q(".cal-grid");
+      if (!grid) return;
+
+      var dayArr = [];
+      for (var i = 0; i < firstDay; i++)
+        dayArr.push({ day: null, dateKey: "" });
+      for (var day = 1; day <= daysInMonth; day++) {
+        var dateKey =
+          displayYear + "-" + pad(displayMonth + 1) + "-" + pad(day);
+        var has = postsByDate[dateKey] && postsByDate[dateKey].length > 0;
+        dayArr.push({
+          day: day,
+          dateKey: dateKey,
+          has: has,
+          count: has ? postsByDate[dateKey].length : 0,
+        });
+      }
+      var cells = dayArr
+        .map(function (it) {
+          if (!it.day)
+            return '<div class="calendar-day aspect-square flex items-center justify-center rounded-sm text-sm relative cursor-pointer text-neutral-400 dark:text-neutral-600"></div>';
+          var isToday = isCurrentMonth && it.day === now.getDate();
+          var cls =
+            "calendar-day aspect-square flex items-center justify-center rounded-sm text-sm relative cursor-pointer";
+          if (!it.has) cls += " text-neutral-700 dark:text-neutral-300";
+          else cls += " text-neutral-900 dark:text-neutral-100 font-bold";
+          if (isToday) cls += " ring-2 ring-(--primary)";
+          var dot = it.has
+            ? '<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-(--primary)"></span>'
+            : "";
+          var badge =
+            it.has && it.count > 1
+              ? '<span class="absolute top-0 right-0 text-[10px] font-bold text-(--primary)">' +
+                it.count +
+                "</span>"
+              : "";
+          return (
+            '<div class="' +
+            cls +
+            '" data-date="' +
+            it.dateKey +
+            '" data-has-post="' +
+            it.has +
+            '">' +
+            it.day +
+            dot +
+            badge +
+            "</div>"
+          );
+        })
+        .join("");
+      grid.innerHTML = cells;
+
+      showMonthlyPosts();
+      setupDayClicks();
+    }
+
+    function monthPosts() {
+      return posts.filter(function (p) {
+        return p.date.slice(0, 7) === displayYear + "-" + pad(displayMonth + 1);
+      });
+    }
+
+    function showMonthlyPosts(dayKey) {
+      var postsWrap = q(".cal-posts");
+      var postsList = q(".cal-posts-list");
+      var divider = q(".cal-posts-divider");
+      var list = dayKey ? postsByDate[dayKey] || [] : monthPosts();
+
+      if (postsWrap)
+        postsWrap.style.display = list.length > 0 ? "block" : "none";
+      if (divider) divider.style.display = list.length > 0 ? "block" : "none";
+      if (!postsList) return;
+      postsList.innerHTML = list
+        .map(function (p) {
+          var ds = p.date.slice(5); // MM-DD
+          return (
+            '<a href="' +
+            p.permalink +
+            '" class="flex justify-between items-center text-sm text-neutral-700 px-2 py-1 rounded-sm transition-colors hover:bg-(--btn-plain-bg-hover) hover:text-(--primary) dark:text-neutral-300 dark:hover:text-(--primary)">' +
+            '<span class="truncate">' +
+            p.title +
+            "</span>" +
+            '<span class="ml-2 text-xs text-neutral-500 whitespace-nowrap dark:text-neutral-400">' +
+            ds +
+            "</span></a>"
+          );
+        })
+        .join("");
+    }
+
+    var selectedDayEl = null;
+    function setupDayClicks() {
+      qq(".calendar-day[data-date]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          var dateKey = el.getAttribute("data-date");
+          var has = el.getAttribute("data-has-post") === "true";
+          if (!has || !dateKey) return;
+          if (selectedDayEl === el) {
+            // 再次点击取消选中，恢复当月全量
+            el.classList.remove("calendar-day-selected");
+            selectedDayEl = null;
+            showMonthlyPosts();
+            return;
+          }
+          if (selectedDayEl)
+            selectedDayEl.classList.remove("calendar-day-selected");
+          selectedDayEl = el;
+          el.classList.add("calendar-day-selected");
+          showMonthlyPosts(dateKey);
+        });
+      });
+    }
+
+    function renderMonthView() {
+      var container = q(".cal-view-month");
+      if (!container) return;
+      var monthsWithPosts = {};
+      posts.forEach(function (p) {
+        if (p.date.slice(0, 4) === String(displayYear))
+          monthsWithPosts[parseInt(p.date.slice(5, 7), 10) - 1] = true;
+      });
+      container.innerHTML = monthNames
+        .map(function (name, index) {
+          var isCurrent = index === displayMonth;
+          var has = !!monthsWithPosts[index];
+          var cls =
+            "p-2 text-center text-sm rounded-sm cursor-pointer transition-colors relative hover:bg-(--btn-plain-bg-hover)";
+          cls += isCurrent
+            ? " font-bold text-(--primary) bg-(--btn-plain-bg-hover)"
+            : " text-neutral-700 dark:text-neutral-300";
+          var dot = has
+            ? '<span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-(--primary)"></span>'
+            : "";
+          return (
+            '<div class="' +
+            cls +
+            '" data-month="' +
+            index +
+            '">' +
+            name +
+            dot +
+            "</div>"
+          );
+        })
+        .join("");
+      container.querySelectorAll("[data-month]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          displayMonth = parseInt(el.getAttribute("data-month"), 10);
+          currentView = "day";
+          renderCalendar();
+        });
+      });
+    }
+
+    function renderYearView() {
+      var container = q(".cal-view-year");
+      if (!container) return;
+      if (availableYears.length === 0) {
+        container.innerHTML =
+          '<div class="col-span-3 text-center text-sm text-neutral-500 dark:text-neutral-400">' +
+          emptyText +
+          "</div>";
+        return;
+      }
+      container.innerHTML = availableYears
+        .map(function (year) {
+          var isCurrent = year === displayYear;
+          var cls =
+            "p-2 text-center text-sm rounded-sm cursor-pointer transition-colors relative hover:bg-(--btn-plain-bg-hover)";
+          cls += isCurrent
+            ? " font-bold text-(--primary) bg-(--btn-plain-bg-hover)"
+            : " text-neutral-700 dark:text-neutral-300";
+          return (
+            '<div class="' +
+            cls +
+            '" data-year="' +
+            year +
+            '">' +
+            year +
+            "</div>"
+          );
+        })
+        .join("");
+      container.querySelectorAll("[data-year]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          displayYear = parseInt(el.getAttribute("data-year"), 10);
+          currentView = "month";
+          renderCalendar();
+        });
+      });
+    }
+
+    function changeMonth(delta) {
+      if (currentView === "day") {
+        displayMonth += delta;
+        if (displayMonth > 11) {
+          displayMonth = 0;
+          displayYear++;
+        } else if (displayMonth < 0) {
+          displayMonth = 11;
+          displayYear--;
+        }
+      } else if (currentView === "month") {
+        displayYear += delta;
+      }
+      renderCalendar();
+    }
+
+    function resetToToday() {
+      displayYear = now.getFullYear();
+      displayMonth = now.getMonth();
+      currentView = "day";
+      selectedDayEl = null;
+      renderCalendar();
+    }
+
+    // 事件绑定（导航按钮）
+    var prevBtn = q(".cal-prev");
+    var nextBtn = q(".cal-next");
+    var resetBtn = q(".cal-reset");
+    var navDisplay = q(".cal-month-display");
+    if (prevBtn)
+      prevBtn.onclick = function () {
+        changeMonth(-1);
+      };
+    if (nextBtn)
+      nextBtn.onclick = function () {
+        changeMonth(1);
+      };
+    if (resetBtn) resetBtn.onclick = resetToToday;
+    if (navDisplay)
+      navDisplay.onclick = function () {
+        if (currentView === "day") currentView = "month";
+        else if (currentView === "month") currentView = "year";
+        renderCalendar();
+      };
+
+    renderCalendar();
+  })();
+</script>
+
+<style is:global>
+  .calendar-day {
+    transition: all 0.2s ease;
+    min-height: 32px;
+  }
+  .calendar-day[data-has-post="true"]:hover {
+    transform: translateY(-2px);
+  }
+  .calendar-day-selected {
+    background-color: var(--btn-regular-bg);
+    border-radius: 0.25rem;
+  }
+  .heatmap-cell {
+    cursor: pointer;
+    min-width: 0;
+    width: 85%;
+    aspect-ratio: 1;
+    margin: auto;
+    transition: box-shadow 0.15s ease;
+  }
+  .heatmap-cell:hover {
+    box-shadow: 0 0 1px 1.5px var(--primary, oklch(0.55 0.15 250));
+  }
+  /* 热力图提示框：绝对定位于本实例卡片内（见脚本注释，勿改回 body 级 fixed） */
+  .cal-tip {
+    position: absolute;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 30;
+    white-space: nowrap;
+  }
+</style>

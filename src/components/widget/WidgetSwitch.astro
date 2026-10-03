@@ -14,6 +14,7 @@
  * 2. 片段根元素必须自带 class="contents"：th:replace 是整体替换，不保留引用点 div 的属性。
  */
 import Announcement from "./Announcement.astro";
+import Calendar from "./Calendar.astro";
 import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
 import MusicPlayer from "./MusicPlayer.astro";
@@ -61,11 +62,13 @@ import Weather from "./Weather.astro";
     <div class="contents" th:case="'schedule'">
       <Schedule class="onload-animation" />
     </div>
+    <div class="contents" th:case="'calendar'">
+      <Calendar class="onload-animation" />
+    </div>
     <div
       th:case="'html'"
       class="card-base onload-animation p-4"
       th:utext="${widget.html}"
-    >
-    </div>
+    ></div>
   </div>
 </div>

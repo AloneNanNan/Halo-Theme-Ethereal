@@ -609,6 +609,8 @@ export interface Sidebar {
   music?: SidebarMusic;
   /** 最近日程小组件配置（sidebar.schedule） */
   schedule?: SidebarSchedule;
+  /** 站点日历小组件配置（sidebar.calendar） */
+  calendar?: SidebarCalendar;
 }
 
 // 以下五个分组是各小组件的「唯一配置源」：条目列表里只放「小组件 + 吸顶」，
@@ -646,6 +648,11 @@ export interface SidebarMusic {
 
 export interface SidebarSchedule {
   limit?: number;
+}
+
+export interface SidebarCalendar {
+  /** 是否在日历下方显示年度文章热力图，缺省 true（后台未配置时视为开启） */
+  showHeatmap?: boolean;
 }
 
 export interface WidgetsConfig {
