@@ -108,6 +108,28 @@ const i18nInlineScript = `<script th:inline="javascript">
     "widget.siteStats.daysAgo": \`[(#{widget.siteStats.daysAgo})]\`,
     "widget.siteStats.monthsAgo": \`[(#{widget.siteStats.monthsAgo})]\`,
     "widget.siteStats.yearsAgo": \`[(#{widget.siteStats.yearsAgo})]\`,
+    "calendar.sunday": \`[(#{calendar.sunday})]\`,
+    "calendar.monday": \`[(#{calendar.monday})]\`,
+    "calendar.tuesday": \`[(#{calendar.tuesday})]\`,
+    "calendar.wednesday": \`[(#{calendar.wednesday})]\`,
+    "calendar.thursday": \`[(#{calendar.thursday})]\`,
+    "calendar.friday": \`[(#{calendar.friday})]\`,
+    "calendar.saturday": \`[(#{calendar.saturday})]\`,
+    "calendar.january": \`[(#{calendar.january})]\`,
+    "calendar.february": \`[(#{calendar.february})]\`,
+    "calendar.march": \`[(#{calendar.march})]\`,
+    "calendar.april": \`[(#{calendar.april})]\`,
+    "calendar.may": \`[(#{calendar.may})]\`,
+    "calendar.june": \`[(#{calendar.june})]\`,
+    "calendar.july": \`[(#{calendar.july})]\`,
+    "calendar.august": \`[(#{calendar.august})]\`,
+    "calendar.september": \`[(#{calendar.september})]\`,
+    "calendar.october": \`[(#{calendar.october})]\`,
+    "calendar.november": \`[(#{calendar.november})]\`,
+    "calendar.december": \`[(#{calendar.december})]\`,
+    "calendar.year": \`[(#{calendar.year})]\`,
+    "calendar.heatmapWeek": \`[(#{calendar.heatmapWeek})]\`,
+    "calendar.empty": \`[(#{calendar.empty})]\`,
     "welcome.close": \`[(#{welcome.close})]\`,
     "common.close": \`[(#{common.close})]\`,
     "common.copy": \`[(#{common.copy})]\`,
@@ -187,7 +209,6 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         };
       })();
     </script>
-
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- 必须含 initial-scale=1：缺失时 iOS Safari 会按视口宽度自动缩放页面 -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -831,6 +852,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       th:if="${theme.config?.style?.styleSwitches?.sakura == true or (theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and theme.config?.layout?.mobileMenu?.visitorStyle?.effects != false)}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/sakura.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
   </body>
 </html>
