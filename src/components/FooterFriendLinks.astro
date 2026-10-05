@@ -1,32 +1,14 @@
 ---
-// 页脚友情链接卡片墙：数据来自 Links 插件（PluginLinks），服务端渲染。
-// 由 Footer.astro 渲染在页脚分隔线之下、版权信息之上。
-// 整块是 <nav> 地标（aria-label 复用标题词条），样式见文件末尾的 is:global 块。
+// 页脚友情链接卡片墙（Links 插件 PluginLinks，服务端渲染）：整块是 <nav> 地标，样式见
+// 文件末尾的 is:global 块；compact=true 供窄容器嵌入（卡片页脚顶行，样式见 .hbf-compact）。
 //
-// 改动前必读的三点（放在 frontmatter 而非 HTML 注释里：后者会被构建剥离，
-// 且 prettier 会把相邻 HTML 注释合并到同一行）：
-//
-// 1) 插件未安装 / 未开启时整块跳过。th:if（优先级 300）先于同元素 th:with（400）执行，
-//    所以开关关闭时 hbfGroupedLinks 不会求值，也就不会触发一次链接查询。
-//
-// 2) 两个已经踩过的 SpEL 坑：
-//    - SpEL 不支持范围下标（方括号里写起止索引那种切片写法），下标只接受单个 Integer，
-//      写错在「解析期」就抛 SpelParseException，与三元分支实际是否走到无关；
-//      列表切片一律用 List.subList(from, to)（含头不含尾）。
-//    - #aggregates.sum(...) 返回 BigDecimal，且集合为空时返回 null（不是 0），
-//      所以 hbfTotal 必须自己做空集合兜底；它对 null 容器 / 含 null 元素的集合
-//      还会直接抛 IllegalArgumentException。本处不必额外判空——插件保证每个分组的
-//      links 恒为非 null（LinkFinderImpl 以 getOrDefault(..., List.of()) 兜底）。
-//
-// 3) 变量口径：
-//    - hbfGroupedLinks：url 过滤条件只在这里写一遍（网址为空 / 非 http、//、/ 开头的
-//      整条剔除），后面的总数、截断偏移、卡片渲染全部基于它，口径天然一致。
-//      它是投影后的「按分组切好的链接列表」List<List<LinkVo>>，已不含分组对象。
-//    - hbfMaxItems：#strings.isEmpty 对 null / 空串都成立，避免清空输入框后拿 "" 去转数字。
-//
-// 4) 两种形态（compact）：默认 standalone 是分隔线下的独立块；compact=true 供
-//    调用方嵌进窄容器（当前用于「卡片页脚」顶行中间），整体收一档，
-//    样式见文件末尾的 .hbf-compact 块。
+// 改动前必读（注释写在 frontmatter：HTML 注释会被构建剥离、prettier 也会合并相邻注释）：
+// 1) 插件未安装 / 开关关闭时整块跳过：同元素 th:if 先于 th:with 求值，hbfGroupedLinks
+//    不会求值，也不会触发链接查询。
+// 2) SpEL 坑：切片用 List.subList(from, to)（含头不含尾，不支持范围下标）；#aggregates.sum
+//    空集合返回 null、null 容器抛 IllegalArgumentException，故 hbfTotal 自做空集合兜底。
+// 3) hbfGroupedLinks 是 url 过滤的唯一来源（总数 / 截断 / 渲染同源）；hbfMaxItems 用
+//    #strings.isEmpty 兜 null/空串，避免清空输入框后拿 "" 转数字。
 const { compact = false } = Astro.props as { compact?: boolean };
 ---
 
@@ -42,12 +24,9 @@ const { compact = false } = Astro.props as { compact?: boolean };
     hbfMaxItems = ${#strings.isEmpty(theme.config?.footer?.friendLinks?.max_items) ? 0 : #conversions.convert(theme.config?.footer?.friendLinks?.max_items, 'java.lang.Integer')}"
 >
   <div class="hbf-head">
-    <!-- 标题图标：与侧边栏「作者信息 → 社交媒体」按钮同款风格。
-         社交按钮是 .btn-regular size-10 rounded-lg（淡色底 + 主题色图标），
-         这里复用同两个变量 --btn-regular-bg / --btn-content，
-         因此颜色与侧边栏天然一致，且深色模式由 :root.dark 自动切换。
-         用内联 SVG + fill="currentColor"：Ethereal 不加载图标字体，
-         <i class="fa ..."> 之类的写法在本主题永远不会显示。 -->
+    <!-- 标题图标：与侧边栏「作者信息 → 社交媒体」按钮同款风格——复用 --btn-regular-bg /
+         --btn-content 两个变量，颜色与侧边栏天然一致、深色模式随 :root.dark 切换。
+         用内联 SVG + fill="currentColor"：本主题不加载图标字体，<i class="fa ..."> 不会显示。 -->
     <span class="hbf-head-icon" aria-hidden="true">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -64,10 +43,8 @@ const { compact = false } = Astro.props as { compact?: boolean };
     <span class="hbf-title" th:text="#{footer.friendLinks.title}">友情链接</span
     >
     <!-- 申请按钮：固定跳转官方 Links 插件的 /links 路由，文案复用友链页的 i18n 词条。
-         show_apply_btn 缺省视为开启（与主题其它可选开关的 != false 口径一致）；
-         总开关 enable_friend_links 则用 == true 严格比较——它必须显式开启，
-         避免「设置里存了 friendLinks 组但没存该字段」的老配置被误判为已开启。
-         按钮文字已可见，不再加与之重复的 title。 -->
+         show_apply_btn 缺省视为开启（!= false 口径）；总开关 enable_friend_links 用 == true
+         严格比较——必须显式开启，避免「存了 friendLinks 组但没存该字段」的老配置被误判。 -->
     <a
       class="hbf-apply"
       th:if="${theme.config?.footer?.friendLinks?.show_apply_btn != false}"
@@ -171,9 +148,7 @@ const { compact = false } = Astro.props as { compact?: boolean };
   }
 
   /* ---- 「仅在首页显示」：由 body.is-home 单一控制 ----
-     body.is-home 由服务端输出首帧初值（Astro isHomePage），运行期每个 Swup
-     page:view 由 syncHomeClass 按路径重算（见 utils/banner-sync.ts），
-     因此首帧与无刷新换页都准确。非首页时卡片墙整块不显示。 */
+     首帧初值由服务端输出，运行期由 banner-sync.ts 的 syncHomeClass 按路径重算（换页也准确）。 */
   body:not(.is-home) .hbf-root.hbf-home-only {
     display: none;
   }
@@ -367,9 +342,8 @@ const { compact = false } = Astro.props as { compact?: boolean };
   }
 
   /* ===== compact 形态：供调用方嵌进窄容器（当前用于「卡片页脚」顶行中间） =====
-     各行尺寸收一档、纵向间距收窄并居中，宽度交给父级 flex-1 + min-w-0 自适应。
-     间距覆写：standalone 的列间距写在 .hbf-list 的 margin-top 上，
-     .hbf-root 的 margin-bottom 与之同优先级、靠源码顺序被下方规则覆写。 */
+     尺寸收一档、间距收窄并居中，宽度交给父级 flex-1 自适应；间距覆写靠源码顺序
+     （.hbf-root 的 margin-bottom 与 .hbf-list 的 margin-top 同优先级）。 */
   .hbf-compact {
     /* 居中与 text-align 基线同 .hbf-root，不重复声明 */
     margin-bottom: 0;

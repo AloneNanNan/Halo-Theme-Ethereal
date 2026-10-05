@@ -109,7 +109,7 @@ export function setTheme(theme: LIGHT_DARK_MODE, store = false): void {
   applyThemeToDocument(theme);
 }
 
-// 系统配色变化时自动响应（参考 earth 主题）
+// 系统配色变化时自动响应：仅当前处于「自动」模式才跟随
 window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", () => {
@@ -144,14 +144,9 @@ export function getStoredTheme(): LIGHT_DARK_MODE {
 }
 
 /* ── 访客样式切换（显示设置面板） ─────────────────────────────
- * localStorage 键：postListLayout / cardBorder / cardFollowTheme / navbarBlur /
- *   postListMasonry / wallpaperOpacity / wallpaperBlur / wallpaperCardAlpha /
- *   bannerDisplay / bannerWave / sakuraEnabled
- * 默认值链路：后台 theme.config → ConfigCarrier data 属性 → 本模块读取；
- * 开关为标签页级（外观/壁纸/特效），关闭时忽略并清理该标签页相关的 localStorage
- * （与 fixed 色调、__eecs 语义一致）。
- * public/assets/visitor-post-layout.js、public/assets/sakura.js 与 Layout.astro
- * 的 body 启动脚本也读这些键做首帧应用，改键名时需多处同步。
+ * 键清单、关闭即忽略并清理的语义、默认值链路（theme.config → ConfigCarrier data-* →
+ * 本模块）见 AGENTS.md 5.5。首帧应用的重复实现还有 public/assets/visitor-post-layout.js、
+ * public/assets/sakura.js 与 Layout.astro 的 body 启动脚本，改键名时需多处同步。
  */
 
 export type PostListLayoutMode = "list" | "grid";
@@ -199,15 +194,11 @@ export function getVisitorSwitches(): VisitorSwitches {
 // 出场结束后按序一并应用（同一操作的多次切换以最后一次为准）
 let pendingLayoutActions: Array<() => void> = [];
 
-/** 完整的内容区出场→入场过渡：切换列表/网格或瀑布流时，
- *  1) 给 #content-wrapper 挂 content-exit-animating 播旧内容淡出下滑动画；
- *  2) 出场结束后按序应用所有待执行动作（首个动作入队在前、出场期间新到达的
- *     追加在后，保证后点的最后一次切换生效）；
- *  3) 再挂 content-entrance-animating 重放与页面入场同款的 fade-in-up 动画
- *     （含 --content-delay 错峰），入场结束摘除类。
- *  入场用独立类而非 onload-animation：后者会被 app.ts 的 animationend 委托
- *  在同一事件里立即移除（出场动画结束的事件冒泡到 document 时新类已挂上），
- *  导致入场无法播放。 */
+/** 内容区出场→入场过渡：切换列表/网格或瀑布流时，先给 #content-wrapper 挂
+ *  content-exit-animating 播淡出，出场结束后按序应用待执行动作（后点的最后
+ *  一次切换生效），再挂 content-entrance-animating 重放 fade-in-up。
+ *  入场必须用独立类：onload-animation 会被 app.ts 的 animationend 委托在出场
+ *  结束的同一事件里立即摘除，导致入场不播放。 */
 function triggerContentTransition(afterExit: () => void): void {
   const content = document.getElementById("content-wrapper");
   if (!content) return;
@@ -534,14 +525,9 @@ export function getStoredFullscreenLayout(): FullscreenLayoutMode {
   return isFullscreenLayoutMode(stored) ? stored : getDefaultFullscreenLayout();
 }
 
-/** 应用全屏布局：写 html[data-fullscreen-layout]（CSS 全部带 fullscreen 前缀门控，
- *  非全屏模式下无视觉效果但保留值），并派发 fullscreenLayoutChange 供 hero 滚动
- *  斜坡等脚本监听。
- *  必须与 applyBannerDisplay 一样先挂过渡窗口：classic 与 hero 的视觉位置由
- *  「top + translate」一负一正相抵拼出（净位置都是 0），窗口内只放 height/opacity
- *  过渡、位置类属性保持瞬时，两项同帧到位即零位移；缺窗口时 translate 的过渡会
- *  单独跑而 top 是瞬时的 —— 一上来就错开整段延伸高度再慢慢归位（即 classic ↔
- *  hero 切换时「壁纸上下摆动」的成因） */
+/** 应用全屏布局：写 html[data-fullscreen-layout] 并派发 fullscreenLayoutChange 供 hero
+ *  斜坡等脚本监听。必须先挂过渡窗口（同 applyBannerDisplay）：位置由「top + translate」
+ *  相抵拼出，缺窗口时 translate 单独跑而 top 瞬时，会出现「壁纸上下摆动」。 */
 export function applyFullscreenLayout(mode: FullscreenLayoutMode): void {
   const root = document.documentElement;
   openBannerTransitionWindow(root);

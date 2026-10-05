@@ -1,11 +1,8 @@
 // @ts-check
-// 检测 theme.yaml 的 version 是否较上一版本增大且 semver 合规。
-// 供 CI 使用（.github/workflows/ci-on-version-bump.yaml，自动触发默认注释），
-// 可独立运行：
-//   node scripts/check-version-bump.mjs          # 基线 = HEAD~1 提交中的 theme.yaml
-//   node scripts/check-version-bump.mjs 1.0.6    # 指定基线
-// 退出码：0 = 应触发构建（版本增大且合规）；1 = 不触发。
-// stdout 输出 JSON：{ current, baseline, valid, trigger }
+// 检测 theme.yaml 的 version 是否较上一版本增大且 semver 合规（供 CI 使用，可独立运行：
+// node scripts/check-version-bump.mjs [基线版本]，缺省基线 = HEAD~1 提交中的 theme.yaml）。
+// 退出码：0 = 应触发构建（版本增大且合规）；1 = 不触发。stdout 输出 JSON：
+// { current, baseline, valid, trigger }
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 

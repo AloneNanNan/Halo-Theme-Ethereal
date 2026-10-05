@@ -55,6 +55,5 @@
   init();
 
   // Swup 页面切换后重新初始化
-  // 换页后重新绑定由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 换页后重新绑定由 SwupScriptsPlugin 重执行覆盖。
 })();

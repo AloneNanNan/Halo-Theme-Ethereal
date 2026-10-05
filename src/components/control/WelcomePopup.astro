@@ -1,12 +1,9 @@
 ---
-// 欢迎弹窗：访客进入网站时显示欢迎卡片，IP 定位复用天气小组件
-// （腾讯位置服务 WebService API + weather_ip_cache），避免重复请求。
-// - 位置：电脑端四角可配（top-left/top-right/bottom-left/bottom-right），
-//   移动端固定底部居中（媒体查询强制）
-// - 关闭记忆：sessionStorage，本次会话不再弹出，重新打开网站再次弹出
-// - 降级：未配置 Key / 定位失败时 {location} 显示 fallbackLocation 文案
-// - 样式：沿用主题 fuwari 卡片语言（card-base / --btn-regular-bg / 主色点缀），
-//   开启「高级材质」时跟随导航栏毛玻璃；{location} 以主题色高亮作为视觉焦点
+// 欢迎弹窗：访客进入网站时显示欢迎卡片，IP 定位复用天气小组件（腾讯位置服务 WebService
+// API + weather_ip_cache），避免重复请求。电脑端四角可配（top-left/top-right/bottom-left/
+// bottom-right），移动端固定底部居中；关闭记忆存 sessionStorage（本次会话不再弹出）；未配置
+// Key / 定位失败时 {location} 显示 fallbackLocation；样式沿用全站卡片语言（card-base /
+// --btn-regular-bg，高级材质下跟随毛玻璃），{location} 以主题色高亮为视觉焦点。
 interface Props {
   class?: string;
 }
@@ -71,10 +68,8 @@ interface Props {
     display: flex;
   }
 
-  /* 电脑端四角定位：
-     左上/右上：顶部固定在导航栏内容层（4.5rem）下方区域；
-     左/右边缘由 JS 跟随导航栏卡片实际边缘（见脚本），此处 1rem 为兜底；
-     左下/右下：屏幕角落 */
+  /* 电脑端四角定位：左上/右上固定在导航栏内容层（4.5rem）下方；左/右边缘由 JS 跟随
+     导航栏卡片实际边缘（脚本驱动），此处 1rem 为兜底；左下/右下为屏幕角落。 */
   #welcome-popup-wrapper[data-position="top-left"],
   #welcome-popup-wrapper[data-position="top-right"] {
     top: calc(4.5rem + 0.75rem);
@@ -165,8 +160,8 @@ interface Props {
     var API_BASE = "https://apis.map.qq.com/ws";
 
     function getThemeConfig() {
-      // I27：读/写 window.__themeConfig 缓存（与 scripts/assets/_theme-config.ts
-      // 及各 public 脚本共享契约），避免多脚本重复 JSON.parse
+      // 读/写 window.__themeConfig 缓存（与 scripts/assets/_theme-config.ts
+      // 及各 public 脚本共享契约），避免重复 JSON.parse
       var cached = window.__themeConfig;
       if (cached !== undefined) return cached;
       try {
@@ -237,10 +232,8 @@ interface Props {
     // （写记忆 + 解绑监听 + 淡出），避免关闭逻辑分散在两处
     if (closeBtn) closeBtn.addEventListener("click", autoClose);
 
-    // 自动关闭（滚动页面 / 点击弹窗外部）：同样写入关闭记忆。
-    // 若仅隐藏不记忆，切页/刷新后脚本重跑会再次弹出并立即被滚动检测
-    // 关闭（"闪一下"），且浏览器会恢复滚动位置；写记忆后本次会话不再弹，
-    // 重新打开网站（新标签页，sessionStorage 独立）才会再次弹出
+    // 自动关闭（滚动页面 / 点击弹窗外部）同样写入关闭记忆：仅隐藏不记忆的话，切页/刷新后
+    // 脚本重跑会再次弹出并立即被滚动检测关闭（闪一下）；写记忆后本次会话不再弹。
     var autoClosed = false;
     var shown = false;
     function autoClose() {

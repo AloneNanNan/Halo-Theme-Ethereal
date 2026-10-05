@@ -13,12 +13,9 @@ html.is-animating .transition-swup-fade {
   @apply translate-y-4 opacity-0;
 }
 
-/* 侧栏换页动画抑制：右栏曾是 swup 容器（换页整块替换），需要这两条把新节点的
-   入场动画压掉。侧栏现已全部改为普通节点（换页不重建，仅目录槽位被替换），
-   故两条规则如今只作兜底：容器替换换入的节点、以及换入节点内部的
-   onload-animation（WidgetSwitch 给每个 case 都加了，两侧栏共用）都不会重播。
-   swup-visited：首次换页（visit:start）起永久挂在 <html> 上；首刷时 <html> 上
-   还没有该标记，因此两侧栏的小组件仍会正常播放入场动画（"仅首刷播一次"）。 */
+/* 侧栏换页动画抑制：换页换入的节点（目录槽位）与换入节点内部的 onload-animation
+   （WidgetSwitch 每个 case 都加）不重播。swup-visited 首次换页起永久挂 <html>，
+   首刷尚无该标记 ⇒ 两侧栏小组件正常播放入场动画（仅首刷播一次）。 */
 html.is-changing #right-sidebar,
 html.is-animating #right-sidebar,
 html.swup-visited #right-sidebar {

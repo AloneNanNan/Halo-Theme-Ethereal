@@ -18,12 +18,10 @@ const thClassappend = Astro.props["th:classappend"] || "";
 const widgetSwitchReplace = "~{::widgetSwitch(${widget})}";
 
 /**
- * 吸顶前缀规则：条目「未勾选吸顶」且它前面所有条目也都未勾选时，才归入不吸顶区；
- * 前面一旦出现过勾选吸顶的条目，后面的未勾选条目一律回退为吸顶。
- *
- * 判定写作「前缀中未勾选吸顶的条目数 == 当前下标」——前缀规则下与「前面没有勾选项」
- * 等价。选择器 .?[] 内部只引用 #this，不触 Thymeleaf 上下文变量，规避 SpringEL 7
- * 在列表选择/投影内解析上下文变量抛 EL1008E 的已知坑（见 archives.astro 顶部注释）。
+ * 吸顶前缀规则：条目未勾选吸顶、且它前面所有条目也都未勾选时才归入不吸顶区；前面一旦有
+ * 勾选项，后面的未勾选项一律回退为吸顶。判定写作「前缀中未勾选吸顶数 == 当前下标」
+ * （前缀规则下与「前面没有勾选项」等价）；.?[] 内只引用 #this、不触上下文变量，规避
+ * SpringEL 7 的 EL1008E（见 archives.astro 顶部注释）。
  */
 const nonStickyExpr = `widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky == false].size() == widgetStat.index`;
 const nonStickyIf = `\${${nonStickyExpr}}`;
@@ -75,13 +73,11 @@ const tocIf = showToc ? `\${tocOnLeft and (${tocEnabledExpr})}` : "false";
         <div class="contents"><Tags class="onload-animation" /></div>
       </div>
       {
-        /* 目录槽位（Swup 容器）：左栏是普通节点、不随换页更新，只有把这一格单独做成
-          容器，目录才能像右栏那样由服务端条件按页渲染——文章页换成目录卡片，
-          其他页面换成空内容，无需任何客户端 refresh / 显隐逻辑。
-          ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：目标页缺任一容器即 abort），
-          故这里恒渲染、不带 th:if；显示条件写在里面的 th:if 上。
-          吸顶限额与限高由 Layout.astro 的 #sidebar-sticky:has(#sidebar-toc > *) 承担：
-          卡片在不在由 Swup 换页实时决定，无目录的页面左栏吸顶组件照常全部显示 */
+        /* 目录槽位（Swup 容器）：把这一格单独做成容器，目录才能由服务端条件按页
+          渲染（文章页换成卡片、其他页空内容），无需客户端 refresh / 显隐逻辑。
+          ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：缺任一容器即 abort），
+          故恒渲染、不带 th:if；显示条件写在里面的 th:if 上。吸顶限高由
+          Layout.astro 的 #sidebar-sticky:has(#sidebar-toc > *) 承担 */
       }
       <div id="sidebar-toc">
         <div th:remove="tag" th:if={tocIf}>

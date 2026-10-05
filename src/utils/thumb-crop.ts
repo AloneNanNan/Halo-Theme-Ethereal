@@ -1,11 +1,8 @@
 /**
- * 缩略图裁剪判定（瞬间媒体区专用）
- *
- * Moment 的 medium 数据不含图片宽高，服务端无法预知图片比例，展示时是否被 CSS
- * 裁剪只能在图片加载后比较「元素盒子比例」与「图片真实比例」得出。
- * 两个消费方共用同一判据，避免各自实现出现偏差：
- *  - content-photoswipe.ts：决定 PhotoSwipe zoom 过渡是否从裁剪态开始（thumbCropped）
- *  - moment-media-badge.ts：决定是否显示「长图 / 宽图」徽章
+ * 缩略图裁剪判定（瞬间媒体区专用）。Moment 的 medium 数据不含图片宽高，服务端无法预知比例，
+ * 是否被 CSS 裁剪只能在图片加载后比较「元素盒子比例」与「图片真实比例」得出。两个消费方共用
+ * 同一判据：content-photoswipe.ts（thumbCropped，决定 zoom 过渡起点）与
+ * moment-media-badge.ts（决定是否显示「长图 / 宽图」徽章）。
  */
 
 /** 比例差超过该值才判定为裁剪（吸收亚像素与取整误差） */

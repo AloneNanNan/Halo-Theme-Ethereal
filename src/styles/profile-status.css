@@ -178,13 +178,9 @@
   padding: 0.75rem 1rem 0.25rem;
 }
 
-/* 状态选项：标准网格卡片（一排 4 个，第二排自然左对齐），
-   UI 参考友链(links)页面的链接卡片：
-   - 形状用圆方形（rounded-xl），不用圆形
-   - 白底 + 主题色细描边（btn-card-outline 同款）
-   - 悬浮上移 + 主题色阴影（card-hover-lift，接入后台「卡片悬浮效果」开关）
-   - 点击内凹（active:scale-95），hover 内容变主题色
-   卡片撑满整列（不固定小尺寸、不居中），列间只剩均匀 gap，两侧无大片空白 */
+/* 状态选项：标准网格卡片（一排 4 个，第二排左对齐；卡片撑满整列，列间只剩均匀 gap）。
+   形状圆方形（rounded-xl）、白底 + 主题色细描边、悬浮上移 + 主题色阴影（接入「卡片悬浮
+   效果」开关）、点击内凹，hover 内容变主题色。 */
 .status-options {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

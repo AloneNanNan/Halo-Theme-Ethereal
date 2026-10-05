@@ -7,14 +7,9 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
 ---
 
 <!--
-  页脚 = 版式 × 分割带（相互独立，共 4 种组合）：
-    · 版式 footer.styleConfig.style：classic 经典（默认）/ card 卡片
-    · 分割带 footer.styleConfig.divider.style：classic 虚线（默认）/ star 星芒
-  缺省走经典款，升级前没有 styleConfig 的存量配置外观不变。
-
-  取值集中在下面这层 th:with（只对后代可见，不能与同元素 th:if 互赖）。
-  版权行 / 自定义链接 / 备案 / 署名四段内容两种版式一致，已抽成同目录子组件复用；
-  这里只负责各自的**外层排版容器**（经典居中堆叠、卡片左右分栏）。
+  页脚 = 版式（styleConfig.style：classic/card）× 分割带（divider.style：classic/star）共 4 种组合，
+  取值见下方 th:with（只对后代可见，不能与同元素 th:if 互赖）；缺省与未知值走经典款。四段内容
+  两种版式一致、已抽成子组件复用，本文件只负责各自的外层排版容器。
 -->
 <div
   th:with="
@@ -95,11 +90,9 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
   </footer>
 
   <!-- ============ 卡片页脚（整块一张 .card-base 卡片） ============
-       ① 顶行：站点标题 · 友情链接（compact）· 社交图标
-       ② 虚线分隔
-       ③ 底行：左「版权 + 链接」 / 右「备案 + 署名」
-       窄屏（<sm）折成纵向堆叠。顶行只放单行站点标题、不渲染副标题：两行堆叠时
-       垂直居中的是整块几何中心（落在两行之间），标题必然会偏上。 -->
+       ① 顶行：站点标题 · 友情链接（compact）· 社交图标　② 虚线分隔
+       ③ 底行：左「版权 + 链接」/ 右「备案 + 署名」；窄屏（<sm）纵向堆叠。
+       顶行只放单行标题、不渲染副标题：两行堆叠时垂直居中是整块几何中心，标题会偏上。 -->
   <footer th:if="${footerStyle == 'card'}" class="card-base mb-12">
     <!-- ① 顶行：身份 ←→ 社交，中间留给友链 -->
     <div
@@ -176,10 +169,8 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
 </div>
 
 <style is:global>
-  /* 星芒徽标的底色圆遮罩：普通模式取页面底色（--page-bg）遮断细线。
-     「全屏透明」壁纸下实际背景是盖住页面的壁纸、「全屏沉浸」下页脚卡片是
-     半透明磨砂，两者用 --page-bg 都会形成一个突兀的不透明色饼，
-     故一并改透明让细线自然穿过。 */
+  /* 星芒徽标的底色圆遮罩：普通模式取页面底色（--page-bg）遮断细线；
+     「全屏透明 / 沉浸」下用 --page-bg 会形成突兀的不透明色饼，故一并改透明。 */
   html[data-banner-display="transparent"] .footer-star-badge,
   html[data-banner-display="fullscreen"][data-fullscreen-layout="hero"]
     .footer-star-badge {

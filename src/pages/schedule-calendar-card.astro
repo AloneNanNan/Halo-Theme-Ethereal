@@ -1,10 +1,8 @@
 ---
-// 日程日历插件（halo-plugin-schedule-calendar）事项卡片嵌入页主题适配模板。
-// 插件将 /schedule-calendar/cards/{name} 路由渲染到 templates/schedule-calendar-card.html
-// （即本文件编译产物），并注入：title / color / summary / summaryClass /
-// nextOccurrenceLabel / sourceLabel / location / description。
-// 该页面为独立卡片（分享/嵌入用），不套用主题整体布局，样式内联自包含。
-// 主题未提供本模板时插件自动回退内置模板。
+// 日程日历插件（halo-plugin-schedule-calendar）事项卡片嵌入页适配模板：插件把
+// /schedule-calendar/cards/{name} 渲染到 templates/schedule-calendar-card.html（本文件产物），
+// 注入 title / color / summary / nextOccurrenceLabel / location / description 等。独立卡片、
+// 不套主题布局、样式自包含；未提供时插件回退内置模板。
 ---
 
 <!doctype html>

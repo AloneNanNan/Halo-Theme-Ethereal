@@ -802,12 +802,9 @@ export interface Footer {
 }
 
 /**
- * 页脚样式配置（settings.yaml 的 footer.styleConfig 组）。
- *
- * 说明：Halo 实际存的是任意字符串，这里的字面量联合只是「约定的合法值」。
- * 模板侧用否定式判断（`!= 'card'` / `!= 'star'` 走经典分支），所以
- * null（升级前没有该字段）、空串、未知值都会静默回落到经典款，不会出现
- * 两个互斥分支都不渲染的情况。
+ * 页脚样式配置（settings.yaml 的 footer.styleConfig 组）。Halo 实际存任意字符串，这里的
+ * 字面量联合只是约定的合法值：模板侧用否定式判断（`!= 'card'` / `!= 'star'` 走经典分支），
+ * null（升级前无该字段）、空串、未知值都静默回落经典款，不会两个互斥分支都不渲染。
  */
 export interface FooterStyleConfig {
   /** 页脚样式类型：classic 经典页脚（默认）/ card 卡片页脚 */

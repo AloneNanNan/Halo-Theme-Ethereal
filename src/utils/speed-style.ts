@@ -1,16 +1,9 @@
 /**
- * 动画速度「自定义档」时长变量生成的 Thymeleaf 表达式。
- *
- * 将 Layout.astro 中原本超长的一行 th:style 三元表达式拆分为：
- *  - SPEED_CUSTOM_DEFAULTS：9 项默认时长（ms）的唯一来源；
- *  - speedCustomStyleThWith()：生成 th:with 局部变量（sc / isCustom）；
- *  - speedCustomStyleThExpr()：生成 th:style 表达式主体。
- *
- * ⚠️ 默认值同步须知：修改某时长默认值请只改 SPEED_CUSTOM_DEFAULTS，
- * 但需同步三处保持渲染一致——
- * ① speed.css 的 :root（均衡档）同名变量
- * ② settings.yaml 动画速度组 value 与各 number 的 value
- * ③ 本文件的 SPEED_CUSTOM_DEFAULTS
+ * 动画速度「自定义档」时长变量生成的 Thymeleaf 表达式：把原本超长的一行 th:style 三元拆为
+ * SPEED_CUSTOM_DEFAULTS（9 项默认时长的唯一来源）、speedCustomStyleThWith()（th:with 局部
+ * 变量 sc / isCustom）与 speedCustomStyleThExpr()（th:style 主体）。
+ * ⚠️ 默认值同步：只改 SPEED_CUSTOM_DEFAULTS 不够，需与 speed.css 的 :root（均衡档）及
+ * settings.yaml 动画速度组各 number 的 value 保持渲染一致。
  */
 
 /** 自定义档各动画时长默认值（ms），唯一来源 */

@@ -1,19 +1,9 @@
 // @ts-check
-// 构建后处理（issue #83）：兜底补回 iconify mask 图标规则被 CSS 工具链裁掉的 -webkit- 前缀。
-//
-// 背景：主题的 icon-[...] 图标是 CSS 遮罩图标（background-color: currentColor +
-// mask-image: var(--svg)），遮罩 SVG 的固有尺寸是 24×24，靠 mask-size:100% 100% 缩进
-// 1em 的方框里。Chromium < 120（OPPO/一加自带 HeyTap 浏览器 115、老微信内置内核等）
-// 只认 -webkit-mask-image/-size/-repeat，不认无前缀的 mask-*：
-// 一旦产物里缺这几条 -webkit- 声明，这些内核就按遮罩固有尺寸左上角贴合绘制（并允许平铺），
-// 被方框裁掉右下角 —— 表现为图标显示不全（字形贴边的图标尤其明显）。
-//
-// 这些前缀是否被保留，由构建链按「目标浏览器」决定，且随构建环境漂移（同一份源码、
-// 不同机器/流水线可能一个有一个没有；官方 CI 产物 1.1.0–1.2.4 就是缺的），因此不能依赖
-// 工具链行为：这里直接对产物做兜底补齐，并把补齐结果写进构建日志（补回即说明工具链又裁了）。
-//
-// 以 Astro integration 挂载到 astro:build:done（见 astro.config.mjs），
-// 也可独立运行：node scripts/ensure-icon-mask-prefix.mjs [outDir]（默认 ./templates）
+// 构建后处理：兜底补回 iconify mask 图标规则被 CSS 工具链裁掉的 -webkit- 前缀。icon-[...]
+// 是 CSS 遮罩，Chromium < 120（老微信内核、国产浏览器等）只认 -webkit-mask-*，缺声明时
+// 遮罩按固有尺寸绘制、被裁掉右下角；前缀是否保留随构建环境漂移，故不依赖工具链、直接补齐
+// 并写进构建日志（补回即说明工具链又裁了）。挂 astro:build:done；可独立运行（默认
+// ./templates）。发版前的解包复核步骤见 AGENTS.md「常见坑」。
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

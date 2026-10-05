@@ -1,13 +1,8 @@
 /**
- * 照片 EXIF 字段定义（Thymeleaf 表达式）。
- *
- * 展示行（`PhotoExifMeta.astro`）与「是否真的有 EXIF 数据」的判定
- * （`photo.astro` 的 EXIF 面板 / 无 EXIF 占位提示）共用这一份条件：
- * 字段清单只有一处，新增或删除 EXIF 字段不会出现「面板空白但仍判定为有数据」
- * 这类两处漂移的问题。
- *
- * 约定：`condition` 只写字段自身的非空判定，不含 `photo.exif != null` 前缀、
- * 也不含 `${}`，由下面的 helper 统一拼接成完整表达式。
+ * 照片 EXIF 字段定义（Thymeleaf 表达式）。展示行（PhotoExifMeta.astro）与「是否真有 EXIF
+ * 数据」的判定（photo.astro）共用这一份条件——字段清单只有一处，避免「面板空白但仍判定为
+ * 有数据」这类两处漂移。约定：condition 只写字段自身非空判定，不含 photo.exif != null
+ * 前缀、也不含 ${}，由下面的 helper 统一拼接成完整表达式。
  */
 
 const EXIF_NULL_GUARD = "photo.exif != null";
@@ -94,9 +89,8 @@ export const exifItemExpr = (item: ExifItem): string =>
   `\${${EXIF_NULL_GUARD} and ${item.condition}}`;
 
 /**
- * 整块 EXIF 是否真的有数据（th:if / th:unless 表达式）。
- * 任一字段有值即视为有数据：`photo.exif` 对象存在但字段全空时按无 EXIF 处理，
- * 页面改显示「此照片无 EXIF」占位提示，避免出现空白面板。
+ * 整块 EXIF 是否真的有数据：任一字段有值即视为有；photo.exif 存在但字段全空按无 EXIF
+ * 处理（页面显示「此照片无 EXIF」占位），避免空白面板。
  */
 export const exifHasDataExpr = `\${${EXIF_NULL_GUARD} and (${exifItems
   .map((item) => item.condition)

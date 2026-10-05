@@ -55,13 +55,11 @@ export function writeBannerHeightExtend(offset: number): void {
 }
 
 /** 与 CSS `100vh` 同基准的视口高度（px）——banner 高度体系 JS 换算的唯一基准。
- *  移动端 Chrome/Safari 的 vh 按「大视口」解析，与 window.innerHeight（动态
- *  视口）相差一个地址栏高度；JS 按 innerHeight 换算会与 CSS 基准错位，表现为
- *  波浪底边与内容背景露缝（修「移动端波浪露缝」，内嵌 WebView 与桌面无此问题）。
- *  实现：临时插入 height:100vh 的隐藏探针读取实际像素（直接采用浏览器解析值，
- *  免区分 lvh/dvh；探测异常回退 innerHeight），结果缓存，视口变化时由
- *  banner-sync 调 invalidateCssVhViewportHeight() 重置。
- *  ⚠️ Layout.astro 两处内联脚本（head 首帧 / 访客覆盖）有同款手写拷贝需同步 */
+ *  移动端 vh 按「大视口」解析、与 window.innerHeight 差一个地址栏高度，按后者
+ *  换算会让波浪底边与内容背景露缝。实现：插入 height:100vh 的隐藏探针读实际
+ *  像素（探测异常回退 innerHeight），结果缓存；视口变化由 banner-sync 调
+ *  invalidateCssVhViewportHeight() 重置。
+ *  ⚠️ Layout.astro 两处内联脚本有同款拷贝需同步 */
 let cachedVhViewportHeight = 0;
 
 export function cssVhViewportHeight(): number {

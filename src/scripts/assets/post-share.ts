@@ -1,7 +1,6 @@
-// @ts-nocheck —— 主体为从 post.bundle.js 提取的 legacy 画布海报代码（800+ 行 ES5），
-// 保持逐字迁移不作类型改造；仅外围新增的 loadQRCode 懒加载逻辑在下方。
-// 构建产物：public/assets/post-share.js（源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
-// 文章分享图生成器（v4）+ 当前文章 URL 同步
+// @ts-nocheck —— 主体为从 post.bundle.js 提取的 legacy 画布海报代码（800+ 行 ES5），保持
+// 逐字迁移不作类型改造；仅外围 loadQRCode 为新逻辑。产物 public/assets/post-share.js
+//（esbuild 编译，勿手改）：文章分享图生成器 + 当前文章 URL 同步。
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 var t =
@@ -32,12 +31,11 @@ var t =
       window.__etherealSyncCurrentPostUrl &&
         window.__etherealSyncCurrentPostUrl();
     });
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
     // 每次进文章页时 SwupScriptsPlugin 重执行本脚本即同步当前文章 URL。
   }
 })();
 
-// 文章分享图生成器 v4 - 修复对齐 + 无封面原版头部
+// 文章分享图生成器：修正对齐，支持无封面头部布局
 (function () {
   "use strict";
 
@@ -575,7 +573,7 @@ var t =
       var contentEnd = summaryY + sumLines.length * 36 + 16;
       drawFooter(ctx, data, cx, cy, cw, ch, ix, iw, PAD, col, contentEnd);
     } else {
-      // ======== 无封面：原版顶部风格 ========
+      // ======== 无封面：顶部紧凑布局 ========
       // 装饰竖条
       ctx.fillStyle = col.primary;
       roundedRect(ctx, ix, cy + 44, 4, 20, 2);
@@ -838,12 +836,9 @@ var t =
   // ==================== 主流程 ====================
   // ==================== 主流程 ====================
 
-  // qrcode.bundle.js 懒加载：海报二维码仅在生成海报时按需注入（window 守卫跨
-  // Swup 换页持久；加载失败走 hasQR 退化分支，海报照常生成无二维码）。
-  // 脚本地址由 post.astro 通过按钮 data-qr-src 注入（含 /themes 前缀与版本指纹）
-  // 超时兜底：Swup 换页可能移除在途 script（onload/onerror 永不触发），
-  // 8s 后强制置 failed 并冲刷队列，避免 __etherealQRState 永久停在 loading
-  // 导致分享按钮永久禁用。
+  // qrcode.bundle.js 懒加载：海报二维码按需注入（window 守卫跨换页持久；失败走 hasQR
+  // 退化，海报照常生成）。脚本地址由按钮 data-qr-src 注入。超时兜底 8s：Swup 换页可能
+  // 移除在途 script（onload/onerror 永不触发），避免 __etherealQRState 永久停在 loading。
   function loadQRCode(cb) {
     if (
       typeof QRCode !== "undefined" &&
@@ -1007,6 +1002,5 @@ var t =
 
   // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
 
-  // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 重新绑定由 SwupScriptsPlugin 重执行覆盖。
 })();

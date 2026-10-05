@@ -75,11 +75,9 @@ function scrollFunction() {
     backToTopBtn.classList.toggle("hide", scrollY <= bannerHeightPx);
   }
 
-  // 目录门控仅横幅/全屏模式启用（与 components.css 的
-  // html[data-banner-display=...]:not(.toc-revealed) #toc-wrapper 同源）：
-  // 视口在顶部横幅区（≤35vh）隐藏，滚动超过后给 <html> 加 .toc-revealed 解除；
-  // disabled/transparent 模式目录恒显，清除两处隐藏状态（切回横幅模式时
-  // 由 bannerModeChange 监听立即重算）
+  // 目录门控仅横幅/全屏模式启用（与 components.css 的 toc-revealed 规则同源）：视口在
+  // 顶部横幅区（≤35vh）隐藏，滚过后加 .toc-revealed 解除；disabled/transparent 恒显，
+  // 切回横幅模式由 bannerModeChange 监听立即重算。
   if (toc) {
     const bannerDisplay = document.documentElement.dataset.bannerDisplay;
     const tocGated =
@@ -92,19 +90,17 @@ function scrollFunction() {
     );
   }
 
-  // 导航栏滚动显隐：桌面端（≥lg）且非「固定菜单栏」模式才启用。
-  // 不再用「页面是否存在 #banner-wrapper」门控：CSS 侧桌面端导航栏已统一 fixed，
-  // 若保留门控，「有导航栏但无 banner」的页面会变成常驻且滚不走。当前使用本
-  // 布局的页面都带 #banner-wrapper，去掉门控行为不变，只是让 JS 与 CSS 口径一致
+  // 导航栏滚动显隐：桌面端（≥lg）且非「固定菜单栏」模式才启用。不用「是否存在
+  // #banner-wrapper」门控：CSS 侧桌面端导航栏已统一 fixed，保留门控会让「有导航栏但
+  // 无 banner」的页面常驻滚不走；当前布局的页面都带该容器，去掉后 JS 与 CSS 口径一致。
   const navDynamic =
     window.innerWidth >= MOBILE_BREAKPOINT &&
     !!navbar &&
     document.documentElement.dataset.navbarFixed !== "true";
 
   // 程序化定位锁（<html data-navbar-lock>，见 pages/moment.astro 的 #comment 落点校正）：
-  // 定位期间换页后文档瞬时变矮被浏览器钳到顶、锚点先滚一小段，都会产生与用户意图
-  // 无关的反向位移；不加锁会「导航栏先展开、内容随吸顶让位量下移 72px、随后又被
-  // 收起」，观感上就是顿一下。锁存期间不响应这类反向位移（深层照常收起）
+  // 不加锁时换页后文档瞬时变矮被钳到顶、锚点先滚一小段会产生反向位移（观感是
+  // 「导航栏先展开又收起」顿一下）。锁存期间不响应这类反向位移（深层照常收起）。
   const navbarLockRaw = document.documentElement.dataset.navbarLock;
   const navbarLocked =
     !!navbarLockRaw && Date.now() - Number(navbarLockRaw) < NAVBAR_LOCK_TTL_MS;
@@ -130,7 +126,7 @@ function scrollFunction() {
       // 不更新基准可让连续的小位移累积到超过死区后才响应
       if (Math.abs(delta) > SCROLL_DIRECTION_DEADZONE_PX) {
         lastScrollY = scrollY;
-        // 下滑隐藏、上滑显示（对齐 firefly dynamic 模式）
+        // 下滑隐藏、上滑显示
         navbarHidden = delta > 0;
       }
     }
@@ -150,14 +146,11 @@ function scrollFunction() {
 }
 
 // 全屏首页向下箭头（#scroll-down-indicator）点击目标：手算平滑滚动到内容区。
-// 落点 = 网格顶边 − 首页间距（--banner-home-content-gap）− 固定导航栏高度，
-// 使"页面背景顶部边缘"（banner 底边，100vh）对齐视口顶部而非网格顶边。
-// Chrome 平滑 scrollIntoView 会忽略 scroll-margin，故必须手算；间距直接读
-// CSS 变量（rem）按根字号换算 px，不再借用 scroll-margin-top 传值（语义扭曲）。
-// 固定导航栏（html[data-navbar-fixed="true"]）常驻顶部且滚动后不隐藏，落点需
-// 再上移导航栏高度使"导航栏底边"对齐页面背景顶部边缘；高度动态测量（移动端
-// 强制固定，断点间可能不同），非固定模式为 0——该模式桌面端虽同为 fixed，但
-// 向下滚动即自动收起，落点无需为它让位
+// 落点 = 网格顶边 − --banner-home-content-gap − 固定导航栏高度，使 banner 底边
+// 对齐视口顶部。Chrome 平滑 scrollIntoView 会忽略 scroll-margin，故必须手算；
+// 间距读 CSS 变量按根字号换算。固定导航栏（html[data-navbar-fixed="true"]）
+// 常驻且滚动后不隐藏，落点需再上移其高度（动态测量）；非固定模式为 0——桌面端
+// 虽同为 fixed，但下滑即收起，无需让位
 export function scrollDownToContent(): void {
   const grid = getGrid();
   if (!grid) return;
@@ -192,12 +185,9 @@ window.addEventListener("scroll", function () {
 window.addEventListener("bannerModeChange", scrollFunction);
 
 // ── 换页回顶（与 is-home 位移锁步）──
-// 首页↔非首页（横幅 / 全屏：内容区随 is-home 位移）的换页里，滚动回顶与 grid
-// translate / panel top 的 --dur-banner 位移是两段反向运动：原生平滑滚动的时长
-// 与曲线不可控，异步叠加会形成「先下后上」的往复。此处改为 rAF 逐帧插值，与位移
-// 同曲线 cubic-bezier(0.4,0,0.2,1)、同时长（--dur-banner），合成位移恢复单调；
-// 仅换页时由 app.ts 在 content:scroll 接管处调用（纯色 / 全屏透明无位移，保持
-// 原生平滑）。
+// 首页↔非首页的换页里，回顶与 grid translate / panel top 是两段反向运动；原生
+// 平滑的时长与曲线不可控，异步叠加会「先下后上」往复。改用 rAF 逐帧插值，与
+// 位移同曲线、同时长（--dur-banner），合成位移单调；仅换页时由 app.ts 调用。
 
 let lockstepToken = 0;
 

@@ -284,7 +284,7 @@
   background: var(--admonitions-color-caution);
 }
 
-/* 正文表格（issue #67）：覆盖 typography 默认样式——其选择器在 :where() 内
+/* 正文表格：覆盖 typography 默认样式——其选择器在 :where() 内
    （权重 0）、本文件规则 unlayered（Tailwind v4 中优先级最高），故可直接盖掉。
    外观由 variables.css 的 --md-table-* 控制；表格 HTML 由 Halo 侧产出。 */
 .custom-md table {
@@ -323,7 +323,7 @@
   border-bottom: 1px solid var(--md-table-cell-rule);
 }
 
-/* 数据单元格铺不透明卡片色（与 Firefly 一致），表格整体呈一块实心卡片 */
+/* 数据单元格铺不透明卡片色，表格整体呈一块实心卡片 */
 .custom-md td {
   background: var(--md-table-cell-bg);
 }

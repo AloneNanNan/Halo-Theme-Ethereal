@@ -5,11 +5,9 @@ import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
-  时间轴页面模板（Halo 自定义页面「时间轴」）。
-  数据来自主题设置（settings.yaml 的「时间轴」Tab）→ theme.config.timeline.entries.items，
-  每一条目渲染为纵向时间轴卡片；类型筛选通过 URL 参数（type）在服务端完成
-  （分组标签参考 links/equipments，切换即整页导航并触发入场动画），
-  技能/成就/链接的多行字段由 timeline.js 在客户端渲染。
+  时间轴页面模板（Halo 自定义页面「时间轴」）：数据来自 theme.config.timeline.entries.items，
+  每一条目渲染为纵向时间轴卡片；类型筛选走 URL 参数 type、服务端完成（切换即整页导航）；
+  技能 / 成就 / 链接等多行字段由 timeline.js 客户端渲染。
 -->
 <MainGridLayout
   title="${singlePage.spec.title + ' - ' + site.title}"

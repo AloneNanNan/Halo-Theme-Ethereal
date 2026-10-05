@@ -102,7 +102,7 @@
       (wallpaperMode === "fullscreen" && fullscreenLayout === "hero"),
   );
 
-  /* ── 面板 Tab（外观 / 壁纸 / 特效，参考 firefly） ── */
+  /* ── 面板 Tab（外观 / 壁纸 / 特效） ── */
   type PanelTab = "appearance" | "wallpaper" | "effects";
   // 可见 Tab 按固定顺序收集：≥2 个时显示 Tab 栏，=1 个时直接渲染该标签页内容
   const visibleTabs = $derived.by<PanelTab[]>(() => {
@@ -488,7 +488,7 @@
         </div>
       {/if}
 
-      <!-- 壁纸设置（横幅/全屏：首页壁纸标题 + 波浪开关，参考 firefly 的壁纸设置分区） -->
+      <!-- 壁纸设置（横幅/全屏：首页壁纸标题 + 波浪开关） -->
       {#if showWallpaperSettings}
         <div class="section-title mb-3">
           {t("display.wallpaperSettings", "壁纸设置")}
@@ -698,7 +698,7 @@
     color: white;
   }
 
-  /* 壁纸模式 2×2 网格（参考 firefly：图标 + 文字，当前模式主题色高亮） */
+  /* 壁纸模式 2×2 网格：图标 + 文字，当前模式主题色高亮 */
   #display-setting .mode-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -736,7 +736,7 @@
     flex-shrink: 0;
   }
 
-  /* 开关行（卡片式整行，参考 firefly：开启时主题色背景 tint + 图标 + 开关） */
+  /* 开关行（卡片式整行：开启时主题色背景 tint + 图标 + 开关） */
   #display-setting .toggle-row {
     display: flex;
     width: 100%;
@@ -772,7 +772,7 @@
     width: 2.25rem;
     height: 1.25rem;
     border-radius: 9999px;
-    /* 未开启轨道用比行背景更深的按钮色（参考 firefly），避免与行底色重合 */
+    /* 未开启轨道用比行背景更深的按钮色，避免与行底色重合 */
     background: var(--btn-regular-bg-active);
     position: relative;
     flex-shrink: 0;

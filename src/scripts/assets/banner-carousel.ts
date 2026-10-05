@@ -1,13 +1,10 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// Banner 多图轮播：切换动画（淡入淡出/滑动）、可点击指示点、停留定时器、
-// 预加载、屏幕外暂停。配置来自 #theme-config JSON（public/ 静态资产读不到
-// theme.config，同 wave.js）。切换动画时长 --dur-banner-transition 由动画档位
-// /custom 档注入 <html>；停留时长独立配置 style.bannerStyle.carousel.dwellMs 直接读 JSON，
-// 不随档位变化。切换动画时长交给 CSS transition。
-// 移动端独立来源开启时存在双容器（#banner / #banner-mobile）：两个容器各自
-// 独立初始化（slides/指示点/定时器/IO 各自一份），行为设置共用 style.bannerStyle.carousel。
-// 隐藏容器（display:none）的 IntersectionObserver 报 isIntersecting=false 自然
-// 暂停定时器，无需跨容器事件联动；首图 lazy 在容器被 CSS 显示后立即加载。
+// Banner 多图轮播：切换动画（fade/slide）、指示点、停留定时器、预加载、屏幕外暂停。
+// 配置来自 #theme-config JSON（public/ 静态资产读不到 theme.config）；切换时长走 CSS
+// transition（--dur-banner-transition 随动画档位注入），停留时长独立读
+// style.bannerStyle.carousel.dwellMs（不随档位）。移动端独立来源开启时双容器
+// （#banner / #banner-mobile）各自独立初始化；隐藏容器的 IntersectionObserver 自然
+// 暂停定时器，无需跨容器联动；首图 lazy 在容器被 CSS 显示后立即加载。
 (function () {
   // 本脚本会被 SwupScriptsPlugin 在每次换页时克隆重执行，而 #banner 位于
   // Layout（Swup 容器外）跨页面持久——不守卫则每次换页叠加一套定时器链 +
@@ -21,8 +18,8 @@
   if (c1) containers.push(c1);
   if (c2) containers.push(c2);
 
-  // #theme-config JSON 解析（I27：写/读 window.__themeConfig 缓存，与
-  // scripts/assets/_theme-config.ts 共享契约，避免多脚本重复 JSON.parse）
+  // #theme-config JSON 解析（写/读 window.__themeConfig 缓存，与
+  // scripts/assets/_theme-config.ts 共享契约，避免重复 JSON.parse）
   var cfg = null;
   var cachedCfg = window.__themeConfig;
   if (cachedCfg !== undefined) {
@@ -49,10 +46,8 @@
     var slides = carousel.querySelectorAll(".banner-slide");
     if (slides.length === 0) return;
 
-    // 同一链接在配置中出现多次（典型如随机图片 API）时，浏览器按 URL 缓存
-    // 会让所有实例显示同一张图。从第二次出现的实例起给 src 追加唯一令牌
-    // （_r=索引+随机串），使每个链接实例单独发起请求、互不复用；首次出现的
-    // 实例保持原样，不打断首页 eager 首图加载。
+    // 同一链接出现多次（如随机图 API）时浏览器按 URL 缓存、各实例会显示同一张图：从第二次
+    // 出现起给 src 追加唯一令牌（_r=索引+随机串），首次实例保持原样（不打断 eager 首图）。
     var srcSeen = {};
     for (var i = 0; i < slides.length; i++) {
       var slideEl = slides[i];
@@ -147,10 +142,8 @@
       carousel.appendChild(dotsWrap);
     }
 
-    // 等首图加载完全后再开始计时轮换：首图 eager + fetchpriority=high 也需网络
-    // 时间，若定时器先行，会在首图未就绪时就切走/或首图半途加载完与计时竞争。
-    // load 后照常 start；error 也放行（naturalWidth 恒为 0，不能再走 start 重挂
-    // 监听），避免加载失败导致轮播永久停转。
+    // 等首图加载完全后再开始计时轮换，避免首图未就绪就被切走。load 后 start；error 也放行
+    //（naturalWidth 恒 0，不能再走 start 重挂监听），避免加载失败导致轮播永久停转。
     function firstImgReady() {
       var el = slides[0];
       return !el || (el.complete && el.naturalWidth > 0);
@@ -180,11 +173,9 @@
       }
     }
 
-    // 切换：fade 新图淡入盖旧图；slide 旧图左移、新图右入。
-    // display:none 元素无法过渡，需先加 visible（display:block）并强制重排，
-    // 再加 active（opacity:1）驱动过渡；过渡结束后清理非当前幻灯片。
-    // slide 模式注意事项：新图必须一开始就完全不透明（内联 opacity/transition
-    // 只保留 transform 过渡），否则滑动过程中半透明的新图会透出背景底色。
+    // 切换：fade 新图淡入盖旧图；slide 旧图左移、新图右入。display:none 无法过渡，先加
+    // visible + 强制重排、再加 active 驱动过渡；slide 时新图须一开始完全不透明（只保留
+    // transform 过渡），否则滑动中会透出背景底色。
     function go(i) {
       if (i === index || count < 2) return;
       i = ((i % count) + count) % count;
@@ -247,11 +238,9 @@
       }
     }
 
-    // 屏幕外暂停定时器（wave 同构：rootMargin 100px + visibilitychange）。
-    // display:none 的隐藏容器 IO 报 isIntersecting=false → 自然暂停；
-    // 跨断点被 CSS 显示后 IO 报 intersecting → resume 并等待首图就绪。
-    // resume 额外校验 offsetParent：隐藏容器（display:none）在页面重新
-    // 可见时也会收到 visibilitychange，不加校验会在隐藏状态下启动定时器
+    // 屏幕外暂停定时器（wave 同构：rootMargin 100px + visibilitychange）。隐藏容器 IO 报
+    // isIntersecting=false 自然暂停；resume 额外校验 offsetParent：隐藏容器重新可见时也会
+    // 收到 visibilitychange，不加校验会在隐藏状态下启动定时器。
     function resume() {
       visible = true;
       if (carousel.offsetParent !== null) start();
@@ -280,10 +269,8 @@
 
     buildDots();
     updateDots();
-    // 初始预加载/计时必须以容器可见为前提（offsetParent 门控，同 resume()）：
-    // 隐藏容器（display:none）的 new Image 预加载会绕过 loading=lazy 直接下载，
-    // 违反"隐藏端不下载"；激活后 IO 报 intersecting → resume → start，
-    // 首图 eager 升级加载完成后照常启动，preload() 在 go() 轮转时补充
+    // 初始预加载/计时以容器可见为前提（offsetParent 门控）：new Image 预加载会绕过
+    // loading=lazy 直接下载、违反「隐藏端不下载」；激活后 IO → resume 启动。
     if (carousel.offsetParent !== null) {
       preload();
       start();

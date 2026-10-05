@@ -1,13 +1,9 @@
 // @ts-nocheck —— execCommand 剪贴板兜底已被 TS 标记 deprecated（会让 astro check 失败），
-// 故与其它资产脚本一样跳过类型检查
-// 经典浏览器脚本（SwupScriptsPlugin 换页重执行，data-copy-bound 幂等）
-// 瞬间卡片：复制链接按钮（MomentCard.astro 的 .moment-copy-btn）
-//
-// 契约：
-// - 目标地址由 data-copy-path（Thymeleaf 生成的相对路径，如 /moments/xxx）在点击时
-//   解析为绝对地址：不依赖站点域名变量，任意域名 / 子路径部署都正确；
-// - 反馈：按钮加 .is-copied（链环图标切对勾，CSS 在 components.css，1.5s 后移除）；
-// - 幂等：data-copy-bound 守卫；Swup 换页后由 ScriptsPlugin 重执行重新绑定。
+// 故与其它资产脚本一样跳过类型检查。
+// 经典浏览器脚本（SwupScriptsPlugin 换页重执行，data-copy-bound 幂等）：瞬间卡片复制链接
+// 按钮（.moment-copy-btn）。契约：目标地址由 data-copy-path（Thymeleaf 生成的相对路径）
+// 在点击时解析为绝对地址，不依赖站点域名变量；反馈为按钮加 .is-copied（components.css，
+// 1.5s 后移除）。
 (function () {
   function fallbackCopy(text: string): boolean {
     var ta = document.createElement("textarea");

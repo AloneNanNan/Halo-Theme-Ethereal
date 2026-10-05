@@ -5,11 +5,9 @@ import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
-  技能页面模板（Halo 自定义页面「技能」）。
-  数据来自主题设置（settings.yaml 的「技能」Tab）→ theme.config.skills.entries.items，
-  每项技能渲染为一张卡片（图标 / 名称 / 熟练度 / 经验 / 进度条）；
-  分类筛选通过 URL 参数（category）在服务端完成（分组标签参考 links/equipments，
-  切换即整页导航并触发入场动画）。
+  技能页面模板（Halo 自定义页面「技能」）：数据来自 theme.config.skills.entries.items，
+  每项渲染为卡片（图标 / 名称 / 熟练度 / 经验 / 进度条）；分类筛选走 URL 参数 category、
+  在服务端完成（切换即整页导航并触发入场动画）。
 -->
 <MainGridLayout
   title="${singlePage.spec.title + ' - ' + site.title}"

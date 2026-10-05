@@ -371,13 +371,9 @@
     grid-template-columns: minmax(0, 1fr) 288px;
   }
 }
-/* 卡片内边距：主列与侧列统一取同一个值。
-   原先侧列写死 1rem、主列是 clamp(1rem,2.5vw,1.45rem)，同一容器内两列卡片的
-   水平内边距差了 0.45rem（宽屏）⇒ 标题到卡片左右边缘的留白不一致，侧列看着"贴边"。
-   现两列共用一套值；窄屏档（≤640px）两者仍然都是 0.9rem。
-   1.4.x：整体再收一档（宽屏 1.45rem → 1.15rem）—— 带主题色竖线的卡片标题，
-   上方与右侧都是纯空白，原来是卡片里最"空"的两处；四边同比收窄后标题不再悬在
-   右上角一大片留白里，同时避免只收上/右造成的内容偏心。 */
+/* 卡片内边距：主列与侧列共用同一套值（此前侧列 1rem、主列 clamp(1rem,2.5vw,1.45rem)，
+   宽屏下两列差 0.45rem、侧列看着「贴边」）；窄屏档（≤640px）两者均为 0.9rem。带主题色
+   竖线的卡片标题上方/右侧留白最多，故四边同比收窄（宽屏 1.15rem），避免内容偏心。 */
 .about-col-main > section,
 .about-col-side > section {
   padding: clamp(0.9rem, 2.2vw, 1.15rem);
@@ -817,19 +813,15 @@ body.card-hover-lift-enabled .about-friend:active {
   font-size: 0.95rem;
   line-height: 1;
 }
-/* 个人简介小组件的社交图标是 iconify 的 svg 形态（format: svg），
-   输出自带 width/height="24" 这类**绝对像素**，必须按 em 重设尺寸，
-   否则 24px 会撑破 1.1rem 的图标列。fill 已是 currentColor，跟着上面的
-   color 走（默认次要灰、hover 主色）。 */
+/* 个人简介小组件的社交图标是 iconify svg 形态，自带 width/height="24" 绝对像素，
+   必须按 em 重设尺寸（否则撑破 1.1rem 图标列）；fill 已是 currentColor，跟随 color。 */
 .about-connect-icon > svg {
   display: block;
   width: 1.05em;
   height: 1.05em;
 }
-/* 右上角箭头：与「最近提交」的 .about-activity-arrow 同一套动效 ——
-   hover / focus 时变主题色并向右上飘 0.1rem。
-   这里显式声明 color（原先靠继承 .about-connect 的颜色）只是为了让颜色过渡
-   由箭头自己控制，跟 .about-activity-arrow 的写法保持一致。 */
+/* 右上角箭头：与「最近提交」的 .about-activity-arrow 同一套动效（hover / focus 变主题色
+   并向右上飘 0.1rem）；显式声明 color 让颜色过渡由箭头自己控制。 */
 .about-connect-arrow {
   color: var(--content-meta);
   font-size: 0.82rem;
@@ -1069,10 +1061,9 @@ body.card-hover-lift-enabled .about-friend:active {
 }
 
 /* ================= ⑭ 页脚卡 ================= */
-/* ⚠️ margin-top 不能省：外层 th:with 容器带 th:remove="tag"，渲染后页脚卡是
-   .about-cols-wrap 的**直接兄弟**，而 .about-cols-wrap 没有下外边距 ⇒
-   不加这条时页脚卡与两栏区块的间距是 0，和全页 1rem 的节奏对不上。
-   用「上外边距」而不是给 .about-cols-wrap 补下外边距：页脚卡被隐藏时不留空档。 */
+/* ⚠️ margin-top 不能省：外层 th:with 容器带 th:remove="tag"、渲染后页脚卡直接跟
+   .about-cols-wrap（无下外边距）相邻，不加则间距为 0。用上外边距而非补下外边距，
+   页脚卡被隐藏时不留空档。 */
 section.about-footer-card {
   display: flex;
   align-items: center;

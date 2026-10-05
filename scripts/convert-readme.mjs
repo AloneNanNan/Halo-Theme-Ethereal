@@ -1,9 +1,7 @@
 // @ts-check
-// 把根目录 README.md（GitHub 风格，徽章用 <picture> 适配深浅色）转换为 Halo
-// 应用市场可读的 README-Halo.md：halo.run 的 Markdown 渲染器不识别 <picture>，
-// 需将每个 <picture> 块降级为内部第一个 <img>（即浅色模式徽章）。
-// 路径基于脚本自身位置解析（import.meta.url），任意 CWD 下均可运行——
-// pnpm 脚本固定以包根为 CWD，若按相对路径写 ../README.md 会指向项目外。
+// 把 README.md（徽章用 <picture> 适配深浅色）转换为 Halo 应用市场可读的 README-Halo.md：
+// halo.run 不识别 <picture>，降级为内部第一个 <img>（浅色徽章）。路径基于脚本自身位置
+//（import.meta.url）解析，任意 CWD 可运行——按相对路径写会指向项目外。
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 

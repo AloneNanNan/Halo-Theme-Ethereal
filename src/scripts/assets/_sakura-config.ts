@@ -1,7 +1,6 @@
-// 共享：樱花特效参数与类型
-// 主脚本 sakura.ts 消费 SAKURA_CONFIG 并经 Worker init 消息传给 sakura-worker.ts；
-// Worker 仅 import type（类型编译期消除）。参数为内置默认（后台只开关、不暴露调参），
-// 调整时两处生效路径都要考虑：主线程回退版直接读本模块，Worker 版读消息里的 config。
+// 共享：樱花特效参数与类型。主脚本 sakura.ts 消费并经 Worker init 消息传给
+// sakura-worker.ts（Worker 仅 import type）。参数为内置默认；调整时注意两条生效路径：
+// 主线程回退版直接读本模块，Worker 版读消息里的 config。
 export interface SakuraConfig {
   /** 樱花数量 */
   sakuraNum: number;

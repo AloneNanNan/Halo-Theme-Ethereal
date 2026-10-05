@@ -1,28 +1,14 @@
 ---
-// 分组页页头统一组件（眉题 + 标题 + 已筛选徽章 + 统计片 + 右侧 slot）。
-//
-// 结构（全站页头统一形态：眉题 + 标题 + 已筛选钮 + 统计片 + 动作槽）：
-// - 眉题行：图标 + 英文大写设计词（props.eyebrow，如 ARCHIVES / MOMENTS，静态词不走 i18n）
-// - 大标题：左侧悬空主题色竖线装饰（.page-head-modern h1::before，不占布局）
-// - 右侧 = 「已筛选」清除钮（filteredExpr 条件显示，位于统计片左侧）
-//   + 统计方片组（stats）+ 动作槽（slot="right"），一条基线贴底对齐
-// - 大图标水印（与眉题共用 iconClass，.ph-watermark）
-// 容器自带内边距（样式见 components.css 的 .page-head-modern），页面头部卡
-// 不再包 px/py。
+// 分组页页头统一组件（眉题 + 标题 + 已筛选钮 + 统计片 + 右侧 slot），容器自带内边距
+// （样式见 components.css 的 .page-head-modern，页面头部卡不再包 px/py）。
 //
 // 约定（Thymeleaf 表达式字符串传 props，与 FilterTab 一致）：
-// - titleExpr/filteredExpr/filteredClearExpr 传完整表达式（含 ${} 或 #{}），
-//   如 `${linksTitle}` / `#{common.filtered}` / `@{/links}`
-// - titleExpr 缺省时 h1 内容改由默认 slot 渲染（wishes 用嵌套 span）
-// - iconClass 只传 icon-[...] 名字面量（如 `icon-[material-symbols--psychology]`），
-//   eyebrow 内用 0.9rem、水印由 .ph-watermark 控制 8rem。名字面量留在各页源码，
-//   Tailwind/Iconify 内容扫描才能生成图标规则，勿用 `icon-[${icon}]` 动态拼接
-// - filteredExpr 缺省则整个清除钮不渲染（wishes 为客户端筛选无 URL 参数）
-// - 右侧按钮/徽章放 slot="right"（links 随机访问 / moments RSS / wishes 纪念日）
-// - 统计方片组 stats：数值 + 词条，与 slot 动作钮同排、贴底对齐；无数字可展示的
-//   页面不传。valueExpr 传数值表达式（含 ${}），labelExpr 传词条表达式（#{}）；
-//   value / label 为 SSR 占位内容。key（可选）渲染成 .stat 的 data-stat，
-//   供筛选态脚本定位改写数值（计数无法用聚合表达式表达的 archives / links / wishes）。
+// - titleExpr / filteredExpr / filteredClearExpr 传完整表达式（含 ${} 或 #{}）；
+//   titleExpr 缺省时 h1 改由默认 slot 渲染。
+// - iconClass 只传 icon-[...] 名字面量（尾缀扫描生成图标规则，勿运行时拼接）。
+// - filteredExpr 缺省则清除钮不渲染（wishes 为客户端筛选、无 URL 参数）。
+// - 右侧按钮 / 徽章放 slot="right"；stats 的 valueExpr 传数值、labelExpr 传词条，
+//   可选 key 渲染成 .stat[data-stat] 供筛选脚本改写数值，无数字可展示的页面不传。
 export interface HeaderStat {
   valueExpr: string;
   value: string;

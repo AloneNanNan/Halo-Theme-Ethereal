@@ -1,7 +1,6 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// 心愿便签墙交互（Wishboard 插件适配）—— 便签墙视框风格
-// 功能：卡片随机散布、拖动（限定画布内）、类型筛选、类型切换、
-//       颜色选择、发布便签、AI 润色、字符计数、纪念日计数
+// 心愿便签墙交互（Wishboard 适配）：卡片随机散布 / 拖动（限定画布内）/ 类型筛选与切换 /
+// 颜色选择 / 发布便签 / AI 润色 / 字符与纪念日计数。
 (function () {
   var API = "/apis/anonymous.wishboard.aobp.cn/v1alpha1";
   // 便签颜色唯一来源：卡片背景与发布栏颜色圆点共用，避免多处色值不一致
@@ -169,11 +168,9 @@
   }
 
   /* ===== 筛选 =====
-     切换分组时重播卡片入场动画（照搬 theme-Serenity / 作者站点实现）：
-     先清掉旧动画并显式置透明 → 强制回流 → 重新赋 wishCardIn（按可见序号
-     40ms 错峰淡入）。解决此前 display 恢复触发的原生重播缺陷——旧动画
-     只有 forwards（无 backwards），delay 期间会先按自然态闪现一下再消失
-     淡入（用户反馈的「闪一下」）。首次初始化同样走此函数，与切换同节奏。 */
+     切换分组时重播卡片入场动画：先清旧动画并显式置透明 → 强制回流 → 重新赋 wishCardIn
+    （按可见序号 40ms 错峰淡入）。避免 display 恢复触发的原生重播缺陷——旧动画只有
+     forwards，delay 期间会先按自然态闪现再消失。首次初始化同样走此函数。 */
   function filterCards() {
     var body = el.body;
     if (!body) return;
@@ -476,6 +473,5 @@
   } else {
     init();
   }
-  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖。
 })();

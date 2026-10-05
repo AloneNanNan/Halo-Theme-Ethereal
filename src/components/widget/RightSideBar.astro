@@ -21,10 +21,8 @@ const widgetSwitchReplace = "~{::widgetSwitch(${widget})}";
 const nonStickyExpr = `widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky == false].size() == widgetStat.index`;
 const nonStickyIf = `\${${nonStickyExpr}}`;
 const hasNonStickyIf = `\${widgets != null and not #lists.isEmpty(widgets) and widgets[0].sticky == false}`;
-// 吸顶条目一律全部渲染——「文章页只留前 2 个给目录腾空间」改由 Layout.astro 的
-// #right-sidebar-sticky:has(#right-sidebar-toc > *) 规则按「目录卡片在不在」判定，
-// 与左栏完全同源（右栏已不是 Swup 容器，服务端序号判断反而要引入 position 运行时
-// 变量、容易与其它条件 AND 错位）
+// 吸顶条目一律全部渲染——「文章页只留前 2 个」由 Layout.astro 的
+// #right-sidebar-sticky:has(#right-sidebar-toc > *) 按目录卡片有无判定，与左栏同源。
 const stickyIf = `\${not (${nonStickyExpr})}`;
 // 目录卡片：文章页（showToc）+ 主题开启目录 + 目录位置在本栏（position 非 left）+ 非两栏布局。
 // position / layoutMode 都是运行时主题配置，只能在 Thymeleaf 侧判断，故用 th:with 引入

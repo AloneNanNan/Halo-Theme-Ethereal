@@ -2,15 +2,9 @@
 import WidgetLayout from "./WidgetLayout.astro";
 
 /*
- * 音乐播放器交互和布局参考开源社区实现。
- * MIT License
- *
- * 图标统一用 span + icon-[...]（与全站其余组件一致），不用 astro-icon 的
- * <Icon>：后者默认走 sprite——同一页面内某个图标只在首次使用处输出 <symbol>，
- * 其余位置仅输出 <use href="#ai:...">。本组件可配置在左栏或右栏，两侧分支都由
- * Thymeleaf 运行时决定渲染与否，若首次使用处（源码中更靠前的左栏分支）未渲染，
- * 另一栏就只剩 <use> 引用而图标全丢。span + icon-[...] 每个实例自带图标数据，
- * 与渲染位置、渲染顺序完全无关。
+ * 音乐播放器：播放列表 / 歌词抽屉 / 封面旋转，交互实现见下方脚本。
+ * 图标统一用 span + icon-[...]、不用 astro-icon 的 <Icon> sprite：本组件可配在左栏或右栏，
+ * 首个使用处未渲染时另一栏只剩 <use> 引用、图标全丢（机制见 AGENTS.md「常见坑」）。
  */
 
 interface Props {
@@ -24,8 +18,7 @@ const widgetId = `music-widget-${Math.random().toString(36).slice(2, 9)}`;
 const layoutId = `${widgetId}-layout`;
 ---
 
-<!-- data-widget="music"：换页时 app.ts 据此在 Swup 容器中定位并保留本节点，
-     见 app.ts「换页保留右栏音乐播放器」 -->
+<!-- data-widget="music"：本小组件节点的类型标记（与下方未配置提示卡互斥渲染） -->
 <div
   class="contents"
   data-widget="music"
@@ -323,11 +316,8 @@ const layoutId = `${widgetId}-layout`;
   </WidgetLayout>
 </div>
 
-<!-- 未配置 ID：渲染提示卡而不是静默消失。
-     与上方播放器互斥（th:if / 此处 th:if 取反），二者共用 data-widget="music"
-     标记，但同一时刻只会渲染一个节点。
-     后台「音乐播放器小组件」的 ID 不再设必填校验（配置已外提到独立分组，
-     无法判断你是否真的把该小组件放进了侧边栏列表），故用前台提示代替校验。 -->
+<!-- 未配置 ID：渲染提示卡而不是静默消失（与上方播放器 th:if 互斥，共用 data-widget="music"）。
+     配置已外提为独立分组、无法判断小组件是否真的进了侧栏列表，故用前台提示代替必填校验。 -->
 <div
   class="contents"
   data-widget="music"
@@ -456,9 +446,8 @@ const layoutId = `${widgetId}-layout`;
       ),
     };
 
-    // 封面旋转用 WAAPI 驱动而非 CSS 动画：换页时播放器节点会被搬移（见 app.ts
-    // 「换页保留右栏音乐播放器」），CSS 动画会随之重建并从 0 重启；脚本持有的
-    // 动画跨 DOM 移动不中断。不支持 WAAPI 时降级为不旋转（不阻断播放器初始化）。
+    // 封面旋转用 WAAPI 驱动而非 CSS 动画：动画句柄由脚本持有，节点被重新挂载时
+    // 不会像 CSS 动画那样从 0 重启。不支持 WAAPI 时降级为不旋转（不阻断初始化）。
     const coverSpin =
       typeof ui.cover.animate === "function"
         ? ui.cover.animate(
@@ -955,7 +944,6 @@ const layoutId = `${widgetId}-layout`;
       })
       .finally(() => setLoading(false));
 
-    // 换页清理音频：Swup 容器替换时旧 audio 元素随之销毁；
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 换页清理音频：Swup 容器替换时旧 audio 元素随之销毁。
   })();
 </script>

@@ -1,22 +1,9 @@
 /**
- * 文章卡片布局的 Thymeleaf 表达式生成。
- *
- * 与 settings.yaml 的 layout.postList 配置组对应，读取：
- *   defaultMode / list.coverPosition / list.coverRatio / descriptionLines /
- *   grid.masonry / grid.coverFullWidth / grid.coverAutoHeight
- *
- * 渲染结果输出到 PostList.astro 的容器上：
- *   th:classappend -> 追加布局类（post-grid-mode / post-list-mode / cover-left /
- *                     cover-fixed / grid-cover-inset|full / grid-cover-fill）
- *   th:attr        -> data-masonry（供瀑布流 JS 读取）
- *   th:style       -> --post-card-min-width（写死 320px）/ --post-desc-lines
- *
- * 安全约定：
- *   Thymeleaf 表达式（${} 内 / SpringEL）中不能出现 Tailwind 的括号类
- *   （rounded-(--radius-large)、w-[calc(...)] 等），否则解析器会误判括号
- *   导致 "Could not parse as expression"。因此所有含特殊字符的 Tailwind 类
- *   一律放静态 class 属性，Thymeleaf 只产出简单类名。
- *   类名拼接采用 '文本' + ${expr} 交替模式（与 friends.astro 已验证写法一致）。
+ * 文章卡片布局的 Thymeleaf 表达式生成：读 settings.yaml 的 layout.postList，输出到
+ * PostList.astro 容器（th:classappend 布局类 / th:attr data-masonry / th:style 的
+ * --post-card-min-width 与 --post-desc-lines）。安全约定：Thymeleaf 表达式不能出现
+ * Tailwind 括号类（rounded-(--radius-large)、w-[calc(...)] 等），否则解析器误判括号并抛
+ * "Could not parse as expression"——含特殊字符的类放静态 class，拼接用 '文本' + ${expr}。
  */
 
 export function postListContainerThWith(): string {

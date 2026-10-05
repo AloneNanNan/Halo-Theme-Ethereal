@@ -1,23 +1,10 @@
 /**
- * 个人简介小组件"在线状态"功能。
- *
- * 原理：状态值存在主题全局配置（sidebar.profile.statusSettings），页面服务端渲染，
- * 因此切换后当前页面立即更新、其他访客刷新页面即可看到新状态。
- *
- * 交互：
- * - 前台：鼠标悬停状态表情显示状态文案气泡（data-tooltip + CSS 伪元素）。
- * - 点击表情弹出主题风格模态框（参考外链跳转 / 友链申请 / 打赏模态框）：
- *   - 管理员：GET 主题配置探测登录态（/apis/api.console.halo.run，同源 Cookie 自动携带），
- *     成功则展示状态选项列表 + 自定义文案输入框；
- *   - 访客（401/403）：模态框内提示「暂无权限切换」。
- *
- * PUT 为整体替换，因此必须先 GET 完整配置再改字段再 PUT，避免冲掉其他后台配置。
- *
- * ⚠️ 状态集合维护须知：新增/修改状态需同步 4 处 ——
- * ① settings.yaml (select 选项 + 文案字段 + value)
- * ② Profile.astro (th:case 分支)
- * ③ 本文件的 STATUS_OPTIONS
- * ④ src/types/config.ts (SidebarProfileStatusText)
+ * 个人简介小组件「在线状态」：状态值存在主题全局配置（sidebar.profile.statusSettings），
+ * 服务端渲染——切换后当前页立即更新、其他访客刷新可见。交互：悬停表情显示气泡；点击弹
+ * 模态框（先 GET 探测登录态，访客 401/403 提示无权限）；PUT 是整体替换，必须先 GET 完整
+ * 配置、改字段、再 PUT，避免冲掉其它后台配置。
+ * ⚠️ 新增/修改状态需同步 4 处：settings.yaml、Profile.astro（th:case）、本文件
+ * STATUS_OPTIONS、src/types/config.ts。
  */
 
 import { getThemeConfig, setThemeConfig } from "./theme-config";
@@ -206,10 +193,8 @@ function syncTooltip() {
   });
 }
 
-/** 更新状态图标 DOM（无需刷新页面），并同步气泡文案。
- *  用 DOM API 构建（不用 innerHTML，避免 CodeQL 静态告警）。
- *  同时更新侧栏徽章与关于页面状态胶囊；胶囊是「图标 + 文案」结构，
- *  重建时需补文案节点，否则切换后会退化成只有图标。 */
+/** 更新状态图标 DOM 并同步气泡文案。用 DOM API 构建（不用 innerHTML，避免 CodeQL 告警）。
+ *  同时更新侧栏徽章与关于页面胶囊；胶囊是「图标 + 文案」结构，重建时需补文案节点。 */
 function setBadgeStatus(status: string) {
   const opt = getOption(status) || STATUS_OPTIONS[0];
   document.querySelectorAll(BADGE_SELECTOR).forEach((badge) => {
@@ -504,10 +489,8 @@ function selectOption(key: string) {
 // ── 交互 ──────────────────────────────────────────────
 
 /**
- * 自动清理"非当前状态"的文案残留（含历史嵌套 statusText 结构）并写回。
- * 配合 applyStatus 的清空逻辑，保证文案只属于当前状态：
- * 后台切换状态保存后，旧状态文案即使残留在配置里，打开模态框时也会被清空，
- * 前台不再显示旧文案（无需刷新、无需手动删除）。
+ * 自动清理「非当前状态」的文案残留（含历史嵌套 statusText 结构）并写回：配合 applyStatus
+ * 的清空逻辑，保证文案只属于当前状态，旧文案无需刷新、无需手动删除。
  */
 async function cleanupStaleStatusText(
   config: Record<string, unknown>,

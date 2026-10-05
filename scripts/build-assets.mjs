@@ -1,13 +1,9 @@
 // @ts-check
-// 构建期脚本资产管线：
-//  1. compileAssets()：把 src/scripts/assets/*.ts 编译为 IIFE 经典脚本输出到 public/assets/
-//     （保持经典脚本形态：SwupScriptsPlugin 换页重执行 + window 守卫的架构依赖它）
-//  2. copyVendorAssets()：把 src/scripts/vendor/*.js 原样拷贝到 public/assets/
-//     （第三方 vendored 资产，如 qrcode.bundle.js UMD，不经过 esbuild 编译）
-//  3. compressAssetsInDir(dir, names)：对 outDir/assets/ 下指定的 *.js 做 esbuild 压缩
-//     （只压缩 public/ 拷贝进来的经典脚本，跳过 Astro/Vite 的 hashed module 产物）
-// 以 Astro integration 挂载：build:start 编译+拷贝（先于 public/ 拷贝）、build:done 压缩。
-// 亦可独立运行：node scripts/build-assets.mjs [publicDir] [--watch]
+// 构建期脚本资产管线（Astro integration：build:start 编译+拷贝、build:done 压缩；也可独立
+// 运行 node scripts/build-assets.mjs [publicDir] [--watch]）：compileAssets() 把
+// src/scripts/assets/*.ts 编译为 IIFE 经典脚本到 public/assets/、copyVendorAssets() 原样
+// 拷贝 src/scripts/vendor/*.js、compressAssetsInDir() 只压经典脚本、跳过 hashed module
+// 产物。管线全貌与产物约定见 AGENTS.md 5.1。
 import { build, transform } from "esbuild";
 import { readdir, readFile, writeFile, copyFile } from "node:fs/promises";
 import { join, resolve } from "node:path";

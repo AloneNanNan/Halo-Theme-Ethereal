@@ -1,16 +1,10 @@
-// 樱花特效主脚本：优先 OffscreenCanvas + Web Worker（绘制循环脱离主线程，
-// 换页 / 滚动时主线程阻塞不导致掉帧），不支持时回退主线程 Canvas 2D。
-//
-// 构建产物 public/assets/sakura.js（源码在 src/scripts/assets/，esbuild 编译，勿手改产物）。
-// 开关链路（与 setting-utils.ts / Layout.astro 启动脚本同步）：
-//   · 后台「样式开关 → 全局樱花特效」= 全站默认值（ConfigCarrier data-sakura-default）；
-//   · 访客在显示设置面板切换（localStorage 键 sakuraEnabled），
-//     setSakuraEnabled / resetSakura 派发 sakuraToggle 事件实时启停本脚本；
-//   · 「访客样式切换 → 特效切换」关闭时忽略 localStorage，跟随全局默认。
-// 图片 / Worker 路径从本脚本自身 src 推导（构建后自动带 /themes/Ethereal 前缀，勿硬编码），
-// 并把脚本 URL 的查询串（?v=版本号）透传下去做缓存失效，主题升级换图 / 换 worker 后不吃旧缓存。
-// Swup 换页会克隆重跑本脚本：window 守卫保证只初始化一次；canvas 动态挂 body
-// （Swup 容器外），动画跨页持续。
+// 樱花特效主脚本：优先 OffscreenCanvas + Web Worker（绘制脱离主线程），不支持时回退主线程
+// Canvas 2D。开关链路：后台「样式开关 → 全局樱花特效」为全站默认（data-sakura-default）；
+// 访客在显示设置面板切换（localStorage 键 sakuraEnabled），setSakuraEnabled / resetSakura
+// 派发 sakuraToggle 实时启停；「访客样式切换 → 特效切换」关闭时忽略 localStorage、跟随默认。
+// 图片 / Worker 路径从脚本自身 src 推导（构建后自动带 /themes/Ethereal 前缀，勿硬编码），
+// 并透传脚本 URL 的 ?v= 查询串做缓存失效。Swup 换页重跑本脚本，window 守卫只初始化一次；
+// canvas 挂 body（Swup 容器外），动画跨页持续。
 
 import { SAKURA_CONFIG } from "./_sakura-config";
 import {

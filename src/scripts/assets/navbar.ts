@@ -1,11 +1,8 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// 导航栏面板切换：document 级事件委托，替代原先按钮上的内联 onclick（CSP 友好）。
-// 移动端菜单支持两种模式（布局设置 → 菜单栏设置 → 菜单样式）：
-//  - drawer（抽屉）：右侧滑出圆角卡片，子菜单平铺；开关由 body.nav-menu-open 驱动
-//  - accordion（手风琴，默认）：导航栏下方下拉面板，子菜单手风琴折叠；
-//    开关切换 #nav-menu-panel 的 float-panel-closed 类（与原版一致）
-// 模式由 DOM 判定：#nav-menu-root 存在即为抽屉模式。
-// 导航栏位于 Swup 容器之外，脚本只执行一次（defer），window 标志防重复绑定。
+// 导航栏面板切换：document 级事件委托，替代按钮内联 onclick（CSP 友好）。移动端菜单两种
+// 模式：drawer（右侧滑出圆角卡片、子菜单平铺，body.nav-menu-open 驱动）/ accordion（默认，
+// 下拉面板，切 #nav-menu-panel 的 float-panel-closed 类）；模式由 DOM 判定（#nav-menu-root
+// 存在即 drawer）。导航栏在 Swup 容器外，脚本只执行一次（defer），window 标志防重复绑定。
 if (!window.__navbarPanelToggleBound) {
   window.__navbarPanelToggleBound = true;
 
@@ -14,12 +11,10 @@ if (!window.__navbarPanelToggleBound) {
   var drawerMode = !!document.getElementById("nav-menu-root");
 
   // ===== 抽屉模式逻辑 =====
-  // 把整个抽屉 root（#nav-menu-root，内含遮罩 + 面板）挂到 body 直接子级。
-  // 与模态框（外链跳转/友情链接）同款：天然位于 OverlayScrollbars 滚动容器
-  // 之外，backdrop-filter 按真实视口采样。
-  // 关键：页面加载（脚本执行）时立即挂载，而不是首次打开时才挂载——若首次
-  // 打开才 appendChild 移动 root，同帧内"移动 DOM + 触发 CSS 动画"会让浏览器
-  // 对刚插入的子树延迟启动动画（首次打开生硬无动画，二次正常）。
+  // 把整个抽屉 root（#nav-menu-root，内含遮罩 + 面板）挂到 body 直接子级：位于
+  // OverlayScrollbars 滚动容器之外，backdrop-filter 按真实视口采样。关键：脚本执行时立即
+  // 挂载而非首次打开时再挂——同帧「移动 DOM + 触发动画」会让浏览器对新插入子树延迟启动动画
+  // （首次打开生硬无动画，二次正常）。
   var navPanelRootMoved = false;
 
   function ensureNavPanelInBody() {
@@ -62,7 +57,7 @@ if (!window.__navbarPanelToggleBound) {
   }
 
   // ===== 手风琴模式逻辑 =====
-  // 切换面板开关（float-panel-closed），与原版 navbar.js 一致
+  // 切换面板开关（float-panel-closed）
   function toggleAccordionPanel(force) {
     var panel = document.getElementById("nav-menu-panel");
     if (!panel) return;
@@ -73,7 +68,7 @@ if (!window.__navbarPanelToggleBound) {
     }
   }
 
-  // 手风琴子菜单切换（同时只展开一个），逻辑与原版 NavMenuPanel 内联脚本一致
+  // 手风琴子菜单切换（同时只展开一个）
   function toggleSubmenu(buttonEl, submenuId) {
     var submenu = document.getElementById(submenuId);
     if (!submenu) return;
@@ -131,9 +126,8 @@ if (!window.__navbarPanelToggleBound) {
   }
 
   // ===== 统一事件委托 =====
-  // 页面加载即挂载 root（抽屉模式）：此时菜单未打开、无动画在播放，
-  // 移动 DOM 无副作用；OS 懒加载若把 root 包进滚动容器，MutationObserver 兜底移回。
-  // 这样首次打开时 root 已在 body 直接子级，无 DOM 移动，渐入动画正常。
+  // root 在页面加载即挂到 body（此时无动画在播，移动 DOM 无副作用）；OS 懒加载若把 root
+  // 包进滚动容器，MutationObserver 兜底移回——首次打开时无 DOM 移动，渐入动画正常。
   ensureNavPanelInBody();
 
   document.addEventListener("click", function (e) {
@@ -273,10 +267,8 @@ if (!window.__navbarPanelToggleBound) {
   );
 })();
 
-// 导航栏「顶部透明、下滑玻璃」：滚动超过阈值后给 <html> 挂 .navbar-scrolled，
-// 样式由 components.css 的全屏模式段消费（仅在「全屏模式 + 首页 + 高级材质」下
-// 生效，其余情况该状态类无视觉效果）。rAF 节流；换页过渡（Swup 的 is-changing /
-// is-animating）期间保持现状，避免导航栏背景闪烁
+// 导航栏「顶部透明、下滑玻璃」：滚动超过阈值给 <html> 挂 .navbar-scrolled（样式只在
+// 「全屏 + 首页 + 高级材质」下生效）。rAF 节流；换页过渡期间保持现状，避免背景闪烁。
 if (!window.__navbarScrollGlassBound) {
   window.__navbarScrollGlassBound = true;
 
@@ -310,11 +302,9 @@ if (!window.__navbarScrollGlassBound) {
     passive: true,
   });
 
-  // 换页过渡结束的那一帧补算一次：Swup 的「滚动归零」发生在过渡窗口内，scroll
-  // 事件被上面的 return 吞掉，若之后用户不滚动，类会残留旧值（从首页深处进文章、
-  // 再回首页时，顶部会错误地显示玻璃底）。监听 <html> 的 class —— is-changing /
-  // is-animating 被 Swup 移除的瞬间重算；只在「过渡 → 非过渡」的转换时触发，
-  // 平时（含 navbar-scrolled 自身变化）零开销
+  // 换页过渡结束的那一帧补算一次：Swup 的「滚动归零」发生在过渡窗口内、scroll 被吞掉，
+  // 不补算会残留旧值（从首页深处进文章再回首页时顶部错误显示玻璃底）。监听 <html> 的
+  // class：is-changing / is-animating 被移除的瞬间重算，仅「过渡 → 非过渡」时触发。
   var navbarRoot = document.documentElement;
   var navbarWasTransitioning = false;
 

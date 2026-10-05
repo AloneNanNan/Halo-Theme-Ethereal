@@ -102,7 +102,6 @@ const htmlContentClass = `${contentClass} overflow-y-auto overflow-x-hidden`;
       apply();
     });
 
-    // 换页后重新应用：由 SwupScriptsPlugin 重执行本脚本时自动覆盖；
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 换页后重新应用：由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 </script>

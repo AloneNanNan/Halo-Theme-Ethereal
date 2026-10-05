@@ -37,10 +37,8 @@ const stats = [
   title="|#{page.bangumi.title} - ${site.title}|"
   description="#{page.bangumi.description(${site.title})}"
 >
-  <!-- 头部卡：新版页头（modern，含图标水印）+ 类型/状态两条胶囊池——
-       氛围渐变由卡片级 .page-head-card 承载（页头与池之间无缝）。
-       curType/curStatus 供两条池的链接拼接与激活判定（原定义在 section 上，
-       拆分后随头部卡走） -->
+  <!-- 头部卡：新版页头（modern）+ 类型/状态两条胶囊池，氛围渐变由 .page-head-card 承载；
+       curType/curStatus 供两条池的链接拼接与激活判定。 -->
   <div
     th:with="
       curType=${bangumis.typeNum},

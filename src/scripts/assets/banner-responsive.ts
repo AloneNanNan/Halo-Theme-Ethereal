@@ -87,7 +87,6 @@
   // window/document 级监听器只绑一次：本脚本会被 SwupScriptsPlugin 在每次换页时
   // 克隆重执行，不守卫则 resize/scroll 处理器逐次叠加（N 次换页 = N 倍回调开销）。
   // 换页后的重排由上方 fullUpdate() 在每次重执行时完成。
-  // 原 swup:contentReplaced 监听删除：Swup v3 事件名，v4 分发 swup:{hook}，从未触发。
   if (!window.__bannerRespBound) {
     window.__bannerRespBound = true;
 

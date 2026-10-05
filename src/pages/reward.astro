@@ -1,11 +1,8 @@
 ---
 // 打赏页面模板（Halo 自定义页面，自定义模板选「打赏页面」/ reward）。
-// 结构：打赏主卡（页头 → 用途说明 → 收款码）→ 打赏者名单（可选）→ 评论（跟随页面「允许评论」）。
-// 数据源：
-//   · 收款码 = 文章打赏模态框同源（theme.config.post.actionBar.rewardSetting.wechat_qr /
-//     alipay_qr），仅读取、不受「文章操作栏」/「启用打赏」开关影响（数据常驻后台配置）；
-//   · 页面文案与打赏者名单 = 主题设置 extendPages.reward（名单留空则整卡不渲染）。
-// 纯服务端渲染，无页面脚本；评论区条件与默认 page 模板一致。
+// 收款码 = 文章打赏模态框同源配置（rewardSetting.wechat_qr / alipay_qr），仅读取、
+// 不受「文章操作栏」/「启用打赏」开关影响；文案与名单 = extendPages.reward
+// （名单留空则整卡不渲染）。纯服务端渲染，评论区条件与默认 page 模板一致。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import PageHeader from "../components/control/PageHeader.astro";
 ---
@@ -74,12 +71,9 @@ import PageHeader from "../components/control/PageHeader.astro";
         </p>
       </div>
 
-      <!-- 收款码（微信 / 支付宝，与打赏模态框同源；白底保证二维码识别）。
-         布局：两张卡满宽双列，只配一种时降级为单卡居中（见 th:classappend）；
-         卡片与标题沿用打赏模态框收款卡语言（白底 + 主题色描边 18% + 圆角，
-         标题文字纯色、图标主题色）；二维码外套带主题色阴影的白盒（.reward-qr-box）。
-         底侧内边距刻意比顶侧大 4px（pt-4 + pb-5）：抵消标题行高（text-xl）多出的
-         视觉空隙，使标题上方 / 白盒下方的留白一致。 -->
+      <!-- 收款码（微信 / 支付宝，与打赏模态框同源；白底保证识别）。两张卡满宽双列、
+           只配一种时降级单卡居中；卡片语言同打赏模态框收款卡，二维码外套主题色阴影
+           白盒（.reward-qr-box）。底侧内边距比顶侧大 4px（pt-4 + pb-5），抵消标题行高。 -->
       <div
         th:if="${hasQr}"
         class="grid grid-cols-1 gap-4"
@@ -89,7 +83,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           th:if="${!#strings.isEmpty(wechatQr)}"
           class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-white px-4 pt-4 pb-5"
         >
-          <!-- 标题：参考 Firefly（图标 text-2xl + 标题 text-xl font-semibold）。
+          <!-- 标题：图标 text-2xl + 标题 text-xl font-semibold。
              文字色取恒定的 text-neutral-900（白卡明暗都是白底，不能挂 dark: 浅色变体）；
              图标沿用模态框的主题色 text-(--primary) -->
           <div class="flex items-center gap-3 text-neutral-900">

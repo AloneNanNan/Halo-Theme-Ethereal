@@ -400,7 +400,7 @@ spec:
               key: welcome_enable
               label: 启用
               value: false
-              help: "开启后访客进入网站时显示欢迎弹窗；访客关闭后本次会话不再弹出。IP 定位复用天气小组件配置的腾讯位置服务 Key，在侧边栏设置的「天气小组件」分组中配置 Key 后生效。"
+              help: "开启后访客进入网站时显示欢迎弹窗，关闭后本次会话不再弹出。IP 定位复用「天气小组件」中配置的腾讯位置服务 Key。"
             - $formkit: select
               name: position
               id: welcome_position
@@ -435,7 +435,7 @@ spec:
               if: "$get(welcome_enable).value"
               label: 定位失败文案
               value: "未知星球"
-              help: "未配置腾讯位置服务 Key 或定位失败时，替换 {location} 的地点文字（请填写地点名词，如：未知星球）。模板为「来自 {location} 的小伙伴」时，将显示「来自未知星球的小伙伴」"
+              help: "未配置 Key 或定位失败时替换 {location} 的文字（填地点名词，如：未知星球）。例：「来自 {location} 的小伙伴」→「来自未知星球的小伙伴」"
     - group: style
       label: 样式设置
       formSchema:
@@ -510,7 +510,7 @@ spec:
                   accepts:
                     - "image/*"
                   value: []
-                  help: "选择多张静态图片，按顺序循环切换；少于 2 张时按单图显示。支持外部链接，重复链接会自动附加查询参数强制单独请求；随机图接口建议使用无状态服务（uapis.cn 等接口存在同一浏览器会话内反复请求返回同一张图的问题"
+                  help: "多图按顺序循环切换，少于 2 张时按单图显示；支持外链，重复链接会自动附加参数单独请求。随机图接口请使用无状态服务（避免同一会话反复拿到同一张图）。"
                 - $formkit: select
                   name: effect
                   label: 切换效果
@@ -747,7 +747,7 @@ spec:
                   id: style
                   label: 切换动画样式
                   value: fade
-                  help: '已知 Mac 平台部分浏览器"圆形扩散"与"擦除"动画显示异常（圆心偏移、边缘残留、模糊丢失），建议使用淡入淡出以获得多平台更佳体验；需开启菜单栏设置中的「配色（深浅色）切换」开关后生效'
+                  help: "Mac 部分浏览器上「圆形扩散 / 擦除」动画显示异常，建议改用淡入淡出；需先开启菜单栏设置中的「配色（深浅色）切换」"
                   options:
                     - label: 淡入淡出
                       value: fade
@@ -1467,7 +1467,7 @@ spec:
               name: tencent_key
               label: 腾讯位置服务 Key
               value: ""
-              help: "WebService API 类型，免费注册：https://lbs.qq.com/dev/console/application/mine；Key 会在前端页面源码中明文出现，建议在腾讯位置服务控制台配置域名白名单。请对控制台【账户额度】下的“天气:天气”和“IP定位”分别进行配额分配，确保“调用量分配”和“并发量分配”满足网站需求"
+              help: "腾讯位置服务 Key（免费注册：https://lbs.qq.com/dev/console/application/mine）。Key 会明文出现在前端源码中，建议配置域名白名单，并在控制台为「天气」与「IP 定位」分别分配合额。"
             - $formkit: text
               name: default_city
               label: 默认城市编码
@@ -2393,7 +2393,7 @@ spec:
               key: footer_style
               label: 页脚样式类型
               value: classic
-              help: "经典：单栏居中的原版细线页脚；卡片：整块卡片式页脚"
+              help: "经典：单栏居中的细线页脚；卡片：整块卡片式页脚"
               options:
                 - label: 经典页脚
                   value: classic
@@ -2734,7 +2734,7 @@ spec:
               id: image_processing_provider
               label: 图片处理服务
               value: none
-              help: "选择你的图片存储/CDN 服务，以启用实时图片压缩缩放。此功能会对文章封面图和文章内图片进行分辨率压缩处理，以便达到速度优化效果。\n如果图片存储在非halo内部存储，需在对应服务端开启图片处理功能。\n建议值仅供参考，以实际显示效果自主调试为准。\n此功能测试中，无法保证所有功能正常，如有问题请反馈。"
+              help: "启用后对文章封面图与正文图片做实时压缩。图片在非 Halo 内部存储时，需先在对应服务端开启图片处理；建议值仅供参考，以实际显示效果为准。功能仍在完善中，有问题欢迎反馈。"
               options:
                 - label: 不处理（使用原图）
                   value: none
@@ -2786,7 +2786,7 @@ spec:
               min: 0
               max: 3840
               step: 160
-              help: "Banner 图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：1920\n注：Banner 会按屏幕自适应加载——固定 400/800/1200/1600 档位；使用外部 CDN 时，本项宽度还会作为顶档参与选择（超过 1600 才生效）。本项宽度同时用作兜底地址（不支持 srcset 的浏览器）与首页预加载地址；外部 CDN 下设为 0 表示不分档，直接加载原图"
+              help: "Banner 图片缩放宽度（px），0 = 原图不压缩、不分档；建议 1920。其余档位（400/800/1200/1600）由主题按屏幕自适应选择，外部 CDN 下本项超过 1600 时作为顶档生效。"
             - $formkit: number
               name: avatar_size
               if: "$get(image_processing_provider).value !== 'none'"

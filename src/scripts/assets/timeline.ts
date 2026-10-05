@@ -1,9 +1,6 @@
-// 时间轴条目多值字段渲染：技能标签 / 成就列表 / 相关链接。
-// 数据由模板写入条目的 data-skills / data-achievements / data-links 属性
-// （每行一条；links 行支持「名称|链接」格式，也可直接填链接，
-// 统一在新窗口打开），由本脚本在客户端拆分渲染到对应容器
-// （容器仅在字段非空时由 th:if 渲染）。
-// Swup 换页由 SwupScriptsPlugin 重执行（DOM 已替换），data-rendered 守卫仅防重复。
+// 时间轴条目多值字段渲染：技能 / 成就 / 链接由模板写入 data-skills / data-achievements /
+// data-links（每行一条；links 支持「名称|链接」，统一新窗口打开），本脚本拆分渲染到对应
+// 容器（容器仅在字段非空时渲染）。换页由 SwupScriptsPlugin 重执行，data-rendered 守卫防重复。
 
 (function () {
   function splitLines(raw: string | null | undefined): string[] {

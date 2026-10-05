@@ -1,8 +1,7 @@
 ---
-// 最近日程小组件（自由配置型，配套 halo-plugin-schedule-calendar 插件）。
-// - 数据来源：scheduleCalendarFinder.upcoming(limit)（未来 365 天内按开始时间排序）
-// - 插件未安装/未启用时通过 pluginFinder.available 优雅降级，避免全站 500
-// - 后台可配置：显示条数（sidebar.schedule.limit，默认 3，上限 10，在「最近日程小组件」分组里）
+// 最近日程小组件（配套 halo-plugin-schedule-calendar）：数据取
+// scheduleCalendarFinder.upcoming(limit)（未来 365 天按开始时间排序）；插件不可用时经
+// pluginFinder.available 降级、避免全站 500；显示条数读 sidebar.schedule.limit（默认 3）。
 import WidgetLayout from "./WidgetLayout.astro";
 
 interface Props {

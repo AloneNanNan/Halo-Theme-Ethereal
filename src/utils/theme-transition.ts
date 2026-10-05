@@ -1,18 +1,8 @@
-// src/utils/theme-transition.ts — 主题切换动画（View Transitions API + 注册表驱动）
-//
-// 架构：JS 负责「读配置 → 加 html.theme-anim-{style} 类 → 设 --theme-anim-duration/
-// easing 变量 → buildKeyframes 生成数值化 @keyframes（具体 px，无 var/calc）并注入
-// <style id="theme-anim-keyframes"> → startViewTransition」。CSS 只保留选择器、
-// 时长/缓动与 UA 动画覆盖（见 theme-transition.css）。
-//
-// 数值化 keyframes 的动机：keyframes 中的 var()/calc() 在 VT 伪元素上下文解析
-// 不可靠（曾导致 circle 圆心偏移、wipe 终点未达），由 JS 算好数值直接写入可根治；
-// 每次点击都按当前视口/按钮位置重新生成（动态），非构建期写死。
-//
-// 新增动画样式 = 注册表加一项（registerThemeTransitionStyle）+ buildKeyframes。
-//
-// 降级链：无 startViewTransition（老浏览器）/ prefers-reduced-motion / none 样式 →
-// 直调 apply()，行为与现状完全一致，无需 polyfill。
+// 主题切换动画（View Transitions API + 注册表驱动）：JS 加 html.theme-anim-{style} 类、设
+// --theme-anim-duration/easing、注入数值化 @keyframes 并 startViewTransition；选择器与时长
+// 在 theme-transition.css。keyframes 用具体 px（var()/calc() 在 VT 伪元素上下文解析不可靠，
+// 曾致圆心偏移），每次点击按当前视口重新生成。新增样式 = 注册表加项 + buildKeyframes；
+// 降级（无 startViewTransition / reduced-motion / none）直调 apply()。
 
 export type ThemeAnimStyleId = "fade" | "circle" | "wipe" | "none";
 
@@ -59,10 +49,8 @@ const EASING_DURATION: Record<ThemeAnimEasingId, number> = {
 };
 
 /**
- * 动画速度三档：按 <html data-speed> 逐缓动曲线覆盖时长（ms）。
- * 由 settings.yaml styleSwitches.speedTier 注入。
- * relaxed / balanced 不写 → 走 EASING_DURATION 原值（均衡=当前原值，零回归）；
- * snappy 最短但回弹（back-out）保留呼吸空间。
+ * 动画速度三档（settings.yaml styleSwitches.speedTier 注入）：按 <html data-speed> 逐缓动
+ * 曲线覆盖时长（ms）。relaxed / balanced 不写 → 走 EASING_DURATION 原值；snappy 最短。
  */
 const SPEED_TIER_DURATION: Record<
   string,
@@ -98,9 +86,8 @@ export interface ThemeTransitionStyle {
   /** 加入 <html> 的类，如 "theme-anim-circle"，CSS 据此选择 keyframes */
   cssClass: string;
   /**
-   * 生成数值化 keyframes CSS 文本（具体 px，不依赖 var()/calc()）。
-   * 根治 keyframes 中 var/calc 解析不可靠导致的圆心偏移、终点未达等问题——
-   * 几何由 JS 算好后直接写进 @keyframes，运行时注入 <style>。
+   * 生成数值化 keyframes CSS 文本（具体 px）：几何由 JS 算好直接写进 @keyframes、运行时
+   * 注入 <style>，避开 var()/calc() 在 keyframes 中解析不可靠的问题。
    */
   buildKeyframes(ctx: ThemeTransitionContext): string;
 }
@@ -172,10 +159,9 @@ export function isThemeAnimEligible(): boolean {
 }
 
 /**
- * 页面入场动画（fade-in-up）是否仍在播放。
- * 首次点击常落在页面未渲染完成窗口（banner 未加载、主内容不可见），此时 VT 快照
- * 几乎只有背景色，wipe 等动画会呈现"纯背景色条带"——命中时走瞬时切换。
- * getAnimations() 也会返回 VT 伪元素动画，但其 animationName 为 theme-*，不冲突。
+ * 页面入场动画（fade-in-up）是否仍在播放。首次点击常落在未渲染完成窗口，此时 VT 快照
+ * 几乎只有背景色（wipe 会呈「纯背景色条带」）——命中时走瞬时切换。getAnimations() 返回
+ * 的 VT 伪元素动画名为 theme-*，不冲突。
  */
 function isEntranceAnimationRunning(): boolean {
   return document
@@ -197,11 +183,10 @@ interface InFlightTransition {
 let inFlight: InFlightTransition | null = null;
 
 /**
- * 播放主题切换动画。apply() 内同步翻转主题（如 setTheme）。
- * origin 为切换按钮圆心（视口 px，circle 样式用），由调用方（LightDarkSwitch）
- * 从组件内 bind:this 引用提供——不依赖 getElementById（macOS Chrome 下偶发
- * 查询不到按钮导致圆心回退视口中心的"中央最上方"问题）。
- * 仅显式用户操作（切换按钮点击）走此入口；页面加载同步、系统配色跟随保持瞬时。
+ * 播放主题切换动画。apply() 内同步翻转主题（如 setTheme）。origin 为切换按钮圆心
+ * （视口 px，circle 样式用），由调用方从组件 bind:this 引用提供——不依赖 getElementById
+ * （macOS Chrome 下偶发查询不到、圆心回退视口中心）。仅显式用户操作走此入口；页面加载
+ * 同步与系统配色跟随保持瞬时。
  */
 export function runThemeTransition(
   apply: () => void,
@@ -331,14 +316,9 @@ registerThemeTransitionStyle({
 registerThemeTransitionStyle({
   id: "wipe",
   cssClass: "theme-anim-wipe",
-  // 扫动方向 u（0° 左→右，90° 上→下），边界方向 v 垂直于 u。
-  // 让覆盖视口的平行四边形条带沿 u 平移：起点/终点同为 4 顶点 polygon()，
-  // 插值即纯平移。所有坐标由 JS 数值化后直接写进 keyframes（无 var/calc）。
-  // 旧快照保持全屏静止（CSS animation: none），仅生成 theme-wipe-in
-  // 揭示新主题条带——动画结束 new 盖满遮住 old，避免旧快照 clip-path
-  // fill 失效回退显示旧主题（"闪回亮色一帧"）。
-  //   E1/E2 起始边缘（s=0 贴在起始角 A，s=1 平移 d 到角 B）
-  //   F1/F2 新主题条带后沿（始终在视口后方）
+  // 扫动方向 u（0° 左→右，90° 上→下），边界方向 v 垂直于 u。平行四边形条带沿 u 平移：
+  // 起终点同为 4 顶点 polygon()，插值即纯平移。旧快照保持全屏静止、只生成 theme-wipe-in
+  // 揭示新主题——结束 new 盖满 old，避免 clip-path fill 失效闪回一帧。
   buildKeyframes(ctx) {
     const { viewport, config } = ctx;
     const W = viewport.width;
@@ -366,11 +346,8 @@ registerThemeTransitionStyle({
 
     const D = dotU(B) - dotU(A); // 视口在扫动方向的投影跨度（W·|cosθ| + H·|sinθ|）
     const m = W + H; // 安全裕量：任意视口点到 A 的 v 向投影 ≤ W+H，且 ≥ D
-    // 分段关键帧（冗余不减，解决"页面内时间极短"）：
-    //   0%→90%：条带扫过画面 + 小冗余（D×1.2，边缘已完全离屏），
-    //            画面内扫过占满前 90% 进度——缓出曲线下页面内时间 ~75%
-    //            （此前单一 to 帧 ×2 冗余时边缘 50% 进度即离屏，仅 ~20%）
-    //  90%→100%：继续平移到大冗余（D×2），确保终点完全离屏（防不完全擦除）
+    // 分段关键帧（解决「页面内时间极短」）：0%→90% 条带扫过画面 + 小冗余（D×1.2，
+    // 边缘已完全离屏）；90%→100% 继续平移到大冗余（D×2），确保终点完全离屏。
     const d1x = ux * D * 1.2;
     const d1y = uy * D * 1.2;
     const d2x = ux * D * 2;

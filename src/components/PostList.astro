@@ -76,10 +76,8 @@ const { pagination = "posts" } = Astro.props;
     height: 100%;
   }
 
-  /* 封面：移到卡片顶部。默认内缩（grid-cover-inset）：按卡片内边距内缩、四角圆角。
-     封面固定为 2:1 统一高度，不随等高网格拉伸；剩余高度由内容区吸收，
-     摘要下方留白（见下方内容区规则）。开启「封面高度自适应」时由
-     .grid-cover-fill 覆盖为 flex-grow 吸收 */
+  /* 封面：移到卡片顶部；默认内缩（grid-cover-inset），固定 2:1、不随等高网格拉伸，剩余
+     高度由内容区吸收；开启「封面高度自适应」时 .grid-cover-fill 覆盖为 flex-grow 吸收。 */
   #post-list-container.post-grid-mode .post-card-cover {
     position: relative !important;
     top: auto !important;
@@ -164,9 +162,7 @@ const { pagination = "posts" } = Astro.props;
   }
 
   /* ===== 紧凑卡片样式（标题缩小、元信息缩小、摘要字号）=====
-     适用：网格模式（全断点）+ 列表模式移动端（两者观感统一）。
-     注：网格为全断点、列表仅在移动端生效，断点不同无法共用选择器，
-     故分别声明、保持规则体一致，避免修改时遗漏 */
+     适用：网格全断点 + 列表模式移动端；断点不同无法共用选择器，故分别声明、规则体保持一致。 */
   /* 网格：标题缩小、去掉装饰条 */
   #post-list-container.post-grid-mode .post-card-title {
     font-size: 1.35rem !important;
@@ -227,14 +223,11 @@ const { pagination = "posts" } = Astro.props;
   }
 
   /* ===== 列表模式封面固定 16:9（coverRatio: fixed16x9）=====
-     混合策略（容器查询，阈值 63.75rem ≈ 内容列最大宽度 64rem 留 4px 余量）：
-     内容列满宽时封面撑满卡片高度（与「撑满」档一致），被压缩后改为固定 16:9、
-     垂直居中（避免越裁越多）。两态统一用显式 top + height 表达（不用 top/bottom
-     拉伸或 aspect-ratio 定高），使跨阈值切换可被 transition 平滑插值（否则
-     切换瞬间跳变）。
-     维护注意：cqw 与 --post-card-cover-width（34%）需同步（16:9 高 = 34cqw × 9/16 = 19.125cqw，
-     居中偏移 50% - 9.5625cqw）；阈值用 rem（内容列宽即 64rem）；容器挂
-     post-card-item（卡片有 1px 边框，挂卡片会误判）；仅桌面端生效 */
+     容器查询，阈值 63.75rem ≈ 内容列最大宽 64rem 留 4px 余量：满宽时封面撑满卡片高（同
+     「撑满」档），被压缩后改固定 16:9 垂直居中。两态用显式 top + height（不用拉伸 /
+     aspect-ratio 定高），跨阈值切换才能被 transition 平滑插值（否则切换瞬间跳变）。
+     维护注意：cqw 与 --post-card-cover-width（34%）需同步（16:9 高 = 34cqw × 9/16，居中
+     偏移 50% - 9.5625cqw）；容器挂 post-card-item（卡片有 1px 边框，挂卡片会误判）；仅桌面端 */
   @media (min-width: 768px) {
     #post-list-container.post-list-mode.cover-fixed .post-card-item {
       container-type: inline-size;

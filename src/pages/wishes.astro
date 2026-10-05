@@ -4,13 +4,10 @@ import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <!--
-  心愿便签页（Wishboard 插件适配）—— 便签墙视框风格
-  参照插件内置 wishes.html 的交互与视觉：
-  - 视框（board）内便签卡片带 macOS 窗口圆点、可拖动
-  - 筛选标签 / 纪念日徽章 / 发布输入栏悬浮在视框内
-  支持两种渲染模式：
-    1. 插件内置页面（enableBuiltinPage=true）：插件拦截 /wishes，注入 pageTitle 等变量
-    2. Halo 自定义页面（后台选「心愿便签」模板）：注入 singlePage 变量
+  心愿便签页（Wishboard 插件适配）：便签墙视框风格——视框内便签可拖动（带 macOS 窗口圆点），
+  筛选标签 / 纪念日徽章 / 发布输入栏悬浮在视框内。
+  两种渲染模式：插件内置页（enableBuiltinPage=true，插件拦截 /wishes 并注入 pageTitle 等变量）
+  与 Halo 自定义页（后台选「心愿便签」模板，注入 singlePage 变量）。
 -->
 <MainGridLayout
   title="${(singlePage != null ? singlePage.spec.title : (pageTitle ?: #messages.msg('page.wishes.title'))) + ' - ' + site.title}"
@@ -111,11 +108,9 @@ import PageHeader from "../components/control/PageHeader.astro";
           </div>
         </PageHeader>
       </div>
-      <!-- 类型筛选池（原画布内居中悬浮标签，上移至此与其他页分组池一致；
-           data-seg-ready 直出显示滑块；滑块由页尾内联脚本驱动，
-           不走全局 filter-seg.js——wishes.js 只切 .active（见页尾注释）。
-           「全部」不带计数（对齐其它页）；类型项计数由插件 countByType()
-           提供（插件无 URL 筛选，属客户端过滤范式） -->
+      <!-- 类型筛选池（上移至此与其他页分组池一致）：data-seg-ready 直出显示滑块；滑块由
+           页尾内联脚本驱动、不走全局 filter-seg.js——wishes.js 只切 .active。「全部」不带
+           计数；类型项计数由插件 countByType() 提供（客户端过滤范式）。 -->
       <div class="px-6 pb-5 md:px-9">
         <div class="seg-scroll">
           <div class="seg" id="wishTabs" data-seg-ready>
@@ -330,10 +325,8 @@ import PageHeader from "../components/control/PageHeader.astro";
           animate,
         );
       }
-      // 页头「x 便签」统计片：类型筛选是客户端行为，服务端给的是全部已通过张数，
-      // 需要按当前可见卡片重算。放在内联脚本而非 wishes.js：外部脚本 URL 带
-      // 固定 ?v=<主题版本>，版本未升时浏览器可能命中旧缓存（本项曾因此不生效），
-      // 内联脚本始终随模板更新。
+      // 页头「x 便签」统计片：类型筛选是客户端行为，需按当前可见卡片重算。放内联脚本而非
+      // wishes.js：外部脚本 URL 带固定 ?v=<主题版本>，版本未升时可能命中旧缓存。
       function syncNotesStat() {
         var stat = document.querySelector('[data-stat="wish-notes"] b');
         if (!stat) return;

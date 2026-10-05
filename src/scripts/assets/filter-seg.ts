@@ -1,23 +1,12 @@
 // @ts-nocheck —— 经典浏览器脚本（SwupScriptsPlugin 换页重执行，全部幂等）
 /**
- * 分组筛选「胶囊池」（segmented）滑块定位 + 滚动两端渐隐
+ * 分组筛选「胶囊池」（segmented）滑块定位 + 滚动两端渐隐。结构见 components.css 的
+ * .seg-* 段（.seg-scroll / .seg[data-filter-seg] / .seg-thumb / .seg-item.seg-active，
+ * 就绪后轨道挂 data-seg-ready）。
  *
- * 结构契约（components.css `.seg-*` 段 + FilterTab segmented 模式）：
- *   <div class="seg-scroll">               横滚容器（溢出时两端渐隐）
- *     <div class="seg" data-filter-seg>    轨道（就绪后挂 data-seg-ready）
- *       <span class="seg-thumb"></span>    浮块：定位/滑动都由本脚本驱动
- *       <a class="seg-item seg-active">…    条目（服务端渲染激活态 .seg-active）
- *
- * 行为：
- * - 入场：按当前 .seg-active 项无动画定位浮块（JS 未就绪时浮块隐藏、
- *   激活项自带兜底底色，无脚本页面仍可读）；
- * - 点击：先让浮块滑向点击项（导航/换页随即发生，退场期间动画播完——
- *   整页导航下这是最接近「点击即滑动」的时机）；修饰键点击不预移动；
- * - 渐隐：容器可横向滚动时按滚动位置切换 can-scroll-left/right；
- * - 重算：窗口 resize / 字体加载完成（宽度可能变化）后无动画校正。
- *
- * 幂等：window.__etherealFilterSeg 单例——Swup 换页重执行本脚本时只调 init()
- * （扫描当前 DOM），resize/字体监听只绑一次，不随换页累积。
+ * 行为：入场按当前 .seg-active 无动画定位；点击先让浮块滑向点击项再导航（修饰键点击不
+ * 预移动）；容器可横滚时按滚动位置切 can-scroll-left/right；resize / 字体加载后校正。
+ * 幂等：window.__etherealFilterSeg 单例——换页重执行只调 init()，监听不累积。
  */
 (function () {
   if (window.__etherealFilterSeg) {

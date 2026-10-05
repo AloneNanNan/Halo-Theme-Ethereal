@@ -388,10 +388,8 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     />
   </div>
 
-  <!-- 操作栏脚本（I27）：拆分自原 post.bundle.js（155K，含 140K qrcode 库）。
-       三文件按子开关独立门控；qrcode.bundle.js 仅在首次生成分享海报时由
-       post-share.js 按需注入（见 post-share.js 的 loadQRCode），文章页默认负载
-       从 155K 降至 ~25K。 -->
+  <!-- 操作栏脚本：拆分自原 post.bundle.js，三文件按子开关独立门控；qrcode.bundle.js 仅在
+       首次生成海报时由 post-share.js 按需注入，文章页默认负载从 155K 降至 ~25K。 -->
   <script
     th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.like != false}"
     src={`${basePath}/assets/post-like.js?v=${ASSET_VERSION}`}
@@ -412,7 +410,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     th:if="${theme.config?.post?.summary == null or theme.config?.post?.summary?.summaryEffect == null or theme.config?.post?.summary?.summaryEffect == 'typewriter'}"
   >
     // 文章摘要打字机效果
-    // （修复 I24 遗留：曾有一段完全重复的代码——var timer ×2、启动 setTimeout ×2、
+    // （注意别写重复代码——曾出现 var timer ×2、启动 setTimeout ×2、
     //   visibilitychange 监听 ×2，双监听器会导致打字机双循环/异常）
     (function () {
       var el = document.getElementById("summary-text");
@@ -435,7 +433,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
         }
       }
       timer = setTimeout(type, 600);
-      // I24：后台标签页暂停打字（进度保留，回前台继续）
+      // 后台标签页暂停打字（进度保留，回前台继续）
       function onVisibilityChange() {
         if (document.hidden) {
           if (timer) {
@@ -451,7 +449,6 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       // 若不在离开时销毁，visibilitychange 监听器会逐次累积泄漏。
       // astro:before-swap 由 @swup/astro 在换出本页前分发（换入时不存在本监听器，
       // 不会误伤新页面）；astro:after-swap 兜底（el 已脱离文档才执行，同理不误伤）。
-      // 注：不能用 swup:contentReplaced——Swup v3 事件名，v4 分发 swup:{hook}，从未触发。
       function destroy() {
         if (timer) {
           clearTimeout(timer);
@@ -574,17 +571,14 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
               // 仅主图加 CDN 压缩后缀（默认 1920），不加 srcset：
               // srcset 会让浏览器按 sizes+DPR 选小档位图，img.naturalWidth 变小，
               // 而灯箱（content-photoswipe）按 naturalWidth 取宽高，导致灯箱
-              // 打开很小。省流量诉求由下方 I2 的 loading="lazy" 覆盖。
+              // 打开很小。省流量诉求由下方的 loading="lazy" 覆盖。
               img.setAttribute("src", src + suffix);
             }
           });
         }
 
-        // I2：懒加载 + 宽高占位（width/height 属性提供 aspect-ratio 提示，
-        // 避免图片加载造成 CLS；与照片页 EXIF 占位先例同思路）。
-        // 正文 markdown 无宽高元数据，占位用 16:9 仅为加载前的比例提示；
-        // 加载完成后按真实比例（naturalWidth/naturalHeight）修正并移除占位属性，
-        // 避免固定比例与正文实际图片比例不符导致变形。
+        // 懒加载 + 宽高占位（width/height 提供 aspect-ratio 提示，避免 CLS）。正文无宽高
+        // 元数据，16:9 仅为加载前提示；加载完成后按 naturalWidth/naturalHeight 修正并移除。
         contentEl.querySelectorAll("img").forEach(function (img) {
           if (!img.getAttribute("loading")) {
             img.setAttribute("loading", "lazy");
@@ -618,9 +612,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
       }
 
       // 注：Swup 换页后的重新处理由 SwupScriptsPlugin 重执行本脚本覆盖（每次进
-      // 文章页脚本都重新跑一遍并立即 processAndInsert）。原 swup:contentReplaced
-      // 监听已删除——那是 Swup v3 事件名，v4 分发 swup:{hook}（如
-      // swup:content:replace），该监听从未触发，且每进一次文章页就累积一个。
+      // 文章页脚本都重新跑一遍并立即 processAndInsert）。
     })();
   </script>
 </MainGridLayout>

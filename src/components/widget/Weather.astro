@@ -47,10 +47,8 @@ const className = Astro.props.class;
 
 <script is:inline>
   (function () {
-    // 实例作用域：脚本是 is:inline、每个实例各跑一份，重复配置（如左栏 + 移动端列表）
-    // 时必须只操作自己这一份——用 currentScript 取本实例所在条目容器再查元素，否则
-    // getElementById 永远命中文档里第一个实例，重复的那份是空壳。
-    // currentScript 对 is:inline 的经典脚本有效（模块脚本为 null），缺失时退化为 document。
+    // 实例作用域：脚本 is:inline、每个实例各跑一份，重复配置（左栏 + 移动端列表）时必须只
+    // 操作自己这份——用 currentScript 取所属实例容器，勿用 getElementById（永远命中第一个实例）。
     var widgetRoot =
       (document.currentScript && document.currentScript.parentElement) ||
       document;
@@ -384,11 +382,8 @@ const className = Astro.props.class;
       return status === 101 || status === 102;
     }
 
-    // JSONP 请求封装（V8）：限流码 101/102 不重试、直接抛错。
-    // 原实现以 1.5s 间隔重试 2 次，限流期间每访客请求 ×3 放大；
-    // 天气为低优先级数据，限流时直接走错误提示（配合缓存展示）即可。
-    // 注：不改为 fetch——腾讯位置服务 API 无 CORS 头，
-    // 浏览器 fetch 会被跨域拦截，JSONP 是纯前端方案下唯一可用通道。
+    // JSONP 请求封装：限流码 101/102 不重试、直接抛错（重试会成倍放大限流期请求数）；
+    // 不用 fetch——腾讯位置服务 API 无 CORS 头，JSONP 是纯前端唯一可用通道。
     async function jsonpOnce(url) {
       var data = await jsonp(url);
       if (isRateLimited(data.status)) {
@@ -476,7 +471,6 @@ const className = Astro.props.class;
     }
 
     loadWeather();
-    // 换页后数据刷新：由 SwupScriptsPlugin 重执行本脚本时自动覆盖；
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 换页后数据刷新：由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 </script>

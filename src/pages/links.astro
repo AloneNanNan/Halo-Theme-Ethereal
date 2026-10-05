@@ -45,12 +45,9 @@ import PageHeader from "../components/control/PageHeader.astro";
         text-decoration: underline;
       }
 
-      /* 搜索框：全宽横在内容卡顶部（列表上方），只过滤当前页已渲染的卡片
-         （分组跳转仍走服务端）。视觉沿用主题输入框语言（= 申请友链模态框
-         .link-apply-field input：1.5px 主题色 18% 边框 + 4% 淡底 + 0.75rem
-         圆角）；padding 撑出的高度（≈42px）作为舒展的工具条。focus 不做
-         表单那套「底变实色」（全宽实底视觉过重），只加强边框与光环。
-         行为（输入即过滤 / 整组隐藏 / 空态）见 links.bundle.js 末尾 IIFE */
+      /* 搜索框：全宽横在内容卡顶部，只过滤当前页已渲染的卡片（分组跳转仍走服务端）。
+         视觉沿用主题输入框语言（1.5px 主题色 18% 边框 + 4% 淡底 + 0.75rem 圆角）；
+         focus 只加强边框与光环（全宽实底过重）。行为见 links.bundle.js 末尾 IIFE。 */
       .links-search {
         position: relative;
       }
@@ -280,14 +277,10 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:text="${#lists.size(group.links)}">0</span
           >
         </div>
-        <!-- 卡片最小宽 240px：列数由「网格容器宽」决定（容器 = 内容列 − 本卡片的
-             md:px-9 72px，随窗口在 482~952px 之间浮动），所以 min 必须同时满足两头，
-             取值区间只有 (226, 248]：
-               · min > 226px ⇒ 最宽时（容器上限 952px）不会排成 4 列
-                 （4×226+3×16=952，卡会被压到 226px、文字区只剩 ~130px ——
-                 本卡固定开销就有 96px：48px logo + 16px gap + 左右 p-4）
-               · min ≤ 248px ⇒ 容器 776px（三栏 + 视口≈1600）时仍能排 3 列，否则掉成 2 列
-             ⚠️ 改成 280 会让中等窗口掉成 2 列，改回 220 会在最宽时变 4 列。 -->
+        <!-- 卡片最小宽 240px：容器宽随窗口在 482~952px 浮动，min 须同时满足两头，
+            取值区间只有 (226, 248]。min > 226 ⇒ 最宽时（952px）不排成 4 列；
+            min ≤ 248 ⇒ 容器 776px 时仍能排 3 列。改成 280 会掉成 2 列、改回 220
+            会在最宽时变 4 列。 -->
         <div
           class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
         >
@@ -722,7 +715,7 @@ import PageHeader from "../components/control/PageHeader.astro";
     </div>
   </div>
 
-  <!-- 友链页脚本（I27）：由 requirements/collapse/copy/link-apply/random-visit/search
+  <!-- 友链页脚本：由 requirements/collapse/copy/link-apply/random-visit/search
        六个脚本合并为单请求；link-apply 与 random-visit 的原 th:if 门控改由脚本内部守卫
        （按钮/模态框不存在即不绑定，行为等价，见 links.bundle.js 各 IIFE 注释） -->
   <script

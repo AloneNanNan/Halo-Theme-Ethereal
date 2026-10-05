@@ -289,15 +289,12 @@ import { Icon } from "astro-icon/components";
     height: 1.75rem;
   }
 
-  /* 移动端目录弹窗（swup 容器，换页整容器替换自动关闭并重建 TOC）。
-     恒渲染、CSS 门控：不用 display:none（display 切换会让卡片在首帧直接
-     落到目标态、过渡被跳过），改用 visibility 延迟切换可见性——
-     父级 #toc-popup 保持 opacity:1（父级透明度动画会把卡片 backdrop-filter
-     变成 backdrop root，导致「高级材质」磨砂在动画期间失效），淡入淡出
-     全由卡片自身 opacity/transform 承担。卡片为 fixed 定位（相对视口，
-     本容器的 right/bottom 不参与其定位），bottom/max-height 在打开时由
-     JS 按目录按钮实际位置计算。动画时长集中为 --toc-popup-duration，
-     JS 打开时读取同源变量同步高亮（避免魔法数漂移） */
+  /* 移动端目录弹窗（swup 容器，换页整容器替换 → 自动关闭并重建 TOC）。恒渲染、CSS 门控：
+     不用 display:none（display 切换会让卡片首帧直接落到目标态、过渡被跳过），改用 visibility
+     延迟切换；父级 #toc-popup 保持 opacity:1（父级透明度动画会把卡片的 backdrop-filter 变成
+     backdrop root，动画期间磨砂失效），淡入淡出全由卡片自身承担。卡片 fixed 定位（相对视口，
+     本容器的 right/bottom 不参与），bottom/max-height 打开时由 JS 按目录按钮位置计算；时长集中
+     为 --toc-popup-duration，JS 读取同源变量（避免魔法数漂移）。 */
   #toc-popup {
     --toc-popup-duration: 200ms;
     position: fixed;
@@ -366,7 +363,6 @@ import { Icon } from "astro-icon/components";
     }
   }
   __moveFloatingControls();
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
   // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
 
   // 悬浮按钮点击：document 级事件委托，替代三个内联 onclick（CSP 友好）。
@@ -585,7 +581,6 @@ import { Icon } from "astro-icon/components";
       btn.classList.toggle("hide", normalized === "/");
     }
     updateHomeBtn();
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
     // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 
@@ -597,7 +592,6 @@ import { Icon } from "astro-icon/components";
       btn.classList.toggle("hide", !document.getElementById("comment"));
     }
     updateCommentBtn();
-    // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）；
     // 每次换页由 SwupScriptsPlugin 重执行本脚本时自动覆盖。
   })();
 
@@ -634,6 +628,6 @@ import { Icon } from "astro-icon/components";
 
     // 滚动重算已并入 __tocPopupBound 守卫块内的唯一滚动监听，此处不再注册，
     // 避免换页重执行本脚本时监听累积；换页后 DOM 更新由 SwupScriptsPlugin
-    // 重执行本脚本覆盖。原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 重执行本脚本覆盖。
   })();
 </script>

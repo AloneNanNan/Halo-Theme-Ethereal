@@ -1,7 +1,6 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// 文章卡片瀑布流（Masonry）布局
-// 仅在容器为 grid 模式且启用瀑布流（data-masonry="true"）时生效；
-// 否则恢复 CSS grid 布局。换页后由 SwupScriptsPlugin 重执行覆盖（同 collapse.js）。
+// 文章卡片瀑布流（Masonry）：仅容器为 grid 模式且 data-masonry="true" 时生效，否则恢复
+// CSS grid。换页后由 SwupScriptsPlugin 重执行。
 (function () {
   function getContainer() {
     return document.getElementById("post-list-container");
@@ -49,7 +48,7 @@
     items.forEach(function (item) {
       // 清掉可能残留的入场 transform，避免影响 offsetHeight
       item.style.transform = "";
-      // 高度回归内容自定，覆盖 grid 模式的 height:100%（Firefly 同款处理）
+      // 覆盖 grid 模式继承的 height:100%：瀑布流里高度必须回到内容自定
       item.style.setProperty("height", "auto", "important");
       // 放到当前最短列
       var colIndex = colHeights.indexOf(Math.min.apply(null, colHeights));
@@ -135,7 +134,7 @@
       }, 200);
     });
 
-    // 页面从后台切回时重排（图片可能刚完成懒加载，Firefly 同款处理）
+    // 页面从后台切回时重排：隐藏期间图片可能刚完成懒加载，列高已失真
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden) {
         var container = getContainer();

@@ -1,14 +1,13 @@
 ---
 // 瞬间卡片：moments 列表（variant="list"，带「更多」）/ moment 详情（"detail"，带「返回」）共用。
-// 外壳 card-base + card-hover-lift；勿挂 .btn-card-outline（主题色细描边条目卡语言，
-// 会被「卡片边框与阴影」开关排除，表现为自己加了边框）。
+// 外壳 card-base + card-hover-lift；勿挂 .btn-card-outline（会被「卡片边框与阴影」开关排除）。
 //
 // 约定（改动前必读）：
 // - 依赖外层 Thymeleaf 变量 moment（两页同名）；根元素 th:with 出 content 供 MomentMedia 读取。
-// - 缩进轨道：正文/媒体/操作栏统一 md:ml-[4.25rem]（头像 3.25rem + 间距 1rem），移动端归零。
-// - 脚本钩子（样式见 components.css）：点赞 .moment-upvote-btn / .moment-upvote-count
-//   （已投高亮 .is-upvoted，含禁用点击）；复制 .moment-copy-btn + data-copy-path
-//   （moment-copy.js 绑定）；水印 .moment-card-watermark（右下角 bolt，参数可调）。
+// - 缩进轨道：正文 / 媒体 / 操作栏统一 md:ml-[4.25rem]（头像 3.25rem + 间距 1rem），移动端归零。
+// - 脚本钩子（样式见 components.css，勿改名）：点赞 .moment-upvote-btn / .moment-upvote-count
+//   （已投高亮 .is-upvoted）；复制 .moment-copy-btn + data-copy-path（moment-copy.js 绑定）；
+//   水印 .moment-card-watermark。
 // - 正文 id="content" 只在详情页输出（TOC 扫描 #content；列表页重复 id 非法）。
 import MomentMedia from "./MomentMedia.astro";
 
@@ -151,7 +150,7 @@ const commentCountExpr =
     <MomentMedia />
 
     <footer class="mt-3.5 flex flex-wrap items-center gap-2 text-sm">
-      <!-- 点赞：保留原脚本钩子（upvote.js 乐观更新 + 失败回滚 + .is-upvoted 高亮） -->
+      <!-- 点赞：upvote 脚本钩子（src/scripts/assets/upvote.ts：乐观更新 + 失败回滚 + .is-upvoted 高亮） -->
       <button
         type="button"
         class="moment-action moment-upvote-btn"

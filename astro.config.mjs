@@ -41,7 +41,7 @@ const stripHtmlComments = {
 };
 
 // 构建后处理：兜底补回 iconify 图标遮罩被 CSS 工具链裁掉的 -webkit- 前缀
-// （缺前缀会让 Chromium<120 上的图标被裁切，详见脚本内注释与 issue #83）
+// （缺前缀会让 Chromium<120 上的图标被裁切，详见脚本内注释）
 /** @type {import("astro").AstroIntegration} */
 const ensureIconMaskPrefix = {
   name: "ensure-icon-mask-prefix",
@@ -110,14 +110,11 @@ export default defineConfig({
         "#sidebar-toc",
         "#right-sidebar-toc",
       ],
-      // 跨页回顶滚动统一走浏览器原生平滑（behavior:"smooth"）：app.ts 在
-      // content:scroll 接管并调用 window.scrollTo 原生平滑，插件的
-      // betweenPages 平滑（scrl JS 引擎）被跳过，不再参与跨页滚动。
-      // 保留 SwupScrollPlugin 是因为同页锚点（目录点击）的 samePageWithHash
-      // 平滑仍依赖它——此处保持插件启用与 animateScroll 对象配置不变。
-      // 注：@swup/astro 类型声明为 boolean，但运行时会透传给 SwupScrollPlugin
-      // 选项对象（enabledPlugins 的 options === true ? {} : options 分支），
-      // 故此处需绕过类型限制
+      // 跨页回顶统一走原生平滑：app.ts 在 content:scroll 接管并调 window.scrollTo，
+      // 插件的 betweenPages（scrl JS 引擎）被跳过。保留 SwupScrollPlugin 是因为
+      // 同页锚点（目录点击）的 samePageWithHash 仍依赖它——插件启用与 animateScroll
+      // 配置不变。注：@swup/astro 类型声明为 boolean，但运行时会透传给插件选项对象
+      // （enabledPlugins 的 options === true ? {} : options 分支），故绕过类型限制
       smoothScrolling: /** @type {any} */ ({
         animateScroll: {
           betweenPages: true,
@@ -126,7 +123,7 @@ export default defineConfig({
         },
       }),
       cache: false, // 禁用缓存，避免友链页面内容不完整
-      // I25：删除 preload——cache:false 下 @swup/astro 强制禁用 preload（死配置），
+      // 删除 preload——cache:false 下 @swup/astro 强制禁用 preload（死配置），
       // 保留会误导未来误启用（每 hover = 整页 HTML 拉取，成为带宽放大面）
       accessibility: true,
       updateHead: true,

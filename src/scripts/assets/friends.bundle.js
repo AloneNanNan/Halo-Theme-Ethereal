@@ -28,9 +28,7 @@
     init();
   }
 
-  // Swup 页面切换后重新初始化
-  // 换页后重新初始化：每次进入朋友圈页面时 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // Swup 页面切换后重新初始化：每次进入朋友圈页面时 SwupScriptsPlugin 重执行覆盖。
 })();
 
 // 朋友圈 - 同作者同日合并（后续文章并入第一张卡的内容区）
@@ -119,8 +117,7 @@
     init();
   }
 
-  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖。
 })();
 
 // 朋友圈 - 分批加载（"加载更多"按钮）
@@ -193,6 +190,5 @@
     setup();
   }
 
-  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 换页后重新初始化由 SwupScriptsPlugin 重执行覆盖。
 })();

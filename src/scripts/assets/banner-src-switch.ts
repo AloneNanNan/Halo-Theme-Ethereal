@@ -1,14 +1,12 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// Banner 移动端独立来源切换引擎
-// 双容器（#banner / #banner-mobile）显隐由 CSS 媒体查询驱动（首帧即定），
-// 本脚本只负责媒体生命周期：激活容器首图升级 eager、视频 preload/播放切换。
-// 配置来自 #theme-config JSON（同 banner-carousel.js）；未启用移动端独立
-// 来源或移动端无有效来源（空值回退）时早退，保持现状行为。
-// 本脚本会被 SwupScriptsPlugin 在每次换页时克隆重执行，而 #banner 位于
-// Swup 容器外跨页面持久——全局守卫只绑一次 matchMedia 监听（同 wave.js）。
+// Banner 移动端独立来源切换引擎：双容器（#banner / #banner-mobile）显隐由 CSS 媒体查询
+// 驱动（首帧即定），本脚本只管媒体生命周期——激活容器首图升级 eager、视频 preload/播放切换。
+// 配置来自 #theme-config JSON；未启用移动端独立来源或移动端无有效来源时早退。本脚本会被
+// SwupScriptsPlugin 每次换页重执行，而 #banner 位于容器外跨页持久，故全局守卫只绑一次
+// matchMedia 监听。
 (function () {
-  // #theme-config JSON 解析（I27：写/读 window.__themeConfig 缓存，与
-  // scripts/assets/_theme-config.ts 共享契约，避免多脚本重复 JSON.parse）
+  // #theme-config JSON 解析（写/读 window.__themeConfig 缓存，与
+  // scripts/assets/_theme-config.ts 共享契约，避免重复 JSON.parse）
   var cfg = null;
   var cachedCfg = window.__themeConfig;
   if (cachedCfg !== undefined) {
@@ -26,10 +24,8 @@
   var bannerCfg =
     cfg && cfg.style && cfg.style.bannerStyle ? cfg.style.bannerStyle : null;
   if (!bannerCfg || bannerCfg.useMobileSrc !== true) return;
-  // 移动端是否有有效来源由 SSR 统一判定（src/utils/image-suffix.ts
-  // bannerMobileVars() 的 mobileActive），移动容器 #banner-mobile 仅在
-  // mobileActive 为 true 时渲染；此处直接以容器是否存在为准，避免 JS 侧
-  // 重复实现判定逻辑造成双实现漂移（此前双实现需两处同步维护）
+  // 移动端是否有有效来源由 SSR 统一判定（image-suffix.ts 的 mobileActive），移动容器仅在
+  // true 时渲染；此处以容器是否存在为准，避免 JS 侧重复实现造成双实现漂移。
   var hasMobileSrc = !!document.getElementById("banner-mobile");
   if (!hasMobileSrc) return;
 
@@ -58,12 +54,9 @@
     img.setAttribute("fetchpriority", "high");
   }
 
-  // 视频生命周期管理：激活端 preload=auto + 播放（autoplay 会被浏览器在
-  // display:none 下忽略/延迟，这里显式驱动）；隐藏端暂停并 preload=none，
-  // 确保跨断点切换后隐藏端不再拉流。用户手动暂停（banner-media.js 写入
-  // dataset.etherealUserPaused）时跳过自动播放，保持用户意图。
-  // 仅在无任何数据时（readyState===0）才 load()：跨断点反复切换/拖拽缩放时
-  // 不得重置 currentTime、不得中止在途拉流
+  // 视频生命周期：激活端 preload=auto + 播放（autoplay 在 display:none 下会被忽略/延迟）；
+  // 隐藏端暂停并 preload=none；用户手动暂停（dataset.etherealUserPaused）时跳过自动播放。
+  // 仅在 readyState===0 时才 load()：跨断点反复切换不得重置 currentTime、不得中止在途拉流。
   function setVideoActive(video, active) {
     if (!video) return;
     if (active) {

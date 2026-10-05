@@ -1,7 +1,5 @@
-// 共享：樱花绘制核心（单片 Sakura 与随机工具）
-// 被主线程回退实现（sakura.ts）与 Worker 实现（sakura-worker.ts）共同引用，
-// esbuild 编译时内联进各入口。上下文取联合类型兼容主线程 / OffscreenCanvas，
-// 贴图取 CanvasImageSource（HTMLImageElement / ImageBitmap 均兼容）。
+// 共享：樱花绘制核心（单片 Sakura 与随机工具）。被主线程回退实现与 Worker 实现共同引用，
+// esbuild 编译时内联进各入口；上下文取联合类型兼容 2D / OffscreenCanvas，贴图取 CanvasImageSource。
 import type { SakuraConfig } from "./_sakura-config";
 
 /** 绘制上下文：主线程 Canvas 2D 与 OffscreenCanvas 2D 兼容 */
@@ -125,7 +123,7 @@ export class Sakura {
   }
 
   private resetPosition(): void {
-    // 大多数从顶部落下，少数从右侧飘入（与 Firefly 原实现一致）
+    // 多数从顶部落下、少数从右侧飘入（约 6:4 分布）
     if (Math.random() > 0.4) {
       this.x = randMax(this.viewport.width);
       this.y = 0;

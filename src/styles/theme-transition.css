@@ -1,17 +1,10 @@
 @reference "./global.css";
 
-/* 主题切换动画（View Transitions API）：
-   JS（theme-transition.ts）负责：加 html.theme-anim-{style} 类、设
-   --theme-anim-duration/easing 变量、startViewTransition，以及把
-   buildKeyframes 生成的【数值化 @keyframes】（具体 px，无 var/calc——
-   根治 keyframes 中 var/calc 解析不可靠导致的圆心偏移/终点未达问题）
-   运行时注入 <style id="theme-anim-keyframes">。本文件只保留选择器、
-   时长/缓动与 UA 动画覆盖。
-   降级（老浏览器 / reduced-motion / none / duration=0）由 JS 主闸直调，不经此层。
-   基础规则必须展开书写（不能用 html:is(...) 门控）：实测 Chrome 对
-   html:is(.theme-anim-*) ::view-transition-* 的后代匹配不生效，动画时长
-   会回落 UA 默认 250ms（表现为"改 EASING_DURATION 无变化"）。
-   展开后每类选择器同时是门控：仅主题切换的 VT 生效，不劫持其他 VT。 */
+/* 主题切换动画（View Transitions API）的选择器与时长/缓动；keyframes 生成、注入与
+   降级闸门都在 theme-transition.ts。
+   ⚠️ 基础规则必须逐类展开、不能用 html:is(.theme-anim-*) 门控：实测 Chrome 对该
+   后代匹配不生效，动画时长会回落 UA 默认 250ms；展开后每类选择器同时充当门控，
+   仅主题切换的 VT 生效、不劫持其他 VT。 */
 html.theme-anim-fade::view-transition-old(root),
 html.theme-anim-fade::view-transition-new(root),
 html.theme-anim-circle::view-transition-old(root),

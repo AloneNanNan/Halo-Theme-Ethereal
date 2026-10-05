@@ -1,10 +1,7 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// Banner 视频：右下角播放/暂停按钮 + 屏幕外暂停（wave 同构）。
-// 视频始终 muted（浏览器自动播放限制），不显示浏览器原生控件，
-// 仅自定义按钮控制播放/继续。
-// 移动端独立来源开启时存在双视频（#banner-video / #banner-video-mobile）：
-// 各自独立绑定（按钮/用户暂停态/IO/visibilitychange）。preload 与激活播放
-// 由 banner-src-switch.js 驱动（隐藏端 preload=none 不拉流），本脚本通过
+// Banner 视频：右下角自定义播放/暂停按钮 + 屏幕外暂停；始终 muted（自动播放限制）、
+// 不显示原生控件。移动端独立来源开启时双视频（#banner-video / #banner-video-mobile）
+// 各自绑定；preload 与激活播放由 banner-src-switch.ts 驱动（隐藏端不拉流），本脚本经
 // video.dataset.etherealUserPaused 暴露手动暂停态供其跳过自动播放。
 (function () {
   // 跨页面持久 + Swup 克隆重执行：全局守卫防重复绑定（同 wave.js）
@@ -91,10 +88,8 @@
       video.style.display = "none";
     });
 
-    // 屏幕外/切页暂停，回到屏幕恢复（保持用户手动暂停状态）。
-    // restore 额外校验 offsetParent：隐藏容器（display:none）在页面重新
-    // 可见时也会收到 visibilitychange，不加校验会在隐藏状态下 play()，
-    // 触发 preload=none 的视频开始拉流
+    // 屏幕外/切页暂停，回屏恢复（保持用户手动暂停）。restore 额外校验 offsetParent：
+    // 隐藏容器重新可见时也会收到 visibilitychange，不加校验会让 preload=none 的视频拉流。
     function suspend() {
       if (!video.paused) {
         video.pause();

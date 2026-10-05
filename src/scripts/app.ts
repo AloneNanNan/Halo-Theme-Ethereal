@@ -15,11 +15,8 @@ import "../styles/scrollbar.css";
 import "../styles/external-link-modal.css";
 import "../styles/link-apply-modal.css";
 import "../styles/profile-status.css";
-// 音乐播放器样式：原先是「页面存在 .firefly-music-player 才动态 import」，
-// 但该样式表只有 1.2KB，会被 Astro 的 inlineStylesheets: 'auto' 内联进 HTML，
-// 而 Vite 生成的预加载清单里仍保留独立文件名 → 每次打开页面都产生一个
-// music-player.<hash>.css 的 404 请求（样式本身没丢，只是多一次无用请求）。
-// 改为静态导入：并入主样式包（+1.2KB，可忽略），彻底消除该请求
+// 音乐播放器样式用静态导入而非动态 import：动态 import 时 Vite 预加载清单会保留独立
+// 文件名、每次开页多一个 music-player.<hash>.css 的 404 请求；静态导入并入主样式包（+1.2KB）。
 import "../styles/music-player.css";
 
 // ── 第三方 ──
@@ -93,14 +90,11 @@ function initCustomScrollbar() {
         },
       );
     };
-    // OverlayScrollbars 初始化会把 body 内容包裹进滚动容器（appendChild 移动全部
-    // 元素），Chrome 对被移动且动画未结束的元素会重建 CSS 动画对象，导致入场动画
-    // "播放完成后再重放一次"（复现时间点即 overlayscrollbars 下载完成瞬间）。
-    // 等 fade-in-up 全部结束再初始化——此时动画已被下方的一次性保护清理，
-    // 移动不再触发重放；2s 兜底防动画异常卡住。等待期间原生滚动条正常工作。
-    // 挂载本身会触发一次全量重排（移动全部 body 子元素 + 尺寸测量，数百 ms），
-    // 用 requestIdleCallback 错峰到主线程空闲时执行；空闲回调不可用（Safari）
-    // 时退化为立即执行，行为与旧版一致
+    // OverlayScrollbars 初始化会把 body 内容裹进滚动容器（appendChild 移动全部元素），
+    // Chrome 对被移动且动画未结束的元素会重建动画对象，导致入场动画重放（时间点即
+    // overlayscrollbars 下载完成瞬间）。等 fade-in-up 全部结束再初始化（2s 兜底防动画
+    // 异常卡住），此时动画已被下方的一次性保护清理，移动不再触发重放。挂载触发一次全量
+    // 重排（数百 ms），用 requestIdleCallback 错峰到主线程空闲；不可用时立即执行。
     const runWhenIdle = (task: () => void): void => {
       if ("requestIdleCallback" in window) {
         window.requestIdleCallback(task, { timeout: 1500 });
@@ -128,11 +122,9 @@ function initCustomScrollbar() {
 }
 
 // ── 入场动画一次性保护 ──
-// 浏览器会因元素移动（滚动容器包裹等）/样式重算重建 CSS 动画对象，使入场动画
-// 从头重放。用 document 级事件委托在动画结束/取消后清理：
-//  - .onload-animation 类元素：移除类（回到静态可见状态，重放无动画可播）
-//  - banner 标题/副标题/链接行（动画由 CSS 选择器定义，无类可移除）：内联固化终态
-//    （opacity: 1 + animation: none）
+// 元素移动（滚动容器包裹等）/样式重算会让 CSS 动画从头重放。用 document 级委托在动画
+// 结束/取消后清理：.onload-animation 元素移除类；banner 标题/副标题/链接行（动画由
+// CSS 选择器定义、无类可移）内联固化终态（opacity: 1 + animation: none）。
 function removeOnloadAnimation(e: AnimationEvent) {
   const el = e.target as Element | null;
   if (!el) return;
@@ -170,10 +162,8 @@ function showBanner() {
 }
 
 // ── Banner overlay 显隐同步 ──
-// SSR 在非首页给 #banner-overlay 设置 display:none 内联样式，
-// 该元素在 Swup 容器外，跨页切换时不被替换，需手动同步。
-// 首次加载由 banner-responsive.ts initOverlay() 处理，
-// 此处仅覆盖 Swup 导航场景（banner-responsive.ts 不会重新执行）
+// #banner-overlay 在 Swup 容器外、跨页不被替换，SSR 非首页设 display:none 需手动同步。
+// 首载由 banner-responsive.ts initOverlay() 处理，此处仅覆盖 Swup 导航场景。
 function syncBannerOverlay() {
   const overlay = document.getElementById("banner-overlay");
   if (!overlay) return;
@@ -299,8 +289,7 @@ class TableOfContents extends HTMLElement {
       this.refresh();
     }
 
-    // 换页后刷新由 app.ts 中 swup.hooks.on("content:replace") 的真实钩子
-    // 承担；原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+    // 换页后刷新由 app.ts 中 swup.hooks.on("content:replace") 的真实钩子承担。
   }
 
   disconnectedCallback() {
@@ -439,7 +428,7 @@ class TableOfContents extends HTMLElement {
     // 高亮更新由 scroll/resize 的 rAF 节流驱动；读 rect 与写 class 的顺序由
     // toggleActiveHeading 保证（先读后写，避免 layout thrash）。勿改用
     // IntersectionObserver：isIntersecting 是「与视口相交」而非「顶边越过 96px 线」，
-    // 集合取 max 会指向视口底部标题，与原 currentHeadingIndex 语义不等价（I23 曾引入已回退）
+    // 集合取 max 会指向视口底部标题，与原 currentHeadingIndex 语义不等价（曾引入该方案后回退）
     let scrollTicking = false;
     this.scrollHandler = () => {
       if (scrollTicking) return;
@@ -527,7 +516,7 @@ class TableOfContents extends HTMLElement {
     const bottomOffset =
       bottommost.getBoundingClientRect().bottom - tocTop + scrollTop;
     // 高亮变化即跟随滚动（update 仅在 active 变化时调用，dirty 检查已在
-    // updateActiveByScroll 承担）：恢复 v1.1.1 的平滑跟随行为。目录小容器的
+    // updateActiveByScroll 承担）：目录小容器的
     // smooth 滚动不触发 window 级 scrollHandler，无放大重排问题
     const top =
       bottomOffset - topOffset < 0.9 * tocHeight
@@ -596,7 +585,7 @@ if (!customElements.get("table-of-contents")) {
   customElements.define("table-of-contents", TableOfContents);
 }
 
-// ── 非主题页判定（#82）──
+// ── 非主题页判定 ──
 // 主题页都由 MainGridLayout 外壳渲染，必然带 astro.config.mjs 声明的全部 Swup 容器
 // （清单由调用方从 swup.options.containers 取，改配置无需同步）；插件自带前台页
 // （独立模板，或经契约外壳 templates/layout.html 渲染的页面）都没有 —— 缺任一项即交还浏览器。
@@ -621,14 +610,11 @@ function setupSwup() {
   if ((window as any).__etherealSwupHandlersBound) return;
   (window as any).__etherealSwupHandlersBound = true;
 
-  // ── 非主题页不接管（#82）──
-  // 目标页没有主题容器时，SwupHeadPlugin 会摘掉整套主题 CSS（换页期间可见的导航栏/
-  // 侧栏/页脚当场无样式），随后 replaceContent 容器不匹配报错并整页刷新。挂 page:load
-  // （响应 HTML 到手时）：abort() 置 done 后 renderPage / animatePageIn 都在入口
-  // `if (e.done) return` 直接返回，head 合并与内容替换绝不发生，等价于「这次点击不走
-  // Swup」，代价只有一次已发出的 HTML 请求。
-  // 下场动画不等 fetch，此时必然已开始/播完，而 abort 跳过了 visit:end 的收尾 ——
-  // 故下方撤回换页态，避免页面定格在"主内容已淡出"。
+  // ── 非主题页不接管 ──
+  // 目标页缺主题容器时 SwupHeadPlugin 会先摘掉整套主题 CSS、随后 replaceContent 报错并
+  // 整页刷新（详见 AGENTS.md 5.2）。在 page:load abort()：renderPage / animatePageIn 按
+  // done 直接返回，等价于这次点击不走 Swup。abort 跳过 visit:end 收尾，故下方撤回换页态，
+  // 避免定格在「主内容已淡出」。
   window.swup.hooks.on(
     "page:load",
     (
@@ -702,21 +688,14 @@ function setupSwup() {
     },
   );
 
-  // 注：曾在此把 --content-delay 改为 0ms（让换页后内容立即浮现），但该变量被全部
-  // 入场动画的 animation-delay: calc(var(--content-delay) + Xms) 消费，点击时修改
-  // 会重算已完成动画的 delay（方向依赖的重启风险，且单向永不恢复）——已移除，
-  // 保持 150ms 默认错落延迟。
+  // 勿在点击时改 --content-delay：它被全部入场动画的 animation-delay 消费，改动会重算
+  // 已完成动画的延迟（方向依赖的重启风险，且单向永不恢复）——保持 150ms 默认错落。
   window.swup.hooks.on("content:replace", initCustomScrollbar);
   window.swup.hooks.on("content:replace", destroyAll, { before: true });
-  // 首页↔其他页换页（is-home 变化时）挂 home-switch：仅全屏模式启用——
-  // 让新内容淡入与横幅/网格 700ms 位移同速，换入即最终布局，消除"内容先显示、
-  // 再位移"的闪烁（全屏下位移大 100vh↔35vh，且波浪下移出视口、缝隙不可见）。
-  // 横幅模式回归 1.1.0 行为：不在 content:replace 提前切 is-home，换入后内容
-  // 与波浪/横幅同速滑动（page:view 同步），避免"波浪滑过内容顶边露 1px 背景缝"
-  // （Edge 75% 缩放可复现）。URL 在 animation:out:start 前已由 Swup pushState
-  // 更新，可预判新页。
-  // 当前是否全屏模式：运行时读取 <html data-banner-display>（访客可在面板切换
-  // 壁纸模式，默认非全屏时手动切到全屏也应生效），不能按初始化时的值缓存
+  // 首页↔其他页换页（is-home 变化）挂 home-switch：仅全屏模式——新内容淡入与 700ms 位移
+  // 同速，换入即最终布局，消除「先显示再位移」的闪烁。横幅模式不提前切 is-home（换入后
+  // 内容与波浪/横幅同速滑动，避免波浪滑过内容顶边露缝）；URL 已由 Swup pushState 更新可
+  // 预判新页。是否全屏运行时读 <html data-banner-display>（访客可切换），不能缓存。
   function isFullscreenMode(): boolean {
     return document.documentElement.dataset.bannerDisplay === "fullscreen";
   }
@@ -736,21 +715,17 @@ function setupSwup() {
       } else {
         root.classList.toggle("home-switch", switching);
       }
-      // 点击换页（非 popstate / 非 hash）且 is-home 会变、从非顶部出发时显示
-      // 300vh 撑高：位移期间文档高度持续变化，深层换页的滚动位置可能超出新
-      // 文档可滚动上限被浏览器钳制（内容先下坠再上升的抖动来源之一）。收起见
-      // hidePageHeightExtendWhenAtTop（等回顶再收，避免骤降反被钳制）；从顶部
-      // 换页无需撑高，popstate / hash 场景沿用 visit:start 的设置
+      // 点击换页（非 popstate / hash）且 is-home 会变、从非顶部出发时显示 300vh 撑高：
+      // 位移期间文档高度持续变化，深层换页的滚动位置可能超出新文档可滚动上限被钳制。
+      // 收起见 hidePageHeightExtendWhenAtTop（等回顶再收）；从顶部换页无需撑高。
       if (!visit?.history?.popstate && !visit?.to?.hash && bannerMoves) {
         if (switching && window.scrollY > 0) showPageHeightExtend();
         else hidePageHeightExtend();
       }
     },
   );
-  // 旧内容已淡出、新内容未换入的空档切换 is-home（仅全屏模式：横幅/网格/波浪
-  // 的 700ms 位移发生在不可见阶段，跳过动画的换页维持原 page:view 同步）。
-  // 横幅模式不提前切换——新内容以旧 is-home 定位换入，page:view 后再整体滑动，
-  // 内容与波浪/横幅同速联动，不产生波浪越过内容顶边时的 1px 缝隙
+  // 旧内容已淡出、新内容未换入的空档切换 is-home（仅全屏模式）。横幅模式不提前切换——
+  // 新内容以旧 is-home 定位换入、page:view 后再整体滑动，避免波浪越过内容顶边的 1px 缝隙。
   window.swup.hooks.on(
     "content:replace",
     () => {
@@ -769,10 +744,8 @@ function setupSwup() {
     document.documentElement.classList.remove("home-switch");
     revealBannerTitleOnSwitchEnd();
   });
-  // 注：此处原有「换页保留右栏音乐播放器」的寄存逻辑，因 #right-sidebar 曾是 Swup 容器。
-  // 侧栏现已全部改为普通节点（容器只剩目录槽位），播放器不再被替换，寄存逻辑删除；留着
-  // 反而危险（暂存后原位置查不到，归还分支会走 remove()）。副作用：被吸顶额度挤出可视区
-  // 的播放器现在是「CSS 隐藏但继续播放」，旧实现是整块丢弃。
+  // 勿恢复「换页寄存右栏音乐播放器」：侧栏已是普通节点、播放器不再被换页替换；寄存后
+  // 原位置查不到，归还分支会走 remove()。
   window.swup.hooks.on("content:replace", () => {
     // 侧栏目录：左栏 #sidebar-toc、右栏 #right-sidebar-toc 两个槽位都是 Swup 容器，
     // 换页整块替换后自定义元素随新节点升级重建，这里再刷一次，兜住首帧的深度/高亮状态
@@ -797,13 +770,11 @@ function setupSwup() {
     initLegacyAdmonitions();
     initExternalLinkRedirect();
   });
-  // 同页锚点（目录点击）的平滑由 samePageWithHash 独立控制，不受跨页回顶改造影响。
-  // TOC 恢复显示绑定「滚动真正结束」：长文从底部回顶可持续数百 ms，晚于
-  // visit:end + 200ms——若按 visit:end 移除 toc-not-ready，后半段滚动中目录就已
-  // 显示。滚动结束信号双通道：原生平滑派发 scrollend 事件、scrl 引擎派发
-  // swup scroll:end（两者都监听，幂等 release）。
-  // needsScrollWait 仅对「从非顶部换页回顶」的场景置真；从顶部换页（零距离
-  // 短路无滚动结束信号）与 popstate 由 visit:end 直接移除
+  // 同页锚点（目录点击）的平滑由 samePageWithHash 独立控制。TOC 恢复显示绑定「滚动真正
+  // 结束」：长文从底部回顶可持续数百 ms（晚于 visit:end + 200ms），若按 visit:end 移除
+  // toc-not-ready，后半段滚动中目录就已显示。滚动结束信号双通道：原生平滑的 scrollend、
+  // scrl 引擎的 swup scroll:end（都监听，幂等 release）。needsScrollWait 仅对「从非顶部
+  // 换页回顶」置真；从顶部换页与 popstate 由 visit:end 直接移除。
   let needsScrollWait = false;
   const releaseTocNotReady = () => {
     document.documentElement.classList.remove("toc-not-ready");
@@ -834,15 +805,11 @@ function setupSwup() {
       restoreOriginalHistoryStateHandlers();
       // 上一轮换页的锁步回顶若还在进行（连续快速换页），让位给本轮
       cancelLockstepScrollToTop();
-      // 标记会话内已发生换页（<html> 不被 Swup 替换，标记永久有效）：
-      // 触发换页的容器会换入带静态 onload-animation 类的节点（两侧栏目录槽位、
-      // #toc-container 等），transition.css 据此标记永久抑制其入场动画
-      // （首刷动画不受影响）。
+      // 标记会话内已发生换页（<html> 不被 Swup 替换，永久有效）：换入的节点带静态
+      // onload-animation 类，transition.css 据此永久抑制其入场动画（首刷不受影响）。
       document.documentElement.classList.add("swup-visited");
-      // 换页进行中：目录隐藏（CSS 门控 html.toc-not-ready，覆盖两栏/三栏）。
-      // 挂在 <html> 上而非容器类：Swup 换页会替换 #toc-container 与两侧栏的目录
-      // 槽位 #sidebar-toc / #right-sidebar-toc，旧节点上的类随销毁，新节点无类会
-      // 导致目录提前显示
+      // 换页进行中：目录隐藏（html.toc-not-ready，覆盖两栏/三栏）。挂 <html> 而非容器类——
+      // 换页会替换目录容器与槽位，旧节点上的类随销毁、新节点无类会提前显示。
       document.documentElement.classList.add("toc-not-ready");
       needsScrollWait =
         !visit?.history?.popstate && !visit?.to?.hash && window.scrollY > 0;
@@ -860,14 +827,9 @@ function setupSwup() {
       }
     },
   );
-  // 跨页回顶滚动接管 content:scroll：一般场景用浏览器原生平滑（behavior:
-  // "smooth"，合成器驱动不占主线程，无 scrl 引擎的每帧 JS 测量卡顿）；
-  // 首页↔非首页（横幅 / 全屏：内容区随 is-home 位移）用与位移锁步的插值回顶，见下。
-  // content:replace 换入新内容后布局仍 dirty，立即滚动会派发 scroll 事件
-  // → OverlayScrollbars 同步测量 → 强制整页重排（实测单帧 900ms）。延迟
-  // 双 rAF 让浏览器先完成新内容首次布局，滚动时测量命中缓存不触发重排。
-  // popstate / 带 hash 场景走插件默认逻辑（默认锚点滚动）。后注册的
-  // replace 生效（Swup 按注册顺序取最后者）
+  // 跨页回顶接管 content:scroll：一般场景用原生平滑；首页↔非首页（内容区随 is-home
+  // 位移）用与位移锁步的插值回顶。换入后布局仍 dirty，立即滚动会触发 OverlayScrollbars
+  // 同步测量与整页重排，故延迟双 rAF。popstate / hash 走插件默认；后注册的 replace 生效。
   window.swup.hooks.replace(
     "content:scroll",
     (
@@ -896,11 +858,9 @@ function setupSwup() {
         );
         return;
       }
-      // 页面级定位接管：<html data-scroll-owner="<时间戳>"> 由瞬间详情页的内联脚本
-      // 在 content:replace 时置位（见 pages/moment.astro 的 #comment 落点校正）。
-      // 置位即跳过插件的锚点滚动——插件用 scrl 引擎做动画、页面脚本要做落点校正，
-      // 两个驱动同时写滚动位置会互相抢；交给页面脚本独占后落位一次到位、不再抖动。
-      // 一次性消费 + TTL：旗标过期即忽略，不影响其它 hash 跳转的默认锚点滚动。
+      // 页面级定位接管：<html data-scroll-owner> 由瞬间详情页内联脚本在 content:replace
+      // 置位（见 pages/moment.astro 的 #comment 落点校正）。置位即跳过插件的锚点滚动——
+      // 两个驱动同时写滚动会互相抢；一次性消费 + TTL，不影响其它 hash 跳转。
       const SCROLL_OWNER_TTL_MS = 2000;
       const scrollOwner = document.documentElement.dataset.scrollOwner;
       if (scrollOwner) {
@@ -934,12 +894,9 @@ function setupSwup() {
   });
 }
 
-// 目录悬浮按钮显隐（I29）：只要页面没有可见目录（两栏悬浮目录 #toc-wrapper /
-// 三栏侧栏目录 #sidebar table-of-contents、#right-sidebar table-of-contents），就显示目录悬浮按钮——
-// 面向移动端/平板端无目录场景；空目录文章仍显示按钮，点开弹窗展示"此文章无目录"
-// 占位（与目录小组件一致）。.floating-controls 位于 Swup 容器外、换页不刷新，
-// 故换页（content:replace）与窗口 resize 都要重算：offsetParent 对 display:none
-// 祖先返回 null，可准确反映两栏/三栏 TOC 在各断点下的实际可见性。
+// 目录悬浮按钮显隐：页面没有可见目录（两栏 #toc-wrapper / 三栏侧栏 TOC）就显示——面向
+// 移动端/平板无目录场景；空目录文章仍显示（点开是「此文章无目录」占位）。.floating-controls
+// 在 Swup 容器外，换页与 resize 都要重算：offsetParent 可准确反映各断点的 TOC 可见性。
 function updateTocBtnVisibility() {
   const btn = document.getElementById("back-to-toc-btn");
   if (!btn) return;

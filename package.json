@@ -6,7 +6,7 @@
   },
   "scripts": {
     "dev": "nodemon --config nodemon.json --exec 'astro build'",
-    "build": "astro build && pnpm package",
+    "build": "pnpm check && astro build && pnpm package",
     "build:pkg": "pnpm build",
     "build:only": "astro build",
     "readme:halo": "node scripts/convert-readme.mjs",

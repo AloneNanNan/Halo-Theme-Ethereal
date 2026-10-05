@@ -60,10 +60,8 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         ]}
       />
 
-      <!-- 分类选择器（胶囊池）：分类切换 + “全部” + 未分类。
-           激活判定/标签/计数均由 service 端表达式完成，无额外脚本；
-           计数挂在 countClass=archive-cat-count 供筛选态脚本读取；
-           轨道保留 id，筛选脚本用 getElementById 读取分类名与计数 -->
+      <!-- 分类选择器（胶囊池）：激活判定/标签/计数均由服务端表达式完成；计数挂
+           countClass=archive-cat-count 供筛选态脚本读取，轨道保留 id。 -->
       <div class="px-6 pb-5 md:px-9">
         <div class="seg-scroll">
           <div class="seg" id="archive-filter-tabs" data-filter-seg>

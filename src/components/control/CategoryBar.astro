@@ -1,20 +1,12 @@
 ---
-// 分类导航栏：首页 → 归档 → 各分类 → 全部分类，水平滚动 pill 样式。
-// 门控：由 MainGridLayout.astro 的 wrapper div 的 th:if 控制显隐。
+// 分类导航栏：首页 → 归档 → 各分类 → 全部分类，水平滚动 pill；显隐由 MainGridLayout.astro
+// 的 wrapper th:if 控制。数据：categoryFinder.listAll() + postFinder.list 的总数。
 //
-// 数据来源：
-// - categoryFinder.listAll() — Halo Finder API，列出所有分类
-// - postFinder.list({page: 1, size: 1}).total — 总文章数
-//
-// 高亮方案：液态滑块（.category-liquid）用 CSS transform 滑动覆盖层，
-// pill 本身不变背景色，仅切换 text color，彻底消除 transition-colors 闪烁。
-// pill z-index:1 在滑块 z-index:0 上方，pill 半透明背景（6%）让滑块颜色透出。
-// 滑块是滚动区的兄弟而非子级（需横跨首页/归档/更多），不受 overflow 裁剪或 mask
-// 渐隐约束，故 moveLiquid 会与滚动区可见窗口求交集：半露时只铺可见段、
-// 完全滚出时隐藏，避免高亮底色溢出到相邻 pill/分隔线（issue #52）。
-//
-// 归档页筛选：由归档页内的分类选择器（FilterTabs）承担，导航栏在
-// 归档页始终高亮"归档"按钮（不随 URL 筛选参数切换分类高亮）。
+// 高亮 = 液态滑块（.category-liquid，pill 本身不变色、只切文字色，消除 transition-colors
+// 闪烁）：pill z-index:1 在滑块（0）上方、半透明背景（6%）让滑块色透出；滑块是滚动区兄弟
+// 而非子级（需横跨首页/归档/更多），不受 overflow / mask 裁剪，moveLiquid 与可见窗口求交集
+// ——半露只铺可见段、完全滚出时隐藏，避免溢出到相邻 pill/分隔线。归档页筛选由 FilterTabs
+// 承担，本栏恒高亮「归档」（不随 URL 筛选参数切换）。
 ---
 
 <div

@@ -1,17 +1,11 @@
 ---
 /**
- * 小组件分派片段（Thymeleaf 片段库）：全套 `th:switch` 只在这里定义一次。
- *
- * 引用方式：各侧栏在自己的 `th:each="widget, widgetStat : ..."` 迭代体内写
- *   <div th:replace="~{::widgetSwitch(${widget})}"></div>
- * Thymeleaf 把它替换成本片段的渲染结果；条目配置以片段参数传入，其余上下文由调用处继承。
- * 做成片段是为了去重：这段标记含全部小组件的 HTML 与内联脚本（约 60 KB），5 处引用各内联
- * 一份时每页模板 654 KB、主题包 5.3 MB，定义一次后只留「一份片段 + 五行引用」（详见 AGENTS.md）。
- *
- * ⚠️ 两个硬约束（改动前必读）：
- * 1. 外层 th:if="false" 守卫只负责「定义处不渲染」——片段选择走解析树、不受它影响，
- *    引用处照常取得到；守卫**不能**写进片段根元素，否则副本连条件一起复制、渲染结果为空。
- * 2. 片段根元素必须自带 class="contents"：th:replace 是整体替换，不保留引用点 div 的属性。
+ * 小组件分派片段（Thymeleaf 片段库）：全套 th:switch 只定义这一份，侧栏用
+ * <div th:replace="~{::widgetSwitch(${widget})}"></div> 引用——勿在引用处内联第二份
+ * （会撑大每页模板体积，见 AGENTS.md 5.3）。
+ * ⚠️ 两个硬约束：外层 th:if="false" 负责「定义处不渲染」，不能写进片段根元素（副本会连
+ * 条件一起复制、渲染为空）；片段根元素自带 class="contents"（th:replace 是整体替换，
+ * 不保留引用点属性）。
  */
 import Announcement from "./Announcement.astro";
 import Categories from "./Categories.astro";

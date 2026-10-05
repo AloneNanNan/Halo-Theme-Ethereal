@@ -135,8 +135,8 @@ const listId = `${instanceId}-list`;
       container.innerHTML = html;
     }
 
-    // 热门榜逻辑：改用 Halo content API 服务端排序（sort=stats.visit,desc），
-    // 单请求取 Top N，消除原实现的「探 total → size=total 全量拉取」两步）。
+    // 热门榜逻辑：用 Halo content API 服务端排序（sort=stats.visit,desc），
+    // 单请求取 Top N，无需先探 total 再按 total 全量拉取。
     // sessionStorage 缓存最终 Top N：同会话内切换页面不再重复请求列表接口。
     var CACHE_KEY = "popular_posts_v1";
 

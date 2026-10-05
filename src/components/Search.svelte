@@ -192,7 +192,7 @@
     <!-- placeholder 不能作为可靠的可访问名称（输入后消失），补 aria-label；
          id/name：表单字段可访问性（浏览器自动填充） -->
     <!-- mobile 输入框：absolute inset-0 铺满搜索条；聚焦只需边框环提示，
-         不能套用桌面端 focus:w-60 定宽（会破坏占满宽度，即 #58） -->
+         不能套用桌面端 focus:w-60 定宽（会破坏占满宽度） -->
     <input
       id="search-input-mobile"
       name="search"
@@ -218,7 +218,7 @@
         class="group block rounded-xl px-3 py-2 text-lg transition first-of-type:mt-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) lg:first-of-type:mt-0"
       >
         <!-- 标题用 flex + 内部换行：inline-flex 默认 nowrap，窄屏（移动端）长标题
-             无法换行导致溢出、箭头图标错位（#64）；min-w-0/break-words 允许词内断行 -->
+             无法换行导致溢出、箭头图标错位；min-w-0/break-words 允许词内断行 -->
         <div
           class="flex items-center gap-x-1 font-bold text-90 transition group-hover:text-(--primary)"
         >

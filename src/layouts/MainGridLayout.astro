@@ -37,10 +37,8 @@ const {
 ---
 
 <style is:global>
-  /* Banner 轮播：首张 SSR 即显（.active 带 display:block），其余 display:none
-     延迟加载，切换时 JS 两步加类（visible → active）驱动透明度/位移过渡；
-     时长变量随动画档位（--dur-banner-transition）注入。
-     移动端独立来源开启时存在双容器（#banner / #banner-mobile），选择器并列 */
+  /* Banner 轮播：首张 SSR 即显（.active），其余 display:none 延迟加载；切换由 JS 两步
+     加类（visible → active）驱动过渡，时长随动画档位注入；移动端独立来源开启时选择器并列双容器。 */
   #banner .banner-slide,
   #banner-mobile .banner-slide {
     display: none;
@@ -117,10 +115,9 @@ const {
     th:classappend="${mobileActive ? ' banner-mobile-enabled' : ''}"
     class="absolute z-10 w-full overflow-hidden transition duration-[var(--dur-banner,700ms)]"
   >
-    <!-- 首页单图 Banner 预加载：imagesrcset/imagesizes 与下方 <img> 的
-         srcset/sizes 复用同一表达式（rawSrcset），保证预加载与实际选中档位一致，
-         避免窄屏下 preload 白拉一张大图；provider 非 none/halo 时 rawSrcset 为
-         null → imagesrcset 不输出，回退 th:href 单条预加载 -->
+    <!-- 首页单图 Banner 预加载：imagesrcset/imagesizes 与下方 <img> 复用同一表达式
+         （rawSrcset），保证预加载档位与实际选中一致；provider 非 none/halo 时为 null →
+         回退单条预加载。 -->
     {
       isHomePage && (
         <link
@@ -149,7 +146,7 @@ const {
          由 banner-src-switch.js 在激活时升级 eager，避免隐藏端下载 -->
       <!-- 全宽 Banner 显式输出 srcset/sizes：Halo 2.22+ 会对无 srcset 的 <img>
          注入按内容卡模型设计的默认 sizes（桌面上限 800px），全宽 Banner 会被误导
-         选小图拉伸发虚（issue #71）。自带 srcset 后核心跳过注入，档位由
+         选小图拉伸发虚。自带 srcset 后核心跳过注入，档位由
          image-suffix.ts 的 rawSrcset 变量（bannerSrcsetInner 生成）提供 -->
       <img
         th:src="${srcX}"
@@ -332,12 +329,9 @@ const {
         >
         </div>
       </div>
-      <!-- 标题/副标题下方的链接图标行（bannerText.links，仅首页可见——非首页整个
-           #banner-overlay 被隐藏）。#banner-overlay 自身 pointer-events:none，本行的
-           可点性由 components.css 的 #banner-links 规则恢复，并在三类隐藏态（访客关闭
-           标题 / 非首页淡出 / hero 滚动淡化）下一并禁用，避免不可见却可点。
-           注意：th:each 与 th:if 写在同一元素（th:each 优先级 200 更高，先例见 Footer.astro
-           的社媒图标）；iconify 图标是内联 SVG，必须 th:utext 注入（同 Profile.astro） -->
+      <!-- 标题/副标题下方的链接图标行（bannerText.links，仅首页可见）。#banner-overlay 自身
+           pointer-events:none，本行可点性由 #banner-links 恢复、三类隐藏态下一并禁用；
+           图标是内联 SVG、必须 th:utext 注入（同 Profile.astro）。 -->
       <div
         id="banner-links"
         th:if="${theme.config?.style?.bannerText?.links?.items != null and not #lists.isEmpty(theme.config?.style?.bannerText?.links?.items)}"
@@ -363,13 +357,10 @@ const {
         </a>
       </div>
     </div>
-    <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区。
-       独立于 #banner-overlay 渲染——标题/副标题关闭（bannerText.enable=false）
-       时箭头也必须显示（仅全屏模式首页）。落点 = 网格顶边 −
-       --banner-home-content-gap：页面背景顶部边缘（banner 底边）对齐视口顶部。
-       必须用 <button> 而非 <a href="#main-grid">：Swup ScrollPlugin 会拦截 hash
-       锚点点击并用自己的平滑动画滚动到 #main-grid 顶边（无视 scroll-margin 与
-       JS 目标）。非首页由 components.css 的 body:not(.is-home) 规则隐藏 -->
+    <!-- 全屏模式首页：向下滚动指示箭头，点击平滑滚动到内容区（独立于 #banner-overlay
+       渲染）。落点 = 网格顶边 − --banner-home-content-gap。必须用 <button> 而非
+       <a href="#main-grid">：Swup ScrollPlugin 会拦截 hash 锚点并滚到 #main-grid 顶边
+       （无视 scroll-margin）；非首页由 body:not(.is-home) 隐藏。 -->
     <button
       id="scroll-down-indicator"
       type="button"
@@ -383,10 +374,9 @@ const {
   </div>
 
   <!-- banner 首屏揭示：媒体就绪 + 首帧已绘制后摘 opacity-0/scale-105，不等 app.ts
-       主 bundle（其 import 十余个样式表，实测把 LCP 元素渲染延迟拖到 2.7s）。必须
-       等首帧——元素若从未以透明态渲染过，transition 无起始值、缩放渐显整体丢失
-       （首图 preload+eager 常快于样式表）。逻辑封装为 window.__etherealRevealBanners
-       供 app.ts 在 Swup 换页后复用，避免两份实现漂移；本脚本须紧随 #banner-wrapper。 -->
+       主 bundle（bundle 较大，会推迟 LCP 元素渲染）。必须等首帧——元素若从未以
+       透明态渲染过，transition 无起始值、缩放渐显会整体丢失。逻辑封装为
+       window.__etherealRevealBanners 供 app.ts 换页后复用；脚本须紧随 #banner-wrapper。 -->
   <script is:inline>
     (function () {
       // 首帧判定用 Paint Timing 能力检测 + 逐帧等待，**不设超时放行**：超时会在首帧
@@ -447,19 +437,11 @@ const {
       th:classappend="${theme.config?.layout?.pageLayout?.layoutMode == 'two-column' ? 'layout-two-column' : 'layout-three-column'}"
     >
       <!-- 面板顶部区：全站瞬间条 + banner 署名。
-           瞬间条置于 #main-grid 之上、#swup-container 之外，站内换页不掉、直刷任意页
-           也在（元素不随 Swup 替换）。是否渲染由 HomeMoments.astro 内部的
-           momentsBar.enable 开关（主题设置 → 页面布局 → 瞬间预览条）决定。
-           banner 模式下的下推位移由 global.css 的 `.is-home.enable-banner
-           #home-moments-wrap` 规则承担（与 #main-grid 同条件下推），否则 #main-grid
-           被下推而瞬间条不动，整条会相对下方内容向上偏移、贴在 banner 上。
-
-           ⚠️ banner 署名（#banner-credit）刻意放在本容器内、而不是 #main-grid 里：
-           横幅模式下 #main-grid 与 #home-moments-wrap 都会带 translate 下推，而
-           「transform/translate 生效的元素会成为内部绝对定位元素的包含块」—— 署名若留在
-           #main-grid 中，它的 `-top-13` 就从**网格顶边**（已被瞬间条顶下去）起算，署名会
-           落进瞬间条里把跑马灯文字盖住。放在本容器内与瞬间条同处一个 transform 子树：
-           无论瞬间条在不在、开不开横幅，署名都稳定地贴在容器顶边之上 3.25rem。 -->
+           瞬间条在 #swup-container 之外，换页不掉；banner 模式下的下推位移由
+           global.css 的 `.is-home.enable-banner #home-moments-wrap` 规则承担。
+           ⚠️ 署名必须放在本容器内、不能放 #main-grid：横幅模式下 translate 会让
+           #main-grid 成为包含块，署名的 -top-13 改从网格顶边起算、会落进瞬间条遮住
+           文字；本容器与瞬间条同处一个 transform 子树，位置恒定。 -->
       <div
         id="home-moments-wrap"
         class="pointer-events-auto px-0 md:px-4 transition duration-[var(--dur-banner,700ms)]"
@@ -531,11 +513,9 @@ const {
           showToc={showToc}
         />
 
-        <!-- 移动端专用侧栏（<768px 显示）：仅在配置了「移动端小组件」时渲染。
-             内容放在 <template> 里、由组件内的内联脚本按断点克隆挂载（桌面端不加载
-             移动端专属小部件），挂载成功后才给 <html> 加 has-mobile-sidebar →
-             移动端隐藏上面两个 aside（CSS 见 Layout.astro）；脚本没跑则不加类，
-             移动端照旧显示左右两栏，不会白屏。详见 MobileSideBar.astro 注释 -->
+        <!-- 移动端专用侧栏（<768px）：内容放 <template>、由内联脚本按断点克隆挂载（桌面端
+             不加载移动端专属小部件），挂载成功才给 <html> 加 has-mobile-sidebar（移动端隐藏
+             上面两个 aside）；脚本没跑则照旧显示两栏、不白屏。详见 MobileSideBar.astro。 -->
         <MobileSideBar />
 
         <!-- 移动端页脚 -->
@@ -585,10 +565,9 @@ const {
     }
   </div>
 
-  <!-- 移动端目录弹窗（I29）：swup 容器，换页时整容器替换 → 弹窗自动关闭、
-     TOC 按新文章重建。仅文章页 + 目录开启 + 浮动目录按钮开启时渲染卡片；
-     目录按钮显隐由 app.ts 的 updateTocBtnVisibility 按「页面有无可见目录」
-     （两栏悬浮目录 / 三栏右侧栏目录）判定，卡片恒渲染、由点击切换显示 -->
+  <!-- 移动端目录弹窗：swup 容器，换页整容器替换 → 弹窗自动关闭、TOC 重建。卡片恒渲染，
+       仅文章页 + 目录开启 + 浮动按钮开启时渲染；按钮显隐由 app.ts 的 updateTocBtnVisibility
+       按「页面有无可见目录」判定，点击切换显示。 -->
   <div
     id="toc-popup"
     th:with="tocBtnEnabled=${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}, tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"

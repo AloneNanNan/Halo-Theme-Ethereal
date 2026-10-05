@@ -1,9 +1,7 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
-// 访客文章布局覆盖（显示设置面板「列表/网格」切换）
-// 同步脚本（无 defer/async）：在 PostList 容器解析后立即执行，首帧绘制前完成换类；
-// Swup 换页后由 SwupScriptsPlugin 重执行（同 post-list-layout.js / collapse.js）。
-// 执行顺序约定：必须先于 post-list-layout.js（PostList.astro 中标签顺序保证），
-// 使瀑布流初始化直接读取覆盖后的布局类。
+// 访客文章布局覆盖（显示设置「列表/网格」）：同步脚本（无 defer），PostList 容器解析后
+// 立即执行、首帧绘制前完成换类。必须先于 post-list-layout.js（标签顺序保证），瀑布流
+// 初始化才能读到覆盖后的布局类。换页由 SwupScriptsPlugin 重执行。
 (function () {
   var container = document.getElementById("post-list-container");
   if (!container) return;

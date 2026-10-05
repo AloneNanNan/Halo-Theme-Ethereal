@@ -1,14 +1,10 @@
-// 樱花特效 Worker：在 Dedicated Worker 内用 OffscreenCanvas 绘制樱花，
-// 绘制循环脱离主线程（换页 / 滚动时主线程阻塞不导致掉帧）。
-//
-// 构建产物 public/assets/sakura-worker.js（源码在 src/scripts/assets/，
-// esbuild 编译为 IIFE 经典脚本，主脚本 sakura.ts 以经典 Worker 方式加载）。
-// 通信协议（与主脚本约定）：
-//   主 → Worker：{ type:"init", config, canvas, width, height, imgUrl }
-//              / { type:"resize", width, height }
-//              / { type:"visibilitychange", hidden }
+// 樱花特效 Worker：在 Dedicated Worker 内用 OffscreenCanvas 绘制樱花，绘制循环脱离主线程
+// （换页 / 滚动阻塞不掉帧）。构建产物 public/assets/sakura-worker.js（esbuild 编译为 IIFE
+// 经典脚本，主脚本 sakura.ts 以经典 Worker 方式加载）。通信协议（与主脚本约定）：
+//   主 → Worker：{ type:"init", config, canvas, width, height, imgUrl } /
+//              { type:"resize", width, height } / { type:"visibilitychange", hidden }
 //   Worker → 主：{ type:"error", message }
-// 停止不走消息：主线程 stop() 直接 terminate，Worker 资源的回收由 terminate 承担。
+// 停止不走消息：主线程 stop() 直接 terminate。
 import type { SakuraConfig } from "./_sakura-config";
 import {
   createSakuraList,

@@ -14,12 +14,9 @@
   --banner-height-extend: 30vh;
   /* 全屏首页内容区顶部间距（原 #main-grid padding-top，现折进 panel top） */
   --banner-home-content-gap: 1.5rem;
-  /* 波浪底边相对 banner 底边的覆盖量：banner 底边 = 35vh + 30vh(CSS)，而
-     --banner-height-extend 是 4px 向下取整的像素值（余量 0~4px 会吃掉部分
-     覆盖）。覆盖量必须 > 取整步长(4px) + 安全边距，故设 8px：
-     实际覆盖 = 8 − 取整余量 ∈ [4, 8)px，任意 DPR 下波浪底边都能干净地低于
-     banner 底边（≥4px CSS = ≥6 设备像素 @DPR1.5），避免过渡动画中波浪底边
-     与 banner/页面背景边界亚像素错位露 1px 缝隙（Edge DPR 1.5 复现） */
+  /* 波浪底边相对 banner 底边的覆盖量：--banner-height-extend 是 4px 向下取整的
+     像素值，0~4px 余量会吃掉覆盖。取值 8px > 取整步长 + 安全边距，实际覆盖恒
+     ≥4px，避免过渡动画中波浪底边与背景边界亚像素错位露 1px 缝隙 */
   --wave-cover-offset: 8px;
   /* 主内容面板与 banner 的交叠量：panel top = var(--banner-height) − 此值。
      与 constants.ts MAIN_PANEL_OVERLAPS_BANNER_HEIGHT(3.5) 同值，勿单独改 */
@@ -94,7 +91,7 @@
   --toc-btn-active: oklch(0.9 0.015 var(--hue));
   --toc-width: calc((100vw - var(--page-width)) / 2 - 1rem);
 
-  /* 正文表格（issue #67）：全部复用主题变量、深浅色自动适配，可被 Halo 代码
+  /* 正文表格：全部复用主题变量、深浅色自动适配，可被 Halo 代码
      注入的 :root{…} 覆盖。勿用 color-mix(primary, 白) 调淡色——低饱和主色
      混白后视觉近白 */
   --md-table-radius: calc(var(--radius-large) - 0.25rem);
@@ -194,10 +191,8 @@
   --admonitions-color-caution: oklch(0.65 0.2 25);
 }
 
-/* 全屏模式：首页 banner 占满整屏（100vh），其余机制（延伸/平移）随
-   --banner-height-home 自动推导。数值与 src/constants/constants.ts 的
-   BANNER_HEIGHT_HOME_FULLSCREEN / BANNER_HEIGHT_EXTEND_FULLSCREEN 对应
-   （这里仅作 JS 接管前的首帧兜底，运行期由 JS 以像素值覆盖） */
+/* 全屏模式：首页 banner 占满整屏（100vh），延伸/平移随 --banner-height-home 推导。
+   数值对应 constants.ts 的 *_FULLSCREEN（仅作 JS 接管前的首帧兜底）。 */
 html[data-banner-display="fullscreen"] {
   --banner-height-home: 100vh;
   --banner-height-extend: 65vh;

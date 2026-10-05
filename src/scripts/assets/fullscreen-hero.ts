@@ -1,19 +1,12 @@
-// 全屏沉浸（hero）布局：滚动模糊斜坡 + 首页标题上移淡出 + 箭头滚动隐藏 +
-// 状态切换时的模糊过渡。
-//   首页：下滑 300px 内模糊 0 → 最大值（--wallpaper-blur-max，即后台「背景模糊度」，
-//         2px 量化避免逐帧重栅格化）；标题 translateY(-scrollY) 随滚动上移 + opacity
-//         淡出，半个视口高内完成（壁纸钉视口，上移模拟标题随内容滚出）；
-//   非首页：模糊恒为最大值（CSS fallback 兜底首帧，脚本负责与滑块联动）；
-//         标题原地淡出：只清内联 opacity、保留上移位移（见 releaseTitleToCss）；
-//   换页：非首页 → 首页（html.home-switch）期间不写标题，出现时机交给 app.ts 的
-//         revealBannerTitleOnSwitchEnd（落位后淡入）；
-//   箭头：hero 下壁纸钉视口，箭头不会随内容滚出，改滚动超过 100px 加 .hide；
-//   过渡：只在状态切换（首页⇄非首页、进出 hero）瞬间挂 filter 过渡窗口，与内容
-//         卡片下移同源同缓动；滚动斜坡期间绝不挂（否则模糊拖尾）。
-// 变量链：body 的 --transparent-wallpaper-blur → variables.css 的 --wallpaper-blur-max
-//   → 脚本读最大值写 --hero-wallpaper-blur 与标题内联样式（components.css 消费）。
-// 边界：非首页标题隐藏由 CSS 规则 / banner-text-hidden 类负责（脚本不碰 display，
-//   只清内联 opacity 让其生效）；访客关闭标题的 opacity:0 !important 优先，无需判断。
+// 全屏沉浸（hero）布局：滚动模糊斜坡 + 首页标题上移淡出 + 箭头滚动隐藏 + 状态切换模糊过渡。
+//   首页：下滑 300px 内模糊 0 → --wallpaper-blur-max（2px 量化避免逐帧重栅格化）；标题
+//         translateY(-scrollY) 上移 + opacity 淡出（壁纸钉视口，模拟随内容滚出）；
+//   非首页：模糊恒为最大（CSS fallback 兜首帧）；标题原地淡出——只清内联 opacity、保留位移；
+//   换页：非首页 → 首页期间不写标题，显现交给 app.ts 的 revealBannerTitleOnSwitchEnd；
+//   箭头：滚动超过 100px 加 .hide；过渡只在状态切换瞬间挂（斜坡期间挂会模糊拖尾）。
+// 变量链：body --transparent-wallpaper-blur → --wallpaper-blur-max → --hero-wallpaper-blur。
+// 边界：非首页标题隐藏由 CSS / banner-text-hidden 类负责，脚本不碰 display、只清内联
+//   opacity；访客关闭标题的 opacity:0 !important 优先。
 import { readDurBannerMs } from "../../utils/dur-banner";
 
 (() => {
@@ -105,10 +98,8 @@ import { readDurBannerMs } from "../../utils/dur-banner";
   }
 
   /** 首页 → 非首页：只把透明度交回 CSS（触发原地淡出），保留内联 transform 与
-   *  hero-title-faded —— 标题此刻停在「随滚动上移」的位置渐隐，清 transform 会
-   *  让它瞬跳回视口中央再淡出（观感上「标题跑到中间」）。残留值由下次进入首页的
-   *  writeTitle 覆盖、或退出 hero 布局时 resetTitle 清除；渐隐中保持 faded 使
-   *  #banner-links 继续不可点 */
+   *  hero-title-faded——标题停在随滚动上移的位置渐隐，清 transform 会瞬跳回视口中央。
+   *  残留值由下次 writeTitle 覆盖 / resetTitle 清除；渐隐中保持 faded 使链接行不可点 */
   function releaseTitleToCss(): void {
     if (lastTitleOpacity === "") return;
     lastTitleOpacity = "";

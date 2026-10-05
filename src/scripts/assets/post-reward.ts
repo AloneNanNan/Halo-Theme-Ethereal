@@ -256,6 +256,5 @@ var t =
     safeInit();
   }
 
-  // 重新绑定由 SwupScriptsPlugin 重执行覆盖；
-  // 原 swup:contentReplaced 监听删除（v3 事件名从未触发）。
+  // 重新绑定由 SwupScriptsPlugin 重执行覆盖。
 })();

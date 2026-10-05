@@ -247,11 +247,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       var __eecs = /*[[${theme.config?.layout?.mobileMenu?.enable_change_color_scheme ?: theme.config?.style?.colorScheme?.enable_change_color_scheme}]]*/ true;
     </script>
     <script th:inline="javascript" is:inline>
-      // 默认语言引导：后台「样式设置 → 主题语言 → 默认语言」非跟随系统时，
-      // 首次访问（访客未手动切换过语言）且服务端渲染语言与默认不一致时写入 cookie 并刷新一次，
-      // 由 Thymeleaf 服务端用默认语言重渲染；当前语言已匹配时无需刷新。
-      // 访客在前台手动切换后以访客选择为准（切换逻辑会写 ethereal_lang_chosen 标记）。
-      // sessionStorage 防 cookie 被禁用时无限刷新死循环。
+      // 默认语言引导：非「跟随系统」时，首次访问且 SSR 语言与默认不一致 → 写 cookie 并刷新
+      // 一次（服务端用默认语言重渲染）；访客手动切换过（ethereal_lang_chosen 标记）则以
+      // 访客为准；sessionStorage 防 cookie 被禁用时无限刷新。
       (function () {
         var defaultLang =
           /*[[${theme.config?.style?.language?.defaultLanguage}]]*/ "auto";
@@ -327,14 +325,11 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           `${PAGE_WIDTH}rem`,
         );
 
-        // 与 constants.ts 的 calcBannerHeightExtend 保持同式；延伸量 =
-        // 首页高度(全屏 100vh / 横幅 65vh) − 基础 35vh。数值来自注入的
-        // 常量（勿硬编码），确保与 constants.ts / variables.css 不脱节。
-        // 基准必须与 CSS vh 一致：移动端 Chrome/Safari 的 vh 按「大视口」解析，
-        // window.innerHeight 是动态视口（地址栏显示时更小），用后者换算会让
-        // 波浪底边与 banner 底边错位露缝（constants.ts 的 cssVhViewportHeight
-        // 注释详述）。探针不能 import，此处为内联拷贝（与 constants.ts 及下方
-        // 访客覆盖脚本中的同款探针保持同步）：
+        // 与 constants.ts 的 calcBannerHeightExtend 同式（延伸量 = 首页高度 −
+        // 基础 35vh），数值来自注入常量、勿硬编码。基准必须与 CSS vh 一致：
+        // 移动端 vh 按「大视口」解析，用 window.innerHeight 换算会与 CSS 错位、
+        // 波浪底边露缝（详见 constants.ts 的 cssVhViewportHeight）。探针不能
+        // import，此处为内联拷贝，需与 constants.ts 及下方访客覆盖脚本同步：
         const __vhProbe = document.createElement("div");
         __vhProbe.style.cssText =
           "position:fixed;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none";
@@ -651,11 +646,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
-      /* 两栏布局「右栏模式」：侧栏挪到右侧（正文在左），两栏的悬浮目录镜像到左侧空白槽。
-         类挂在 <body> 上——#main-grid 与 #toc-container 是兄弟节点，只有 body 级类能同时
-         命中两者（既有的 .layout-two-column 挂在 #top-row 与面板 div 上，到不了 #toc-container，
-         别照抄那套作用域）。用 CSS 覆盖而不是加第二套 Tailwind 任意值类：同一属性两条
-         任意值工具类谁生效取决于产物里的生成顺序，不可靠 */
+      /* 两栏布局「右栏模式」：侧栏挪到右侧（正文在左），悬浮目录镜像到左侧空白槽。
+         类挂 <body>——#main-grid 与 #toc-container 是兄弟节点，只有 body 级类能同时命中；
+         用 CSS 覆盖而非第二套任意值工具类（同属性两条任意值类的胜负取决于产物顺序）。 */
       body.layout-two-column-right #toc-wrapper {
         right: auto !important;
         left: calc(-1 * var(--toc-width)) !important;
@@ -672,10 +665,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         }
       }
 
-      /* 配置了「移动端小组件」时：移动端隐藏左右两栏。
-         类由 MobileSideBar.astro 的内联脚本在**挂载成功后**加到 <html>（不是服务端
-         渲染时就加）——脚本没跑（禁用 JS、报错）时类不存在，移动端照旧显示左右两栏，
-         不会因为"移动端列表没挂上"而白屏。断点与 Tailwind 的 md 一致（768px） */
+      /* 配置了「移动端小组件」时：移动端隐藏左右两栏。类由 MobileSideBar 的内联脚本在
+         挂载成功后加到 <html>——脚本没跑（禁用 JS / 报错）时类不存在，照旧显示两栏、不白屏。 */
       @media (max-width: 767.98px) {
         html.has-mobile-sidebar #sidebar,
         html.has-mobile-sidebar #right-sidebar {
@@ -692,14 +683,11 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         display: contents;
       }
 
-      /* 侧栏含目录时的吸顶块（左右两栏同源规则）：
-         · max-height 必须扣除吸顶位置下移的让位量，否则目录底部会溢出屏幕下方；
-           --navbar-sticky-offset 只在 1024+ 块定义，低于该断点回退到导航栏高度
-         · 从 md 起生效——目录卡片是 hidden md:flex（<768px 走目录弹窗按钮），
-           手机上不能让一张看不见的卡片白吃两个吸顶名额、也不该限高
-         · :has(槽位 > *) 同时是按页门控：槽位是 Swup 容器，换页后里面有没有卡片由
-           服务端条件决定；无目录的页面（首页/分类页等）这些规则都不命中 →
-           吸顶组件照常全部显示、没有多余限高、也不会被裁 */
+      /* 侧栏含目录时的吸顶块（左右两栏同源规则）：max-height 需扣除吸顶位置
+         下移的让位量（--navbar-sticky-offset，低于 1024+ 断点回退导航栏高度），
+         否则目录底部溢出屏幕；从 md 起生效（卡片 hidden md:flex，手机上不能让
+         看不见的卡片白吃吸顶名额）；:has(槽位 > *) 同时是按页门控——无目录页面
+         这些规则不命中，吸顶组件照常全部显示、不限高不被裁 */
       @media (min-width: 768px) {
         #sidebar-sticky:has(#sidebar-toc > *),
         #right-sidebar-sticky:has(#right-sidebar-toc > *) {
@@ -708,12 +696,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
           ) !important;
           overflow: hidden !important;
         }
-        /* 吸顶组件保持自然高度：差额只该由目录卡片承担。组件若参与收缩，导航栏出现
-           让出 72px 时限高变小，就会按比例把两块组件压扁——flex 负空间按「收缩系数 ×
-           flex-basis」分摊，目录卡片 basis 为 0 时完全不参与，压力全落到组件上。
-           .card-base 覆盖吸顶组件的三种形态（WidgetLayout / Profile / 自定义HTML），
-           widget 内部没有嵌套 .card-base，故不会误伤组件内部布局；
-           > :not(槽位) 把槽位排除在外 → 目录卡片不被钉住，仍可伸缩（见 SidebarTOC.astro） */
+        /* 吸顶组件保持自然高度：限高变化只该由目录卡片承担。组件参与收缩时 flex 负空间会
+           全压到组件上（目录卡片 basis 为 0 不参与）；> :not(槽位) 把槽位排除使其仍可伸缩。 */
         #sidebar-sticky:has(#sidebar-toc > *) > :not(#sidebar-toc) .card-base,
         #right-sidebar-sticky:has(#right-sidebar-toc > *)
           > :not(#right-sidebar-toc)
@@ -759,10 +743,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
             width: calc(92vw - 2rem) !important;
           }
         }
-        /* 吸顶让位量：导航栏可见时为导航栏高度，随滚动收起时（scroll-manager
-           给 body 加 .dynamic-navbar-hidden）归零——否则导航栏收起后侧边栏顶部
-           仍空出 72px，把内容视觉往下挤。侧边栏/目录规则统一引用该变量，
-           新增页面类型只需写一遍。固定模式永不收起，归零分支不命中。 */
+        /* 吸顶让位量：导航栏可见时为导航栏高度，收起时（body.dynamic-navbar-hidden）归零——
+           否则导航栏收起后侧栏顶部仍空出 72px。侧栏/目录统一引用该变量。 */
         :root {
           --navbar-sticky-offset: var(--navbar-height);
         }
@@ -795,14 +777,9 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
             1rem - var(--banner-height-extend) + var(--navbar-sticky-offset)
           ) !important;
         }
-        /* 侧边栏 top / max-height 过渡：与导航栏 --dur-scroll 同步（位移顺滑跟随
-           收起/出现），否则 class 切换会让侧边栏瞬间跳位，与导航栏 700ms 滑动错位。
-           max-height 必须一起过渡：含目录的页面限高是
-           100vh - 让位量 - 2rem，导航栏出现时让位量 0 → 72px，限高瞬间少 72px，
-           而 72px 的负空间全由目录卡片承担（吸顶组件被 flex-shrink: 0 钉住），
-           于是目录"咔"地缩一截。两个属性同规则、同时长 → 与导航栏滑动同拍。
-           注意：必须无条件挂在元素上——若只写在 .dynamic-navbar-hidden 里，
-           移除该类时元素已失去 transition，回程会瞬跳 */
+        /* 侧边栏 top / max-height 过渡：与导航栏 --dur-scroll 同步，否则会瞬间跳位、与
+           导航栏滑动错位。max-height 必须一起过渡（让位量 0→72px 的差额全由目录卡片承担）；
+           必须无条件挂在元素上——只写在 .dynamic-navbar-hidden 里时移除类后回程会瞬跳。 */
         #sidebar-sticky,
         #right-sidebar-sticky {
           transition:
@@ -813,9 +790,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     </style>
     <!-- 右侧边栏入场动画类静态写在 RightSideBar 组件上（首帧即带动画）；
          换页防重播由 transition.css 的 html.swup-visited 门控承担（app.ts
-         在 visit:start 加标记），首播后的清理由 app.ts 的 animationend 委托承担。
-         原 swup:contentReplaced 清理脚本已删除：那是 Swup v3 事件名，
-         v4 分发动态拼名事件 swup:{hook}（如 swup:content:replace），该监听从未触发。 -->
+         在 visit:start 加标记），首播后的清理由 app.ts 的 animationend 委托承担。 -->
     <!-- 客户端入口脚本：必须位于 </body> 内。若写在 </html> 之外，Astro 会把打包后的
          module 脚本排到文档末尾之后，产出非法 HTML（线上曾复现） -->
     <script>

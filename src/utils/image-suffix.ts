@@ -1,18 +1,9 @@
 /**
- * 图片 CDN 处理参数（尺寸后缀）生成。
- *
- * 主题中同一套 provider → 后缀规则存在两处执行环境：
- * 1. 服务端 Thymeleaf 渲染（Halo 后台）—— 见 CDN_SUFFIX_RAW / imageSuffixThWith；
- * 2. 浏览器端运行时（文章正文图片处理，is:inline 脚本）—— 见 CDN_SUFFIX_PATTERNS。
- *
- * 单一数据源约定（新增/调整规则只改本文件）：
- * - 服务端 CDN_SUFFIX_RAW 由 CDN_SUFFIX_PATTERNS 构建期生成；
- * - 扩展名白名单 SUFFIX_ELIGIBLE_EXTENSIONS 同时供服务端 cdnSuffixEligible 与
- *   客户端 isSuffixEligible（经 post.astro 的 define:vars 注入）使用。
- *
- * 注意：Astro 构建器对含 Thymeleaf 表达式（${...}）的属性值不做插值解析，
- * 因此 th:with 必须整体由本函数生成，再通过 `th:with={imageSuffixThWith(...)}`
- * 这类纯表达式属性输出（参考各页面调用处）。
+ * 图片 CDN 尺寸后缀生成：同一套 provider → 后缀规则同时用于服务端 Thymeleaf
+ * （CDN_SUFFIX_RAW / imageSuffixThWith）与浏览器端正文图片脚本（CDN_SUFFIX_PATTERNS，
+ * 经 post.astro 的 define:vars 注入）。单一数据源：新增 / 调整规则只改本文件——
+ * CDN_SUFFIX_RAW 由 CDN_SUFFIX_PATTERNS 构建期生成，扩展名白名单两端共用。注意：Astro 不对
+ * 含 ${...} 的属性值做插值，th:with 必须整体由本文件函数生成后以纯表达式属性输出。
  */
 
 /** 可追加 CDN 尺寸后缀的图片扩展名白名单（服务端 / 浏览器端共用同一来源） */
@@ -86,12 +77,9 @@ export function imageSuffixThWith(widthDefault: string): string {
 
 /**
  * Banner 显示模式相关 th:with 局部变量串，供 Layout.astro 的 <html> 使用：
- * - bannerMode  —— 有效显示模式（layout.bannerLayout 优先，兜底 'banner'）。
- *                  用嵌套 #strings.defaultString 而非链式 Elvis
- *                  （Thymeleaf 无法解析括号包裹的链式 ?:，会 500）。
- * - bannerHasMedia —— 当前是否为「横幅/全屏」（有横幅媒体）；
- *                  transparent 与 disabled 都视为无横幅。
- * 定义在 <html> 上后，整站模板直接引用这两个原子变量做条件判断。
+ * bannerMode（有效模式，缺省 'banner'；用嵌套 #strings.defaultString 而非链式
+ * Elvis——Thymeleaf 不能解析括号包裹的链式 ?:）、bannerHasMedia（是否为
+ * 横幅/全屏；transparent 与 disabled 视为无横幅）。
  */
 export function bannerModeThWith(): string {
   return (
@@ -101,14 +89,11 @@ export function bannerModeThWith(): string {
 }
 
 /**
- * Banner 渲染所需的 th:with 局部变量串：在图片处理后缀变量基础上追加
- * mode（single/carousel，缺省 single）、rawSrc（未拼后缀的原始图 URL，
- * 供 Banner 显式 srcset 基于原图生成档位）、srcX（rawSrc + 可加后缀时的
- * 后缀，供 th:href/th:src 静态属性引用）与 isVideo（single 模式下 src
- * 以 .mp4/.webm 结尾）。以上变量依赖前面定义的局部变量（Thymeleaf th:with
- * 支持顺序引用）。桌面容器再追加移动端独立来源相关变量
- * （useMobileSrc/mobileMode/mobileSrc/mobileImages/mobileActive），
- * 供移动端容器渲染条件与其内层 th:with 引用。
+ * Banner 渲染所需的 th:with 局部变量串：在图片处理后缀变量基础上追加 mode（single/carousel，
+ * 缺省 single）、rawSrc（未拼后缀的原始图 URL）、srcX（rawSrc + 可加后缀时的后缀）、
+ * isVideo（single 模式下 src 以 .mp4/.webm 结尾），变量按顺序引用（th:with 支持）。桌面
+ * 容器再追加移动端独立来源变量（useMobileSrc / mobileMode / mobileSrc / mobileImages /
+ * mobileActive），供移动端容器渲染条件与其内层 th:with 引用。
  */
 export function bannerThWith(): string {
   const src =
@@ -177,11 +162,9 @@ function bannerMediaVars(srcExpr: string, modeExpr: string): string {
 }
 
 /**
- * 生成移动端独立来源局部变量串。mobileActive 是移动容器是否渲染的
- * 唯一条件源：开关开启且移动端文件非空（按移动端自身形态判定）；
- * 为 false 时移动容器不渲染，桌面容器在所有视口显示（空值回退）。
- * 与 public/assets/banner-src-switch.js 的 hasMobileSrc 判定保持同步
- * （双实现，改动需两处一致，同 CDN_SUFFIX_RAW 约定）。
+ * 生成移动端独立来源局部变量串。mobileActive 是移动容器是否渲染的唯一条件源：开关开启且
+ * 移动端文件非空（按移动端自身形态判定）；为 false 时移动容器不渲染、桌面容器全视口显示。
+ * 与 public/assets/banner-src-switch.js 的 hasMobileSrc 判定双实现同步，改动需两处一致。
  */
 function bannerMobileVars(): string {
   const mobileSrc = "theme.config?.style?.bannerStyle?.mobile?.src";
@@ -205,11 +188,10 @@ function bannerMobileVars(): string {
 }
 
 /**
- * 轮播单张图的 th:with 局部变量串（引用 th:each 循环变量 img）。
- *
- * 每张图的 URL 相关量（去查询串基准 cbase、准入判定 celig）逐张算一次，供该图的
- * th:src / th:srcset 引用；否则同一段长表达式要在两个属性里各展开一遍（多图时属性
- * 体积成倍膨胀）。th:each 优先级 200 先于 th:with 的 600 执行，故 img 在此已可用。
+ * 轮播单张图的 th:with 局部变量串（引用 th:each 循环变量 img）：每张图的 cbase（去查询串
+ * 基准）与 celig（准入判定）逐张算一次供 th:src / th:srcset 引用，避免同一段长表达式在两个
+ * 属性里各展开一遍（多图时属性体积成倍膨胀）。th:each 优先级 200 先于 th:with 的 600，
+ * 故 img 在此已可用。
  */
 export function carouselThWith(): string {
   // craw 先落一次空值兜底：否则 withoutQuery / urlEndsWith 各自再包一层
@@ -231,13 +213,8 @@ export function carouselImgSrcExpr(): string {
 }
 
 /**
- * 全宽 Banner 显式 srcset 的「原图兜底档」标称宽度。
- *
- * 渲染期无法得知原图真实像素宽，而 Halo 缩略图最高只到 xl=1600w：若不把原图
- * 纳入 srcset，宽屏（>1600css 视口）或 HiDPI 屏上浏览器会止步于 1600w，放大后
- * 仍发虚（issue #71）。此标称值只需 >= 常规 Banner 原图宽度，即可让浏览器在该
- * 场景优先选原图档。真实下载的是不带 ?width 参数的原图 URL，标称值仅影响候选
- * 挑选，不会造成图片 upscale 失真（原图不足该宽时下载的仍是原图本身）。
+ * 全宽 Banner srcset 的「原图兜底档」标称宽度：渲染期拿不到原图真实宽，而 Halo 缩略图
+ * 最高 1600w，不纳入原图会让宽屏 / HiDPI 放大发虚。标称值仅影响候选挑选，实际下载原图 URL。
  */
 const BANNER_ORIGINAL_SRCSET_WIDTH = 3840;
 
@@ -249,13 +226,9 @@ const BANNER_SRCSET_TOP_WIDTH =
   BANNER_THUMB_SRCSET_WIDTHS[BANNER_THUMB_SRCSET_WIDTHS.length - 1];
 
 /**
- * srcset 候选片段变量串：`c400`~`c1600` 是「该档后缀 + 宽度描述符」，`ctop` 是
- * banner_width 顶档片段（同构）。它们只与 provider / banner_width 有关、与图片 URL
- * 无关，故整页只算一次、单图与轮播共用——否则每个候选都要重复展开一次
- * `#strings.replace(...)`，轮播多图时属性体积会成倍膨胀。
- *
- * 注意：片段**不含基准 URL 也不含分隔符**，拼接时由调用方补 `base + c<N>`，分隔符
- * 写在候选之间（末尾不留悬空逗号）。
+ * srcset 候选片段变量串（c400~c1600 / ctop）：只与 provider / banner_width 有关、
+ * 与图片 URL 无关，故整页只算一次、单图与轮播共用（避免轮播多图时属性体积膨胀）。
+ * 片段不含基准 URL 与分隔符，由调用方拼 `base + c<N>`。
  */
 function bannerSrcsetTokens(): string {
   const tiers = BANNER_THUMB_SRCSET_WIDTHS.map(
@@ -291,22 +264,14 @@ function srcsetLadder(base: string): string {
 }
 
 /**
- * 全宽 Banner 单张图 srcset 的 Thymeleaf 表达式主体（不含 `${...}` 包裹）。
- *
- * 必须自带 srcset：Halo 2.22+ 会给「没有 srcset 的 <img>」注入按内容卡设计的默认
- * 档位（桌面上限 800px），全宽 Banner 会被误导选小图拉伸发虚。
- *
- * - 内部链路（provider none/halo）：固定四档 + **原图兜底档**（Halo 缩略图最高
- *   1600w，宽屏/HiDPI 不纳入原图会放大发虚，issue #71）。与引入 CDN 档位前一致。
- * - 外部 CDN/custom：同样四档，顶档改用 `banner_width` 而非原图（CDN 原图可能数 MB，
- *   宽屏会挑走它，比单档大图还费流量）；仅 > 1600 时追加，避免重复描述符。
- *   此分支在 provider 无模板、`banner_width == 0`（后台选了不压缩）、URL 扩展名不在
- *   SUFFIX_ELIGIBLE_EXTENSIONS 时返回 null → 不输出 srcset，回退 `src` 单档。
- *
- * 已知局限：内部链路未判扩展名，Halo 不支持的格式（如 webp）各档会退化为原图。
- *
- * @param base 已剥查询串的基准 URL token（单图传 "rawBase"，轮播传 "cbase"）
- * @param eligToken 准入判定 token（单图传 "elig"，轮播传 "celig"）
+ * 全宽 Banner 单张图 srcset 的 Thymeleaf 表达式主体（不含 ${...} 包裹）。必须自带 srcset——
+ * Halo 2.22+ 会给没有 srcset 的 <img> 注入内容卡档位（桌面上限 800px），全宽 Banner 会选到
+ * 小图。内部链路（none/halo）：固定四档 + 原图兜底（不纳入原图会让宽屏 / HiDPI 放大发虚）；
+ * 外部 CDN/custom：四档 + banner_width 顶档（仅 >1600 追加）；provider 无模板 /
+ * banner_width==0 / 扩展名不符时返回 null（回退 src 单档）。已知局限：内部链路不判扩展名，
+ * Halo 不支持的格式各档退化为原图。
+ * @param base 已剥查询串的基准 URL token（单图 "rawBase"，轮播 "cbase"）
+ * @param eligToken 准入判定 token（单图 "elig"，轮播 "celig"）
  */
 function bannerSrcsetInner(base: string, eligToken: string): string {
   const ladder = srcsetLadder(base);
@@ -345,12 +310,10 @@ export function carouselSrcsetExpr(): string {
 }
 
 /**
- * 生成「去掉 URL 查询串」的 Thymeleaf 表达式：判断扩展名（urlEndsWith）与拼后缀前
- * 清掉原 URL 参数（srcX / srcset 档位）都用它，否则会拼出
- * `x.webp?v=2?image_process=...` 这种 CDN 解析不了的坏 URL。
- *
- * 陷阱：`#strings.substringBefore(url, '?')` 在 URL 不含 '?' 时返回 null（非原串），
- * null 流入 endsWith/拼接会直接中断服务端渲染 —— 必须先 contains 再调用。
+ * 生成「去掉 URL 查询串」的 Thymeleaf 表达式：判断扩展名与拼后缀前都要先清参数，
+ * 否则会拼出 `x.webp?v=2?image_process=...` 这种 CDN 解析不了的坏 URL。
+ * 陷阱：`#strings.substringBefore(url, '?')` 对不含 '?' 的 URL 返回 null（会中断
+ * 服务端渲染），必须先 contains 再调用。
  */
 function withoutQuery(urlExpr: string): string {
   // 必须整体加括号：?: 优先级低于拼接的 +，调用方写作 withoutQuery(x) + suffix，
@@ -383,18 +346,10 @@ function urlEndsWith(urlExpr: string, ext: string): string {
 }
 
 /**
- * 生成「图片 URL 是否可追加 CDN 尺寸后缀」的 Thymeleaf 布尔表达式主体。
- *
- * 处理 SUFFIX_ELIGIBLE_EXTENSIONS（jpg/jpeg/png/webp）：webp 虽可能为动图
- * （animated WebP），但静态 webp 占绝大多数，排除它会让主流静态图白白损失优化
- * （Halo 官方缩略图亦不支持 webp）；gif 是唯一能靠扩展名可靠识别的动图格式，故
- * 排除。已知局限：APNG 扩展名同为 .png，无法靠扩展名区分，只能一并处理。
- *
- * 白名单来自共享常量 SUFFIX_ELIGIBLE_EXTENSIONS，与 post.astro 正文图脚本
- * （浏览器端 isSuffixEligible）同源，避免两边规则漂移。
- *
- * 匹配路径末尾扩展名（先去掉查询串），避免 contains 对
- * "?src=x.mp4"/"/images/jpg/" 等子串误判。
+ * 生成「图片 URL 是否可追加 CDN 尺寸后缀」的 Thymeleaf 布尔表达式主体。白名单
+ * SUFFIX_ELIGIBLE_EXTENSIONS（jpg/jpeg/png/webp）两端共用；排除 gif（唯一能靠扩展名可靠
+ * 识别的动图），webp 按静态处理（动图少见，排除会让主流静态图白丢优化）；APNG 扩展名同为
+ * .png、无法区分。匹配路径末尾扩展名（先剥查询串），避免 contains 对 "?src=x.mp4" 误判。
  * @param urlExpr 图片 URL 的 Thymeleaf 表达式（需自带空值兜底，如 "img ?: ''"）
  */
 export function cdnSuffixEligible(urlExpr: string): string {

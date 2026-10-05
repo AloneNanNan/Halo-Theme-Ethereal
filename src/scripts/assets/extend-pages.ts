@@ -1,12 +1,8 @@
-// @ts-nocheck —— 与 timeline.js 同款：配合模板里 th:data-* 字段做客户端增强。
-// 只服务「关于页面」三件事：
-//   1. 「个人简介」正文：按 data-lines 把多行文本拆成 <p> 段落（服务端已直出纯文本
-//      兜底，这里只把它换成与设计一致的段落版式）；
-//   2. 「最近提交」：按 data-time 归并文章 + 瞬间两组行，并按 data-count 截断；
-//   3. 「订阅卡片」邮箱订阅：自建主题表单直连 flow-post 插件公开接口
-//      （匿名角色已放行 follows/submit，见插件 role-template-follow-anonymous）。
-// 其余字段均已服务端直出，不经过本文件。
-// Swup 换页由 SwupScriptsPlugin 重执行（DOM 已替换），data-rendered 守卫仅防重复。
+// @ts-nocheck —— 配合模板里 th:data-* 字段做客户端增强，只服务「关于页面」三件事：
+//   1. 个人简介正文：按 data-lines 把多行文本拆成 <p>（服务端已直出纯文本兜底）；
+//   2. 最近提交：按 data-time 归并文章 + 瞬间两组行，并按 data-count 截断；
+//   3. 订阅卡片：自建表单直连 flow-post 插件公开接口（匿名角色已放行）。
+// 其余字段均服务端直出；换页由 SwupScriptsPlugin 重执行，data-rendered 守卫防重复。
 (function () {
   function splitLines(raw) {
     if (!raw) return [];
@@ -44,13 +40,8 @@
     el.appendChild(frag);
   }
 
-  // 「最近的提交」= 最新文章 + 最新瞬间两组由服务端直出的行，这里按 data-time
-  // 归并成一条时间线。时间戳都是 ISO-8601（同为 UTC 口径），取前 19 位（精确到秒）
-  // 做**字典序**比较即等价于时间序 —— 既避开 Date.parse 对「9 位小数秒」的兼容性坑，
-  // 也不用先解析。归并后按容器的 data-count（设置里的「显示数量」）只留最新 N 条：
-  // 两组各取了 count 条作候选，所以必须排完序才知道该留哪些（服务端算不了）。
-  // 无 JS 时既不归并也不截断，两组按服务端顺序完整展示，属于渐进增强；
-  // Swup 换页由 init 重新触发（data-sorted 守卫防重复）。
+  // 「最近的提交」= 文章 + 瞬间两组服务端直出的行，按 data-time 归并：ISO-8601 UTC 取前
+  // 19 位字典序比较即等价时间序（避开 Date.parse 小数秒兼容坑）；排完序才能按 data-count 截断。
   function sortTimeline() {
     document
       .querySelectorAll("[data-activity-timeline]:not([data-sorted])")
@@ -94,12 +85,9 @@
   }
 })();
 
-// 「订阅卡片」邮箱订阅：直连 flow-post 插件的公开提交接口
-// （POST，body 仅 email；200 空响应 = 成功〔待邮件确认〕；失败响应为 ProblemDetail，
-// 优先展示 detail 字段，取不到再回退本地文案）。
-// 匿名可用性由插件的 role-template-follow-anonymous 放行（follows/submit create）。
-// 表单 UI 是自建主题样式（about.css ⑫-B）：插件自带 follow-card 是 Shadow DOM，
-// 尺寸/字号无法主题化，故不复用。
+// 「订阅卡片」直连 flow-post 插件公开接口（POST body 仅 email；200 = 成功，失败为
+// ProblemDetail、优先展示 detail）。匿名可用性由插件 role-template-follow-anonymous 放行。
+// 表单 UI 自建（about.css ⑫-B）：插件自带 follow-card 是 Shadow DOM，无法主题化。
 (function () {
   var API_URL = "/apis/api.flow.post.kunkunyu.com/v1alpha1/follows/-/submit";
   var t =

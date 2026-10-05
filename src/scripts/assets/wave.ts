@@ -1,11 +1,9 @@
 // @ts-nocheck —— legacy 手写脚本迁入源码目录（保持 ES5 原样，不做类型改造）
 // 波浪 viewBox 动画
 (function () {
-  // 三选开关（settings.yaml styleSwitches.banner_wave）：
-  // disabled / 旧版布尔 false → 不启动动画；desktop_only + 触屏设备 → 隐藏容器并跳过动画。
-  // wave.js 是 public/ 静态资产读不到 theme.config，从 Layout.astro 注入的 #theme-config JSON 解析。
-  // 解析结果写入 window.__themeConfig 缓存（I27：与 scripts/assets/_theme-config.ts 共享契约，
-  // 首个 parse 的脚本写缓存，后续脚本复用，避免多脚本重复 JSON.parse）
+  // 三选开关（styleSwitches.banner_wave）：disabled / 旧布尔 false 不启动；desktop_only +
+  // 触屏 → 隐藏容器并跳过动画。public/ 资产读不到 theme.config，从 #theme-config JSON 解析，
+  // 结果写入 window.__themeConfig 缓存（首个 parse 的写、后续复用）。
   var waveValue = null;
   var waveCfg = window.__themeConfig;
   if (waveCfg === undefined) {
@@ -99,7 +97,5 @@
   }
 
   requestAnimationFrame(step);
-  // 原 swup:contentReplaced 同步监听已删除：Swup v3 事件名，v4 分发
-  // swup:{hook}（如 swup:content:replace），该监听从未触发；
-  // 且 rAF 链每帧持续同步 viewBox，无需换页时额外校准。
+  // rAF 链每帧持续同步 viewBox，无需换页时额外校准。
 })();

@@ -1,10 +1,8 @@
 ---
-// 日程日历插件（halo-plugin-schedule-calendar）公开页主题适配模板。
-// 插件通过 TemplateNameResolver 将 /schedule-calendar 路由渲染到
-// templates/schedule-calendar.html（即本文件编译产物），并注入：
-//   - title  String  公开页面标题（来自插件设置）
-//   - view   WeekViewResponse  周视图数据（weekStart/currentWeekStart/previousWeekStart/nextWeekStart/days/summary/serverTime/zoneId）
-// 未安装插件或主题未提供模板时，插件自动回退内置模板，不会影响本站。
+// 日程日历插件（halo-plugin-schedule-calendar）公开页适配模板：插件把 /schedule-calendar
+// 渲染到 templates/schedule-calendar.html（本文件产物），注入 title（页面标题）与 view
+//（WeekViewResponse：weekStart / days / summary / serverTime / zoneId 等）。未安装插件或
+// 未提供模板时插件回退内置模板。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import PageHeader from "../components/control/PageHeader.astro";
 ---

@@ -1,10 +1,7 @@
 ---
-// 移动端菜单栏：按后台配置（布局设置 → 菜单栏设置 → 菜单样式）渲染两种模式。
-//  - accordion（默认）：从导航栏下方展开的下拉面板，子菜单手风琴折叠（原版样式）
-//  - drawer：从右侧滑出的圆角卡片抽屉，子菜单平铺展示（新样式）
-// 数据源一致：均读取 Halo 菜单（theme.config?.layout?.mobileMenu?.menu 或主菜单）。
-// 两种模式的开关逻辑见 public/assets/navbar.js（以 #nav-menu-root 是否
-// 存在判定模式）。
+// 移动端菜单栏：按「菜单样式」渲染两种模式——accordion（默认，导航栏下方下拉面板）/
+// drawer（右侧滑出圆角卡片）；数据源一致（theme.config?.layout?.mobileMenu?.menu 或主菜单），
+// 模式由 navbar.ts 按 #nav-menu-root 是否存在判定。
 import SiteLogo from "../SiteLogo.astro";
 ---
 

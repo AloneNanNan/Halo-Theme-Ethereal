@@ -1,13 +1,8 @@
 ---
-// 关于页面模板（Halo 自定义页面，自定义模板选 about），配置来自 extendPages.about。
-// 结构：身份卡 → 顶部导航 → 两栏（主列：个人简介 / 本人项目 / 最近提交；
-// 侧列：我的技能 / 我的朋友 / 保持联系 / 订阅更新）→ 页脚卡。
-// 数据源：本人项目 =「项目集」插件；我的技能 = 技能页面设置；
-// 我的朋友 = 友链插件 linkFinder.random(N)；最近提交 = 本站文章 + 瞬间；
-// 订阅卡片 = flow-post 插件（邮箱推送，自建表单直连其公开接口）。
-// 两栏按容器宽度分档（.about-cols-wrap）：阈值 880px 大于默认内容列宽（恒 872px），
-// 故分栏目前不会触发，属已知预期，待内容区加宽后自动生效。
-// 「个人简介」正文由服务端直出纯文本（无 JS 也可见），extend-pages.js 再重建成段落。
+// 关于页面模板（Halo 自定义页面，模板选 about），配置来自 extendPages.about。数据源：
+// 项目集插件 / 技能页设置 / 友链插件 random(N) / 文章 + 瞬间（extend-pages.js 归并）/
+// flow-post 订阅；「个人简介」服务端直出纯文本、脚本再重建段落。两栏阈值 880px 大于内容
+// 列宽 872px，分栏暂不触发（已知预期）。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import "../styles/about.css";
 ---
@@ -205,10 +200,8 @@ import "../styles/about.css";
           </p>
         </div>
 
-        <!-- 卡片按钮：数量上限由设置项 max: 3 限制，第 1 个是主按钮、其余为次按钮；
-             「文字 + 链接」都填才算有效条目，一条都没有时整块不渲染。
-             图标（iconify svg）必须 th:utext 注入，留空不渲染图标元素（同顶部导航）。
-             只有外链新开标签，站内路径在当前页跳转（同顶部导航、项目卡片口径）。 -->
+        <!-- 卡片按钮：上限 3 个，第 1 个主按钮、其余次按钮；「文字 + 链接」都填才算有效，
+             一条都没有时整块不渲染。图标必须 th:utext 注入；仅外链新开标签（同顶部导航口径）。 -->
         <div
           class="about-hero-actions"
           th:if="${actions != null and not #lists.isEmpty(actions)}"
@@ -241,9 +234,8 @@ import "../styles/about.css";
     </section>
 
     <!-- ================= ② 顶部导航（长条菜单） =================
-        条目完全自定义（主题设置 → 关于页面 → 顶部导航卡片 → 导航条目）；
-        一条都没配时整块不渲染。链接留空 = 指向当前页（自动带 is-active +
-        aria-current="page"，用于「个人资料」这类条目）。 -->
+        条目完全自定义（设置 → 关于页面 → 顶部导航卡片）；全空不渲染；链接留空 = 指向
+        当前页（自动带 is-active / aria-current="page"）。 -->
     <nav
       class="card-base about-subnav onload-animation mb-4"
       th:if="${cfg?.nav?.enable != false and cfg?.nav?.items != null and not #lists.isEmpty(cfg?.nav?.items)}"
@@ -256,10 +248,8 @@ import "../styles/about.css";
         th:href="${#strings.isEmpty(navItem?.url) ? singlePage.status.permalink : navItem?.url}"
         th:aria-current="${#strings.isEmpty(navItem?.url) ? 'page' : null}"
       >
-        <!-- 图标：$formkit: iconify + format: svg ⇒ 值是一整段内联 SVG（fill 为
-             currentColor，跟随条目文字色）。必须用 th:utext 注入、不能走 th:class
-             —— 同 links.astro 折叠面板、Profile.astro 社交图标。
-             图标由用户自选（后台不预置默认值）：留空时不渲染任何图标元素，只显示文字。 -->
+        <!-- 图标：iconify svg（fill=currentColor），必须 th:utext 注入——同 links.astro
+             折叠面板、Profile.astro 社交图标；留空不渲染图标元素、只显示文字。 -->
         <span
           th:if="${navItem?.icon != null and !#strings.isEmpty(navItem?.icon?.value)}"
           class="about-ico about-ico--svg"
@@ -365,11 +355,9 @@ import "../styles/about.css";
             </div>
           </section>
 
-          <!-- 最近提交：数据 = 最新文章 + 最新瞬间，服务端直出（无 JS 也完整可见）；
-               样式为时间轴（竖虚线 + 节点圆点 + 日期/类型/标题三段式）。
-               瞬间的 content.raw 是富文本，先剥标签当纯文本用，超长由单行省略号收尾。
-               行上 data-time 供客户端把两组归并、并按 data-count 截断到 N 条；
-               无 JS 时按服务端顺序完整展示（渐进增强）。 -->
+          <!-- 最近提交：最新文章 + 最新瞬间服务端直出（无 JS 也完整），样式为时间轴；瞬间
+               正文先剥标签当纯文本。行上 data-time 供客户端归并、按 data-count 截断；
+               无 JS 时按服务端顺序完整展示。 -->
           <section
             class="card-base onload-animation"
             th:if="${cfg?.activity?.enable != false and (aboutPostCount + aboutMomentCount) > 0}"

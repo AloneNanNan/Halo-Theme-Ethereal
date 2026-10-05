@@ -204,7 +204,7 @@ const className = Astro.props.class;
     </div>
 
     <NavMenuPanel />
-    <!-- 显示设置面板（I27）：与入口按钮同条件门控——总开关关闭或全部标签页关闭时，
+    <!-- 显示设置面板：与入口按钮同条件门控——总开关关闭或全部标签页关闭时，
          面板及其 client:only chunk 不随页面传输（th:if 包住组件输出，含 module script 标签） -->
     <span
       th:if="${theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and ((theme.config?.layout?.mobileMenu?.visitorStyle?.appearance != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.wallpaper != false) or (theme.config?.layout?.mobileMenu?.visitorStyle?.effects != false))}"
