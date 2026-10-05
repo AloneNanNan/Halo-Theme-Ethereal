@@ -11,7 +11,8 @@ const className = Astro.props.class ?? "";
 
 <!-- z-0：使 table-of-contents 成为堆叠上下文，把高亮条（[data-toc-indicator]）
      的 -z-10 约束在本组件内（画在卡片之上、条目之下）；否则 -z-10 会透到根上下文，
-     被不透明白卡片背景盖住，非透明模式下高亮/虚线完全看不见 --><!-- 内部两个钩子（高亮条 / 空目录占位）刻意用 data-* 而非 id：本组件在页面里有
+     被不透明白卡片背景盖住，非透明模式下高亮/虚线完全看不见 -->
+<!-- 内部两个钩子（高亮条 / 空目录占位）刻意用 data-* 而非 id：本组件在页面里有
      多个实例（侧栏卡片、两栏悬浮目录、移动端弹窗），id 会重复——JS 的
      getElementById / querySelector("#…") 只命中第一个实例，CSS 的 #… 却全部命中，
      这种"界面看着正常、某一份的脚本改错元素"的隐性坑极难排查 -->
@@ -24,16 +25,10 @@ const className = Astro.props.class ?? "";
     data-toc-indicator
     class="-z-10 absolute left-0 right-0 rounded-xl border-2 border-dashed border-transparent bg-(--primary)/10 transition-all duration-(--toc-transition-duration) group-hover:border-(--primary) group-hover:bg-transparent"
     style="opacity: 0"
-  >
-  </div>
-  {
-    showEmptyMessage && (
-      <div
-        data-toc-empty
-        class="hidden px-2 py-4 text-center text-sm text-50"
-      />
-    )
-  }
+  ></div>
+  {showEmptyMessage && (
+    <div data-toc-empty class="hidden px-2 py-4 text-center text-sm text-50" />
+  )}
 </table-of-contents>
 
 <!-- 自定义元素注册与实现在 src/scripts/app.ts（见那里的说明）：不能留在组件里——

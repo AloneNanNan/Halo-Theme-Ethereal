@@ -17,26 +17,22 @@ const valueClass = isHidden ? "photo-meta-value" : "min-w-0 font-bold text-90";
 ---
 
 <div class={wrapperClass} th:if={condition}>
-  {
-    !isHidden && (
-      <div
-        class="text-xs font-bold uppercase text-30"
-        th:text="#{page.photos.exif.title}"
-      >
-        EXIF
-      </div>
-    )
-  }
-  {
-    exifItems.map((item) => (
-      <div th:if={exifItemExpr(item)} class={rowClass}>
-        <span class={labelClass} th:text={item.label}>
-          {item.key}
-        </span>
-        <span class={valueClass} th:text={item.value}>
-          Value
-        </span>
-      </div>
-    ))
-  }
+  {!isHidden && (
+    <div
+      class="text-xs font-bold uppercase text-30"
+      th:text="#{page.photos.exif.title}"
+    >
+      EXIF
+    </div>
+  )}
+  {exifItems.map((item) => (
+    <div th:if={exifItemExpr(item)} class={rowClass}>
+      <span class={labelClass} th:text={item.label}>
+        {item.key}
+      </span>
+      <span class={valueClass} th:text={item.value}>
+        Value
+      </span>
+    </div>
+  ))}
 </div>

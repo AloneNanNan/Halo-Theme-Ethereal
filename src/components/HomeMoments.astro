@@ -21,7 +21,8 @@
   <a
     th:href="@{/moments}"
     class="home-moments-overlay"
-    th:aria-label="#{page.moments.viewAll}"></a>
+    th:aria-label="#{page.moments.viewAll}"
+  ></a>
 
   <!-- ===== 顶部：跑马灯行 ===== -->
   <div class="relative z-10 flex flex-nowrap items-center gap-3">
@@ -30,13 +31,13 @@
       th:href="@{/moments}"
       class="home-moments-badge group flex shrink-0 items-center gap-1.5 rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 transition hover:bg-(--btn-regular-bg-hover) active:scale-95"
     >
-      <span
-        class="icon-[material-symbols--auto-awesome-outline-rounded] text-base text-(--primary)"
-      ></span>
+      <span class="icon-[material-symbols--auto-awesome-outline-rounded] text-base text-(--primary)"></span>
       <span
         class="text-sm font-bold text-(--btn-content)"
-        th:text="#{page.moments.title}">瞬间</span
+        th:text="#{page.moments.title}"
       >
+        瞬间
+      </span>
     </a>
 
     <!-- 滚动区 -->
@@ -59,23 +60,28 @@
             <span
               class="home-moment-owner text-sm font-bold text-(--primary)"
               th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.displayName)}"
-              th:text="${moment.owner.displayName}">作者</span
+              th:text="${moment.owner.displayName}"
             >
+              作者
+            </span>
             <span
               class="text-sm text-(--primary)"
               th:if="${moment.owner != null and not #strings.isEmpty(moment.owner.displayName)}"
-              >：</span
             >
+              ：
+            </span>
             <!-- 原始内容（可能是富文本 HTML）：服务端先剥掉标签再以纯文本输出，
                  无 JS 时也不会露出 <p> 之类的标签；端上 JS 再取首个逻辑行回填 -->
             <span
               class="home-moment-text text-sm text-50"
               th:text="${moment.spec.content.raw.replaceAll('<[^>]*>', ' ')}"
-              >内容</span
             >
+              内容
+            </span>
             <span
               class="home-moment-dot mx-3 inline-block h-1 w-1 shrink-0 rounded-full bg-(--primary)/40"
-              aria-hidden="true"></span>
+              aria-hidden="true"
+            ></span>
           </a>
         </div>
       </div>
@@ -96,9 +102,7 @@
       class="btn-regular group flex h-8 shrink-0 items-center gap-0.5 rounded-lg px-3 text-sm font-bold active:scale-95"
     >
       <span th:text="#{common.more}">更多</span>
-      <span
-        class="icon-[material-symbols--chevron-right-rounded] text-base transition-transform group-hover:translate-x-0.5"
-      ></span>
+      <span class="icon-[material-symbols--chevron-right-rounded] text-base transition-transform group-hover:translate-x-0.5"></span>
     </a>
   </div>
 </section>

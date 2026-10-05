@@ -41,16 +41,9 @@ const { eachExpr } = Astro.props;
     <!-- 封面悬浮反馈：30% 黑遮罩 + 居中箭头（scale-50→100 + 淡入），只在悬浮封面时出现
          （命名 group/cover，与标题 group/title 互不干扰）。箭头 text-3xl(30px)：封面约
          307×153，再大会吃掉近 1/3 高度；遮罩盒 1em×1em 不影响布局。 -->
-    <div
-      class="pointer-events-none absolute inset-0 z-10 transition group-hover/cover:bg-black/30 group-active/cover:bg-black/50"
-    >
-    </div>
-    <div
-      class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
-    >
-      <span
-        class="icon-[mingcute--right-fill] scale-50 text-3xl text-white opacity-0 transition group-hover/cover:scale-100 group-hover/cover:opacity-100"
-      ></span>
+    <div class="pointer-events-none absolute inset-0 z-10 transition group-hover/cover:bg-black/30 group-active/cover:bg-black/50"></div>
+    <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+      <span class="icon-[mingcute--right-fill] scale-50 text-3xl text-white opacity-0 transition group-hover/cover:scale-100 group-hover/cover:opacity-100"></span>
     </div>
   </a>
   <!-- 正文：内边距固定 15/18/17px，无封面时不再单独补顶部内边距 —— 补的 pt 与基础值
@@ -63,10 +56,10 @@ const { eachExpr } = Astro.props;
       th:href="@{/portfolio/{slug}(slug=${project.slug})}"
       class="group/title flex items-center gap-1 text-base leading-[1.45] font-bold text-90 transition hover:text-(--primary)"
     >
-      <span class="line-clamp-2" th:text="${project.title}">Project Title</span>
-      <span
-        class="icon-[mingcute--right-fill] hidden shrink-0 -translate-x-0.5 text-lg text-(--primary) opacity-0 transition group-hover/title:translate-x-0 group-hover/title:opacity-100 md:inline"
-      ></span>
+      <span class="line-clamp-2" th:text="${project.title}">
+        Project Title
+      </span>
+      <span class="icon-[mingcute--right-fill] hidden shrink-0 -translate-x-0.5 text-lg text-(--primary) opacity-0 transition group-hover/title:translate-x-0 group-hover/title:opacity-100 md:inline"></span>
     </a>
     <!-- 推荐标记 + 平台/类型标签（在标题下方）。
          推荐标记带 th:if：两处列表都只给被标了推荐的项目显示，不再区分"推荐区恒显示" -->
@@ -75,21 +68,23 @@ const { eachExpr } = Astro.props;
         th:if="${project.featured == true}"
         class="inline-flex items-center gap-0.5 rounded-md bg-(--primary)/10 px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--primary)"
       >
-        <span class="icon-[material-symbols--star-rounded] text-[0.6875rem]"
-        ></span>
+        <span class="icon-[material-symbols--star-rounded] text-[0.6875rem]"></span>
         <span th:text="#{page.portfolio.featured}">推荐</span>
       </span>
       <span
         th:if="${not #strings.isEmpty(project.platform)}"
         class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--btn-content)"
         th:text="${platformLabels[project.platform] ?: project.platform}"
-        >Platform</span
       >
+        Platform
+      </span>
       <span
         th:if="${not #strings.isEmpty(project.type)}"
         class="inline-flex items-center rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.5] font-medium text-(--btn-content)"
-        th:text="${typeLabels[project.type] ?: project.type}">Type</span
+        th:text="${typeLabels[project.type] ?: project.type}"
       >
+        Type
+      </span>
     </div>
     <!-- 摘要 -->
     <p
@@ -107,8 +102,10 @@ const { eachExpr } = Astro.props;
       <span
         th:each="tech : ${project.techStacks}"
         class="rounded-md bg-(--btn-regular-bg) px-1.5 py-px text-[0.6875rem] leading-[1.6] font-medium text-(--btn-content)"
-        th:text="${tech}">Tech</span
+        th:text="${tech}"
       >
+        Tech
+      </span>
     </div>
     <!-- 底部元信息：上分隔线 + 左更新日期 + 右外链。间距分两段别合并：上方空
          占位条 flex-1 把整条推到卡片底部（同排卡片横线等高），其 mt-3 提供横线
@@ -122,8 +119,9 @@ const { eachExpr } = Astro.props;
       <span
         th:if="${not #strings.isEmpty(project.updateTime)}"
         th:text="${#strings.substring(project.updateTime, 0, 10)}"
-        >2026-01-01</span
       >
+        2026-01-01
+      </span>
       <span class="ml-auto flex shrink-0 items-center gap-2.5">
         <a
           th:if="${not #strings.isEmpty(project.repoUrl)}"
@@ -142,8 +140,7 @@ const { eachExpr } = Astro.props;
           rel="noopener noreferrer"
           class="inline-flex items-center gap-0.5 transition hover:text-(--primary)"
         >
-          <span class="icon-[material-symbols--play-circle-rounded] text-sm"
-          ></span>
+          <span class="icon-[material-symbols--play-circle-rounded] text-sm"></span>
           <span th:text="#{page.portfolio.demo}">演示</span>
         </a>
       </span>

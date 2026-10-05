@@ -38,9 +38,7 @@ import SiteLogo from "../SiteLogo.astro";
         id="nav-menu-close"
         class="btn-plain scale-animation group h-10 w-10 rounded-lg active:scale-90"
       >
-        <span
-          class="icon-[material-symbols--close-rounded] text-[1.25rem] transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
-        ></span>
+        <span class="icon-[material-symbols--close-rounded] text-[1.25rem] transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"></span>
       </button>
     </div>
 
@@ -56,8 +54,7 @@ import SiteLogo from "../SiteLogo.astro";
           <div
             th:unless="${itemStat.index == 0}"
             class="nav-drawer-divider my-2 border-t border-black/10 dark:border-white/10"
-          >
-          </div>
+          ></div>
           <a
             th:href="@{${menuItem.status.href}}"
             th:target="${menuItem.spec.target?.value}"
@@ -76,11 +73,12 @@ import SiteLogo from "../SiteLogo.astro";
                 />
                 <span
                   th:if="${#strings.startsWith(menuIcon, '<svg')}"
-                  th:utext="${menuIcon}"></span>
+                  th:utext="${menuIcon}"
+                ></span>
               </span>
-              <span class="truncate" th:text="${menuItem.status.displayName}"
-                >Menu</span
-              >
+              <span class="truncate" th:text="${menuItem.status.displayName}">
+                Menu
+              </span>
             </span>
             <span
               th:if="${menuItem.spec.target?.value == '_blank'}"
@@ -107,11 +105,12 @@ import SiteLogo from "../SiteLogo.astro";
                 />
                 <span
                   th:if="${#strings.startsWith(childIcon, '<svg')}"
-                  th:utext="${childIcon}"></span>
+                  th:utext="${childIcon}"
+                ></span>
               </span>
-              <span class="truncate" th:text="${childItem.status.displayName}"
-                >子菜单</span
-              >
+              <span class="truncate" th:text="${childItem.status.displayName}">
+                子菜单
+              </span>
             </span>
             <span
               th:if="${childItem.spec.target?.value == '_blank'}"
@@ -154,12 +153,15 @@ import SiteLogo from "../SiteLogo.astro";
               />
               <span
                 th:if="${#strings.startsWith(menuIcon, '<svg')}"
-                th:utext="${menuIcon}"></span>
+                th:utext="${menuIcon}"
+              ></span>
             </span>
             <span
               class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
-              th:text="${menuItem.status.displayName}">Menu</span
+              th:text="${menuItem.status.displayName}"
             >
+              Menu
+            </span>
           </span>
           <span
             th:if="${menuItem.spec.target?.value == '_blank'}"
@@ -175,9 +177,7 @@ import SiteLogo from "../SiteLogo.astro";
           aria-expanded="false"
           class="px-2 py-2 submenu-toggle flex-shrink-0"
         >
-          <span
-            class="icon-[material-symbols--chevron-right-rounded] text-[1.3rem] text-black/20 transition-transform duration-200 dark:text-white/20 inline-block"
-          ></span>
+          <span class="icon-[material-symbols--chevron-right-rounded] text-[1.3rem] text-black/20 transition-transform duration-200 dark:text-white/20 inline-block"></span>
         </button>
       </div>
       <!-- 子菜单内容 -->
@@ -205,12 +205,15 @@ import SiteLogo from "../SiteLogo.astro";
               />
               <span
                 th:if="${#strings.startsWith(childIcon, '<svg')}"
-                th:utext="${childIcon}"></span>
+                th:utext="${childIcon}"
+              ></span>
             </span>
             <span
               class="font-bold text-black/75 transition group-hover:text-(--primary) group-active:text-(--primary) dark:text-white/75 truncate"
-              th:text="${childItem.status.displayName}">子菜单</span
+              th:text="${childItem.status.displayName}"
             >
+              子菜单
+            </span>
           </span>
           <span
             th:if="${childItem.spec.target?.value == '_blank'}"

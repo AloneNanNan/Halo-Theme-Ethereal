@@ -55,12 +55,11 @@ const layoutId = `${widgetId}-layout`;
     >
       <div class="mb-2 flex items-center gap-2 px-1">
         <div class="group relative h-14 w-14 shrink-0">
-          <div
-            class="relative z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-(--primary)/10 shadow-lg dark:border-neutral-700"
-          >
+          <div class="relative z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-(--primary)/10 shadow-lg dark:border-neutral-700">
             <span
               class="icon-[material-symbols--music-note-rounded] absolute text-2xl text-(--primary) opacity-40"
-              aria-hidden="true"></span>
+              aria-hidden="true"
+            ></span>
             <img
               class="music-cover relative z-10 h-full w-full object-cover opacity-0 transition-opacity duration-300"
               src=""
@@ -86,17 +85,17 @@ const layoutId = `${widgetId}-layout`;
             >
               <span
                 class="icon-[material-symbols--subtitles-off-outline-rounded] icon-lrc-off text-xl"
-                aria-hidden="true"></span>
+                aria-hidden="true"
+              ></span>
               <span
                 class="icon-[material-symbols--subtitles-outline-rounded] icon-lrc-on hidden text-xl"
-                aria-hidden="true"></span>
+                aria-hidden="true"
+              ></span>
             </button>
           </div>
 
           <div class="min-w-0 overflow-hidden">
-            <p
-              class="music-artist truncate text-xs font-medium text-neutral-500 dark:text-neutral-400"
-            >
+            <p class="music-artist truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
               未播放
             </p>
           </div>
@@ -107,7 +106,9 @@ const layoutId = `${widgetId}-layout`;
               aria-live="polite"
             >
               <span class="current-time">0:00</span>
-              <span class="opacity-50" aria-hidden="true">/</span>
+              <span class="opacity-50" aria-hidden="true">
+                /
+              </span>
               <span class="total-time">0:00</span>
             </div>
 
@@ -119,14 +120,14 @@ const layoutId = `${widgetId}-layout`;
               >
                 <span
                   class="icon-[material-symbols--volume-up-rounded] icon-vol-high text-lg"
-                  aria-hidden="true"></span>
+                  aria-hidden="true"
+                ></span>
                 <span
                   class="icon-[material-symbols--volume-off-rounded] icon-vol-mute hidden text-lg"
-                  aria-hidden="true"></span>
+                  aria-hidden="true"
+                ></span>
               </button>
-              <div
-                class="flex w-16 items-center transition-all duration-300 ease-out"
-              >
+              <div class="flex w-16 items-center transition-all duration-300 ease-out">
                 <!-- 音量滑块：原为不可聚焦的 div（仅鼠标可拖/点），
                      加 tabindex 与 keydown 支持键盘操作（方向键/Home/End） -->
                 <div
@@ -138,10 +139,7 @@ const layoutId = `${widgetId}-layout`;
                   aria-valuenow="70"
                   tabindex="0"
                 >
-                  <div
-                    class="vol-bar absolute left-0 top-0 h-full w-[70%] rounded-full bg-(--primary)"
-                  >
-                  </div>
+                  <div class="vol-bar absolute left-0 top-0 h-full w-[70%] rounded-full bg-(--primary)"></div>
                 </div>
               </div>
             </div>
@@ -164,12 +162,8 @@ const layoutId = `${widgetId}-layout`;
           <div
             class="progress-bar absolute left-0 top-0 h-full w-full origin-left rounded-full bg-(--primary) transition-transform duration-100"
             style="transform: scaleX(0)"
-          >
-          </div>
-          <div
-            class="progress-thumb absolute top-1/2 -ml-1.5 -mt-1.5 h-3 w-3 scale-0 rounded-full bg-(--primary) shadow-sm ring-2 ring-white transition-transform duration-200 group-hover:scale-100 dark:ring-neutral-800"
-          >
-          </div>
+          ></div>
+          <div class="progress-thumb absolute top-1/2 -ml-1.5 -mt-1.5 h-3 w-3 scale-0 rounded-full bg-(--primary) shadow-sm ring-2 ring-white transition-transform duration-200 group-hover:scale-100 dark:ring-neutral-800"></div>
         </div>
       </div>
 
@@ -181,13 +175,16 @@ const layoutId = `${widgetId}-layout`;
         >
           <span
             class="icon-[material-symbols--repeat-rounded] icon-repeat text-xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
           <span
             class="icon-[material-symbols--repeat-one-rounded] icon-repeat-one hidden text-xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
           <span
             class="icon-[material-symbols--shuffle-rounded] icon-shuffle hidden text-xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
         </button>
 
         <button
@@ -197,7 +194,8 @@ const layoutId = `${widgetId}-layout`;
         >
           <span
             class="icon-[material-symbols--skip-previous-rounded] text-3xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
         </button>
 
         <button
@@ -207,10 +205,12 @@ const layoutId = `${widgetId}-layout`;
         >
           <span
             class="icon-[material-symbols--play-arrow-rounded] icon-play ml-0.5 text-3xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
           <span
             class="icon-[material-symbols--pause-rounded] icon-pause hidden text-3xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
         </button>
 
         <button
@@ -220,7 +220,8 @@ const layoutId = `${widgetId}-layout`;
         >
           <span
             class="icon-[material-symbols--skip-next-rounded] text-3xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
         </button>
 
         <button
@@ -228,18 +229,16 @@ const layoutId = `${widgetId}-layout`;
           type="button"
           aria-label="Playlist"
         >
-          <span class="icon-[mdi--playlist-music] text-xl" aria-hidden="true"
+          <span
+            class="icon-[mdi--playlist-music] text-xl"
+            aria-hidden="true"
           ></span>
         </button>
       </div>
 
-      <div
-        class="lrc-drawer grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-      >
+      <div class="lrc-drawer grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
         <div class="min-h-0 overflow-hidden">
-          <div
-            class="mx-1 mt-2 border-t border-neutral-100 pt-2 dark:border-white/5"
-          >
+          <div class="mx-1 mt-2 border-t border-neutral-100 pt-2 dark:border-white/5">
             <div
               class="lrc-container custom-scrollbar relative flex h-48 flex-col items-center gap-2 overflow-y-auto scroll-smooth p-4 py-24 text-center"
               role="listbox"
@@ -253,19 +252,14 @@ const layoutId = `${widgetId}-layout`;
         </div>
       </div>
 
-      <div
-        class="playlist-drawer grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-      >
+      <div class="playlist-drawer grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
         <div class="min-h-0 overflow-hidden">
-          <div
-            class="mx-1 mt-2 border-t border-neutral-100 pt-2 dark:border-white/5"
-          >
+          <div class="mx-1 mt-2 border-t border-neutral-100 pt-2 dark:border-white/5">
             <div
               class="playlist-container custom-scrollbar flex max-h-48 flex-col gap-1 overflow-y-auto pb-1 pr-1"
               role="listbox"
               aria-label="Playlist"
-            >
-            </div>
+            ></div>
           </div>
         </div>
       </div>
@@ -278,37 +272,27 @@ const layoutId = `${widgetId}-layout`;
         <div class="h-8 w-8 animate-spin text-(--primary)">
           <span
             class="icon-[material-symbols--sync-rounded] text-3xl"
-            aria-hidden="true"></span>
+            aria-hidden="true"
+          ></span>
         </div>
       </div>
     </div>
 
     <template id={`playlist-item-template-${widgetId}`}>
-      <div
-        class="playlist-item group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-neutral-50 dark:hover:bg-white/5"
-      >
-        <div
-          class="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-700"
-        >
+      <div class="playlist-item group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-neutral-50 dark:hover:bg-white/5">
+        <div class="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-700">
           <img
             src=""
             class="item-cover h-full w-full object-cover"
             loading="lazy"
             alt=""
           />
-          <div
-            class="item-active-overlay absolute inset-0 hidden items-center justify-center bg-(--primary)/20"
-          >
-            <span
-              class="icon-[material-symbols--graphic-eq-rounded] text-sm text-(--primary)"
-            ></span>
+          <div class="item-active-overlay absolute inset-0 hidden items-center justify-center bg-(--primary)/20">
+            <span class="icon-[material-symbols--graphic-eq-rounded] text-sm text-(--primary)"></span>
           </div>
         </div>
         <div class="min-w-0 flex-1">
-          <div
-            class="item-title truncate text-xs font-bold text-neutral-700 transition-colors group-hover:text-(--primary) dark:text-neutral-200"
-          >
-          </div>
+          <div class="item-title truncate text-xs font-bold text-neutral-700 transition-colors group-hover:text-(--primary) dark:text-neutral-200"></div>
           <div class="item-artist truncate text-[10px] text-neutral-400"></div>
         </div>
       </div>

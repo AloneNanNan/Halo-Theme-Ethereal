@@ -72,25 +72,23 @@ const {
     size={size}
     countClass={countClass}
   />
-  {
-    eachExpr && tabTemplate ? (
-      <div class="contents" th:each={eachExpr}>
-        <FilterTab
-          {...tabTemplate}
-          segmented={segmented}
-          size={size}
-          countClass={countClass}
-        />
-      </div>
-    ) : (
-      items.map((item) => (
-        <FilterTab
-          {...item}
-          segmented={segmented}
-          size={size}
-          countClass={countClass}
-        />
-      ))
-    )
-  }
+  {eachExpr && tabTemplate ? (
+    <div class="contents" th:each={eachExpr}>
+      <FilterTab
+        {...tabTemplate}
+        segmented={segmented}
+        size={size}
+        countClass={countClass}
+      />
+    </div>
+  ) : (
+    items.map((item) => (
+      <FilterTab
+        {...item}
+        segmented={segmented}
+        size={size}
+        countClass={countClass}
+      />
+    ))
+  )}
 </div>

@@ -34,12 +34,9 @@ const pageWindow = `
     th:aria-label="#{pagination.previous}"
     class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
   >
-    <span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"
-    ></span>
+    <span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"></span>
   </a>
-  <div
-    class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300"
-  >
+  <div class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300">
     <a
       th:if="${windowStart gt 1}"
       th:with="pageNumber=1, targetUrl=${photoUrl.list(currentGroup, pageNumber, pageSize)}"
@@ -60,7 +57,8 @@ const pageWindow = `
     </a>
     <span
       th:if="${windowStart gt 3}"
-      class="icon-[material-symbols--more-horiz] mx-1"></span>
+      class="icon-[material-symbols--more-horiz] mx-1"
+    ></span>
 
     <span
       class="contents"
@@ -87,7 +85,8 @@ const pageWindow = `
 
     <span
       th:if="${windowEnd lt totalPages - 2}"
-      class="icon-[material-symbols--more-horiz] mx-1"></span>
+      class="icon-[material-symbols--more-horiz] mx-1"
+    ></span>
     <a
       th:if="${windowEnd == totalPages - 2}"
       th:with="pageNumber=${totalPages - 1}, targetUrl=${photoUrl.list(currentGroup, pageNumber, pageSize)}"
@@ -115,7 +114,6 @@ const pageWindow = `
     th:aria-label="#{pagination.next}"
     class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
   >
-    <span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"
-    ></span>
+    <span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"></span>
   </a>
 </nav>

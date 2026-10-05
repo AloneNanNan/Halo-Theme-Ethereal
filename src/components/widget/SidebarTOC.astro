@@ -16,20 +16,16 @@ import TOC from "./TOC.astro";
  */
 ---
 
-<div
-  class="card-base hidden md:flex min-h-[6rem] flex-auto flex-col overflow-hidden pb-0"
->
+<div class="card-base hidden md:flex min-h-[6rem] flex-auto flex-col overflow-hidden pb-0">
   <div
     class="relative mb-2 ml-8 mt-4 shrink-0 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
     th:text="#{widget.toc.title}"
   >
     目录
   </div>
-  {
-    /* data-toc-scroll：TOC 组件靠 closest("[data-toc-scroll]") 找滚动容器（不认 id），
+  {/* data-toc-scroll：TOC 组件靠 closest("[data-toc-scroll]") 找滚动容器（不认 id），
       故卡片换到任意一栏都成立；Layout.astro 的侧栏限高规则也用它做 :has() 判定，
-      改名会同时打断两处 */
-  }
+      改名会同时打断两处 */}
   <div
     id="toc-inner-wrapper-sidebar"
     data-toc-scroll

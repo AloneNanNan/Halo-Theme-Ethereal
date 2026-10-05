@@ -187,7 +187,6 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         };
       })();
     </script>
-
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- 必须含 initial-scale=1：缺失时 iOS Safari 会按视口宽度自动缩放页面 -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -806,6 +805,7 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
       th:if="${theme.config?.style?.styleSwitches?.sakura == true or (theme.config?.layout?.mobileMenu?.visitorStyle?.enable != false and theme.config?.layout?.mobileMenu?.visitorStyle?.effects != false)}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/sakura.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
   </body>
 </html>

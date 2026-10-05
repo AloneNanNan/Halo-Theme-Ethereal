@@ -58,12 +58,10 @@ import PageHeader from "../components/control/PageHeader.astro";
           th:title="#{page.friends.randomFishTitle}"
           slot="right"
         >
-          <span
-            class="random-fish-icon icon-[material-symbols--phishing-outline-rounded] text-base"
-          ></span>
-          <span class="random-fish-label" th:text="#{page.friends.randomFish}"
-            >随机钓鱼</span
-          >
+          <span class="random-fish-icon icon-[material-symbols--phishing-outline-rounded] text-base"></span>
+          <span class="random-fish-label" th:text="#{page.friends.randomFish}">
+            随机钓鱼
+          </span>
         </button>
       </PageHeader>
     </div>
@@ -95,8 +93,7 @@ import PageHeader from "../components/control/PageHeader.astro";
                 <div
                   class="friends-timeline-dot"
                   th:classappend="${iterStat.index == 0 || curDate != prevDate} ? 'friends-timeline-dot-primary' : 'friends-timeline-dot-dimmed'"
-                >
-                </div>
+                ></div>
               </div>
 
               <!-- 右栏：日期（卡片上方）+ 卡片 -->
@@ -126,15 +123,11 @@ import PageHeader from "../components/control/PageHeader.astro";
                         th:unless="${not #strings.isEmpty(item.authorLogo)}"
                         class="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-(--primary)"
                       >
-                        <span
-                          class="icon-[material-symbols--account-circle] text-3xl"
-                        ></span>
+                        <span class="icon-[material-symbols--account-circle] text-3xl"></span>
                       </div>
                     </div>
 
-                    <div
-                      class="flex min-h-[3.25rem] min-w-0 flex-1 flex-col justify-between"
-                    >
+                    <div class="flex min-h-[3.25rem] min-w-0 flex-1 flex-col justify-between">
                       <a
                         href="#"
                         class="friend-author truncate text-base font-bold text-(--primary) transition hover:text-(--primary)"
@@ -142,16 +135,15 @@ import PageHeader from "../components/control/PageHeader.astro";
                       >
                         <span th:text="${item.author}">Author</span>
                       </a>
-                      <div
-                        class="friends-item-time mt-1.5 flex flex-wrap items-center gap-2"
-                      >
+                      <div class="friends-item-time mt-1.5 flex flex-wrap items-center gap-2">
                         <time
                           class="inline-flex items-center gap-1 text-sm text-50"
                           th:datetime="${item.publishedAt}"
                           th:title="${item.publishedAt != null ? #dates.format(item.publishedAt, 'yyyy-MM-dd HH:mm') : null}"
                           th:text="${item.publishedAt != null ? #dates.format(item.publishedAt, 'MM-dd HH:mm') : ''}"
-                          >09-21 14:30</time
                         >
+                          09-21 14:30
+                        </time>
                       </div>
                     </div>
                   </div>
@@ -165,9 +157,7 @@ import PageHeader from "../components/control/PageHeader.astro";
                       class="friends-item-title block line-clamp-2 text-[15px] font-semibold text-90 leading-snug transition hover:text-(--primary)"
                     >
                       <span th:text="${item.title}">Article Title</span>
-                      <span
-                        class="icon-[fa6-solid--arrow-up-right-from-square] ml-1 inline-block align-middle text-[10px] text-30"
-                      ></span>
+                      <span class="icon-[fa6-solid--arrow-up-right-from-square] ml-1 inline-block align-middle text-[10px] text-30"></span>
                     </a>
                     <div
                       th:if="${not #strings.isEmpty(item.summary)}"
@@ -190,16 +180,13 @@ import PageHeader from "../components/control/PageHeader.astro";
         type="button"
         class="btn-regular mx-auto mt-8 hidden h-11 rounded-xl px-4 text-sm font-bold active:scale-95"
       >
-        <span
-          class="icon-[material-symbols--expand-circle-down-outline] mr-1.5 text-base"
-        ></span>
+        <span class="icon-[material-symbols--expand-circle-down-outline] mr-1.5 text-base"></span>
         <span th:text="#{page.friends.loadMore}">加载更多</span>
       </button>
 
       <!-- 空状态 -->
       <div th:if="${#lists.isEmpty(allItems.items)}" class="py-16 text-center">
-        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-20"
-        ></span>
+        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-20"></span>
         <p class="mt-4 text-sm text-50" th:text="#{page.friends.empty}">
           暂无朋友圈动态
         </p>
@@ -213,6 +200,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       th:if="${not #lists.isEmpty(allItems.items)}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/friends.bundle.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
   </div>
 </MainGridLayout>

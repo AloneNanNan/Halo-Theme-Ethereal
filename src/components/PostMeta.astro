@@ -27,20 +27,21 @@ const className = Astro.props.class;
     th:if="${post.spec.pinned == true}"
   >
     <span class="icon-[material-symbols--pinboard] text-xl leading-none"></span>
-    <span class="text-sm leading-none" th:text="#{post.pinned}">Pinned</span>
+    <span class="text-sm leading-none" th:text="#{post.pinned}">
+      Pinned
+    </span>
   </div>
 
   <div class="flex items-center" hidden={hideDate}>
     <div class="meta-icon">
-      <span
-        class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"
-      ></span>
+      <span class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"></span>
     </div>
     <span
       class="text-sm font-medium text-50"
       th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
-      >2026-01-01</span
     >
+      2026-01-01
+    </span>
   </div>
 
   <div
@@ -49,21 +50,19 @@ const className = Astro.props.class;
     hidden={hideUpdateDate}
   >
     <div class="meta-icon">
-      <span
-        class="icon-[material-symbols--edit-calendar-outline-rounded] text-xl"
-      ></span>
+      <span class="icon-[material-symbols--edit-calendar-outline-rounded] text-xl"></span>
     </div>
     <span
       class="text-sm font-medium text-50"
       th:text="${#dates.format(post.status.lastModifyTime, 'yyyy-MM-dd')}"
-      >2026-01-01</span
     >
+      2026-01-01
+    </span>
   </div>
 
   <div class="flex items-center" th:if="${not #lists.isEmpty(post.categories)}">
     <div class="meta-icon">
-      <span class="icon-[material-symbols--book-2-outline-rounded] text-xl"
-      ></span>
+      <span class="icon-[material-symbols--book-2-outline-rounded] text-xl"></span>
     </div>
     <div class="flex flex-row flex-nowrap items-center">
       <span
@@ -72,13 +71,17 @@ const className = Astro.props.class;
       >
         <span
           th:if="${categoryStat.index > 0}"
-          class="mx-1.5 text-sm text-(--meta-divider) transition">/</span
+          class="mx-1.5 text-sm text-(--meta-divider) transition"
         >
+          /
+        </span>
         <a
           th:href="@{${category.status.permalink}}"
           class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
-          th:text="${category.spec.displayName}">Category</a
+          th:text="${category.spec.displayName}"
         >
+          Category
+        </a>
       </span>
     </div>
   </div>
@@ -97,13 +100,17 @@ const className = Astro.props.class;
       <span class="contents" th:each="tag, tagStat : ${post.tags}">
         <span
           th:if="${tagStat.index > 0}"
-          class="mx-1.5 text-sm text-(--meta-divider) transition">/</span
+          class="mx-1.5 text-sm text-(--meta-divider) transition"
         >
+          /
+        </span>
         <a
           th:href="@{${tag.status.permalink}}"
           class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
-          th:text="${tag.spec.displayName}">Tag</a
+          th:text="${tag.spec.displayName}"
         >
+          Tag
+        </a>
       </span>
     </div>
   </div>

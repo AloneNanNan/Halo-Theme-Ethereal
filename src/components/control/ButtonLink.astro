@@ -27,23 +27,19 @@ const { badge, url, label } = Astro.props;
         `}
   >
     <div class="flex items-center justify-between relative mr-2">
-      <div
-        class="overflow-hidden text-left whitespace-nowrap overflow-ellipsis"
-      >
+      <div class="overflow-hidden text-left whitespace-nowrap overflow-ellipsis">
         <slot />
       </div>
-      {
-        badge !== undefined && badge !== null && badge !== "" && (
-          <div
-            class="transition px-2 h-7 ml-4 min-w-8 rounded-lg text-sm font-bold
+      {badge !== undefined && badge !== null && badge !== "" && (
+        <div
+          class="transition px-2 h-7 ml-4 min-w-8 rounded-lg text-sm font-bold
                     text-(--btn-content) dark:text-(--deep-text)
                     bg-(--btn-regular-bg) dark:bg-(--primary)
                     flex items-center justify-center"
-          >
-            {badge}
-          </div>
-        )
-      }
+        >
+          {badge}
+        </div>
+      )}
     </div>
   </button>
 </a>

@@ -49,8 +49,7 @@ import PageHeader from "../components/control/PageHeader.astro";
     th:if="${wishFinder == null}"
     class="card-base onload-animation mb-4 px-6 py-16 text-center text-50"
   >
-    <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
-    ></span>
+    <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"></span>
     <p class="mt-4 text-sm" th:text="#{page.wishes.notInstalled}">
       请先安装并启用「心愿便签」插件（Wishboard）后再访问本页面
     </p>
@@ -99,12 +98,10 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:attr="data-date=${wishesDate},data-name-a=${wishesNameA},data-name-b=${wishesNameB}"
             slot="right"
           >
-            <span
-              class="wish-days-icon icon-[material-symbols--favorite-rounded]"
-            ></span>
-            <span id="wishDaysContent"
-              >在一起 <span class="wish-days-num">0</span> 天</span
-            >
+            <span class="wish-days-icon icon-[material-symbols--favorite-rounded]"></span>
+            <span id="wishDaysContent">
+              在一起 <span class="wish-days-num">0</span> 天
+            </span>
           </div>
         </PageHeader>
       </div>
@@ -129,11 +126,14 @@ import PageHeader from "../components/control/PageHeader.astro";
               th:data-wish-filter="${type.spec.slug}"
               th:data-wish-name="${type.spec.displayName}"
             >
-              <span th:text="${type.spec.displayName}">类型</span><span
+              <span th:text="${type.spec.displayName}">类型</span>
+              <span
                 class="seg-cnt"
                 th:with="typeCount=${wishFinder.countByType(type.spec.slug)}"
-                th:text="${typeCount}">0</span
+                th:text="${typeCount}"
               >
+                0
+              </span>
             </button>
           </div>
         </div>
@@ -158,21 +158,27 @@ import PageHeader from "../components/control/PageHeader.astro";
             </div>
             <span
               class="wish-card-label"
-              th:text="${typeMap[wish.spec.type] ?: wish.spec.type}">类型</span
+              th:text="${typeMap[wish.spec.type] ?: wish.spec.type}"
             >
+              类型
+            </span>
           </div>
           <div class="wish-card-body">
             <span th:text="${wish.spec.content}">内容</span>
             <em
               th:if="${wish.spec.status == 'doing'}"
               class="wish-status-text doing"
-              th:text="#{page.wishes.statusDoing}">进行中</em
+              th:text="#{page.wishes.statusDoing}"
             >
+              进行中
+            </em>
             <em
               th:if="${wish.spec.status == 'done'}"
               class="wish-status-text"
-              th:text="#{page.wishes.statusDone}">已达成</em
+              th:text="#{page.wishes.statusDone}"
             >
+              已达成
+            </em>
           </div>
           <p
             th:if="${not #strings.isEmpty(wish.spec.doneNote)}"
@@ -199,14 +205,16 @@ import PageHeader from "../components/control/PageHeader.astro";
             <span
               class="wish-card-nick"
               th:text="${wish.spec.anonymous ? #messages.msg('page.wishes.anonymous') : (wish.spec.nickname ?: #messages.msg('page.wishes.anonymous'))}"
-              >匿名</span
             >
+              匿名
+            </span>
             <time
               th:if="${wish.spec.createdAt != null}"
               th:datetime="${wish.spec.createdAt}"
               th:text="${#temporals.format(wish.spec.createdAt, 'yyyy/M/d')}"
-              >2026/1/1</time
             >
+              2026/1/1
+            </time>
           </div>
         </article>
 
@@ -242,38 +250,46 @@ import PageHeader from "../components/control/PageHeader.astro";
             autocomplete="off"
             spellcheck="false"
           />
-          <span class="wish-char-counter" id="wishCharCounter">0/200</span>
+          <span class="wish-char-counter" id="wishCharCounter">
+            0/200
+          </span>
           <div class="wish-bar-colors" id="wishColorPicker">
             <span
               class="wish-bar-color active"
               data-wish-color="green"
               title="绿色"
-              th:title="#{page.wishes.colorGreen}"></span>
+              th:title="#{page.wishes.colorGreen}"
+            ></span>
             <span
               class="wish-bar-color"
               data-wish-color="yellow"
               title="黄色"
-              th:title="#{page.wishes.colorYellow}"></span>
+              th:title="#{page.wishes.colorYellow}"
+            ></span>
             <span
               class="wish-bar-color"
               data-wish-color="purple"
               title="紫色"
-              th:title="#{page.wishes.colorPurple}"></span>
+              th:title="#{page.wishes.colorPurple}"
+            ></span>
             <span
               class="wish-bar-color"
               data-wish-color="pink"
               title="粉色"
-              th:title="#{page.wishes.colorPink}"></span>
+              th:title="#{page.wishes.colorPink}"
+            ></span>
             <span
               class="wish-bar-color"
               data-wish-color="blue"
               title="蓝色"
-              th:title="#{page.wishes.colorBlue}"></span>
+              th:title="#{page.wishes.colorBlue}"
+            ></span>
             <span
               class="wish-bar-color"
               data-wish-color="orange"
               title="橙色"
-              th:title="#{page.wishes.colorOrange}"></span>
+              th:title="#{page.wishes.colorOrange}"
+            ></span>
           </div>
           <button type="button" class="wish-bar-type" id="wishTypeBtn">
             <span id="wishTypeLabel">心愿</span>
@@ -283,14 +299,18 @@ import PageHeader from "../components/control/PageHeader.astro";
             type="button"
             class="wish-bar-btn polish"
             id="wishPolishBtn"
-            th:text="#{page.wishes.polish}">润色</button
+            th:text="#{page.wishes.polish}"
           >
+            润色
+          </button>
           <button
             type="button"
             class="wish-bar-btn"
             id="wishSubmitBtn"
-            th:text="#{page.wishes.submit}">发布</button
+            th:text="#{page.wishes.submit}"
           >
+            发布
+          </button>
         </div>
       </div>
     </div>
@@ -374,9 +394,9 @@ import PageHeader from "../components/control/PageHeader.astro";
       });
     })();
   </script>
-
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wishes.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

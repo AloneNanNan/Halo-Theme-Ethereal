@@ -89,11 +89,9 @@ const {
 >
   <slot slot="head" name="head" />
 
-  {
-    /* 小组件分派片段库：全站只渲染一次（定义处带 th:if="false" 守卫，不产生输出），
+  {/* 小组件分派片段库：全站只渲染一次（定义处带 th:if="false" 守卫，不产生输出），
        各侧栏用 th:replace="~{::widgetSwitch(${widget})}" 引用，避免每个引用处都内联
-       一份 60 KB 的小组件标记——详见 WidgetSwitch.astro 顶部注释。位置在 body 内即可 */
-  }
+       一份 60 KB 的小组件标记——详见 WidgetSwitch.astro 顶部注释。位置在 body 内即可 */}
   <WidgetSwitch />
 
   <div
@@ -118,19 +116,17 @@ const {
     <!-- 首页单图 Banner 预加载：imagesrcset/imagesizes 与下方 <img> 复用同一表达式
          （rawSrcset），保证预加载档位与实际选中一致；provider 非 none/halo 时为 null →
          回退单条预加载。 -->
-    {
-      isHomePage && (
-        <link
-          rel="preload"
-          as="image"
-          fetchpriority="high"
-          imagesizes="100vw"
-          th:if="${mode == 'single' and !isVideo and !mobileActive}"
-          th:href="${srcX}"
-          th:attr="imagesrcset=${rawSrcset}"
-        />
-      )
-    }
+    {isHomePage && (
+      <link
+        rel="preload"
+        as="image"
+        fetchpriority="high"
+        imagesizes="100vw"
+        th:if="${mode == 'single' and !isVideo and !mobileActive}"
+        th:href="${srcX}"
+        th:attr="imagesrcset=${rawSrcset}"
+      />
+    )}
     <!-- 注意：下方三个 #banner 分支（单图 / 视频 / 轮播）由互斥的 th:if 保证
        同一时刻仅一个渲染，id 才不冲突；新增/调整分支条件时务必保持互斥 -->
     <div
@@ -138,10 +134,7 @@ const {
       th:if="${mode == 'single' and !isVideo}"
       class="banner-reveal relative h-full w-full overflow-hidden opacity-0 scale-105 transition duration-[var(--dur-banner,700ms)]"
     >
-      <div
-        class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"
-      >
-      </div>
+      <div class="pointer-events-none absolute inset-0 bg-opacity-50 transition dark:bg-black/10"></div>
       <!-- 移动端独立来源开启时两端都可能被隐藏：首图按 mobileActive 降级 lazy，
          由 banner-src-switch.js 在激活时升级 eager，避免隐藏端下载 -->
       <!-- 全宽 Banner 显式输出 srcset/sizes：Halo 2.22+ 会对无 srcset 的 <img>
@@ -177,7 +170,8 @@ const {
         muted
         loop
         playsinline
-        tabindex="-1"></video>
+        tabindex="-1"
+      ></video>
       <button
         id="banner-play-btn"
         th:if="${theme.config?.style?.bannerStyle?.showPauseBtn == null or theme.config?.style?.bannerStyle?.showPauseBtn}"
@@ -185,8 +179,7 @@ const {
         aria-label="暂停播放"
         class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
       >
-        <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
-        ></span>
+        <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"></span>
       </button>
     </div>
     <div
@@ -250,7 +243,8 @@ const {
           loop
           playsinline
           preload="none"
-          tabindex="-1"></video>
+          tabindex="-1"
+        ></video>
         <button
           id="banner-play-btn-mobile"
           th:if="${theme.config?.style?.bannerStyle?.showPauseBtn == null or theme.config?.style?.bannerStyle?.showPauseBtn}"
@@ -258,8 +252,7 @@ const {
           aria-label="暂停播放"
           class="absolute bottom-24 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/85 transition-colors hover:bg-black/70 active:bg-black/80"
         >
-          <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"
-          ></span>
+          <span class="icon-[material-symbols--pause-rounded] text-[1.25rem]"></span>
         </button>
       </div>
       <div
@@ -303,8 +296,7 @@ const {
         class="font-bold text-white"
         th:style="'--banner-title-size: ' + (${theme.config?.style?.bannerText?.titleFontSize ?: '3.5rem'}) + '; text-shadow: 0 2px 15px rgba(0,0,0,0.5)'"
         th:text="${theme.config?.style?.bannerText?.title}"
-      >
-      </h1>
+      ></h1>
       <div
         id="banner-subtitle-wrapper"
         th:if="${theme.config?.style?.bannerText?.subtitles != null}"
@@ -314,20 +306,22 @@ const {
         <span
           id="banner-subtitle"
           class="text-white/90"
-          style="text-shadow: 0 1px 8px rgba(0,0,0,0.4)">&nbsp;</span
+          style="text-shadow: 0 1px 8px rgba(0,0,0,0.4)"
         >
+          &nbsp;
+        </span>
         <!-- 光标高度跟随副标题字号：CSS 从 wrapper 上的 --banner-subtitle-size 取值 -->
         <span
           id="banner-cursor"
           th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect != 'drop'}"
-          class="inline-block w-[2px] bg-white/80"></span>
+          class="inline-block w-[2px] bg-white/80"
+        ></span>
         <div
           id="banner-subtitles-data"
           style="display:none"
           aria-hidden="true"
           th:text="${theme.config?.style?.bannerText?.subtitles}"
-        >
-        </div>
+        ></div>
       </div>
       <!-- 标题/副标题下方的链接图标行（bannerText.links，仅首页可见）。#banner-overlay 自身
            pointer-events:none，本行可点性由 #banner-links 恢复、三类隐藏态下一并禁用；
@@ -349,11 +343,14 @@ const {
         >
           <span
             th:if="${link.icon != null and not #strings.isEmpty(link.icon.value)}"
-            th:utext="${link.icon.value}"></span>
+            th:utext="${link.icon.value}"
+          ></span>
           <span
             th:if="${not #strings.isEmpty(link.name)}"
-            th:text="${link.name}">Link</span
+            th:text="${link.name}"
           >
+            Link
+          </span>
         </a>
       </div>
     </div>
@@ -367,9 +364,7 @@ const {
       aria-label="向下滚动查看内容"
       class="scroll-down-indicator"
     >
-      <span
-        class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"
-      ></span>
+      <span class="scroll-down-icon icon-[material-symbols--keyboard-arrow-down-rounded]"></span>
     </button>
   </div>
 
@@ -430,7 +425,6 @@ const {
       window.__etherealRevealBanners();
     })();
   </script>
-
   <div id="main-panel-wrapper" class="pointer-events-none absolute z-30 w-full">
     <div
       class="pointer-events-none relative mx-auto w-full xl:w-[92vw] max-w-(--page-width)"
@@ -459,15 +453,12 @@ const {
           rel="noopener"
           class="group onload-animation absolute -top-13 right-4 flex h-9 items-center justify-center rounded-full bg-black/60 px-3 transition-all hover:bg-black/70 hover:pr-9 active:bg-black/80"
         >
-          <span
-            class="icon-[material-symbols--copyright-outline-rounded] mr-1 text-[1.25rem] text-white/75"
-          ></span>
+          <span class="icon-[material-symbols--copyright-outline-rounded] mr-1 text-[1.25rem] text-white/75"></span>
           <span
             class="text-xs text-white/75"
-            th:text="${theme.config?.style?.bannerStyle?.credit?.text}"></span>
-          <span
-            class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"
+            th:text="${theme.config?.style?.bannerStyle?.credit?.text}"
           ></span>
+          <span class="icon-[fa6-solid--arrow-up-right-from-square] absolute right-4 text-[0.75rem] text-(--primary) opacity-0 transition group-hover:opacity-100"></span>
         </a>
       </div>
 
@@ -482,9 +473,7 @@ const {
           id="main-column"
           class="col-span-2 min-w-0 md:col-span-1 md:row-start-1 md:col-start-2 flex flex-col gap-4"
         >
-          <div
-            th:if="${theme.config?.layout?.pageLayout?.categoryNav?.enable == true}"
-          >
+          <div th:if="${theme.config?.layout?.pageLayout?.categoryNav?.enable == true}">
             <CategoryBar />
           </div>
           <main id="swup-container" class="transition-swup-fade min-w-0">
@@ -529,40 +518,38 @@ const {
   </div>
 
   <div id="toc-container">
-    {
-      showToc ? (
+    {showToc ? (
+      <div
+        class="absolute z-0 hidden w-full xl:block"
+        th:classappend="${theme.config?.layout?.pageLayout?.layoutMode != 'two-column' ? 'xl:!hidden' : ''}"
+      >
         <div
-          class="absolute z-0 hidden w-full xl:block"
-          th:classappend="${theme.config?.layout?.pageLayout?.layoutMode != 'two-column' ? 'xl:!hidden' : ''}"
+          class="relative mx-auto max-w-(--page-width)"
+          th:with="tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
         >
           <div
-            class="relative mx-auto max-w-(--page-width)"
-            th:with="tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
+            id="toc-wrapper"
+            th:if="${tocEnabled}"
+            class="absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
           >
             <div
-              id="toc-wrapper"
-              th:if="${tocEnabled}"
-              class="absolute -right-(--toc-width) top-0 hidden w-(--toc-width) items-center transition lg:block"
+              id="toc-inner-wrapper"
+              data-toc-scroll
+              class="hide-scrollbar fixed top-14 h-[calc(100vh-20rem)] w-(--toc-width) overflow-x-hidden overflow-y-scroll"
             >
-              <div
-                id="toc-inner-wrapper"
-                data-toc-scroll
-                class="hide-scrollbar fixed top-14 h-[calc(100vh-20rem)] w-(--toc-width) overflow-x-hidden overflow-y-scroll"
-              >
-                <div id="toc" class="transition-swup-fade h-full w-full">
-                  <div class="h-8 w-full" />
-                  <TOC showEmptyMessage={false} />
-                  <div class="h-8 w-full" />
-                </div>
+              <div id="toc" class="transition-swup-fade h-full w-full">
+                <div class="h-8 w-full" />
+                <TOC showEmptyMessage={false} />
+                <div class="h-8 w-full" />
               </div>
             </div>
-            <div id="toc" th:unless="${tocEnabled}" />
           </div>
+          <div id="toc" th:unless="${tocEnabled}" />
         </div>
-      ) : (
-        <div id="toc" />
-      )
-    }
+      </div>
+    ) : (
+      <div id="toc" />
+    )}
   </div>
 
   <!-- 移动端目录弹窗：swup 容器，换页整容器替换 → 弹窗自动关闭、TOC 重建。卡片恒渲染，
@@ -573,36 +560,34 @@ const {
     th:with="tocBtnEnabled=${theme.config?.layout?.floatingButtons == null or theme.config?.layout?.floatingButtons?.enable_toc}, tocEnabled=${theme.config?.post == null or theme.config?.post?.toc?.enable_toc == null or theme.config?.post?.toc?.enable_toc}"
     aria-hidden="true"
   >
-    {
-      showToc ? (
-        <div th:if="${tocBtnEnabled and tocEnabled}" th:remove="tag">
-          <div
-            class="toc-popup-card card-base pointer-events-auto"
-            role="dialog"
-            aria-modal="false"
-            th:aria-label="#{widget.toc.title}"
-          >
-            <div class="shrink-0">
-              <h3
-                class="relative mb-2 ml-8 mt-4 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
-                th:text="#{widget.toc.title}"
-              >
-                目录
-              </h3>
-            </div>
-            <div
-              id="toc-popup-scroll"
-              data-toc-scroll
-              class="toc-popup-scroll hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3"
+    {showToc ? (
+      <div th:if="${tocBtnEnabled and tocEnabled}" th:remove="tag">
+        <div
+          class="toc-popup-card card-base pointer-events-auto"
+          role="dialog"
+          aria-modal="false"
+          th:aria-label="#{widget.toc.title}"
+        >
+          <div class="shrink-0">
+            <h3
+              class="relative mb-2 ml-8 mt-4 text-lg font-bold text-neutral-900 transition before:absolute before:left-[-16px] before:top-1/2 before:h-4 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
+              th:text="#{widget.toc.title}"
             >
-              <TOC showEmptyMessage={true} />
-            </div>
+              目录
+            </h3>
+          </div>
+          <div
+            id="toc-popup-scroll"
+            data-toc-scroll
+            class="toc-popup-scroll hide-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3"
+          >
+            <TOC showEmptyMessage={true} />
           </div>
         </div>
-      ) : (
-        <div />
-      )
-    }
+      </div>
+    ) : (
+      <div />
+    )}
   </div>
 
   <!-- Banner 脚本：所有页面均加载（脚本自身有全局守卫，非首页无副作用），
@@ -611,32 +596,38 @@ const {
     <script
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-responsive.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
     <script
       th:if="${mode == 'carousel' or (mobileActive and mobileMode == 'carousel')}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-carousel.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
     <script
       th:if="${(mode == 'single' and isVideo) or (mobileActive and mobileIsVideo)}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-media.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
     <script
       th:if="${mobileActive}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-src-switch.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
     <script
       th:if="${theme.config?.style?.bannerText == null or theme.config?.style?.bannerText?.subtitleEffect == null or theme.config?.style?.bannerText?.subtitleEffect == 'typewriter'}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-typewriter.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
     <script
       th:if="${theme.config?.style?.bannerText != null and theme.config?.style?.bannerText?.subtitleEffect == 'drop'}"
       src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/banner-drop.js?v=${ASSET_VERSION}`}
       defer
-      is:inline></script>
+      is:inline
+    ></script>
   </div>
 
   <script is:inline>
@@ -657,7 +648,6 @@ const {
       });
     })();
   </script>
-
   <script
     th:if="${theme.config?.extendPages?.friends?.enable_random_fish == null || theme.config?.extendPages?.friends?.enable_random_fish}"
     is:inline

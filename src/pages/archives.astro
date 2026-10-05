@@ -114,10 +114,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
               2026
             </div>
             <div class="w-[15%] shrink-0 md:w-[10%]">
-              <div
-                class="z-50 mx-auto h-3 w-3 rounded-full bg-none outline-3 -outline-offset-2 outline-(--primary)"
-              >
-              </div>
+              <div class="z-50 mx-auto h-3 w-3 rounded-full bg-none outline-3 -outline-offset-2 outline-(--primary)"></div>
             </div>
             <div
               class="flex-1 text-left text-50 transition"
@@ -148,13 +145,8 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
                   04-29
                 </div>
 
-                <div
-                  class="dash-line relative flex h-full w-[15%] shrink-0 items-center md:w-[10%]"
-                >
-                  <div
-                    class="z-50 mx-auto h-1 w-1 rounded bg-(--btn-regular-bg) outline-4 outline-(--card-bg) transition-all group-hover:h-5 group-hover:bg-(--primary) group-hover:outline-(--btn-plain-bg-hover) group-active:outline-(--btn-plain-bg-active)"
-                  >
-                  </div>
+                <div class="dash-line relative flex h-full w-[15%] shrink-0 items-center md:w-[10%]">
+                  <div class="z-50 mx-auto h-1 w-1 rounded bg-(--btn-regular-bg) outline-4 outline-(--card-bg) transition-all group-hover:h-5 group-hover:bg-(--primary) group-hover:outline-(--btn-plain-bg-hover) group-active:outline-(--btn-plain-bg-active)"></div>
                 </div>
 
                 <div
@@ -164,13 +156,12 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
                   Post
                 </div>
 
-                <div
-                  class="hidden shrink-0 overflow-hidden overflow-ellipsis whitespace-nowrap text-left text-sm text-30 transition md:block md:w-[15%]"
-                >
+                <div class="hidden shrink-0 overflow-hidden overflow-ellipsis whitespace-nowrap text-left text-sm text-30 transition md:block md:w-[15%]">
                   <span
                     th:each="tag : ${post.tags}"
                     th:text="${'#' + tag.spec.displayName + ' '}"
-                    >#Tag
+                  >
+                    #Tag
                   </span>
                 </div>
               </div>
@@ -183,9 +174,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         th:if="${#lists.isEmpty(archives.items)}"
         class="flex flex-col items-center justify-center gap-3 py-16 text-center"
       >
-        <span
-          class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"
-        ></span>
+        <span class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"></span>
         <div class="text-sm text-50" th:text="#{page.archives.empty}">
           暂无文章
         </div>
@@ -198,9 +187,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         hidden
         class="flex flex-col items-center justify-center gap-3 py-16 text-center"
       >
-        <span
-          class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"
-        ></span>
+        <span class="icon-[material-symbols--inbox-outline-rounded] text-4xl text-30"></span>
         <div class="text-sm text-50" th:text="#{page.archives.emptyFiltered}">
           该筛选条件下暂无文章
         </div>
@@ -269,11 +256,11 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
       document.addEventListener("astro:page-load", run);
     })();
   </script>
-
   <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
        Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

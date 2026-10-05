@@ -21,16 +21,12 @@ import { exifHasDataExpr } from "../utils/photo-exif";
   <article class="onload-animation mb-4">
     <section class="card-base overflow-hidden">
       <div class="px-6 py-6 md:px-9">
-        <div
-          class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <a
             th:href="@{${backUrl}}"
             class="btn-card no-card-border h-10 w-fit rounded-lg px-3 text-sm font-bold text-75"
           >
-            <span
-              class="icon-[material-symbols--arrow-back-rounded] mr-1 text-xl"
-            ></span>
+            <span class="icon-[material-symbols--arrow-back-rounded] mr-1 text-xl"></span>
             <span th:text="#{page.photos.backToGallery}">Back to gallery</span>
           </a>
 
@@ -41,21 +37,17 @@ import { exifHasDataExpr } from "../utils/photo-exif";
             class="btn-card no-card-border h-10 w-fit rounded-lg px-3 text-sm font-bold text-75 sm:shrink-0"
             th:aria-label="#{page.photos.openImage}"
           >
-            <span
-              class="icon-[material-symbols--open-in-new-rounded] mr-1 text-xl"
-            ></span>
+            <span class="icon-[material-symbols--open-in-new-rounded] mr-1 text-xl"></span>
             <span th:text="#{page.photos.openImage}">Open full image</span>
           </a>
         </div>
 
-        <div
-          class="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold uppercase text-30"
-        >
+        <div class="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold uppercase text-30">
           <span th:text="#{page.photos.collection}">Collection</span>
           <span class="text-20">/</span>
-          <span th:text="#{page.photos.position(${position}, ${total})}"
-            >1 / 1</span
-          >
+          <span th:text="#{page.photos.position(${position}, ${total})}">
+            1 / 1
+          </span>
         </div>
 
         <h1
@@ -78,13 +70,10 @@ import { exifHasDataExpr } from "../utils/photo-exif";
             th:if="${not #strings.isEmpty(group) or not #strings.isEmpty(photo.spec.groupName)}"
             class="inline-flex h-8 items-center rounded-lg bg-(--btn-regular-bg) px-3 text-xs font-bold text-(--btn-content)"
           >
-            <span
-              class="icon-[material-symbols--folder-outline-rounded] mr-1.5 text-lg text-(--primary)"
-            ></span>
-            <span
-              th:text="${not #strings.isEmpty(group) ? group : photo.spec.groupName}"
-              >Group</span
-            >
+            <span class="icon-[material-symbols--folder-outline-rounded] mr-1.5 text-lg text-(--primary)"></span>
+            <span th:text="${not #strings.isEmpty(group) ? group : photo.spec.groupName}">
+              Group
+            </span>
           </span>
           <span
             th:if="${photo.exif != null and photo.exif.dateTimeOriginal != null}"
@@ -154,9 +143,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
             th:href="@{${photoUrl.detail(prev)}}"
             class="btn-card no-card-border min-h-18 justify-start! gap-3 rounded-xl p-3 text-left"
           >
-            <span
-              class="icon-[material-symbols--chevron-left-rounded] text-2xl text-(--primary)"
-            ></span>
+            <span class="icon-[material-symbols--chevron-left-rounded] text-2xl text-(--primary)"></span>
             <img
               alt=""
               th:src="${not #strings.isEmpty(prev.spec.cover) ? prev.spec.cover : prev.spec.url}"
@@ -212,9 +199,7 @@ import { exifHasDataExpr } from "../utils/photo-exif";
               loading="lazy"
               class="h-12 w-16 shrink-0 rounded-lg object-cover sm:order-2"
             />
-            <span
-              class="icon-[material-symbols--chevron-right-rounded] text-2xl text-(--primary) sm:order-3"
-            ></span>
+            <span class="icon-[material-symbols--chevron-right-rounded] text-2xl text-(--primary) sm:order-3"></span>
           </a>
           <div
             th:unless="${next != null}"
@@ -269,7 +254,9 @@ import { exifHasDataExpr } from "../utils/photo-exif";
       评论
     </h2>
     <Fragment
-      set:html={'<halo:comment group="core.halo.run" kind="Photo" th:attr="name=${photo.metadata.name}" />'}
+      set:html={
+        '<halo:comment group="core.halo.run" kind="Photo" th:attr="name=${photo.metadata.name}" />'
+      }
     />
   </div>
 </MainGridLayout>

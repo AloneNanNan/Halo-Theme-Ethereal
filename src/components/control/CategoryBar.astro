@@ -35,8 +35,10 @@
       <span
         class="pill-count"
         th:with="totalPosts = ${postFinder.list({page: 1, size: 1}).total}"
-        th:text="${totalPosts}">0</span
+        th:text="${totalPosts}"
       >
+        0
+      </span>
     </a>
 
     <div class="category-divider shrink-0" aria-hidden="true"></div>
@@ -52,7 +54,9 @@
           data-no-swup
         >
           <span th:text="${category.spec.displayName}">Category</span>
-          <span class="pill-count" th:text="${category.postCount ?: 0}">0</span>
+          <span class="pill-count" th:text="${category.postCount ?: 0}">
+            0
+          </span>
         </a>
       </div>
     </div>
@@ -67,8 +71,7 @@
       data-no-swup
     >
       <span th:text="#{common.more}">更多</span>
-      <span class="icon-[material-symbols--chevron-right-rounded] text-sm"
-      ></span>
+      <span class="icon-[material-symbols--chevron-right-rounded] text-sm"></span>
     </a>
   </div>
 </div>

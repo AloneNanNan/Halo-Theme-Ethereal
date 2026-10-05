@@ -33,8 +33,7 @@ const htmlContentClass = `${contentClass} overflow-y-auto overflow-x-hidden`;
       class={htmlContentClass}
       th:style="|max-height: ${theme.config?.sidebar?.announcement?.content_height ?: 640}px|"
       th:utext="${announcementContent}"
-    >
-    </div>
+    ></div>
     <div
       th:unless="${theme.config?.sidebar?.announcement?.enable_html == true}"
       class={contentClass}
@@ -51,8 +50,7 @@ const htmlContentClass = `${contentClass} overflow-y-auto overflow-x-hidden`;
         th:attr="rel=${theme.config?.sidebar?.announcement?.link?.external != false ? 'noopener noreferrer' : ''}"
         class="btn-regular rounded-lg px-3 py-1.5 text-sm font-medium active:scale-95 transition-transform"
         th:text="${theme.config?.sidebar?.announcement?.link?.text ?: '了解更多'}"
-      >
-      </a>
+      ></a>
 
       <button
         th:if="${theme.config?.sidebar?.announcement?.closable != false}"
@@ -61,9 +59,7 @@ const htmlContentClass = `${contentClass} overflow-y-auto overflow-x-hidden`;
         th:attr="aria-label=#{widget.announcement.closeLabel}"
         aria-label="关闭公告"
       >
-        <span
-          class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
-        ></span>
+        <span class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"></span>
       </button>
     </div>
   </div>

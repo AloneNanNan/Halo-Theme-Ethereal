@@ -19,8 +19,7 @@ const className = Astro.props.class;
   <div
     class="navbar-blur absolute left-0 right-0 top-0 h-[4.5rem] rounded-(--radius-large) !rounded-t-none transition"
     style="max-width: var(--page-width); margin: 0 auto;"
-  >
-  </div>
+  ></div>
 
   <!-- 内容层：无 backdrop-filter，z-index 高于模糊层，背景透明（露下层模糊/纯色）；
        id="navbar-card" 供欢迎弹窗等按导航栏卡片实际边缘（max-w 居中后）对齐 -->
@@ -39,9 +38,7 @@ const className = Astro.props.class;
       th:aria-label="${theme.config?.layout?.mobileMenu?.showTitle == false ? site.title : null}"
       class="btn-plain scale-animation h-[3.25rem] rounded-lg px-5 font-bold active:scale-95"
     >
-      <div
-        class="site-title flex flex-row items-center text-md text-(--primary)"
-      >
+      <div class="site-title flex flex-row items-center text-md text-(--primary)">
         <SiteLogo />
       </div>
     </a>
@@ -73,7 +70,8 @@ const className = Astro.props.class;
                 />
                 <span
                   th:if="${#strings.startsWith(menuIcon, '<svg')}"
-                  th:utext="${menuIcon}"></span>
+                  th:utext="${menuIcon}"
+                ></span>
               </span>
               <span th:text="${menuItem.status.displayName}">Menu</span>
               <span
@@ -109,21 +107,20 @@ const className = Astro.props.class;
                 />
                 <span
                   th:if="${#strings.startsWith(menuIcon, '<svg')}"
-                  th:utext="${menuIcon}"></span>
+                  th:utext="${menuIcon}"
+                ></span>
               </span>
               <span
                 class="font-medium text-(--primary) truncate"
-                th:text="${menuItem.status.displayName}">概览</span
+                th:text="${menuItem.status.displayName}"
               >
-              <span
-                class="text-xs text-black/40 dark:text-white/40 flex-shrink-0"
-                >概览</span
-              >
+                概览
+              </span>
+              <span class="text-xs text-black/40 dark:text-white/40 flex-shrink-0">
+                概览
+              </span>
             </a>
-            <div
-              class="touch-only my-1 border-t border-black/10 dark:border-white/10"
-            >
-            </div>
+            <div class="touch-only my-1 border-t border-black/10 dark:border-white/10"></div>
             <a
               th:each="childItem : ${menuItem.children}"
               th:with="childIcon = ${#annotations.get(childItem, 'icon')}"
@@ -143,12 +140,15 @@ const className = Astro.props.class;
                   />
                   <span
                     th:if="${#strings.startsWith(childIcon, '<svg')}"
-                    th:utext="${childIcon}"></span>
+                    th:utext="${childIcon}"
+                  ></span>
                 </span>
                 <span
                   class="font-medium text-black/75 dark:text-white/75 truncate"
-                  th:text="${childItem.status.displayName}">子菜单</span
+                  th:text="${childItem.status.displayName}"
                 >
+                  子菜单
+                </span>
               </span>
               <span
                 th:if="${childItem.spec.target?.value == '_blank'}"
@@ -180,8 +180,7 @@ const className = Astro.props.class;
         id="display-settings-switch"
         type="button"
       >
-        <span class="icon-[material-symbols--palette-outline] text-[1.25rem]"
-        ></span>
+        <span class="icon-[material-symbols--palette-outline] text-[1.25rem]"></span>
       </button>
       <span
         th:if="${theme.config?.layout?.mobileMenu?.enable_change_color_scheme == null || theme.config?.layout?.mobileMenu?.enable_change_color_scheme}"
@@ -198,8 +197,7 @@ const className = Astro.props.class;
         id="nav-menu-switch"
         type="button"
       >
-        <span class="icon-[material-symbols--menu-rounded] text-[1.25rem]"
-        ></span>
+        <span class="icon-[material-symbols--menu-rounded] text-[1.25rem]"></span>
       </button>
     </div>
 
@@ -218,4 +216,5 @@ const className = Astro.props.class;
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/navbar.js?v=${ASSET_VERSION}`}
   defer
-  is:inline></script>
+  is:inline
+></script>

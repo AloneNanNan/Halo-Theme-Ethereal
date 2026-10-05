@@ -105,89 +105,81 @@ import "../styles/about.css";
             th:switch="${sts?.status ?: 'online'}"
           >
             <span th:case="energetic" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--sun-fill] text-amber-500 status-spin"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--sun-fill] text-amber-500 status-spin"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.energetic) ? sts?.energetic : '元气满满'}"
-                >元气满满</span
               >
+                元气满满
+              </span>
             </span>
             <span th:case="emo" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--sad-fill] text-violet-400 status-float"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--sad-fill] text-violet-400 status-float"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.emo) ? sts?.emo : 'emo中'}"
-                >emo中</span
               >
+                emo中
+              </span>
             </span>
             <span th:case="study" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--book-2-fill] text-sky-500 status-drift"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--book-2-fill] text-sky-500 status-drift"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.study) ? sts?.study : '学习中'}"
-                >学习中</span
               >
+                学习中
+              </span>
             </span>
             <span th:case="busy" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--fire-fill] text-orange-500 status-wiggle"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--fire-fill] text-orange-500 status-wiggle"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.busy) ? sts?.busy : '忙碌中'}"
-                >忙碌中</span
               >
+                忙碌中
+              </span>
             </span>
             <span th:case="dnd" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--moon-fill] text-indigo-400 status-float"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--moon-fill] text-indigo-400 status-float"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.dnd) ? sts?.dnd : '请勿打扰'}"
-                >请勿打扰</span
               >
+                请勿打扰
+              </span>
             </span>
             <span th:case="sleep" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--moon-stars-fill] text-blue-500 status-pulse"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--moon-stars-fill] text-blue-500 status-pulse"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.sleep) ? sts?.sleep : '睡觉中'}"
-                >睡觉中</span
               >
+                睡觉中
+              </span>
             </span>
             <span th:case="away" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--cloud-fill] text-neutral-400 status-drift"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--cloud-fill] text-neutral-400 status-drift"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.away) ? sts?.away : '暂时离开'}"
-                >暂时离开</span
               >
+                暂时离开
+              </span>
             </span>
             <!-- 在线（默认分支） -->
             <span th:case="*" class="about-status-item">
-              <span
-                class="about-status-ico icon-[mingcute--leaf-fill] text-green-500 status-pulse"
-              ></span>
+              <span class="about-status-ico icon-[mingcute--leaf-fill] text-green-500 status-pulse"></span>
               <span
                 class="about-status-text"
                 th:text="${!#strings.isEmpty(sts?.online) ? sts?.online : '在线中'}"
-                >在线中</span
               >
+                在线中
+              </span>
             </span>
-            <span class="sr-only" th:text="#{profile.switchStatus}"
-              >切换当前状态</span
-            >
+            <span class="sr-only" th:text="#{profile.switchStatus}">
+              切换当前状态
+            </span>
           </button>
           <p
             class="about-status"
@@ -195,7 +187,8 @@ import "../styles/about.css";
           >
             <span
               class="icon-[material-symbols--bolt-rounded] about-ico"
-              aria-hidden="true"></span>
+              aria-hidden="true"
+            ></span>
             <span th:text="${ident?.status}">状态</span>
           </p>
         </div>
@@ -220,7 +213,8 @@ import "../styles/about.css";
               th:if="${act?.icon != null and !#strings.isEmpty(act?.icon?.value)}"
               class="about-ico about-ico--svg"
               aria-hidden="true"
-              th:utext="${act?.icon?.value}"></span>
+              th:utext="${act?.icon?.value}"
+            ></span>
             <span th:text="${act?.label}">查看 GitHub</span>
           </a>
         </div>
@@ -230,7 +224,8 @@ import "../styles/about.css";
            自定义身份卡、无 PageHeader，手动补一枚保持家族观感；纯装饰） -->
       <span
         class="about-hero-watermark icon-[material-symbols--person-rounded]"
-        aria-hidden="true"></span>
+        aria-hidden="true"
+      ></span>
     </section>
 
     <!-- ================= ② 顶部导航（长条菜单） =================
@@ -254,7 +249,8 @@ import "../styles/about.css";
           th:if="${navItem?.icon != null and !#strings.isEmpty(navItem?.icon?.value)}"
           class="about-ico about-ico--svg"
           aria-hidden="true"
-          th:utext="${navItem?.icon?.value}"></span>
+          th:utext="${navItem?.icon?.value}"
+        ></span>
         <span th:text="${navItem?.label}">个人资料</span>
       </a>
     </nav>
@@ -294,8 +290,7 @@ import "../styles/about.css";
               th:data-lines="${cfg?.intro?.intro}"
               th:text="${#strings.trim(cfg?.intro?.intro)}"
               th:if="${!#strings.isEmpty(cfg?.intro?.intro)}"
-            >
-            </div>
+            ></div>
           </section>
 
           <!-- 本人项目：数据 = 「项目集」插件（plugin metadata.name = portfolio），
@@ -305,9 +300,7 @@ import "../styles/about.css";
             class="card-base onload-animation"
             th:if="${cfg?.projects?.enable != false and projects != null and projects.items != null and not #lists.isEmpty(projects.items)}"
           >
-            <div
-              class="about-card-head-row flex flex-wrap items-center justify-between gap-3"
-            >
+            <div class="about-card-head-row flex flex-wrap items-center justify-between gap-3">
               <h2
                 class="about-card-title text-90"
                 th:text="#{page.about.projectsTitle}"
@@ -337,20 +330,24 @@ import "../styles/about.css";
                   <span
                     class="about-proj__desc"
                     th:if="${!#strings.isEmpty(project?.summary)}"
-                    th:text="${project?.summary}">说明</span
+                    th:text="${project?.summary}"
                   >
+                    说明
+                  </span>
                   <span
                     class="about-proj__tech"
                     th:if="${project?.techStacks != null and not #lists.isEmpty(project?.techStacks)}"
                   >
                     <span
                       th:each="tech : ${project?.techStacks}"
-                      th:text="${tech}"></span>
+                      th:text="${tech}"
+                    ></span>
                   </span>
                 </span>
                 <span
                   class="about-proj__arrow icon-[material-symbols--arrow-outward-rounded]"
-                  aria-hidden="true"></span>
+                  aria-hidden="true"
+                ></span>
               </a>
             </div>
           </section>
@@ -392,22 +389,28 @@ import "../styles/about.css";
                         th:text="${p?.spec?.publishTime != null
                           ? #dates.format(p?.spec?.publishTime, 'MM-dd')
                           : ''}"
-                        >09-18</span
                       >
+                        09-18
+                      </span>
                       <span
                         class="about-activity-kind"
-                        th:text="#{page.about.activityPost}">文章</span
+                        th:text="#{page.about.activityPost}"
                       >
+                        文章
+                      </span>
                     </span>
                     <span
                       class="about-activity-title"
-                      th:text="${p?.spec?.title}">标题</span
+                      th:text="${p?.spec?.title}"
                     >
+                      标题
+                    </span>
                   </span>
                   <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
                   <span
                     class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
-                    aria-hidden="true"></span>
+                    aria-hidden="true"
+                  ></span>
                 </a>
               </li>
               <li
@@ -430,30 +433,37 @@ import "../styles/about.css";
                         th:text="${m?.spec?.releaseTime != null
                           ? #dates.format(m?.spec?.releaseTime, 'MM-dd')
                           : ''}"
-                        >09-18</span
                       >
+                        09-18
+                      </span>
                       <span
                         class="about-activity-kind"
-                        th:text="#{page.about.activityMoment}">瞬间</span
+                        th:text="#{page.about.activityMoment}"
                       >
+                        瞬间
+                      </span>
                     </span>
                     <span
                       class="about-activity-title"
                       th:if="${!#strings.isEmpty(momentText)}"
-                      th:text="${momentText}">内容</span
+                      th:text="${momentText}"
                     >
+                      内容
+                    </span>
                     <!-- 无正文的瞬间（例如只发了一张图）没有可展示文本，退回 i18n 通用文案 -->
                     <span
                       class="about-activity-title"
                       th:unless="${!#strings.isEmpty(momentText)}"
                       th:text="#{page.about.momentFallback}"
-                      >分享了一条瞬间</span
                     >
+                      分享了一条瞬间
+                    </span>
                   </span>
                   <!-- 箭头放进 <a> 内部：悬停高亮（胶囊底）要把它一起包住 -->
                   <span
                     class="about-activity-arrow icon-[material-symbols--arrow-outward-rounded]"
-                    aria-hidden="true"></span>
+                    aria-hidden="true"
+                  ></span>
                 </a>
               </li>
             </ul>
@@ -489,9 +499,7 @@ import "../styles/about.css";
               </a>
             </div>
             <div class="about-skill-groups">
-              <div
-                th:if="${skillFrontend != null and not #lists.isEmpty(skillFrontend)}"
-              >
+              <div th:if="${skillFrontend != null and not #lists.isEmpty(skillFrontend)}">
                 <p
                   class="about-skill-group-title"
                   th:text="#{page.skills.frontend}"
@@ -507,14 +515,13 @@ import "../styles/about.css";
                       th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
                       class="about-ico about-ico--svg"
                       aria-hidden="true"
-                      th:utext="${skill?.icon?.value}"></span>
+                      th:utext="${skill?.icon?.value}"
+                    ></span>
                     <span th:text="${skill?.name}">技能</span>
                   </span>
                 </div>
               </div>
-              <div
-                th:if="${skillBackend != null and not #lists.isEmpty(skillBackend)}"
-              >
+              <div th:if="${skillBackend != null and not #lists.isEmpty(skillBackend)}">
                 <p
                   class="about-skill-group-title"
                   th:text="#{page.skills.backend}"
@@ -530,14 +537,13 @@ import "../styles/about.css";
                       th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
                       class="about-ico about-ico--svg"
                       aria-hidden="true"
-                      th:utext="${skill?.icon?.value}"></span>
+                      th:utext="${skill?.icon?.value}"
+                    ></span>
                     <span th:text="${skill?.name}">技能</span>
                   </span>
                 </div>
               </div>
-              <div
-                th:if="${skillDatabase != null and not #lists.isEmpty(skillDatabase)}"
-              >
+              <div th:if="${skillDatabase != null and not #lists.isEmpty(skillDatabase)}">
                 <p
                   class="about-skill-group-title"
                   th:text="#{page.skills.database}"
@@ -553,14 +559,13 @@ import "../styles/about.css";
                       th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
                       class="about-ico about-ico--svg"
                       aria-hidden="true"
-                      th:utext="${skill?.icon?.value}"></span>
+                      th:utext="${skill?.icon?.value}"
+                    ></span>
                     <span th:text="${skill?.name}">技能</span>
                   </span>
                 </div>
               </div>
-              <div
-                th:if="${skillTools != null and not #lists.isEmpty(skillTools)}"
-              >
+              <div th:if="${skillTools != null and not #lists.isEmpty(skillTools)}">
                 <p
                   class="about-skill-group-title"
                   th:text="#{page.skills.tools}"
@@ -573,14 +578,13 @@ import "../styles/about.css";
                       th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
                       class="about-ico about-ico--svg"
                       aria-hidden="true"
-                      th:utext="${skill?.icon?.value}"></span>
+                      th:utext="${skill?.icon?.value}"
+                    ></span>
                     <span th:text="${skill?.name}">技能</span>
                   </span>
                 </div>
               </div>
-              <div
-                th:if="${skillOther != null and not #lists.isEmpty(skillOther)}"
-              >
+              <div th:if="${skillOther != null and not #lists.isEmpty(skillOther)}">
                 <p
                   class="about-skill-group-title"
                   th:text="#{page.skills.other}"
@@ -593,7 +597,8 @@ import "../styles/about.css";
                       th:if="${skill?.icon != null and !#strings.isEmpty(skill?.icon?.value)}"
                       class="about-ico about-ico--svg"
                       aria-hidden="true"
-                      th:utext="${skill?.icon?.value}"></span>
+                      th:utext="${skill?.icon?.value}"
+                    ></span>
                     <span th:text="${skill?.name}">技能</span>
                   </span>
                 </div>
@@ -640,17 +645,21 @@ import "../styles/about.css";
                 <span th:unless="${aboutLogoOk}" class="about-friend-logo-ph">
                   <span
                     class="icon-[material-symbols--link-rounded]"
-                    aria-hidden="true"></span>
+                    aria-hidden="true"
+                  ></span>
                 </span>
                 <span class="about-friend-body">
                   <span
                     class="about-friend-name"
-                    th:text="${l?.spec?.displayName}">链接</span
+                    th:text="${l?.spec?.displayName}"
                   >
+                    链接
+                  </span>
                   <span
                     class="about-friend-desc"
                     th:if="${!#strings.isEmpty(l?.spec?.description)}"
-                    th:text="${l?.spec?.description}"></span>
+                    th:text="${l?.spec?.description}"
+                  ></span>
                 </span>
               </a>
             </div>
@@ -682,11 +691,13 @@ import "../styles/about.css";
                 <span
                   class="about-connect-icon"
                   th:utext="${social.social_icon?.value}"
-                  aria-hidden="true"></span>
+                  aria-hidden="true"
+                ></span>
                 <span th:text="${social.name}">名称</span>
                 <span
                   class="about-connect-arrow icon-[material-symbols--arrow-outward-rounded]"
-                  aria-hidden="true"></span>
+                  aria-hidden="true"
+                ></span>
               </a>
             </div>
           </section>
@@ -732,11 +743,14 @@ import "../styles/about.css";
                   <button type="submit" class="about-subscribe-submit">
                     <span
                       class="icon-[material-symbols--send-rounded] text-sm"
-                      aria-hidden="true"></span>
+                      aria-hidden="true"
+                    ></span>
                     <span
                       class="about-subscribe-submit-label"
-                      th:text="#{page.about.subscribeAction}">立即订阅</span
+                      th:text="#{page.about.subscribeAction}"
                     >
+                      立即订阅
+                    </span>
                   </button>
                 </div>
                 <!-- 提交结果（成功/失败），由 extend-pages.ts 填充与显隐 -->
@@ -785,10 +799,11 @@ import "../styles/about.css";
             th:if="${fl?.icon != null and !#strings.isEmpty(fl?.icon?.value)}"
             class="about-ico about-ico--svg"
             aria-hidden="true"
-            th:utext="${fl?.icon?.value}"></span>
-          <span th:text="${#strings.defaultString(fl?.label, fl?.url)}"
-            >链接</span
-          >
+            th:utext="${fl?.icon?.value}"
+          ></span>
+          <span th:text="${#strings.defaultString(fl?.label, fl?.url)}">
+            链接
+          </span>
         </a>
       </div>
     </section>
@@ -799,5 +814,6 @@ import "../styles/about.css";
   <script
     is:inline
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/extend-pages.js?v=${ASSET_VERSION}`}
-    defer></script>
+    defer
+  ></script>
 </MainGridLayout>

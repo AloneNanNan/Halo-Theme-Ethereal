@@ -41,10 +41,8 @@ const tocIf = showToc ? `\${tocOnRight and (${tocEnabledExpr})}` : "false";
     th:with="widgets=${theme.config?.sidebar?.widgetsConfig?.rightWidgets}, tocOnRight=${theme.config?.post?.toc?.position != 'left' and theme.config?.layout?.pageLayout?.layoutMode != 'two-column'}"
     th:remove="tag"
   >
-    {
-      /* 不吸顶区：随右栏所在位置显示（移动端右栏为第三项，平板宽度下右栏整体隐藏）。
-        mb-4 仅在 xl 以下生效——xl 起 aside 自身是 flex + gap-4，再加 margin 会变成双倍间距 */
-    }
+    {/* 不吸顶区：随右栏所在位置显示（移动端右栏为第三项，平板宽度下右栏整体隐藏）。
+        mb-4 仅在 xl 以下生效——xl 起 aside 自身是 flex + gap-4，再加 margin 会变成双倍间距 */}
     <div class="mb-4 xl:mb-0 flex w-full flex-col gap-4" th:if={hasNonStickyIf}>
       <div
         class="contents"
@@ -55,11 +53,9 @@ const tocIf = showToc ? `\${tocOnRight and (${tocEnabledExpr})}` : "false";
       </div>
     </div>
 
-    {
-      /* 吸顶块：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名。
+    {/* 吸顶块：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名。
         含目录时的限高、「只留前 2 个吸顶条目」与「吸顶组件不参与收缩」统一由
-        Layout.astro 的 :has(#right-sidebar-toc > *) 规则施加（左右两栏同源） */
-    }
+        Layout.astro 的 :has(#right-sidebar-toc > *) 规则施加（左右两栏同源） */}
     <div
       id="right-sidebar-sticky"
       class="sticky top-4 flex w-full flex-col gap-4"
@@ -80,12 +76,10 @@ const tocIf = showToc ? `\${tocOnRight and (${tocEnabledExpr})}` : "false";
           <SiteStats />
         </div>
       </div>
-      {
-        /* 目录槽位（Swup 容器，与左栏 #sidebar-toc 对称）：右栏本身已不是容器、不随
+      {/* 目录槽位（Swup 容器，与左栏 #sidebar-toc 对称）：右栏本身已不是容器、不随
           换页更新，只有这一格被替换，目录才能像左栏那样按页由服务端条件渲染。
           ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：目标页缺任一容器即 abort），
-          故这里恒渲染、不带 th:if；显示条件写在里面的 th:if 上 */
-      }
+          故这里恒渲染、不带 th:if；显示条件写在里面的 th:if 上 */}
       <div id="right-sidebar-toc">
         <div th:remove="tag" th:if={tocIf}>
           <SidebarTOC />

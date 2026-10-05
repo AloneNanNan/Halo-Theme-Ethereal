@@ -40,8 +40,9 @@ const { compact = false } = Astro.props as { compact?: boolean };
         ></path>
       </svg>
     </span>
-    <span class="hbf-title" th:text="#{footer.friendLinks.title}">友情链接</span
-    >
+    <span class="hbf-title" th:text="#{footer.friendLinks.title}">
+      友情链接
+    </span>
     <!-- 申请按钮：固定跳转官方 Links 插件的 /links 路由，文案复用友链页的 i18n 词条。
          show_apply_btn 缺省视为开启（!= false 口径）；总开关 enable_friend_links 用 == true
          严格比较——必须显式开启，避免「存了 friendLinks 组但没存该字段」的老配置被误判。 -->
@@ -66,12 +67,15 @@ const { compact = false } = Astro.props as { compact?: boolean };
     <!-- 数量徽标：视觉上仍是原来的纯数字，数字对屏幕阅读器隐藏，
          改由 sr-only 文本念出完整口径（总数，而非本页显示条数）。 -->
     <span class="hbf-count">
-      <span aria-hidden="true" th:text="${hbfTotal}">0</span>
+      <span aria-hidden="true" th:text="${hbfTotal}">
+        0
+      </span>
       <span
         class="sr-only"
         th:text="#{footer.friendLinks.countLabel(${hbfTotal})}"
-        >共 0 个友情链接</span
       >
+        共 0 个友情链接
+      </span>
     </span>
   </div>
   <div class="hbf-list" th:if="${hbfTotal > 0}">
@@ -105,7 +109,9 @@ const { compact = false } = Astro.props as { compact?: boolean };
         <span th:unless="${hbfLogoOk}" class="hbf-logo-ph">
           <span class="icon-[material-symbols--link-rounded] text-xs"></span>
         </span>
-        <span class="hbf-name" th:text="${hbfLink.spec.displayName}">Link</span>
+        <span class="hbf-name" th:text="${hbfLink.spec.displayName}">
+          Link
+        </span>
       </a>
     </span>
   </div>

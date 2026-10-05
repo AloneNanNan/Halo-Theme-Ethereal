@@ -194,13 +194,10 @@ import PageHeader from "../components/control/PageHeader.astro";
             class="timeline-node"
             th:classappend="${#strings.isEmpty(item.endDate)} ? ' timeline-node-current' : ''"
             th:style="${#strings.isEmpty(item.endDate) ? 'background-color:#22c55e' : (#strings.isEmpty(item.color) ? 'background-color:var(--primary)' : 'background-color:' + item.color)}"
-          >
-          </div>
+          ></div>
 
           <!-- 卡片（悬浮效果接入主题 card-hover-lift，由后台样式开关控制） -->
-          <div
-            class="timeline-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 dark:border-white/10 card-hover-lift"
-          >
+          <div class="timeline-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 dark:border-white/10 card-hover-lift">
             <div class="p-5 sm:p-6">
               <!-- 头部：图标 + 标题/组织 + 徽章 -->
               <div class="mb-3 flex items-center gap-3">
@@ -211,11 +208,13 @@ import PageHeader from "../components/control/PageHeader.astro";
                   <span
                     th:if="${item.icon != null and item.icon.value != null}"
                     class="text-xl"
-                    th:utext="${item.icon.value}"></span>
+                    th:utext="${item.icon.value}"
+                  ></span>
                   <span
                     th:unless="${item.icon != null and item.icon.value != null}"
                     class="text-xl"
-                    th:classappend="${typeIcon}"></span>
+                    th:classappend="${typeIcon}"
+                  ></span>
                 </div>
 
                 <div class="min-w-0 flex-1">
@@ -236,11 +235,10 @@ import PageHeader from "../components/control/PageHeader.astro";
                     class="flex flex-wrap items-center gap-1 text-sm text-50"
                   >
                     <span th:text="${item.organization}">组织</span>
-                    <span
-                      th:if="${not #strings.isEmpty(item.organization) and not #strings.isEmpty(item.position)}"
-                    >
+                    <span th:if="${not #strings.isEmpty(item.organization) and not #strings.isEmpty(item.position)}">
                       ·
-                    </span><span th:text="${item.position}">职位</span>
+                    </span>
+                    <span th:text="${item.position}">职位</span>
                   </p>
                 </div>
 
@@ -248,12 +246,16 @@ import PageHeader from "../components/control/PageHeader.astro";
                   <span
                     th:if="${#strings.isEmpty(item.endDate)}"
                     class="rounded-md bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400"
-                    th:text="#{page.timeline.current}">进行中</span
+                    th:text="#{page.timeline.current}"
                   >
+                    进行中
+                  </span>
                   <span
                     class="rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
-                    th:text="${typeText}">类型</span
+                    th:text="${typeText}"
                   >
+                    类型
+                  </span>
                 </div>
               </div>
 
@@ -271,8 +273,7 @@ import PageHeader from "../components/control/PageHeader.astro";
                 th:if="${not #strings.isEmpty(item.skills)}"
                 class="timeline-skills mb-4 flex flex-wrap gap-2"
                 th:data-skills="${item.skills}"
-              >
-              </div>
+              ></div>
 
               <!-- 成就列表（timeline.js 渲染） -->
               <div
@@ -288,36 +289,33 @@ import PageHeader from "../components/control/PageHeader.astro";
                 <div
                   class="timeline-ach-list"
                   th:data-achievements="${item.achievements}"
-                >
-                </div>
+                ></div>
               </div>
 
               <!-- 底部：日期区间 + 地点 -->
-              <div
-                class="mb-1 flex items-center gap-4 border-t border-black/5 pt-3 text-xs text-30 dark:border-white/5"
-              >
+              <div class="mb-1 flex items-center gap-4 border-t border-black/5 pt-3 text-xs text-30 dark:border-white/5">
                 <span class="flex items-center gap-1">
-                  <span
-                    class="icon-[material-symbols--calendar-month-outline] h-3.5 w-3.5 text-xs"
-                  ></span>
+                  <span class="icon-[material-symbols--calendar-month-outline] h-3.5 w-3.5 text-xs"></span>
                   <span th:text="${item.startDate}">开始</span>
                   <span>~</span>
                   <span
                     th:if="${#strings.isEmpty(item.endDate)}"
-                    th:text="#{page.timeline.present}">至今</span
+                    th:text="#{page.timeline.present}"
                   >
+                    至今
+                  </span>
                   <span
                     th:if="${not #strings.isEmpty(item.endDate)}"
-                    th:text="${item.endDate}">结束</span
+                    th:text="${item.endDate}"
                   >
+                    结束
+                  </span>
                 </span>
                 <span
                   th:if="${not #strings.isEmpty(item.location)}"
                   class="flex items-center gap-1"
                 >
-                  <span
-                    class="icon-[material-symbols--location-on-outline] h-3.5 w-3.5 text-xs"
-                  ></span>
+                  <span class="icon-[material-symbols--location-on-outline] h-3.5 w-3.5 text-xs"></span>
                   <span th:text="${item.location}">地点</span>
                 </span>
               </div>
@@ -327,15 +325,11 @@ import PageHeader from "../components/control/PageHeader.astro";
                 th:if="${not #strings.isEmpty(item.links)}"
                 class="timeline-links mt-3 flex flex-wrap gap-2"
                 th:data-links="${item.links}"
-              >
-              </div>
+              ></div>
             </div>
 
             <!-- 悬浮渐变遮罩 -->
-            <div
-              class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            >
-            </div>
+            <div class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
           </div>
         </div>
       </div>
@@ -346,9 +340,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${items != null and not #lists.isEmpty(items) and not #lists.isEmpty(param.type) and ((#lists.contains(param.type, 'education') and edCount == 0) or (#lists.contains(param.type, 'work') and workCount == 0) or (#lists.contains(param.type, 'project') and projCount == 0) or (#lists.contains(param.type, 'achievement') and achCount == 0))}"
         class="py-16 text-center"
       >
-        <span
-          class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"
-        ></span>
+        <span class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"></span>
         <p
           class="text-lg text-black/40 dark:text-white/40"
           th:text="#{page.timeline.noResults}"
@@ -362,8 +354,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${items == null or #lists.isEmpty(items)}"
         class="py-16 text-center text-50"
       >
-        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
-        ></span>
+        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"></span>
         <p class="mt-4 text-sm" th:text="#{page.timeline.empty}">
           暂无时间轴内容，请在主题设置中配置
         </p>
@@ -399,30 +390,29 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:aria-label="#{pagination.previous}"
         class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
       >
-        <span
-          class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"
-        ></span>
+        <span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"></span>
       </a>
-      <div
-        class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300"
-      >
+      <div class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300">
         <a
           th:if="${windowStart gt 1}"
           th:href="${singlePage.status.permalink + sep + 'page=1'}"
           th:aria-label="#{pagination.page(1)}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          >1</a
         >
+          1
+        </a>
         <a
           th:if="${windowStart == 3}"
           th:href="${singlePage.status.permalink + sep + 'page=2'}"
           th:aria-label="#{pagination.page(2)}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          >2</a
         >
+          2
+        </a>
         <span
           th:if="${windowStart gt 3}"
-          class="icon-[material-symbols--more-horiz] mx-1"></span>
+          class="icon-[material-symbols--more-horiz] mx-1"
+        ></span>
         <span
           class="contents"
           th:each="pn : ${#numbers.sequence(windowStart, windowEnd)}"
@@ -439,24 +429,29 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:href="${singlePage.status.permalink + sep + 'page=' + pn}"
             th:aria-label="#{pagination.page(${pn})}"
             class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-            th:text="${pn}">2</a
+            th:text="${pn}"
           >
+            2
+          </a>
         </span>
         <span
           th:if="${windowEnd lt totalPages - 2}"
-          class="icon-[material-symbols--more-horiz] mx-1"></span>
+          class="icon-[material-symbols--more-horiz] mx-1"
+        ></span>
         <a
           th:if="${windowEnd == totalPages - 2}"
           th:href="${singlePage.status.permalink + sep + 'page=' + (totalPages - 1)}"
           th:aria-label="#{pagination.page(${totalPages - 1})}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          th:text="${totalPages - 1}"></a>
+          th:text="${totalPages - 1}"
+        ></a>
         <a
           th:if="${windowEnd lt totalPages}"
           th:href="${singlePage.status.permalink + sep + 'page=' + totalPages}"
           th:aria-label="#{pagination.page(${totalPages})}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          th:text="${totalPages}"></a>
+          th:text="${totalPages}"
+        ></a>
       </div>
       <a
         th:href="${curPage lt totalPages ? singlePage.status.permalink + sep + 'page=' + (curPage + 1) : ''}"
@@ -464,9 +459,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:aria-label="#{pagination.next}"
         class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
       >
-        <span
-          class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"
-        ></span>
+        <span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"></span>
       </a>
     </nav>
   </div>
@@ -474,12 +467,13 @@ import PageHeader from "../components/control/PageHeader.astro";
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/timeline.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
-
+    is:inline
+  ></script>
   <!-- 胶囊池滑块（filter-seg.js）：定位 / 点击预移动 / 滚动渐隐。
        Swup 换页后由 ScriptsPlugin 重执行（脚本内 window 单例幂等） -->
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

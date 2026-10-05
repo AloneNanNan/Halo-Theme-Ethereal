@@ -118,25 +118,31 @@
           <div class="entry-start">
             <span class="entry-dot" th:style="'background:' + ${color}"></span>
             <div class="entry-main">
-              <div class="entry-title" th:text="${title}">日程标题</div>
+              <div class="entry-title" th:text="${title}">
+                日程标题
+              </div>
               <div class="entry-meta">
                 <span th:class="${summaryClass}" th:text="${summary}"></span>
                 <span
                   th:if="${nextOccurrenceLabel}"
                   class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
-                  th:text="'下一次出现：' + ${nextOccurrenceLabel}"></span>
+                  th:text="'下一次出现：' + ${nextOccurrenceLabel}"
+                ></span>
                 <span
                   th:if="${sourceLabel}"
                   class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
-                  th:text="'来源：' + ${sourceLabel}"></span>
+                  th:text="'来源：' + ${sourceLabel}"
+                ></span>
                 <span
                   th:if="${location}"
                   class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
-                  th:text="'地点：' + ${location}"></span>
+                  th:text="'地点：' + ${location}"
+                ></span>
                 <span
                   th:if="${description}"
                   class="entry-meta__item entry-meta__item--wide entry-meta__item--block"
-                  th:text="'备注：' + ${description}"></span>
+                  th:text="'备注：' + ${description}"
+                ></span>
               </div>
             </div>
           </div>

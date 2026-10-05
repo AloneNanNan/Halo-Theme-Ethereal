@@ -128,7 +128,6 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
         );
       })();
     </script>
-
     <!-- 插件页自身的 head 片段（title / meta / 样式等） -->
     <Fragment set:html={headSlot} />
   </head>
@@ -151,9 +150,7 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
 
     <!-- 插件页正文 -->
     <div id="main-panel-wrapper" class="relative z-30">
-      <div
-        class="relative mx-auto w-full max-w-(--page-width) px-4 py-6 md:px-4"
-      >
+      <div class="relative mx-auto w-full max-w-(--page-width) px-4 py-6 md:px-4">
         <main id="main-grid" class="min-w-0">
           <div id="content-wrapper" class="onload-animation">
             <Fragment set:html={contentSlot} />

@@ -24,12 +24,8 @@ const listId = `${instanceId}-list`;
     style={style}
   >
     <div id={listId} class="flex flex-col gap-1">
-      <div
-        class="flex items-center justify-center py-4 text-sm text-neutral-400"
-      >
-        <span
-          class="icon-[material-symbols--hourglass-top] mr-2 animate-spin text-base"
-        ></span>
+      <div class="flex items-center justify-center py-4 text-sm text-neutral-400">
+        <span class="icon-[material-symbols--hourglass-top] mr-2 animate-spin text-base"></span>
         <span th:text="#{widget.popularPosts.loading}">加载中...</span>
       </div>
     </div>

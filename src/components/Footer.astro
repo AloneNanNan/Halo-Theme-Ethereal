@@ -23,24 +23,17 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
   <div
     th:if="${footerDividerStyle != 'star'}"
     class="mx-8 my-10 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 md:mx-32"
-  >
-  </div>
+  ></div>
   <div
     th:if="${footerDividerStyle == 'star'}"
     class="relative mx-8 my-6 flex items-center justify-center md:mx-32"
   >
     <!-- 贯穿渐隐线：中部最浓、两端透明；星芒位于正中覆盖断口 -->
-    <span
-      class="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-linear-to-r from-transparent via-(--primary)/25 to-transparent"
-    ></span>
+    <span class="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-linear-to-r from-transparent via-(--primary)/25 to-transparent"></span>
     <!-- 居中星芒徽标。默认用页面底色画圆遮罩避免细线穿过星星；
          全屏透明壁纸下的覆写见文件末尾。 -->
-    <span
-      class="footer-star-badge relative z-10 inline-flex size-7 items-center justify-center rounded-full bg-(--page-bg) text-(--primary)"
-    >
-      <span
-        class="absolute inset-0 rounded-full border border-(--primary)/30 transition"
-      ></span>
+    <span class="footer-star-badge relative z-10 inline-flex size-7 items-center justify-center rounded-full bg-(--page-bg) text-(--primary)">
+      <span class="absolute inset-0 rounded-full border border-(--primary)/30 transition"></span>
       <svg
         viewBox="0 0 24 24"
         class="size-3.5 drop-shadow-sm"
@@ -95,12 +88,8 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
        顶行只放单行标题、不渲染副标题：两行堆叠时垂直居中是整块几何中心，标题会偏上。 -->
   <footer th:if="${footerStyle == 'card'}" class="card-base mb-12">
     <!-- ① 顶行：身份 ←→ 社交，中间留给友链 -->
-    <div
-      class="flex flex-col gap-5 px-6 pb-6 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-8"
-    >
-      <div
-        class="relative min-w-0 pl-5 text-xl font-bold text-neutral-900 transition before:absolute before:left-0 before:top-1/2 before:h-5 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100"
-      >
+    <div class="flex flex-col gap-5 px-6 pb-6 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      <div class="relative min-w-0 pl-5 text-xl font-bold text-neutral-900 transition before:absolute before:left-0 before:top-1/2 before:h-5 before:w-1 before:-translate-y-1/2 before:rounded-md before:bg-(--primary) dark:text-neutral-100">
         <span th:text="${site.title}">Ethereal</span>
       </div>
 
@@ -123,20 +112,16 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
           target="_blank"
           rel="noopener noreferrer"
           class="social-btn-lift btn-regular size-9 rounded-lg duration-200 active:scale-90"
-          th:utext="${social.social_icon.value}"></a>
+          th:utext="${social.social_icon.value}"
+        ></a>
       </div>
     </div>
 
     <!-- ② 分隔线 -->
-    <div
-      class="mx-6 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 sm:mx-8"
-    >
-    </div>
+    <div class="mx-6 border-t border-dashed border-(--primary)/15 transition dark:border-(--primary)/20 sm:mx-8"></div>
 
     <!-- ③ 底行：左「版权 + 链接」 / 右「备案 + 署名」 -->
-    <div
-      class="flex flex-col gap-3 px-6 py-5 text-sm text-50 sm:flex-row sm:items-center sm:justify-between sm:px-8"
-    >
+    <div class="flex flex-col gap-3 px-6 py-5 text-sm text-50 sm:flex-row sm:items-center sm:justify-between sm:px-8">
       <div class="flex min-w-0 flex-col gap-1.5">
         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
           <FooterCopyright />
@@ -158,9 +143,7 @@ import FooterFriendLinks from "./FooterFriendLinks.astro";
         >
           <FooterBeian />
         </div>
-        <div
-          th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}"
-        >
+        <div th:if="${theme.config?.footer?.displayLinks?.enable_theme_credit == null || theme.config?.footer?.displayLinks?.enable_theme_credit}">
           <FooterCredit />
         </div>
       </div>

@@ -16,17 +16,13 @@ const statIconClass =
   th:with="coverEmpty = ${#strings.isEmpty(post.spec.cover)}"
   th:classappend="${(coverEmpty ? ' no-cover' : ' has-cover') + (post.spec.pinned == true ? ' is-pinned' : '')}"
 >
-  <div
-    class="post-card-content relative flex w-full flex-col pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7"
-  >
+  <div class="post-card-content relative flex w-full flex-col pb-6 pl-6 pr-6 pt-6 md:pb-6 md:pl-9 md:pt-7">
     <a
       th:href="@{${post.status.permalink}}"
       class="post-card-title relative group mb-3 block w-full text-3xl font-bold text-90 transition before:absolute before:-left-[18px] before:top-2 before:hidden before:h-5 before:w-1 before:rounded-md before:bg-(--primary) hover:text-(--primary) active:text-(--title-active) dark:hover:text-(--primary) dark:active:text-(--title-active) md:before:block"
     >
       <span th:text="${post.spec.title}">Post title</span>
-      <span
-        class="post-card-arrow icon-[material-symbols--chevron-right-rounded] absolute z-30 hidden -translate-x-1 -translate-y-1/2 text-[2rem] text-(--primary) opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 top-1/2 md:inline"
-      ></span>
+      <span class="post-card-arrow icon-[material-symbols--chevron-right-rounded] absolute z-30 hidden -translate-x-1 -translate-y-1/2 text-[2rem] text-(--primary) opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100 top-1/2 md:inline"></span>
     </a>
 
     <PostMeta
@@ -45,43 +41,45 @@ const statIconClass =
     </div>
 
     <!-- 底部统计：发布日期 + 浏览量 + 评论数 + 点赞（图标外有圆角灰色背景） -->
-    <div
-      class="post-card-stats mt-auto flex items-center gap-3 text-sm text-black/50 transition dark:text-white/50"
-    >
+    <div class="post-card-stats mt-auto flex items-center gap-3 text-sm text-black/50 transition dark:text-white/50">
       <div class="inline-flex items-center gap-1.5">
         <span class={statIconClass}>
-          <span
-            class="icon-[material-symbols--calendar-today-outline-rounded] text-base leading-none"
-          ></span>
+          <span class="icon-[material-symbols--calendar-today-outline-rounded] text-base leading-none"></span>
         </span>
         <span
           class="leading-none"
           th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
-          >2026-01-01</span
         >
+          2026-01-01
+        </span>
       </div>
-      <div class="leading-none" th:if="${post.stats != null}">|</div>
+      <div class="leading-none" th:if="${post.stats != null}">
+        |
+      </div>
       <div
         th:if="${post.stats != null}"
         class="inline-flex items-center gap-1.5"
       >
         <span class={statIconClass}>
-          <span
-            class="icon-[material-symbols--visibility-outline-rounded] text-base leading-none"
-          ></span>
+          <span class="icon-[material-symbols--visibility-outline-rounded] text-base leading-none"></span>
         </span>
-        <span class="leading-none" th:text="${post.stats.visit}">0</span>
+        <span class="leading-none" th:text="${post.stats.visit}">
+          0
+        </span>
       </div>
-      <div class="leading-none" th:if="${post.stats != null}">|</div>
+      <div class="leading-none" th:if="${post.stats != null}">
+        |
+      </div>
       <div
         th:if="${post.stats != null}"
         class="inline-flex items-center gap-1.5"
       >
         <span class={statIconClass}>
-          <span class="icon-[mdi--comment-text-outline] text-base leading-none"
-          ></span>
+          <span class="icon-[mdi--comment-text-outline] text-base leading-none"></span>
         </span>
-        <span class="leading-none" th:text="${post.stats.comment}">0</span>
+        <span class="leading-none" th:text="${post.stats.comment}">
+          0
+        </span>
       </div>
       <!-- 点赞：跟随后台文章操作栏"启用点赞"开关 -->
       <div
@@ -95,11 +93,11 @@ const statIconClass =
         class="inline-flex items-center gap-1.5"
       >
         <span class={statIconClass}>
-          <span
-            class="icon-[material-symbols--favorite-outline-rounded] text-base leading-none"
-          ></span>
+          <span class="icon-[material-symbols--favorite-outline-rounded] text-base leading-none"></span>
         </span>
-        <span class="leading-none" th:text="${post.stats.upvote}">0</span>
+        <span class="leading-none" th:text="${post.stats.upvote}">
+          0
+        </span>
       </div>
     </div>
   </div>
@@ -111,16 +109,9 @@ const statIconClass =
     th:with={imageSuffixThWith("p?.card_cover_width ?: 400")}
     class="post-card-cover group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[2/1] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
   >
-    <div
-      class="pointer-events-none absolute z-10 h-full w-full transition group-hover:bg-black/30 group-active:bg-black/50"
-    >
-    </div>
-    <div
-      class="pointer-events-none absolute z-20 flex h-full w-full items-center justify-center"
-    >
-      <span
-        class="icon-[material-symbols--chevron-right-rounded] scale-50 text-5xl text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100"
-      ></span>
+    <div class="pointer-events-none absolute z-10 h-full w-full transition group-hover:bg-black/30 group-active:bg-black/50"></div>
+    <div class="pointer-events-none absolute z-20 flex h-full w-full items-center justify-center">
+      <span class="icon-[material-symbols--chevron-right-rounded] scale-50 text-5xl text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100"></span>
     </div>
     <img
       th:src="|${post.spec.cover}${suffix}|"
@@ -139,12 +130,8 @@ const statIconClass =
     th:aria-label="${post.spec.title}"
     class="post-card-cover post-card-cover-placeholder group relative mx-4 -mb-2 mt-4 w-[calc(100%-2rem)] max-h-[20vh] overflow-hidden rounded-xl active:scale-95 aspect-[2/1] md:aspect-auto md:absolute md:bottom-3 md:right-3 md:top-3 md:mx-0 md:mb-0 md:mt-0 md:max-h-none md:w-(--post-card-cover-width)"
   >
-    <div
-      class="pointer-events-none absolute inset-0 z-10 flex h-full w-full items-center justify-center transition group-hover:bg-black/10 group-active:bg-black/20"
-    >
-      <span
-        class="icon-[material-symbols--article-outline-rounded] scale-90 text-4xl text-white/80 transition group-hover:scale-100"
-      ></span>
+    <div class="pointer-events-none absolute inset-0 z-10 flex h-full w-full items-center justify-center transition group-hover:bg-black/10 group-active:bg-black/20">
+      <span class="icon-[material-symbols--article-outline-rounded] scale-90 text-4xl text-white/80 transition group-hover:scale-100"></span>
     </div>
   </a>
 
@@ -156,12 +143,7 @@ const statIconClass =
     th:aria-label="${post.spec.title}"
     class="post-card-enter-btn btn-regular absolute bottom-3 right-3 top-3 flex w-[3.25rem] rounded-xl bg-(--enter-btn-bg) hover:bg-(--enter-btn-bg-hover) active:scale-95 active:bg-(--enter-btn-bg-active)"
   >
-    <span
-      class="icon-[material-symbols--chevron-right-rounded] mx-auto text-4xl text-(--primary) transition"
-    ></span>
+    <span class="icon-[material-symbols--chevron-right-rounded] mx-auto text-4xl text-(--primary) transition"></span>
   </a>
 </article>
-<div
-  class="post-card-divider mx-6 border-t-[1px] border-dashed border-black/10 transition last:border-t-0 dark:border-white/15 md:hidden"
->
-</div>
+<div class="post-card-divider mx-6 border-t-[1px] border-dashed border-black/10 transition last:border-t-0 dark:border-white/15 md:hidden"></div>

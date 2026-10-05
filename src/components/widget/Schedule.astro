@@ -32,10 +32,10 @@ const className = Astro.props.class;
         th:if="${#lists.isEmpty(scheduleItems)}"
         class="px-3 py-8 text-center text-50"
       >
-        <span
-          class="icon-[material-symbols--event-busy-rounded] text-3xl text-30"
-        ></span>
-        <p class="mt-2 text-xs" th:text="#{widget.schedule.empty}">暂无日程</p>
+        <span class="icon-[material-symbols--event-busy-rounded] text-3xl text-30"></span>
+        <p class="mt-2 text-xs" th:text="#{widget.schedule.empty}">
+          暂无日程
+        </p>
       </div>
       <!-- 日程列表 -->
       <ul th:unless="${#lists.isEmpty(scheduleItems)}" class="space-y-1 px-2.5">
@@ -46,7 +46,8 @@ const className = Astro.props.class;
           <div class="flex items-start gap-2 py-2 pr-2">
             <span
               class="w-1 shrink-0 self-stretch rounded-full"
-              th:style="|background: ${item.color ?: 'var(--primary)'}|"></span>
+              th:style="|background: ${item.color ?: 'var(--primary)'}|"
+            ></span>
             <div class="min-w-0 flex-1">
               <div
                 class="truncate text-sm font-bold text-90"
@@ -55,9 +56,7 @@ const className = Astro.props.class;
                 事项标题
               </div>
               <div class="mt-0.5 flex items-center gap-1 text-xs text-50">
-                <span
-                  class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-[13px] text-30"
-                ></span>
+                <span class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-[13px] text-30"></span>
                 <span
                   class="truncate"
                   th:text="${item.dayLabel + ' ' + item.startTime}"
@@ -69,9 +68,7 @@ const className = Astro.props.class;
                 th:if="${item.location != null}"
                 class="mt-0.5 flex items-center gap-1 text-xs text-50"
               >
-                <span
-                  class="icon-[mdi--map-marker] shrink-0 text-[13px] text-30"
-                ></span>
+                <span class="icon-[mdi--map-marker] shrink-0 text-[13px] text-30"></span>
                 <span class="truncate" th:text="${item.location}">
                   会议室A
                 </span>

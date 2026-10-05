@@ -50,9 +50,7 @@ const hasRight = Astro.slots.has("right");
 <div class={`page-head-modern ${containerClass}`.trim()}>
   <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
     <div class="min-w-0">
-      <div
-        class="inline-flex items-center gap-1.5 text-[0.72rem] font-extrabold tracking-[0.12em] text-(--primary)"
-      >
+      <div class="inline-flex items-center gap-1.5 text-[0.72rem] font-extrabold tracking-[0.12em] text-(--primary)">
         <span class={`${iconClass} text-[0.9rem]`}></span>
         <span>{eyebrow}</span>
       </div>
@@ -66,33 +64,31 @@ const hasRight = Astro.slots.has("right");
         </h1>
       </div>
     </div>
-    {
-      filteredExpr || (stats && stats.length > 0) || hasRight ? (
-        <div class="flex flex-wrap items-end gap-2.5">
-          {filteredExpr && (
-            <a
-              th:if={filteredExpr}
-              th:href={filteredClearExpr}
-              th:title="#{common.clearFilter}"
-              class="ph-filter-chip"
-            >
-              <span th:text="#{common.filtered}">已筛选</span>
-              <span
-                class="ph-filter-clear icon-[material-symbols--close-rounded]"
-                aria-hidden="true"
-              />
-            </a>
-          )}
-          {stats?.map((st) => (
-            <div class="stat" data-stat={st.key}>
-              <b th:text={st.valueExpr}>{st.value}</b>
-              <span th:text={st.labelExpr}>{st.label}</span>
-            </div>
-          ))}
-          <slot name="right" />
-        </div>
-      ) : null
-    }
+    {filteredExpr || (stats && stats.length > 0) || hasRight ? (
+      <div class="flex flex-wrap items-end gap-2.5">
+        {filteredExpr && (
+          <a
+            th:if={filteredExpr}
+            th:href={filteredClearExpr}
+            th:title="#{common.clearFilter}"
+            class="ph-filter-chip"
+          >
+            <span th:text="#{common.filtered}">已筛选</span>
+            <span
+              class="ph-filter-clear icon-[material-symbols--close-rounded]"
+              aria-hidden="true"
+            />
+          </a>
+        )}
+        {stats?.map((st) => (
+          <div class="stat" data-stat={st.key}>
+            <b th:text={st.valueExpr}>{st.value}</b>
+            <span th:text={st.labelExpr}>{st.label}</span>
+          </div>
+        ))}
+        <slot name="right" />
+      </div>
+    ) : null}
   </div>
   <span class={`ph-watermark ${iconClass}`} aria-hidden="true"></span>
 </div>

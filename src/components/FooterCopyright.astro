@@ -5,37 +5,48 @@
 const currentYear = new Date().getFullYear();
 ---
 
-<span
-  >&copy; {currentYear}{" "}
-  <span th:text="${site.title}">Ethereal</span>.{" "}
-  <span th:text="#{footer.rights}">All Rights Reserved.</span></span
->
+<span>
+  &copy; {currentYear} <span th:text="${site.title}">Ethereal</span>.{" "}
+  <span th:text="#{footer.rights}">All Rights Reserved.</span>
+</span>
 <span class="whitespace-nowrap">
   <span
     th:if="${theme.config?.footer?.displayLinks?.enable_privacy != null ? theme.config?.footer?.displayLinks?.enable_privacy : false}"
     th:remove="tag"
-    >/&nbsp;<a
+  >
+    /&nbsp;
+    <a
       class="link font-medium text-(--primary)"
       th:href="@{${theme.config?.footer?.displayLinks?.privacy_url != null ? theme.config?.footer?.displayLinks?.privacy_url : '/privacy'}}"
-      th:text="#{common.privacyPolicy}">隐私政策</a
-    ></span
-  >
+      th:text="#{common.privacyPolicy}"
+    >
+      隐私政策
+    </a>
+  </span>
   <span
     th:if="${pluginFinder.available('PluginFeed') && (theme.config?.footer?.displayLinks?.enable_rss == null || theme.config?.footer?.displayLinks?.enable_rss)}"
     th:remove="tag"
-    >&nbsp;/&nbsp;<a
+  >
+    &nbsp;/&nbsp;
+    <a
       class="link font-medium text-(--primary)"
       target="_blank"
-      th:href="@{/rss.xml}">RSS</a
-    ></span
-  >
+      th:href="@{/rss.xml}"
+    >
+      RSS
+    </a>
+  </span>
   <span
     th:if="${pluginFinder.available('PluginSitemap') && (theme.config?.footer?.displayLinks?.enable_sitemap == null || theme.config?.footer?.displayLinks?.enable_sitemap)}"
     th:remove="tag"
-    >&nbsp;/&nbsp;<a
+  >
+    &nbsp;/&nbsp;
+    <a
       class="link font-medium text-(--primary)"
       target="_blank"
-      th:href="@{/sitemap.xml}">Sitemap</a
-    ></span
-  >
+      th:href="@{/sitemap.xml}"
+    >
+      Sitemap
+    </a>
+  </span>
 </span>

@@ -127,9 +127,7 @@ import PageHeader from "../components/control/PageHeader.astro";
          技能卡头部是「48px 图标 + 16px 间距 + 名字 + 熟练度徽章」横排，min 取 240 时
          自动填充到 3 列的临界档为 248px 卡，扣掉 p-5 后名字区只剩 ~84px，
          text-lg 下 JavaScript 这类长名会被 truncate 截掉。 -->
-      <div
-        class="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-4"
-      >
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-4">
         <div
           th:each="skill, iterStat : ${pagedItems}"
           th:if="${#lists.isEmpty(param.category) or #lists.contains(param.category, skill.category)}"
@@ -146,13 +144,15 @@ import PageHeader from "../components/control/PageHeader.astro";
                 <span
                   th:if="${skill.icon != null and skill.icon.value != null}"
                   class="text-xl"
-                  th:utext="${skill.icon.value}"></span>
+                  th:utext="${skill.icon.value}"
+                ></span>
                 <span
                   th:unless="${skill.icon != null and skill.icon.value != null}"
                   class="text-xl font-bold"
                   th:text="${#strings.substring(skill.name ?: '?', 0, 1)}"
-                  >S</span
                 >
+                  S
+                </span>
               </div>
 
               <div class="min-w-0 flex-1">
@@ -166,8 +166,10 @@ import PageHeader from "../components/control/PageHeader.astro";
                   <span
                     th:if="${not #strings.isEmpty(levelText)}"
                     class="ml-2 shrink-0 rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)"
-                    th:text="${levelText}">熟练度</span
+                    th:text="${levelText}"
                   >
+                    熟练度
+                  </span>
                 </div>
                 <p
                   th:if="${hasYears or hasMonths}"
@@ -175,13 +177,16 @@ import PageHeader from "../components/control/PageHeader.astro";
                 >
                   <span
                     th:if="${hasYears}"
-                    th:text="|${skill.years} #{page.skills.years}|">2 年</span
+                    th:text="|${skill.years} #{page.skills.years}|"
                   >
+                    2 年
+                  </span>
                   <span
                     th:if="${hasMonths}"
                     th:text="|${skill.months} #{page.skills.months}|"
-                    >6 个月</span
                   >
+                    6 个月
+                  </span>
                 </p>
               </div>
             </div>
@@ -197,16 +202,12 @@ import PageHeader from "../components/control/PageHeader.astro";
               <div
                 class="h-1.5 rounded-full transition-all duration-500"
                 th:style="'width:' + ${levelWidth} + '; background-color:' + ${skillColor}"
-              >
-              </div>
+              ></div>
             </div>
           </div>
 
           <!-- 悬浮渐变遮罩 -->
-          <div
-            class="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          >
-          </div>
+          <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
         </div>
       </div>
 
@@ -216,9 +217,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${items != null and not #lists.isEmpty(items) and not #lists.isEmpty(param.category) and ((#lists.contains(param.category, 'frontend') and frontendCount == 0) or (#lists.contains(param.category, 'backend') and backendCount == 0) or (#lists.contains(param.category, 'database') and databaseCount == 0) or (#lists.contains(param.category, 'tools') and toolsCount == 0) or (#lists.contains(param.category, 'other') and otherCount == 0))}"
         class="py-16 text-center"
       >
-        <span
-          class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"
-        ></span>
+        <span class="icon-[material-symbols--search-off-rounded] mb-4 text-5xl text-black/15 dark:text-white/15"></span>
         <p
           class="text-lg text-black/40 dark:text-white/40"
           th:text="#{page.skills.noResults}"
@@ -232,8 +231,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${items == null or #lists.isEmpty(items)}"
         class="py-16 text-center text-50"
       >
-        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
-        ></span>
+        <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"></span>
         <p class="mt-4 text-sm" th:text="#{page.skills.empty}">
           暂无技能数据，请在主题设置中配置
         </p>
@@ -269,30 +267,29 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:aria-label="#{pagination.previous}"
         class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
       >
-        <span
-          class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"
-        ></span>
+        <span class="icon-[material-symbols--chevron-left-rounded] text-[1.75rem]"></span>
       </a>
-      <div
-        class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300"
-      >
+      <div class="pagination-pages flex flex-row items-center rounded-lg bg-(--card-bg) font-bold text-neutral-700 dark:text-neutral-300">
         <a
           th:if="${windowStart gt 1}"
           th:href="${singlePage.status.permalink + sep + 'page=1'}"
           th:aria-label="#{pagination.page(1)}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          >1</a
         >
+          1
+        </a>
         <a
           th:if="${windowStart == 3}"
           th:href="${singlePage.status.permalink + sep + 'page=2'}"
           th:aria-label="#{pagination.page(2)}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          >2</a
         >
+          2
+        </a>
         <span
           th:if="${windowStart gt 3}"
-          class="icon-[material-symbols--more-horiz] mx-1"></span>
+          class="icon-[material-symbols--more-horiz] mx-1"
+        ></span>
         <span
           class="contents"
           th:each="pn : ${#numbers.sequence(windowStart, windowEnd)}"
@@ -309,24 +306,29 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:href="${singlePage.status.permalink + sep + 'page=' + pn}"
             th:aria-label="#{pagination.page(${pn})}"
             class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-            th:text="${pn}">2</a
+            th:text="${pn}"
           >
+            2
+          </a>
         </span>
         <span
           th:if="${windowEnd lt totalPages - 2}"
-          class="icon-[material-symbols--more-horiz] mx-1"></span>
+          class="icon-[material-symbols--more-horiz] mx-1"
+        ></span>
         <a
           th:if="${windowEnd == totalPages - 2}"
           th:href="${singlePage.status.permalink + sep + 'page=' + (totalPages - 1)}"
           th:aria-label="#{pagination.page(${totalPages - 1})}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          th:text="${totalPages - 1}"></a>
+          th:text="${totalPages - 1}"
+        ></a>
         <a
           th:if="${windowEnd lt totalPages}"
           th:href="${singlePage.status.permalink + sep + 'page=' + totalPages}"
           th:aria-label="#{pagination.page(${totalPages})}"
           class="btn-card h-11 w-11 overflow-hidden rounded-lg active:scale-[0.85]"
-          th:text="${totalPages}"></a>
+          th:text="${totalPages}"
+        ></a>
       </div>
       <a
         th:href="${curPage lt totalPages ? singlePage.status.permalink + sep + 'page=' + (curPage + 1) : ''}"
@@ -334,9 +336,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:aria-label="#{pagination.next}"
         class="btn-card h-11 w-11 overflow-hidden rounded-lg text-(--primary)"
       >
-        <span
-          class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"
-        ></span>
+        <span class="icon-[material-symbols--chevron-right-rounded] text-[1.75rem]"></span>
       </a>
     </nav>
   </div>
@@ -346,5 +346,6 @@ import PageHeader from "../components/control/PageHeader.astro";
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

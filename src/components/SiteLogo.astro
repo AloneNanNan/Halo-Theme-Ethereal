@@ -18,9 +18,12 @@ const { iconClass = "text-[1.75rem] mb-1" } = Astro.props;
 />
 <span
   th:if="${#strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
-  class:list={["icon-[tabler--smart-home]", iconClass]}></span>
+  class:list={["icon-[tabler--smart-home]", iconClass]}
+></span>
 <span
   th:if="${theme.config?.layout?.mobileMenu?.showTitle != false}"
   class="ml-2 site-title-text"
-  th:text="${site.title}">Ethereal</span
+  th:text="${site.title}"
 >
+  Ethereal
+</span>

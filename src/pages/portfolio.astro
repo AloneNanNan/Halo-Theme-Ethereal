@@ -127,21 +127,17 @@ import PortfolioCard from "../components/PortfolioCard.astro";
                  前置主题色图标盒（样式同打赏者名单）；「全部项目」用同一套，改动两处同步 -->
             <div class="mb-4 flex items-center gap-3">
               <div class="title-icon" aria-hidden="true">
-                <span
-                  class="icon-[material-symbols--star-rounded] text-[1.25rem] text-(--primary)"
-                ></span>
+                <span class="icon-[material-symbols--star-rounded] text-[1.25rem] text-(--primary)"></span>
               </div>
               <h2 class="text-xl font-bold text-90">
-                <span th:text="#{page.portfolio.featuredProjects}"
-                  >推荐项目</span
-                >
+                <span th:text="#{page.portfolio.featuredProjects}">
+                  推荐项目
+                </span>
               </h2>
             </div>
             <!-- 卡片最小宽 240px（与下方「全部项目」网格同值，改动两处同步；
                  取值范围 (226, 248] 的推导见下方注释） -->
-            <div
-              class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
-            >
+            <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]">
               <PortfolioCard eachExpr="project, stat : ${featured.items}" />
             </div>
           </div>
@@ -159,9 +155,7 @@ import PortfolioCard from "../components/PortfolioCard.astro";
         class="mb-4 flex items-center gap-3"
       >
         <div class="title-icon" aria-hidden="true">
-          <span
-            class="icon-[material-symbols--grid-view-rounded] text-[1.25rem] text-(--primary)"
-          ></span>
+          <span class="icon-[material-symbols--grid-view-rounded] text-[1.25rem] text-(--primary)"></span>
         </div>
         <h2 class="text-xl font-bold text-90">
           <span th:text="#{page.portfolio.allProjects}">全部项目</span>
@@ -179,17 +173,19 @@ import PortfolioCard from "../components/PortfolioCard.astro";
         th:if="${projects == null or projects.items.isEmpty()}"
         class="py-16 text-center text-50"
       >
-        <span
-          class="icon-[material-symbols--folder-open-rounded] text-5xl text-30"
-        ></span>
-        <p class="mt-4 text-sm" th:text="#{page.portfolio.empty}">暂无项目</p>
+        <span class="icon-[material-symbols--folder-open-rounded] text-5xl text-30"></span>
+        <p class="mt-4 text-sm" th:text="#{page.portfolio.empty}">
+          暂无项目
+        </p>
         <p class="mt-1 text-xs text-30">
           <span th:text="#{page.portfolio.go}">去</span>
           <a
             th:href="@{/portfolio}"
             class="text-(--primary) hover:underline"
-            th:text="#{page.portfolio.viewAll}">查看全部</a
+            th:text="#{page.portfolio.viewAll}"
           >
+            查看全部
+          </a>
         </p>
       </div>
     </section>
@@ -200,5 +196,6 @@ import PortfolioCard from "../components/PortfolioCard.astro";
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

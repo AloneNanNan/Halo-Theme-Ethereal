@@ -29,31 +29,27 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             th:if="${project.featured}"
             class="inline-flex shrink-0 items-center gap-1 rounded-lg bg-(--primary)/10 px-3 py-1 text-sm font-medium text-(--primary)"
           >
-            <span class="icon-[material-symbols--star-rounded] text-base"
-            ></span>
+            <span class="icon-[material-symbols--star-rounded] text-base"></span>
             <span th:text="#{page.portfolio.featured}">推荐</span>
           </span>
         </div>
 
         <!-- 元信息行 -->
-        <div
-          class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-50"
-        >
+        <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-50">
           <!-- 创建日期 -->
           <div
             th:if="${not #strings.isEmpty(project.createTime)}"
             class="flex items-center"
           >
             <div class="meta-icon">
-              <span
-                class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"
-              ></span>
+              <span class="icon-[material-symbols--calendar-today-outline-rounded] text-xl"></span>
             </div>
             <span
               class="text-sm font-medium text-50"
               th:text="${#strings.substring(project.createTime, 0, 10)}"
-              >2026-01-01</span
             >
+              2026-01-01
+            </span>
           </div>
 
           <!-- 外链：结构与文章页 PostMeta 分类/标签项一致——meta-icon 方形图标 + link-lg 文字链接
@@ -64,48 +60,48 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
             class="flex items-center"
           >
             <span class="meta-icon">
-              <span class="icon-[material-symbols--code-rounded] text-xl"
-              ></span>
+              <span class="icon-[material-symbols--code-rounded] text-xl"></span>
             </span>
             <a
               th:href="${project.repoUrl}"
               target="_blank"
               rel="noopener noreferrer"
               class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
-              >仓库</a
             >
+              仓库
+            </a>
           </div>
           <div
             th:if="${not #strings.isEmpty(project.demoUrl)}"
             class="flex items-center"
           >
             <span class="meta-icon">
-              <span class="icon-[material-symbols--play-circle-rounded] text-xl"
-              ></span>
+              <span class="icon-[material-symbols--play-circle-rounded] text-xl"></span>
             </span>
             <a
               th:href="${project.demoUrl}"
               target="_blank"
               rel="noopener noreferrer"
               class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
-              >演示</a
             >
+              演示
+            </a>
           </div>
           <div
             th:if="${not #strings.isEmpty(project.docsUrl)}"
             class="flex items-center"
           >
             <span class="meta-icon">
-              <span class="icon-[material-symbols--description-rounded] text-xl"
-              ></span>
+              <span class="icon-[material-symbols--description-rounded] text-xl"></span>
             </span>
             <a
               th:href="${project.docsUrl}"
               target="_blank"
               rel="noopener noreferrer"
               class="link-lg whitespace-nowrap text-sm font-medium text-50 transition hover:text-(--primary) active:scale-95 dark:hover:text-(--primary)"
-              >文档</a
             >
+              文档
+            </a>
           </div>
         </div>
 
@@ -122,20 +118,25 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           >
             <span
               class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
-              th:text="#{page.portfolio.category}">分类</span
+              th:text="#{page.portfolio.category}"
             >
+              分类
+            </span>
             <span class="flex min-w-0 flex-wrap gap-2">
               <span
                 th:if="${not #strings.isEmpty(project.platform)}"
                 class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
                 th:text="${platformLabels[project.platform] ?: project.platform}"
-                >Platform</span
               >
+                Platform
+              </span>
               <span
                 th:if="${not #strings.isEmpty(project.type)}"
                 class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
-                th:text="${typeLabels[project.type] ?: project.type}">Type</span
+                th:text="${typeLabels[project.type] ?: project.type}"
               >
+                Type
+              </span>
             </span>
           </div>
 
@@ -146,14 +147,18 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           >
             <span
               class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
-              th:text="#{page.portfolio.stack}">技术栈</span
+              th:text="#{page.portfolio.stack}"
             >
+              技术栈
+            </span>
             <span class="flex min-w-0 flex-wrap gap-2">
               <span
                 th:each="tech : ${project.techStacks}"
                 class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
-                th:text="${tech}">Tech</span
+                th:text="${tech}"
               >
+                Tech
+              </span>
             </span>
           </div>
 
@@ -164,14 +169,18 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
           >
             <span
               class="w-13 shrink-0 pt-1.5 text-xs font-bold text-50"
-              th:text="#{page.portfolio.tags}">标签</span
+              th:text="#{page.portfolio.tags}"
             >
+              标签
+            </span>
             <span class="flex min-w-0 flex-wrap gap-2">
               <span
                 th:each="tag : ${project.tags}"
                 class="rounded-lg bg-(--btn-regular-bg) px-3 py-1.5 text-sm font-medium text-(--btn-content)"
-                th:text="${tag}">Tag</span
+                th:text="${tag}"
               >
+                Tag
+              </span>
             </span>
           </div>
         </div>

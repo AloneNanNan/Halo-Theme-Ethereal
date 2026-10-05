@@ -45,18 +45,20 @@ const style = Astro.props.style;
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
-              <span
-                class="icon-[material-symbols--library-books-outline-rounded] text-xl text-(--primary)"
-              ></span>
+              <span class="icon-[material-symbols--library-books-outline-rounded] text-xl text-(--primary)"></span>
               <span
                 class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                th:text="#{widget.siteStats.posts}">文章</span
+                th:text="#{widget.siteStats.posts}"
               >
+                文章
+              </span>
             </div>
             <span
               class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-              th:text="${posts.total}">0</span
+              th:text="${posts.total}"
             >
+              0
+            </span>
           </a>
 
           <!-- 分类数 -->
@@ -66,18 +68,20 @@ const style = Astro.props.style;
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
-              <span
-                class="icon-[material-symbols--book-2-outline-rounded] text-xl text-(--primary)"
-              ></span>
+              <span class="icon-[material-symbols--book-2-outline-rounded] text-xl text-(--primary)"></span>
               <span
                 class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                th:text="#{widget.siteStats.categories}">分类</span
+                th:text="#{widget.siteStats.categories}"
               >
+                分类
+              </span>
             </div>
             <span
               class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-              th:text="${#lists.size(categories)}">0</span
+              th:text="${#lists.size(categories)}"
             >
+              0
+            </span>
           </a>
 
           <!-- 标签数 -->
@@ -87,18 +91,20 @@ const style = Astro.props.style;
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
-              <span
-                class="icon-[material-symbols--tag-rounded] text-xl text-(--primary)"
-              ></span>
+              <span class="icon-[material-symbols--tag-rounded] text-xl text-(--primary)"></span>
               <span
                 class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                th:text="#{widget.siteStats.tags}">标签</span
+                th:text="#{widget.siteStats.tags}"
               >
+                标签
+              </span>
             </div>
             <span
               class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-              th:text="${#lists.size(tags)}">0</span
+              th:text="${#lists.size(tags)}"
             >
+              0
+            </span>
           </a>
 
           <!-- 访问量（Halo 自带 siteStatsFinder）：选中该统计项且有数据时才渲染 -->
@@ -108,18 +114,20 @@ const style = Astro.props.style;
               class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
             >
               <div class="flex items-center gap-2.5">
-                <span
-                  class="icon-[material-symbols--visibility-outline-rounded] text-xl text-(--primary)"
-                ></span>
+                <span class="icon-[material-symbols--visibility-outline-rounded] text-xl text-(--primary)"></span>
                 <span
                   class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                  th:text="#{widget.siteStats.visits}">访问量</span
+                  th:text="#{widget.siteStats.visits}"
                 >
+                  访问量
+                </span>
               </div>
               <span
                 class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-                th:text="${stats.visit}">0</span
+                th:text="${stats.visit}"
               >
+                0
+              </span>
             </div>
           </div>
 
@@ -130,18 +138,20 @@ const style = Astro.props.style;
               class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
             >
               <div class="flex items-center gap-2.5">
-                <span
-                  class="icon-[material-symbols--favorite-outline-rounded] text-xl text-(--primary)"
-                ></span>
+                <span class="icon-[material-symbols--favorite-outline-rounded] text-xl text-(--primary)"></span>
                 <span
                   class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                  th:text="#{widget.siteStats.upvotes}">点赞数</span
+                  th:text="#{widget.siteStats.upvotes}"
                 >
+                  点赞数
+                </span>
               </div>
               <span
                 class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-                th:text="${stats.upvote}">0</span
+                th:text="${stats.upvote}"
               >
+                0
+              </span>
             </div>
           </div>
 
@@ -152,18 +162,20 @@ const style = Astro.props.style;
               class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
             >
               <div class="flex items-center gap-2.5">
-                <span
-                  class="icon-[mdi--comment-text-outline] text-xl text-(--primary)"
-                ></span>
+                <span class="icon-[mdi--comment-text-outline] text-xl text-(--primary)"></span>
                 <span
                   class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                  th:text="#{widget.siteStats.comments}">评论数</span
+                  th:text="#{widget.siteStats.comments}"
                 >
+                  评论数
+                </span>
               </div>
               <span
                 class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-                th:text="${stats.comment}">0</span
+                th:text="${stats.comment}"
               >
+                0
+              </span>
             </div>
           </div>
 
@@ -173,13 +185,13 @@ const style = Astro.props.style;
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
-              <span
-                class="icon-[material-symbols--draw-outline-rounded] text-xl text-(--primary)"
-              ></span>
+              <span class="icon-[material-symbols--draw-outline-rounded] text-xl text-(--primary)"></span>
               <span
                 class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                th:text="#{widget.siteStats.totalWords}">总字数</span
+                th:text="#{widget.siteStats.totalWords}"
               >
+                总字数
+              </span>
             </div>
             <!-- data-server-words：API 拓展包插件（app-di1jh8gd;extra-api ≥3.x）已安装时，
                服务端在此注入全站总字数，客户端直接展示、不再逐篇抓正文 -->
@@ -187,8 +199,9 @@ const style = Astro.props.style;
               id="site-stats-total-words"
               th:attr="data-server-words=${serverTotalWords != null ? serverTotalWords : ''}"
               class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-              >--</span
             >
+              --
+            </span>
           </div>
 
           <!-- 最后活动（客户端计算) -->
@@ -197,19 +210,20 @@ const style = Astro.props.style;
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
-              <span
-                class="icon-[material-symbols--history-rounded] text-xl text-(--primary)"
-              ></span>
+              <span class="icon-[material-symbols--history-rounded] text-xl text-(--primary)"></span>
               <span
                 class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                th:text="#{widget.siteStats.lastActivity}">最后活动</span
+                th:text="#{widget.siteStats.lastActivity}"
               >
+                最后活动
+              </span>
             </div>
             <span
               id="site-stats-last-activity"
               class="text-base font-bold text-neutral-900 dark:text-neutral-100"
-              >--</span
             >
+              --
+            </span>
           </div>
 
           <!-- 运行天数：选中该统计项且已填「网站上线日期」时才渲染 -->
@@ -220,25 +234,28 @@ const style = Astro.props.style;
               class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
             >
               <div class="flex items-center gap-2.5">
-                <span
-                  class="icon-[material-symbols--calendar-clock-outline-rounded] text-xl text-(--primary)"
-                ></span>
+                <span class="icon-[material-symbols--calendar-clock-outline-rounded] text-xl text-(--primary)"></span>
                 <span
                   class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                  th:text="#{widget.siteStats.runningDays}">运行天数</span
+                  th:text="#{widget.siteStats.runningDays}"
                 >
+                  运行天数
+                </span>
               </div>
               <div class="flex items-center">
                 <span
                   id="site-stats-running-days"
                   class="text-base font-bold text-neutral-900 dark:text-neutral-100"
                   th:attr="data-start-date=${theme.config?.sidebar?.siteStats?.site_start_date}"
-                  >--</span
                 >
+                  --
+                </span>
                 <span
                   class="ml-1 text-sm text-neutral-500 dark:text-neutral-400"
-                  th:text="#{widget.siteStats.days}">天</span
+                  th:text="#{widget.siteStats.days}"
                 >
+                  天
+                </span>
               </div>
             </div>
           </div>

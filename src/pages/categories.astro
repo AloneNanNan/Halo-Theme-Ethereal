@@ -47,13 +47,14 @@ import PageHeader from "../components/control/PageHeader.astro";
             class="mt-1 text-sm text-50"
             th:if="${not #strings.isEmpty(category.spec.description)}"
             th:text="${category.spec.description}"
-          >
-          </div>
+          ></div>
         </div>
         <span
           class="rounded-lg bg-(--btn-regular-bg) px-2 py-1 text-sm font-bold text-(--btn-content)"
-          th:text="${category.postCount ?: 0}">0</span
+          th:text="${category.postCount ?: 0}"
         >
+          0
+        </span>
       </a>
     </div>
   </section>

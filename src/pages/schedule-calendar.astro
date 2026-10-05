@@ -38,8 +38,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         class="act-outline group w-fit active:scale-95"
         slot="right"
       >
-        <span class="icon-[material-symbols--rss-feed-rounded] text-base"
-        ></span>
+        <span class="icon-[material-symbols--rss-feed-rounded] text-base"></span>
         <span th:text="#{page.schedule.ical}">iCal 订阅</span>
       </a>
     </PageHeader>
@@ -54,8 +53,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           class="btn-regular h-9.5 w-9.5 rounded-xl active:scale-95"
           th:aria-label="#{page.schedule.prevWeek}"
         >
-          <span class="icon-[material-symbols--chevron-left-rounded] text-xl"
-          ></span>
+          <span class="icon-[material-symbols--chevron-left-rounded] text-xl"></span>
         </a>
         <a
           th:href="@{/schedule-calendar}"
@@ -63,8 +61,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           th:aria-disabled="${view.weekStart == view.currentWeekStart}"
           class="btn-regular h-9.5 rounded-xl px-3 text-sm font-bold active:scale-95"
         >
-          <span class="icon-[material-symbols--refresh-rounded] mr-1 text-base"
-          ></span>
+          <span class="icon-[material-symbols--refresh-rounded] mr-1 text-base"></span>
           <span th:text="#{page.schedule.backToThisWeek}">回到本周</span>
         </a>
         <a
@@ -90,8 +87,7 @@ import PageHeader from "../components/control/PageHeader.astro";
       <!-- 当前状态 -->
       <div class="rounded-xl bg-(--btn-regular-bg) p-4">
         <div class="mb-2 flex items-center gap-2 text-xs text-50">
-          <span class="icon-[material-symbols--check-circle-rounded] text-sm"
-          ></span>
+          <span class="icon-[material-symbols--check-circle-rounded] text-sm"></span>
           <span th:text="#{page.schedule.currentStatus}">当前状态</span>
         </div>
         <div class="flex items-center gap-2.5">
@@ -201,8 +197,7 @@ import PageHeader from "../components/control/PageHeader.astro";
             th:if="${#lists.isEmpty(day.occupied)}"
             class="flex min-h-16 items-center justify-center py-2 text-xs text-20"
           >
-            <span class="icon-[material-symbols--checklist-rounded] text-base"
-            ></span>
+            <span class="icon-[material-symbols--checklist-rounded] text-base"></span>
           </div>
         </div>
       </div>
@@ -215,9 +210,7 @@ import PageHeader from "../components/control/PageHeader.astro";
     >
       <div class="mt-8 mb-4 flex items-center gap-3 text-lg font-bold text-90">
         <div class="title-icon" aria-hidden="true">
-          <span
-            class="icon-[material-symbols--upcoming-rounded] text-[1.25rem] text-(--primary)"
-          ></span>
+          <span class="icon-[material-symbols--upcoming-rounded] text-[1.25rem] text-(--primary)"></span>
         </div>
         <span th:text="#{page.schedule.upcoming}">即将开始</span>
       </div>
@@ -226,9 +219,7 @@ import PageHeader from "../components/control/PageHeader.astro";
            952px）不掉到 4 列，min≤248 保证容器 776px（三栏 + 视口≈1600）时仍排 3 列。
            本页另两处网格（顶部概要 md:grid-cols-2、周历 md:grid-cols-7）是视口断点控制的
            固定列数，与本处的 auto-fill 无关，勿混改。 -->
-      <div
-        class="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-4"
-      >
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-4">
         <div
           th:each="item, itemStat : ${upcomingItems}"
           th:style="|animation-delay: min(calc(var(--content-delay) + ${itemStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
@@ -237,7 +228,8 @@ import PageHeader from "../components/control/PageHeader.astro";
           <div class="mb-2.5 flex items-stretch gap-2.5">
             <span
               class="w-1 shrink-0 self-stretch rounded-full"
-              th:style="|background: ${item.color ?: 'var(--primary)'}|"></span>
+              th:style="|background: ${item.color ?: 'var(--primary)'}|"
+            ></span>
             <div class="min-w-0 flex-1">
               <div
                 class="truncate font-bold text-90 transition group-hover:text-(--primary)"
@@ -256,9 +248,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           </div>
           <div class="space-y-1 text-xs text-50">
             <div class="flex items-center gap-1.5">
-              <span
-                class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-sm text-30"
-              ></span>
+              <span class="icon-[material-symbols--calendar-today-outline-rounded] shrink-0 text-sm text-30"></span>
               <span th:text="${item.dayLabel + ' ' + item.startTime}">
                 星期一 2026-07-27 10:00
               </span>
@@ -267,26 +257,21 @@ import PageHeader from "../components/control/PageHeader.astro";
               th:if="${item.durationLabel != null}"
               class="flex items-center gap-1.5"
             >
-              <span
-                class="icon-[material-symbols--hourglass-top] shrink-0 text-sm text-30"
-              ></span>
+              <span class="icon-[material-symbols--hourglass-top] shrink-0 text-sm text-30"></span>
               <span th:text="${item.durationLabel}">1小时</span>
             </div>
             <div
               th:if="${item.location != null}"
               class="flex items-center gap-1.5"
             >
-              <span class="icon-[mdi--map-marker] shrink-0 text-sm text-30"
-              ></span>
+              <span class="icon-[mdi--map-marker] shrink-0 text-sm text-30"></span>
               <span th:text="${item.location}">会议室A</span>
             </div>
             <div
               th:if="${item.recurrenceDescription != null}"
               class="flex items-center gap-1.5"
             >
-              <span
-                class="icon-[material-symbols--repeat-rounded] shrink-0 text-sm text-30"
-              ></span>
+              <span class="icon-[material-symbols--repeat-rounded] shrink-0 text-sm text-30"></span>
               <span th:text="${item.recurrenceDescription}">每周一</span>
             </div>
           </div>
@@ -298,9 +283,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         th:if="${#lists.isEmpty(upcomingItems)}"
         class="py-12 text-center text-50"
       >
-        <span
-          class="icon-[material-symbols--event-busy-rounded] text-5xl text-30"
-        ></span>
+        <span class="icon-[material-symbols--event-busy-rounded] text-5xl text-30"></span>
         <p class="mt-4 text-sm" th:text="#{page.schedule.emptyUpcoming}">
           暂无即将开始的事项
         </p>

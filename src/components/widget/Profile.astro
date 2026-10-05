@@ -10,12 +10,8 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
     th:with={imageSuffixThWith("p?.avatar_size ?: 512")}
     class="group relative mx-auto mb-3 mt-1 block max-w-[12rem] overflow-hidden rounded-xl active:scale-95 lg:mx-0 lg:mt-0 lg:max-w-none"
   >
-    <div
-      class="pointer-events-none absolute z-50 flex h-full w-full items-center justify-center transition group-hover:bg-black/30 group-active:bg-black/50"
-    >
-      <span
-        class="icon-[fa6-regular--address-card] scale-90 text-5xl text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100"
-      ></span>
+    <div class="pointer-events-none absolute z-50 flex h-full w-full items-center justify-center transition group-hover:bg-black/30 group-active:bg-black/50">
+      <span class="icon-[fa6-regular--address-card] scale-90 text-5xl text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100"></span>
     </div>
     <ImageWrapper
       src="${(theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png') + suffix}"
@@ -49,7 +45,8 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
         >
           <span
             th:case="energetic"
-            class="icon-[mingcute--sun-fill] text-amber-500 status-spin"></span>
+            class="icon-[mingcute--sun-fill] text-amber-500 status-spin"
+          ></span>
           <span
             th:case="emo"
             class="icon-[mingcute--sad-fill] text-violet-400 status-float"
@@ -82,8 +79,7 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
         </button>
       </span>
     </div>
-    <div class="mx-auto mb-2 h-1 w-5 rounded-full bg-(--primary) transition">
-    </div>
+    <div class="mx-auto mb-2 h-1 w-5 rounded-full bg-(--primary) transition"></div>
     <div
       class="mb-2.5 text-center text-neutral-400 transition"
       th:text="${theme.config?.sidebar?.profile?.bio ?: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}"
@@ -100,8 +96,7 @@ import { imageSuffixThWith } from "../../utils/image-suffix";
         rel="noopener noreferrer"
         class="social-btn-lift btn-regular size-10 rounded-lg duration-200 active:scale-90"
         th:utext="${social.social_icon.value}"
-      >
-      </a>
+      ></a>
     </div>
   </div>
 </div>

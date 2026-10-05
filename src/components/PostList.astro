@@ -45,7 +45,8 @@ const { pagination = "posts" } = Astro.props;
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/post-list-layout.js?v=${ASSET_VERSION}`}
   defer
-  is:inline></script>
+  is:inline
+></script>
 
 <style is:global>
   /* ===== 置顶卡片高亮：主色描边 + 轻微光晕（列表/网格/瀑布流通用）===== */

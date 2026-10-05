@@ -25,34 +25,40 @@
         th:if="${mediaCount == 1}"
         class="moment-media-badge moment-media-badge-tall"
         th:text="#{page.moments.tallImage}"
-        hidden>长图</span
+        hidden
       >
+        长图
+      </span>
       <span
         th:if="${mediaCount == 1}"
         class="moment-media-badge moment-media-badge-wide"
         th:text="#{page.moments.wideImage}"
-        hidden>宽图</span
+        hidden
       >
+        宽图
+      </span>
     </figure>
     <video
       th:if="${momentItem.type.name == 'VIDEO'}"
       th:src="${momentItem.url}"
       controls
-      class="moment-media-nonphoto rounded-xl bg-black"></video>
+      class="moment-media-nonphoto rounded-xl bg-black"
+    ></video>
     <audio
       th:if="${momentItem.type.name == 'AUDIO'}"
       th:src="${momentItem.url}"
       controls
-      class="moment-media-nonphoto"></audio>
+      class="moment-media-nonphoto"
+    ></audio>
     <a
       th:if="${momentItem.type.name == 'POST'}"
       th:href="${momentItem.url != null and (momentItem.url.startsWith('http') or momentItem.url.startsWith('//') or momentItem.url.startsWith('/')) ? momentItem.url : null}"
       class="moment-media-nonphoto btn-regular min-h-20 rounded-xl px-4 font-bold"
     >
-      <span
-        class="icon-[material-symbols--article-outline-rounded] mr-2 text-xl"
-      ></span>
-      <span class="truncate" th:text="${momentItem.url}">Post</span>
+      <span class="icon-[material-symbols--article-outline-rounded] mr-2 text-xl"></span>
+      <span class="truncate" th:text="${momentItem.url}">
+        Post
+      </span>
     </a>
   </div>
 </div>
@@ -60,4 +66,5 @@
 <script
   src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/moment-media-badge.js?v=${ASSET_VERSION}`}
   defer
-  is:inline></script>
+  is:inline
+></script>

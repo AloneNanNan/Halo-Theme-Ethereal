@@ -153,54 +153,54 @@ const stats = [
           <span
             th:if="${not #strings.isEmpty(bangumi.spec.type)}"
             class="absolute left-2.5 top-2.5 rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm"
-            th:text="${bangumi.spec.type}">番剧</span
+            th:text="${bangumi.spec.type}"
           >
+            番剧
+          </span>
 
           <!-- 右上：评分角标 -->
           <span
             th:if="${bangumi.spec.score != null and bangumi.spec.score != '' and bangumi.spec.score != '-'}"
             class="absolute right-2.5 top-2.5 rounded-md bg-(--primary)/90 px-1.5 py-0.5 text-xs font-bold text-white shadow-sm"
-            th:text="${bangumi.spec.score}">9.9</span
+            th:text="${bangumi.spec.score}"
           >
+            9.9
+          </span>
 
           <!-- 底部渐变遮罩 + 信息 -->
-          <div
-            class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3.5 pb-3 pt-10"
-          >
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3.5 pb-3 pt-10">
             <!-- 标题 -->
             <div class="text-[15px] font-bold leading-snug text-white">
-              <span class="line-clamp-2" th:text="${bangumi.spec.title}"
-                >Title</span
-              >
+              <span class="line-clamp-2" th:text="${bangumi.spec.title}">
+                Title
+              </span>
             </div>
 
             <!-- 元信息：地区 · 总集数 -->
-            <div
-              class="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-white/75"
-            >
+            <div class="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-white/75">
               <span
                 th:if="${not #strings.isEmpty(bangumi.spec.area)}"
-                th:text="${bangumi.spec.area}">日本</span
+                th:text="${bangumi.spec.area}"
               >
+                日本
+              </span>
               <span
                 th:if="${not #strings.isEmpty(bangumi.spec.area)}"
-                class="text-white/40">·</span
+                class="text-white/40"
               >
+                ·
+              </span>
               <span th:text="${bangumi.spec.totalCount}">全24话</span>
             </div>
 
             <!-- 统计信息：追番 / 播放 / 弹幕 / 硬币 -->
-            <div
-              class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-white/75"
-            >
-              {
-                stats.map((stat) => (
-                  <span class="inline-flex items-center gap-0.5">
-                    <span class={`${stat.icon} text-[12px]`} />
-                    <span th:text={stat.expr}>{stat.text}</span>
-                  </span>
-                ))
-              }
+            <div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-white/75">
+              {stats.map((stat) => (
+                <span class="inline-flex items-center gap-0.5">
+                  <span class={`${stat.icon} text-[12px]`} />
+                  <span th:text={stat.expr}>{stat.text}</span>
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -212,8 +212,7 @@ const stats = [
       th:if="${bangumis == null or #lists.isEmpty(bangumis.items)}"
       class="py-16 text-center text-50"
     >
-      <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"
-      ></span>
+      <span class="icon-[material-symbols--inbox-rounded] text-5xl text-30"></span>
       <p
         th:if="${bangumis != null and (bangumis.typeNum != 1 or bangumis.status != 0)}"
         class="mt-4"
@@ -238,5 +237,6 @@ const stats = [
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

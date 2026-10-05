@@ -56,9 +56,7 @@ const tocIf = showToc ? `\${tocOnLeft and (${tocEnabledExpr})}` : "false";
       </div>
     </div>
 
-    {
-      /* 吸顶区：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名 */
-    }
+    {/* 吸顶区：id 被 Layout.astro 的吸顶位置规则与 global.css 的 banner 偏移规则引用，勿改名 */}
     <div id="sidebar-sticky" class="sticky top-4 flex w-full flex-col gap-4">
       <div
         class="contents"
@@ -69,16 +67,18 @@ const tocIf = showToc ? `\${tocOnLeft and (${tocEnabledExpr})}` : "false";
       </div>
       {/* 默认小组件（新安装主题未保存设置时显示） */}
       <div th:if="${widgets == null}" class="contents">
-        <div class="contents"><Categories class="onload-animation" /></div>
-        <div class="contents"><Tags class="onload-animation" /></div>
+        <div class="contents">
+          <Categories class="onload-animation" />
+        </div>
+        <div class="contents">
+          <Tags class="onload-animation" />
+        </div>
       </div>
-      {
-        /* 目录槽位（Swup 容器）：把这一格单独做成容器，目录才能由服务端条件按页
+      {/* 目录槽位（Swup 容器）：把这一格单独做成容器，目录才能由服务端条件按页
           渲染（文章页换成卡片、其他页空内容），无需客户端 refresh / 显隐逻辑。
           ⚠️ 容器必须在每个主题页存在（app.ts 的容器守卫：缺任一容器即 abort），
           故恒渲染、不带 th:if；显示条件写在里面的 th:if 上。吸顶限高由
-          Layout.astro 的 #sidebar-sticky:has(#sidebar-toc > *) 承担 */
-      }
+          Layout.astro 的 #sidebar-sticky:has(#sidebar-toc > *) 承担 */}
       <div id="sidebar-toc">
         <div th:remove="tag" th:if={tocIf}>
           <SidebarTOC />

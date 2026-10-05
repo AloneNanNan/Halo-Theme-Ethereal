@@ -87,21 +87,22 @@ import "../styles/photos-gallery-lightbox.css";
           >
             <span
               class="photo-detail-url hidden"
-              th:text="@{${photoUrl.detail(photo)}}"></span>
-            <span class="photo-full-url hidden" th:text="${photo.spec.url}"
+              th:text="@{${photoUrl.detail(photo)}}"
+            ></span>
+            <span
+              class="photo-full-url hidden"
+              th:text="${photo.spec.url}"
             ></span>
             <span
               th:if="${not #strings.isEmpty(photo.spec.groupName)}"
               class="photo-group-name hidden"
               th:text="${photo.spec.groupName}"
-            >
-            </span>
+            ></span>
             <span
               th:if="${not #strings.isEmpty(photo.spec.groupName)}"
               class="photo-group-url hidden"
               th:text="@{${photoUrl.list(photo.spec.groupName)}}"
-            >
-            </span>
+            ></span>
             <span
               class="photo-data-title hidden"
               th:text="${not #strings.isEmpty(photo.spec.displayName) ? photo.spec.displayName : photo.metadata.name}"
@@ -112,20 +113,17 @@ import "../styles/photos-gallery-lightbox.css";
               th:if="${not #strings.isEmpty(photo.spec.description)}"
               class="photo-data-description hidden"
               th:text="${photo.spec.description}"
-            >
-            </span>
+            ></span>
             <span
               th:if="${photo.exif != null and photo.exif.dateTimeOriginal != null}"
               class="photo-data-date hidden"
               th:text="${#dates.format(photo.exif.dateTimeOriginal, 'yyyy-MM-dd HH:mm')}"
-            >
-            </span>
+            ></span>
             <span
               th:if="${photo.exif != null and (not #strings.isEmpty(photo.exif.make) or not #strings.isEmpty(photo.exif.model))}"
               class="photo-data-camera hidden"
               th:text="${#strings.trim((photo.exif.make ?: '') + ' ' + (photo.exif.model ?: ''))}"
-            >
-            </span>
+            ></span>
 
             <figure class="relative">
               <!-- EXIF 宽高比预占高度：瀑布流列在图片加载前即按比例占位，避免逐列重排（CLS）；无 EXIF 时回退原行为 -->
@@ -152,8 +150,7 @@ import "../styles/photos-gallery-lightbox.css";
                   th:if="${not #strings.isEmpty(photo.spec.description)}"
                   class="mt-1 line-clamp-2 text-sm leading-5 text-white/75"
                   th:text="${photo.spec.description}"
-                >
-                </div>
+                ></div>
                 <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/80">
                   <span
                     th:if="${photo.exif != null and photo.exif.dateTimeOriginal != null}"
@@ -192,8 +189,7 @@ import "../styles/photos-gallery-lightbox.css";
             th:href="@{${photoUrl.detail(photo)}}"
             th:aria-label="#{page.photos.viewDetail}"
           >
-            <span class="icon-[material-symbols--info-outline-rounded] text-xl"
-            ></span>
+            <span class="icon-[material-symbols--info-outline-rounded] text-xl"></span>
           </a>
         </article>
       </div>
@@ -203,10 +199,10 @@ import "../styles/photos-gallery-lightbox.css";
       th:if="${#lists.isEmpty(photos.items)}"
       class="py-16 text-center text-50"
     >
-      <span
-        class="icon-[material-symbols--photo-library-outline-rounded] text-5xl text-30"
-      ></span>
-      <p class="mt-4 text-sm" th:text="#{page.photos.empty}">暂无图片</p>
+      <span class="icon-[material-symbols--photo-library-outline-rounded] text-5xl text-30"></span>
+      <p class="mt-4 text-sm" th:text="#{page.photos.empty}">
+        暂无图片
+      </p>
     </div>
   </section>
 
@@ -217,5 +213,6 @@ import "../styles/photos-gallery-lightbox.css";
   <script
     src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/filter-seg.js?v=${ASSET_VERSION}`}
     defer
-    is:inline></script>
+    is:inline
+  ></script>
 </MainGridLayout>

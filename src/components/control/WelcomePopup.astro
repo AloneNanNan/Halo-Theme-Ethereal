@@ -16,9 +16,7 @@ interface Props {
   role="status"
   aria-live="polite"
 >
-  <div
-    class="welcome-card card-base pointer-events-auto relative w-full max-w-80 overflow-hidden"
-  >
+  <div class="welcome-card card-base pointer-events-auto relative w-full max-w-80 overflow-hidden">
     <div class="p-4">
       <!-- 标题行：主色装饰竖线 + 标题 + 关闭按钮。标题用 h2：卡片在 banner 的 h1
            之后，h1→h3 跳级违反 heading-order；字号在 class 上，换标签不影响视觉 -->
@@ -35,22 +33,18 @@ interface Props {
           aria-label="关闭"
           th:aria-label="#{common.close}"
         >
-          <span
-            class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"
-          ></span>
+          <span class="icon-[fa6-solid--xmark] text-sm transition-all duration-300 group-hover:rotate-90 group-hover:text-(--primary)"></span>
         </button>
       </div>
 
       <!-- 正文：欢迎手势图标 + 位置主色高亮 -->
       <div class="mt-3 flex items-start gap-2">
-        <span
-          class="icon-[material-symbols--waving-hand-rounded] mt-0.5 shrink-0 text-lg leading-none text-(--primary)"
-        ></span>
-        <p
-          class="min-w-0 flex-1 text-sm leading-relaxed whitespace-pre-line text-black/60 dark:text-white/60"
-        >
+        <span class="icon-[material-symbols--waving-hand-rounded] mt-0.5 shrink-0 text-lg leading-none text-(--primary)"></span>
+        <p class="min-w-0 flex-1 text-sm leading-relaxed whitespace-pre-line text-black/60 dark:text-white/60">
           <span data-field="location-prefix"></span>
-          <span class="font-medium text-(--primary)" data-field="location"
+          <span
+            class="font-medium text-(--primary)"
+            data-field="location"
           ></span>
           <span data-field="location-suffix"></span>
         </p>

@@ -68,15 +68,13 @@ const activeAppend = activeExpr
   {...attrs}
 >
   <span th:text={labelExpr}>{label}</span>
-  {
-    countExpr && (
-      <span
-        th:if={countShowIfExpr}
-        class={segmented ? `seg-cnt ${countClass}` : countClass}
-        th:text={countExpr}
-      >
-        0
-      </span>
-    )
-  }
+  {countExpr && (
+    <span
+      th:if={countShowIfExpr}
+      class={segmented ? `seg-cnt ${countClass}` : countClass}
+      th:text={countExpr}
+    >
+      0
+    </span>
+  )}
 </a>

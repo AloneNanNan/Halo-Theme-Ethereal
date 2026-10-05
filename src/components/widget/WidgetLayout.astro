@@ -65,18 +65,16 @@ const titleText = nameExpression
   >
     <slot />
   </div>
-  {
-    (isCollapsed || hasRuntimeCollapse) && (
-      <div class="expand-btn -mb-2 px-4" th:if={collapseCondition}>
-        <button class="btn-plain h-9 w-full rounded-lg" type="button">
-          <div class="-translate-x-2 flex items-center justify-center gap-2 text-(--primary)">
-            <span class="icon-[material-symbols--more-horiz] text-[1.75rem]" />
-            <span th:text="#{common.more}">More</span>
-          </div>
-        </button>
-      </div>
-    )
-  }
+  {(isCollapsed || hasRuntimeCollapse) && (
+    <div class="expand-btn -mb-2 px-4" th:if={collapseCondition}>
+      <button class="btn-plain h-9 w-full rounded-lg" type="button">
+        <div class="-translate-x-2 flex items-center justify-center gap-2 text-(--primary)">
+          <span class="icon-[material-symbols--more-horiz] text-[1.75rem]" />
+          <span th:text="#{common.more}">More</span>
+        </div>
+      </button>
+    </div>
+  )}
 </widget-layout>
 
 <style define:vars={{ collapsedHeight }}>
