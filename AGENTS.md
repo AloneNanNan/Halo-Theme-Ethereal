@@ -180,6 +180,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - `theme.config?.xxx` 用 `?.` 安全导航；字面值可写成 `|${...}|` 拼接。
 - 静态资源用 `#theme.assets("/assets/...")` 或 `@{/assets/...}` 引用，构建后路径带 `/themes/Ethereal` 前缀。
 - 图片拼 CDN 参数使用 `imageSuffixThWith(...)`（见 `src/utils/image-suffix.ts`），不要在模板里手写硬编码后缀。
+- **`<halo:footer />` 页脚注入挂载点**：位于 `src/layouts/Layout.astro` 的 `</body>` 前（`<Fragment set:html={...} />` 字符串注入）。后台「代码注入 → 页脚」与页脚类插件（`TemplateFooterProcessor`）的输出都依赖它，**勿删除、勿移入 Swup 容器**（容器外才能换页不重建、注入内容跨页常驻）；全站只此一份，别在 `MainGridLayout` 等处重复添加。head 注入无需模板标签（Halo 直接处理 `<head>` 元素）。
 
 ## 6. 常见坑（务必注意）
 
