@@ -23,6 +23,7 @@ import {
 interface Props {
   title?: string;
   description?: string;
+  descriptionShowIfExpr?: string;
   setOGTypeArticle?: boolean;
   isHomePage?: boolean;
 }
@@ -30,6 +31,7 @@ interface Props {
 const {
   title = "${site.title}",
   description = "",
+  descriptionShowIfExpr = "",
   setOGTypeArticle = false,
   isHomePage = false,
 } = Astro.props;
@@ -193,7 +195,15 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <!-- 必须含 initial-scale=1：缺失时 iOS Safari 会按视口宽度自动缩放页面 -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
-    <meta name="description" th:content={description} />
+    <!-- description 显隐条件可由页面经 descriptionShowIfExpr 传入（裸表达式，缺省无条件输出；
+         首页让位用法见 index.astro） -->
+    <meta
+      name="description"
+      th:content={description}
+      th:if={
+        descriptionShowIfExpr ? "${" + descriptionShowIfExpr + "}" : undefined
+      }
+    />
     <!-- 社交分享标签由「杂项设置 → SEO 设置」开关控制（默认开启）；canonical 在文章 /
          独立页面模板内输出；og:url 不输出（模板上下文不暴露请求对象） -->
     <meta

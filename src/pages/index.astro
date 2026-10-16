@@ -3,10 +3,13 @@ import PostList from "../components/PostList.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 ---
 
+<!-- 首页 description 让位：站长配置了系统 SEO 描述时不再输出主题描述（不抑制会与
+     Halo 注入的描述并存、首页出现两条；见 AGENTS.md 5.7） -->
 <MainGridLayout
   title="${site.title}"
   isHomePage={true}
   description="${theme.config?.sidebar?.profile?.bio}"
+  descriptionShowIfExpr="!#strings.isEmpty(theme.config?.sidebar?.profile?.bio) and #strings.isEmpty(site.seo?.description)"
 >
   <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <!-- 首页 h1 兜底：banner 标题缺失时用隐藏站点名（sr-only），保证首页始终有且只有一个

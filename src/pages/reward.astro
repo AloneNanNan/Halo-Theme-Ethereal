@@ -12,6 +12,12 @@ import PageHeader from "../components/control/PageHeader.astro";
   description="#{page.reward.description(${site.title})}"
 >
   <Fragment slot="head">
+    <!-- 独立页面 canonical（开关见「杂项设置 → SEO 设置」）；og 标签由 Layout.astro 统一输出 -->
+    <link
+      rel="canonical"
+      th:href="@{${site.url + singlePage.status.permalink}}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
     <!-- 二维码白盒的静态阴影：取主题色（与 card-hover-lift 的悬浮阴影同款取值）。
          用 is:global 样式而非 Tailwind 任意值类：color-mix 含逗号/空格，
          塞进任意值里转义易踩坑（见 AGENTS「常见坑」） -->

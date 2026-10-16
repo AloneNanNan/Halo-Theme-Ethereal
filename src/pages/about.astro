@@ -11,6 +11,14 @@ import "../styles/about.css";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.about.description(${site.title})}"
 >
+  <Fragment slot="head">
+    <!-- 独立页面 canonical（开关见「杂项设置 → SEO 设置」）；og 标签由 Layout.astro 统一输出 -->
+    <link
+      rel="canonical"
+      th:href="@{${site.url + singlePage.status.permalink}}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+  </Fragment>
   <!-- 变量统一在本条（页面顶层）th:with 定义，下方卡片直接读：
        cfg / aboutPosts / aboutMoments / friendLinks / friendCount / skill* / projects / socials。
        ⚠️ 不要在消费点上再叠 th:with + th:if：Thymeleaf 的 th:if(优先级 3) 早于

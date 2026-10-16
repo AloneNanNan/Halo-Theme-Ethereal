@@ -14,7 +14,14 @@ import PageHeader from "../components/control/PageHeader.astro";
   description="#{page.wishes.description(${site.title})}"
 >
   <Fragment slot="head">
-    <!-- 页面标题由 Layout.astro 统一输出；此处仅保留页面特有 head 内容 -->
+    <!-- 独立页面 canonical：插件内置页模式（无 singlePage）不输出；og 标签由 Layout.astro
+         统一输出；开关见「杂项设置 → SEO 设置」 -->
+    <link
+      rel="canonical"
+      th:href="@{${site.url + singlePage.status.permalink}}"
+      th:if="${singlePage != null and theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+    <!-- 页面标题由 Layout.astro 统一输出；以下为页面特有 head 内容 -->
     <link
       rel="stylesheet"
       href={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/wishes.css?v=${ASSET_VERSION}`}

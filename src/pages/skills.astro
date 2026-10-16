@@ -13,6 +13,14 @@ import PageHeader from "../components/control/PageHeader.astro";
   title="${singlePage.spec.title + ' - ' + site.title}"
   description="#{page.skills.description(${site.title})}"
 >
+  <Fragment slot="head">
+    <!-- 独立页面 canonical（开关见「杂项设置 → SEO 设置」）；og 标签由 Layout.astro 统一输出 -->
+    <link
+      rel="canonical"
+      th:href="@{${site.url + singlePage.status.permalink}}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+  </Fragment>
   <!-- 注：分类计数用字面量投影（category == 'literal'），勿在 items.![...] 投影内引用
        param（Map 条目会遮蔽上下文变量导致 #lists.contains(null,...) 抛异常）。
        filteredCount 由同一限制而来：只能写成 contains 链取当前分类的预计算数，
