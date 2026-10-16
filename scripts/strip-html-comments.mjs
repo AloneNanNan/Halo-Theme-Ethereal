@@ -1,5 +1,5 @@
 // @ts-check
-// 构建后处理：剥离产物 HTML（templates/**/*.html）中的 <!-- --> 注释。
+// 构建后处理：递归剥离产物 HTML（templates/**/*.html，含 error/ 等子目录）中的 <!-- --> 注释。
 // 保护 <script>/<style> 块内部——其中含有 Thymeleaf th:inline="javascript"
 // 的内联表达式语法 /*[[${...}]]*/，是功能性代码，绝不能删。
 // 以 Astro integration 挂载到 astro:build:done（见 astro.config.mjs），
@@ -15,21 +15,30 @@ const PROTECTED =
 // 跨行非贪婪匹配 HTML 注释；未闭合（无 --> 配对）时匹配到段尾一并清除，避免残留破坏结构
 const COMMENT = /<!--[\s\S]*?(?:-->|$)/g;
 
-/** @param {string} dirPath */
-export async function stripHtmlCommentsInDir(dirPath) {
+/**
+ * @param {string} dirPath
+ * @returns {Promise<{ files: number; comments: number }>}
+ */
+async function stripDir(dirPath) {
   let files = 0;
   let comments = 0;
   let entries;
   try {
-    entries = await readdir(dirPath);
+    entries = await readdir(dirPath, { withFileTypes: true });
   } catch {
     console.warn(`[strip-comments] 目录不存在，跳过：${dirPath}`);
-    return { files: 0, comments: 0 };
+    return { files, comments };
   }
-  for (const name of entries) {
-    if (!name.endsWith(".html")) continue;
-    const file = join(dirPath, name);
-    let html = await readFile(file, "utf8");
+  for (const entry of entries) {
+    const file = join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      const sub = await stripDir(file);
+      files += sub.files;
+      comments += sub.comments;
+      continue;
+    }
+    if (!entry.name.endsWith(".html")) continue;
+    const html = await readFile(file, "utf8");
     const parts = html.split(PROTECTED);
     let removed = 0;
     const stripped = parts
@@ -46,6 +55,12 @@ export async function stripHtmlCommentsInDir(dirPath) {
       comments += removed;
     }
   }
+  return { files, comments };
+}
+
+/** @param {string} dirPath */
+export async function stripHtmlCommentsInDir(dirPath) {
+  const { files, comments } = await stripDir(dirPath);
   console.log(`[strip-comments] 剥离 ${comments} 条注释（${files} 个 HTML）`);
   return { files, comments };
 }

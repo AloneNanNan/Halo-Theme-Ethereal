@@ -20,11 +20,21 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
   showToc={true}
 >
   <Fragment slot="head">
-    <!-- og:title 由 Layout.astro 统一输出；此处仅保留文章特有 og 元数据 -->
-    <meta property="og:description" th:content="${post.status.excerpt}" />
+    <!-- og:title 由 Layout.astro 统一输出；此处仅保留文章特有 og 元数据与 canonical。
+         开关见「杂项设置 → SEO 设置」 -->
+    <link
+      rel="canonical"
+      th:href="@{${site.url + post.status.permalink}}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+    <meta
+      property="og:description"
+      th:content="${post.status.excerpt}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
     <meta
       property="og:image"
-      th:if="${not #strings.isEmpty(post.spec.cover)}"
+      th:if="${not #strings.isEmpty(post.spec.cover) and theme.config?.misc?.seo?.enable_metadata != false}"
       th:content="${post.spec.cover}"
     />
   </Fragment>

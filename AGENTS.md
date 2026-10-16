@@ -148,6 +148,8 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 读取默认值时用安全导航，例如 `theme.config?.layout?.postList?.descriptionLines == 0`。
 
+**分组键即数据键**：Halo 按顶层分组名整包存储设置（ConfigMap 里每分组一个键、值为该分组的 JSON），改 `group` 名会使该分组已存设置回落默认，必须同步所有读取处；`$formkit: group` 的嵌套 `name` 也进入数据路径（如 `theme.config?.misc?.seo?.enable_metadata`）。
+
 **`help` 文案要短**：一句话说清「这个设置做什么 / 取值怎么选」，可读性优先——不写长篇大论、不解释实现原理、不用「本选项将…」式公文腔；互斥 / 取值等必要信息用短句补齐即可。正面例（settings.yaml 现有写法）：`经典：单栏居中的细线页脚；卡片：整块卡片式页脚`。
 
 ### 5.5 访客样式面板与展示层开关
@@ -161,6 +163,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **导航栏显隐**：固定 / 非固定两种模式在桌面端（≥1024px）都是 fixed，区别只在 `navbar-hidden` 是否生效（固定模式强制 `translate:none` 永不隐藏）；**别把非固定模式退回 sticky**（sticky 粘附范围只有 `#top-row`，滚出后上滑回不来）。方向判定有 8px 死区（`SCROLL_DIRECTION_DEADZONE_PX`）；状态统一在 `scrollFunction` 末尾落定（含移动端 / 固定 / 无导航栏的清理），隐藏态同步加 `inert`。隐藏时给 body 加 `dynamic-navbar-hidden`，`Layout.astro` 用它把 `--navbar-sticky-offset` 归零，侧栏吸顶 top 与目录 max-height 统一引用。
 - **脚本顺序与门控**：`visitor-post-layout.js`（同步、首帧换布局类）必须在 `post-list-layout.js`（defer、瀑布流）之前，后者暴露 `window.__postListRelayout` 供换类后重排；文章页三件套 `post-like / post-share / post-reward` 按 `actionBar.*` 子开关 `th:if` 门控，`qrcode.bundle.js` 由 `post-share.js` 首次生成海报时经 `data-qr-src` 注入；banner 6 个脚本按 `mode == 'carousel'` / `isVideo` / `mobileActive` 门控（与 `#banner-wrapper` 的 `th:with` 同源）；`friends.bundle.js` 按列表非空门控、`links.bundle.js` 恒加载（外部门控已改脚本内守卫）；`window.__themeConfig` 缓存契约——首个消费脚本 parse 并写入、其余复用，不得各自 `JSON.parse`；樱花特效门控见 `Layout.astro` 尾部（默认值走 `data-sakura-default`，参数在 `_sakura-config.ts`、绘制核心 `_sakura-core.ts` 共享）。
 - **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处。
+- **插件配色契约**：`html` 根节点的 `data-color-scheme`（auto/light/dark）+ `color-scheme-*` 类供插件前台组件跟随主题明暗；同步点：`Layout.astro` / `pages/layout.astro` 的 html 标签与启动脚本、`setting-utils.applyThemeToDocument`（改一处必须同步其余）。
 
 ### 5.6 组件表达式 prop 约定
 
@@ -181,6 +184,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - 静态资源用 `#theme.assets("/assets/...")` 或 `@{/assets/...}` 引用，构建后路径带 `/themes/Ethereal` 前缀。
 - 图片拼 CDN 参数使用 `imageSuffixThWith(...)`（见 `src/utils/image-suffix.ts`），不要在模板里手写硬编码后缀。
 - **`<halo:footer />` 页脚注入挂载点**：位于 `src/layouts/Layout.astro` 的 `</body>` 前（`<Fragment set:html={...} />` 字符串注入）。后台「代码注入 → 页脚」与页脚类插件（`TemplateFooterProcessor`）的输出都依赖它，**勿删除、勿移入 Swup 容器**（容器外才能换页不重建、注入内容跨页常驻）；全站只此一份，别在 `MainGridLayout` 等处重复添加。head 注入无需模板标签（Halo 直接处理 `<head>` 元素）。
+- **favicon 由 Halo 注入**（系统设置里配置）：主题布局不输出 `<link rel="icon">`，否则与注入重复（未配置时主题侧只会渲染出空 href 的无用标签）。
 
 ## 6. 常见坑（务必注意）
 

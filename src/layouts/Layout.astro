@@ -172,6 +172,8 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
   th:data-fullscreen-layout="${theme.config?.layout?.bannerLayout?.fullscreenLayout ?: 'classic'}"
   th:with={bannerModeThWith() + ", " + speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
+  th:data-color-scheme="${theme.config?.style?.colorScheme?.color_scheme ?: 'auto'}"
+  th:classappend="${' color-scheme-' + (theme.config?.style?.colorScheme?.color_scheme ?: 'auto')}"
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
   data-overlayscrollbars-initialize
 >
@@ -192,17 +194,26 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
     <meta name="description" th:content={description} />
-    <!-- 注意：不在此输出 og:url / canonical。Halo 模板上下文不暴露请求对象
-         （#httpServletRequest 恒为 null，会导致空属性），canonical 由 Halo 核心自动注入 -->
-    <meta property="og:site_name" th:content="${site.title}" />
-    <meta property="og:title" th:content={title} />
+    <!-- 社交分享标签由「杂项设置 → SEO 设置」开关控制（默认开启）；canonical 在文章 /
+         独立页面模板内输出；og:url 不输出（模板上下文不暴露请求对象） -->
+    <meta
+      property="og:site_name"
+      th:content="${site.title}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+    <meta
+      property="og:title"
+      th:content={title}
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
     <meta
       property="og:type"
       content={setOGTypeArticle ? "article" : "website"}
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
     />
     <!-- 全站唯一 <title>：页面组件不再自行定义，避免重复输出 -->
     <title th:text={title}></title>
-    <link rel="icon" th:href="${site.favicon}" />
+    <!-- favicon 由 Halo 注入，主题不输出（避免与注入重复） -->
 
     <Fragment set:html={themeSettingScript} />
     <Fragment set:html={i18nInlineScript} />
@@ -314,6 +325,19 @@ const themeSettingScript = `<script type="application/json" id="theme-config" th
         } else {
           document.documentElement.classList.remove("dark");
         }
+
+        // 插件配色契约：与 setting-utils.applyThemeToDocument、pages/layout.astro 启动脚本同步（契约见 AGENTS.md 5.5）
+        const contractMode =
+          storedTheme === LIGHT_MODE || storedTheme === DARK_MODE
+            ? storedTheme
+            : AUTO_MODE;
+        document.documentElement.dataset.colorScheme = contractMode;
+        document.documentElement.classList.remove(
+          "color-scheme-auto",
+          "color-scheme-light",
+          "color-scheme-dark",
+        );
+        document.documentElement.classList.add("color-scheme-" + contractMode);
 
         const hue = fixedHue
           ? configHue

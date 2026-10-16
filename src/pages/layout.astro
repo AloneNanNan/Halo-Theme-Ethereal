@@ -55,6 +55,8 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
   th:with={speedCustomStyleThWith()}
   th:style={speedCustomStyleThExpr()}
   th:fragment="html (head, content)"
+  th:data-color-scheme="${theme.config?.style?.colorScheme?.color_scheme ?: 'auto'}"
+  th:classappend="${' color-scheme-' + (theme.config?.style?.colorScheme?.color_scheme ?: 'auto')}"
   class="bg-(--page-bg) text-[14px] transition md:text-[16px]"
 >
   <head>
@@ -62,9 +64,14 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" th:content="${theme.config?.sidebar?.profile?.name}" />
-    <meta property="og:site_name" th:content="${site.title}" />
-    <title th:text="${site.title}"></title>
-    <link rel="icon" th:href="${site.favicon}" />
+    <meta
+      property="og:site_name"
+      th:content="${site.title}"
+      th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
+    />
+    <!-- 契约：调用方经 head 传标题时由其提供；本布局仅在 head 为空时输出站点标题 -->
+    <title th:if="${head == null}" th:text="${site.title}"></title>
+    <!-- favicon 由 Halo 注入，主题不输出（避免与注入重复） -->
 
     <Fragment set:html={themeSettingScript} />
     <script th:inline="javascript" is:inline>
@@ -117,6 +124,19 @@ const contentSlot = `<th:block th:replace="\${content}" />`;
         } else {
           document.documentElement.classList.remove("dark");
         }
+
+        // 插件配色契约：与 setting-utils.applyThemeToDocument、Layout.astro 启动脚本同步（契约见 AGENTS.md 5.5）
+        const contractMode =
+          storedTheme === LIGHT_MODE || storedTheme === DARK_MODE
+            ? storedTheme
+            : AUTO_MODE;
+        document.documentElement.dataset.colorScheme = contractMode;
+        document.documentElement.classList.remove(
+          "color-scheme-auto",
+          "color-scheme-light",
+          "color-scheme-dark",
+        );
+        document.documentElement.classList.add("color-scheme-" + contractMode);
 
         const hue = fixedHue
           ? configHue

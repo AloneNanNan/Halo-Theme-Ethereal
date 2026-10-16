@@ -2796,16 +2796,29 @@ spec:
               max: 512
               step: 32
               help: "头像图片的缩放宽度（px）。设为 0 则使用原图不压缩。建议值：512"
-    - group: auth
-      label: 认证
+    - group: misc
+      label: 杂项设置
       formSchema:
-        - $formkit: select
-          name: loginPage
-          id: login_page
-          label: 登录界面
-          value: halo
-          options:
-            - label: 主题认证界面
-              value: theme
-            - label: Halo 默认
+        - $formkit: group
+          name: auth
+          label: 认证设置
+          children:
+            - $formkit: select
+              name: loginPage
+              id: login_page
+              label: 登录界面
               value: halo
+              options:
+                - label: 主题认证界面
+                  value: theme
+                - label: Halo 默认
+                  value: halo
+        - $formkit: group
+          name: seo
+          label: SEO 设置
+          children:
+            - $formkit: switch
+              name: enable_metadata
+              label: 输出 canonical 与社交分享标签
+              value: true
+              help: "关闭后不再输出 canonical 与 Open Graph 标签；已通过插件提供同类标签的站点可关闭本项避免重复"

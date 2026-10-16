@@ -21,7 +21,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 //         必须用 post.categories 对象列表（ListedPostVo 增强字段，spec.slug）匹配，
 //         spec.categories 分支仅作兜底保留。
 const postMatchRow = `(#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)) or (not #lists.isEmpty(param.category) and ((post.categories != null and #lists.contains(post.categories.![spec.slug], param.category[0])) or #lists.contains(post.spec.categories, param.category[0]))) or (#lists.isEmpty(param.category) and not #lists.isEmpty(param.uncategorized) and ((post.categories == null or #lists.isEmpty(post.categories)) and (post.spec.categories == null or #lists.isEmpty(post.spec.categories))))`;
-const topWith = `totalPosts=\${#aggregates.sum(archives.items.![#aggregates.sum(months.![posts.size()])])},filterActive=\${not #lists.isEmpty(param.category) or not #lists.isEmpty(param.uncategorized)}`;
+const topWith = `totalPosts=\${#aggregates.sum(archives.items.![#aggregates.sum(months.![posts.size()])])},filterActive=\${not #lists.isEmpty(param.category) or not #lists.isEmpty(param.uncategorized)},allCategories=\${categoryFinder.listAll()}`;
 const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.size()])}`;
 ---
 
@@ -42,7 +42,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
         iconClass="icon-[material-symbols--archive-outline-rounded]"
         eyebrow="ARCHIVES"
         filteredExpr="${filterActive}"
-        filteredClearExpr="@{/archives}"
+        filteredClearExpr="@{${site.routes.archivesUri}}"
         stats={[
           {
             key: "archives-posts",
@@ -52,7 +52,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
             label: "文章",
           },
           {
-            valueExpr: "${#lists.size(categoryFinder.listAll())}",
+            valueExpr: "${#lists.size(allCategories)}",
             value: "0",
             labelExpr: "#{common.stat.categories}",
             label: "分类",
@@ -68,13 +68,14 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
             <span class="seg-thumb" aria-hidden="true"></span>
             <FilterTabs
               segmented
-              showIfExpr="${not #lists.isEmpty(categoryFinder.listAll())}"
-              allHrefExpr="@{/archives}"
+              showIfExpr="${not #lists.isEmpty(allCategories)}"
+              allHrefExpr="@{${site.routes.archivesUri}}"
               allActiveExpr="#lists.isEmpty(param.category) and #lists.isEmpty(param.uncategorized)"
               countClass="archive-cat-count text-30"
-              eachExpr="category : ${categoryFinder.listAll()}"
+              eachExpr="category : ${allCategories}"
               tabTemplate={{
-                hrefExpr: "@{/archives(category=${category.spec.slug})}",
+                hrefExpr:
+                  "${site.routes.archivesUri + '?category=' + category.spec.slug}",
                 activeExpr:
                   "#lists.contains(param.category, category.spec.slug)",
                 labelExpr: "${category.spec.displayName}",
@@ -83,7 +84,7 @@ const yearCountThWith = `postCount=\${#aggregates.sum(archive.months.![posts.siz
             />
             <FilterTab
               segmented
-              hrefExpr="@{/archives?uncategorized}"
+              hrefExpr="${site.routes.archivesUri + '?uncategorized'}"
               activeExpr="not #lists.isEmpty(param.uncategorized)"
               labelExpr="#{page.archives.uncategorized}"
               label="未分类"

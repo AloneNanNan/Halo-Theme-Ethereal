@@ -1,0 +1,35 @@
+---
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout
+  title="|#{page.error.title} - ${site.title}|"
+  description="#{page.error.description}"
+>
+  <!-- 通用错误兜底页：Halo 错误页按 404 → 4xx → error.html（5xx 同理）逐级匹配，
+       本文件作为最终兜底。error 对象字段：status / title / detail / type / instance -->
+  <div class="card-base onload-animation flex flex-col items-center justify-center px-8 py-16 text-center min-h-[50vh]">
+    <div
+      class="text-[8rem] font-black leading-none tracking-tighter text-(--primary)/20 md:text-[12rem]"
+      th:text="${error?.status ?: 'Error'}"
+    >
+      Error
+    </div>
+    <h1
+      class="mt-4 text-2xl font-bold text-90 md:text-3xl"
+      th:text="#{page.error.title}"
+    >
+      Something Went Wrong
+    </h1>
+    <p class="mt-3 max-w-md text-50" th:text="#{page.error.description}">
+      An unexpected error occurred. Please try again later.
+    </p>
+    <a
+      th:href="@{/}"
+      class="btn-regular mt-8 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition active:scale-95"
+    >
+      <span class="icon-[material-symbols--arrow-back-rounded] text-lg"></span>
+      <span th:text="#{page.error.backHome}">Back to Home</span>
+    </a>
+  </div>
+</MainGridLayout>

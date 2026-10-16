@@ -41,7 +41,7 @@ const style = Astro.props.style;
           <!-- 文章数 -->
           <a
             th:case="'posts'"
-            th:href="@{/archives}"
+            th:href="@{${site.routes.archivesUri}}"
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
@@ -64,7 +64,7 @@ const style = Astro.props.style;
           <!-- 分类数 -->
           <a
             th:case="'categories'"
-            th:href="@{/categories}"
+            th:href="@{${site.routes.categoriesUri}}"
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">
@@ -87,7 +87,7 @@ const style = Astro.props.style;
           <!-- 标签数 -->
           <a
             th:case="'tags'"
-            th:href="@{/tags}"
+            th:href="@{${site.routes.tagsUri}}"
             class="group flex items-center justify-between rounded-lg px-3 py-2 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 active:bg-(--btn-plain-bg-active)"
           >
             <div class="flex items-center gap-2.5">

@@ -26,7 +26,7 @@
     </a>
 
     <a
-      th:href="@{/archives}"
+      th:href="@{${site.routes.archivesUri}}"
       class="category-pill shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm active:scale-95"
       data-category-name="__archive__"
       data-no-swup
@@ -65,7 +65,7 @@
 
     <!-- 「更多」：可见文本即天然可访问名，不设 aria-label（硬编码 "More" 会违反 WCAG 2.5.3） -->
     <a
-      th:href="@{/categories}"
+      th:href="@{${site.routes.categoriesUri}}"
       class="category-pill shrink-0 flex items-center gap-1 rounded-xl px-3 py-1.5 text-sm active:scale-95"
       data-category-name="__categories__"
       data-no-swup
