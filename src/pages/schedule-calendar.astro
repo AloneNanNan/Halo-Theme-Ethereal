@@ -223,7 +223,7 @@ import PageHeader from "../components/control/PageHeader.astro";
         <div
           th:each="item, itemStat : ${upcomingItems}"
           th:style="|animation-delay: min(calc(var(--content-delay) + ${itemStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-          class="card-base btn-card-outline group onload-animation card-hover-lift rounded-xl p-4"
+          class="card-base btn-card-outline group hover:bg-(--btn-card-bg-hover) onload-animation card-hover-lift rounded-xl p-4"
         >
           <div class="mb-2.5 flex items-stretch gap-2.5">
             <span

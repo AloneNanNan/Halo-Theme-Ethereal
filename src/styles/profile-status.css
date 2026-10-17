@@ -205,13 +205,13 @@
   color: var(--deep-text, #333);
   text-align: center;
   /* 必须包含 transform / box-shadow，否则 card-hover-lift 的上移与阴影会突变（生硬）；
-     缓动曲线与主题卡片悬浮保持一致 */
+     悬浮过渡与主题卡片统一取 --card-hover-duration，按压 scale 保持更快的 0.15s */
   transition:
-    background 0.2s,
-    border-color 0.2s,
-    color 0.2s,
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background var(--card-hover-duration),
+    border-color var(--card-hover-duration),
+    color var(--card-hover-duration),
+    transform var(--card-hover-duration) cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow var(--card-hover-duration) cubic-bezier(0.4, 0, 0.2, 1),
     scale 0.15s ease;
   font-family: inherit;
 }

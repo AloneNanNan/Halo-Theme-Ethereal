@@ -187,6 +187,13 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **favicon 由 Halo 注入**（系统设置里配置）：主题布局不输出 `<link rel="icon">`，否则与注入重复（未配置时主题侧只会渲染出空 href 的无用标签）。
 - **description 的最终归属**：Halo 注入的描述排在主题之后、渲染末尾同名 `name`-meta 只保留最后一条（`theme-color` / `robots` 除外）→ **文章 / 独立页最终 = 页面「摘要」**（未填摘要会输出空标签；主题手写值会被顶掉，要改描述就填「摘要」）；分类 / 标签 = 站长配置优先（未配置时展示主题描述）；首页 = 系统 SEO 描述、未配置时回退主题 bio（首页注入与主题描述并存，主题在 `index.astro` 经 `descriptionShowIfExpr` 让位）。
 
+### 5.8 卡片悬浮语言
+
+- **卡片底色**：需要悬浮反馈的卡片统一走 `--btn-card-bg-hover`——`.btn-card` 自带，`.card-base` 卡片补 `hover:bg-(--btn-card-bg-hover)`；深色取值只比 `--card-bg` 亮一档（见 `variables.css` 注释），保持「浅浅的」、不泛主题色。
+- **主色淡底只用于小型卡片 / 条目**（如关于页的 `.about-proj` / `.about-friend`）；大卡片（时间轴、打赏收款码）不加悬浮底色，也不叠主色。别再给卡片加 `group-hover` 渐变遮罩——会与统一底色叠加成双层效果。
+- 上浮 + 主题色阴影由 `.card-hover-lift` 与后台「卡片悬浮效果」开关统一控制，不要各自另写。
+- **过渡时长统一**：唯一取值是 `--card-hover-duration`（`variables.css`，300ms）。`.card-hover-lift` 在 `components.css` 的非分层段统一兜底（原因见该处注释）；关于页卡、页脚友链、状态弹窗、打赏模态框直接引用该变量，勿写死 `0.3s`。
+
 ## 6. 常见坑（务必注意）
 
 **构建与产物**

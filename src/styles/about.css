@@ -478,17 +478,18 @@
   /* 描边取主题色：与友链页面 /links 的链接卡片（.btn-card-outline）同款 */
   border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
   border-radius: 0.78rem;
-  background: color-mix(in srgb, var(--card-bg) 95%, var(--primary) 5%);
+  background: var(--card-bg);
   color: inherit;
   text-decoration: none;
   transition:
-    transform 0.18s,
-    border-color 0.18s,
-    background-color 0.18s,
-    box-shadow 0.18s;
+    transform var(--card-hover-duration),
+    border-color var(--card-hover-duration),
+    background-color var(--card-hover-duration),
+    box-shadow var(--card-hover-duration);
 }
 /* 悬停反馈分两层：
-   ① 颜色层（描边 + 底 + 标题转主题色）恒定，不受开关影响，保证「可点」永远看得出来；
+   ① 颜色层（描边提亮 + 主色淡底 + 标题转主题色）恒定，不受开关影响，保证「可点」永远看得出来；
+      静态无填充，悬浮才叠主色（分档见 AGENTS「卡片悬浮语言」）；
    ② 位移 + 阴影层接入主题「样式开关 → 卡片悬浮效果」（body.card-hover-lift-enabled），
       与 .card-hover-lift 共用同一套判定，桌面端（≥768px）生效。 */
 .about-proj:hover,
@@ -635,7 +636,7 @@
    视觉目标：像「一排名片」而不是「一排按钮」。
    · 圆形 logo 弱化轮廓，让名称成为主角
    · 描述行降一级颜色、单行省略，避免长短不一撑破网格
-   · 悬停：描边提亮 + 淡主色底（恒定），上浮 1px 受「卡片悬浮效果」开关控制 */
+   · 悬停：描边提亮 + 淡主色底（恒定，静态无填充），上浮 1px 受「卡片悬浮效果」开关控制 */
 .about-friend {
   display: grid;
   grid-template-columns: 1.5rem minmax(0, 1fr);
@@ -646,15 +647,15 @@
   /* 描边取主题色：与友链页面 /links 的链接卡片（.btn-card-outline）同款 */
   border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent);
   border-radius: 0.55rem;
-  background: color-mix(in srgb, var(--primary) 5%, var(--card-bg));
+  background: var(--card-bg);
   color: var(--btn-content);
   text-decoration: none;
   transition:
-    color 0.18s,
-    border-color 0.18s,
-    background-color 0.18s,
-    box-shadow 0.18s,
-    transform 0.18s;
+    color var(--card-hover-duration),
+    border-color var(--card-hover-duration),
+    background-color var(--card-hover-duration),
+    box-shadow var(--card-hover-duration),
+    transform var(--card-hover-duration);
 }
 .about-friend:hover,
 .about-friend:focus-visible {
@@ -674,16 +675,15 @@
     box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 14%, transparent);
   }
 }
-/* 点击按压反馈（与全站按钮一致：底色加深 + 轻缩、按下不再上浮）。两条带
-   body.card-hover-lift-enabled 的选择器与上方 hover 上浮规则同特异性，靠源码
-   顺序在按下时接管（transform 由 translateY 变为 scale）；transform 有卡片自身
-   的 0.18s 过渡，缩放平滑。 */
+/* 点击按压反馈（与全站按钮一致：底色加深 + 轻缩）。缩放走独立 scale 属性，
+   不占 transform（桌面端悬浮的 translateY 保留），也不在 transition 列表里，
+   按下即时生效、不被悬浮过渡拖慢。 */
 .about-proj:active,
 .about-friend:active,
 body.card-hover-lift-enabled .about-proj:active,
 body.card-hover-lift-enabled .about-friend:active {
   box-shadow: none;
-  transform: scale(0.98);
+  scale: 0.98;
 }
 .about-proj:active,
 .about-friend:active {

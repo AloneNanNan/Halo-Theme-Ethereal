@@ -90,7 +90,7 @@ var t =
       var item = document.createElement("div");
       item.className = "card-hover-lift";
       item.style.cssText =
-        "flex:1;max-width:148px;display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid color-mix(in oklab,var(--primary) 18%,transparent);border-radius:14px;padding:12px 12px 10px 12px;transition:transform 0.25s ease,box-shadow 0.25s ease";
+        "flex:1;max-width:148px;display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid color-mix(in oklab,var(--primary) 18%,transparent);border-radius:14px;padding:12px 12px 10px 12px;transition:transform var(--card-hover-duration,0.3s) ease,box-shadow var(--card-hover-duration,0.3s) ease";
       // hover 效果接入项目 card-hover-lift（依赖 body.card-hover-lift-enabled）：
       // translateY(-4px) + 主题色阴影
       var img = document.createElement("img");

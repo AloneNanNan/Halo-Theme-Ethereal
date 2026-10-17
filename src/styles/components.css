@@ -1892,6 +1892,14 @@ body.pswp-transition #photo-detail-image {
   letter-spacing: 0.02em;
 }
 
+/* 悬浮卡片过渡统一走 --card-hover-duration（上浮 / 阴影 / 底色，见 AGENTS「卡片悬浮语言」）。
+   本段在 @layer components 之外：只有非分层规则才能压过 .card-base / .btn-card
+   与 transition 工具类给的 150ms，挪进层内会失效；状态弹窗选项自己按属性设时长
+   （按压 scale 0.15s），排除在统一规则外 */
+.card-hover-lift:not(.status-option) {
+  transition-duration: var(--card-hover-duration, 300ms);
+}
+
 /* 卡片悬浮上移 + 主题色阴影（受样式开关控制）。
    移动端（<768px）卡片连排不分块，屏蔽悬浮上移；md+ 保留 */
 @media (min-width: 768px) {

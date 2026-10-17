@@ -140,7 +140,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           th:each="skill, iterStat : ${pagedItems}"
           th:if="${#lists.isEmpty(param.category) or #lists.contains(param.category, skill.category)}"
           th:with="skillColor=${#strings.isEmpty(skill.color) ? 'var(--primary)' : skill.color}, levelWidth=${skill.level == 'expert' ? '100%' : (skill.level == 'advanced' ? '80%' : (skill.level == 'intermediate' ? '60%' : (skill.level == 'beginner' ? '40%' : '20%')))}, levelText=${skill.level == 'expert' ? #messages.msg('page.skills.expert') : (skill.level == 'advanced' ? #messages.msg('page.skills.advanced') : (skill.level == 'intermediate' ? #messages.msg('page.skills.intermediate') : (skill.level == 'beginner' ? #messages.msg('page.skills.beginner') : '')))}, hasYears=${not #strings.isEmpty(skill.years) and #strings.toString(skill.years) != '0'}, hasMonths=${not #strings.isEmpty(skill.months) and #strings.toString(skill.months) != '0'}"
-          class="skill-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 dark:border-white/10 onload-animation card-hover-lift"
+          class="skill-card group rounded-xl border border-black/10 transition-all hover:bg-(--btn-card-bg-hover) dark:border-white/10 onload-animation card-hover-lift"
           th:style="|animation-delay: min(calc(var(--content-delay) + ${iterStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
         >
           <div class="p-5">
@@ -213,9 +213,6 @@ import PageHeader from "../components/control/PageHeader.astro";
               ></div>
             </div>
           </div>
-
-          <!-- 悬浮渐变遮罩 -->
-          <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
         </div>
       </div>
 

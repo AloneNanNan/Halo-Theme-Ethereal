@@ -71,9 +71,11 @@ import PageHeader from "../components/control/PageHeader.astro";
         </p>
       </div>
 
-      <!-- 收款码（微信 / 支付宝，与打赏模态框同源；白底保证识别）。两张卡满宽双列、
-           只配一种时降级单卡居中；卡片语言同打赏模态框收款卡，二维码外套主题色阴影
-           白盒（.reward-qr-box）。底侧内边距比顶侧大 4px（pt-4 + pb-5），抵消标题行高。 -->
+      <!-- 收款码（微信 / 支付宝，与打赏模态框同源）。两张卡满宽双列、
+           只配一种时降级单卡居中；底色统一取 --card-bg（深浅自适应、与父卡一致），
+           卡片不做悬浮反馈（大卡不叠主色，分档见 AGENTS「卡片悬浮语言」）；仅二维码
+           白盒恒为白色保证识别（.reward-qr-box），文字用 text-90 / text-50 跟进。
+           底侧内边距比顶侧大 4px（pt-4 + pb-5），抵消标题行高。 -->
       <div
         th:if="${hasQr}"
         class="grid grid-cols-1 gap-4"
@@ -81,19 +83,18 @@ import PageHeader from "../components/control/PageHeader.astro";
       >
         <div
           th:if="${!#strings.isEmpty(wechatQr)}"
-          class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-white px-4 pt-4 pb-5"
+          class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-(--card-bg) px-4 pt-4 pb-5"
         >
           <!-- 标题：图标 text-2xl + 标题 text-xl font-semibold。
-             文字色取恒定的 text-neutral-900（白卡明暗都是白底，不能挂 dark: 浅色变体）；
-             图标沿用模态框的主题色 text-(--primary) -->
-          <div class="flex items-center gap-3 text-neutral-900">
+             文字色用 text-90 随深浅色切换；图标沿用模态框的主题色 text-(--primary) -->
+          <div class="flex items-center gap-3 text-90">
             <span class="icon-[fa6-brands--weixin] text-2xl text-(--primary)"></span>
             <span class="text-xl font-semibold" th:text="#{post.wechat}">
               微信
             </span>
           </div>
           <p
-            class="text-center text-sm text-neutral-600"
+            class="text-center text-sm text-50"
             th:text="#{page.reward.scanWechat}"
           >
             使用 微信 扫码打赏
@@ -109,16 +110,16 @@ import PageHeader from "../components/control/PageHeader.astro";
         </div>
         <div
           th:if="${!#strings.isEmpty(alipayQr)}"
-          class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-white px-4 pt-4 pb-5"
+          class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-(--card-bg) px-4 pt-4 pb-5"
         >
-          <div class="flex items-center gap-3 text-neutral-900">
+          <div class="flex items-center gap-3 text-90">
             <span class="icon-[fa6-brands--alipay] text-2xl text-(--primary)"></span>
             <span class="text-xl font-semibold" th:text="#{post.alipay}">
               支付宝
             </span>
           </div>
           <p
-            class="text-center text-sm text-neutral-600"
+            class="text-center text-sm text-50"
             th:text="#{page.reward.scanAlipay}"
           >
             使用 支付宝 扫码打赏

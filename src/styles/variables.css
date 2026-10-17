@@ -4,6 +4,8 @@
   --content-delay: 150ms;
   /* TOC 目录高亮/悬浮过渡时长（TOC.astro 的 duration-() 与 components.css 共用） */
   --toc-transition-duration: 150ms;
+  /* 卡片悬浮过渡（上浮 / 阴影 / 底色）统一时长，见 AGENTS「卡片悬浮语言」 */
+  --card-hover-duration: 300ms;
   /* 两栏布局总宽（宽屏）= 内容列 64rem(1024px) + md:px-4(2) + 侧栏(17.5) + gap(1) = 84.5rem；
      三栏共用同一内容列宽 ⇒ 总宽 103rem。
      ⚠️ 必须与 constants.ts 的 PAGE_WIDTH 一致（它会内联到 <html>、压过本声明），
@@ -149,7 +151,9 @@
   --btn-regular-bg-active: oklch(0.43 0.045 var(--hue));
   --btn-plain-bg-hover: oklch(0.3 0.035 var(--hue));
   --btn-plain-bg-active: oklch(0.27 0.025 var(--hue));
-  --btn-card-bg-hover: oklch(0.3 0.03 var(--hue));
+  /* 卡片悬浮底色只比 --card-bg 抬一档亮度、彩度与卡片相同：与浅色（近白）同量级，
+     深色下不泛出明显主题色；改大亮度/彩度会让整卡悬浮时发紫 */
+  --btn-card-bg-hover: oklch(0.26 0.015 var(--hue));
   --btn-card-bg-active: oklch(0.35 0.035 var(--hue));
   --deep-text: oklch(0.85 0.02 var(--hue));
   --line-divider: rgba(255, 255, 255, 0.08);

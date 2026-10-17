@@ -203,7 +203,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           ></div>
 
           <!-- 卡片（悬浮效果接入主题 card-hover-lift，由后台样式开关控制） -->
-          <div class="timeline-card group relative overflow-hidden rounded-xl border border-black/10 transition-all duration-300 dark:border-white/10 card-hover-lift">
+          <div class="timeline-card group rounded-xl border border-black/10 transition-all dark:border-white/10 card-hover-lift">
             <div class="p-5 sm:p-6">
               <!-- 头部：图标 + 标题/组织 + 徽章 -->
               <div class="mb-3 flex items-center gap-3">
@@ -333,9 +333,6 @@ import PageHeader from "../components/control/PageHeader.astro";
                 th:data-links="${item.links}"
               ></div>
             </div>
-
-            <!-- 悬浮渐变遮罩 -->
-            <div class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--primary)]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
           </div>
         </div>
       </div>

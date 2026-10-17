@@ -252,11 +252,11 @@ const { compact = false } = Astro.props as { compact?: boolean };
     line-height: 1;
     text-decoration: none;
     transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.2s ease;
+      background-color var(--card-hover-duration) ease,
+      border-color var(--card-hover-duration) ease,
+      color var(--card-hover-duration) ease,
+      box-shadow var(--card-hover-duration) ease,
+      transform var(--card-hover-duration) ease;
   }
   .hbf-item:hover {
     background: var(--btn-card-bg-hover);
