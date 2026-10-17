@@ -2,11 +2,10 @@
 // 分类导航栏：首页 → 归档 → 各分类 → 全部分类，水平滚动 pill；显隐由 MainGridLayout.astro
 // 的 wrapper th:if 控制。数据：categoryFinder.listAll() + postFinder.list 的总数。
 //
-// 高亮 = 液态滑块（.category-liquid，pill 本身不变色、只切文字色，消除 transition-colors
+// 高亮 = 液态滑块（.category-liquid，pill 不铺实色、只切文字色，消除 transition-colors
 // 闪烁）：pill z-index:1 在滑块（0）上方、半透明背景（6%）让滑块色透出；滑块是滚动区兄弟
-// 而非子级（需横跨首页/归档/更多），不受 overflow / mask 裁剪，moveLiquid 与可见窗口求交集
-// ——半露只铺可见段、完全滚出时隐藏，避免溢出到相邻 pill/分隔线。归档页筛选由 FilterTabs
-// 承担，本栏恒高亮「归档」（不随 URL 筛选参数切换）。
+// 而非子级，不受 overflow / mask 裁剪，定位细节见脚本 computeLiquidTarget。归档页筛选由
+// FilterTabs 承担，本栏恒高亮「归档」（不随 URL 筛选参数切换）。
 ---
 
 <div
@@ -43,8 +42,7 @@
 
     <div class="category-divider shrink-0" aria-hidden="true"></div>
 
-    <!-- flex-1：中间滚动区吃掉剩余空间，右侧「分隔线 + 更多」始终贴右端。
-         此前滚动区不弹性，分类不满一屏时「更多」会紧跟在最后一个分类后面 -->
+    <!-- flex-1：中间滚动区吃掉剩余空间，右侧「分隔线 + 更多」始终贴右端 -->
     <div class="category-scroll flex flex-1 items-center gap-2 overflow-x-auto">
       <div class="contents" th:each="category : ${categoryFinder.listAll()}">
         <a
@@ -82,6 +80,7 @@
   }
 
   .category-bar-track {
+    /* isolation 建立滑块/pill 的叠层上下文；position 是脚本 offsetLeft 的基准，勿删 */
     isolation: isolate;
     position: relative;
   }
@@ -90,19 +89,23 @@
     position: absolute;
     top: 0;
     left: 0;
+    /* 基准宽度，与脚本 LIQUID_BASE_WIDTH 同步；实际宽度由 scaleX 合成 */
+    width: 100px;
     height: 100%;
     background: var(--primary);
+    /* 视觉圆角，与脚本 LIQUID_RADIUS 同步；水平半径由脚本按 scaleX 反向补偿 */
     border-radius: 0.75rem;
-    transition:
-      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.2s ease;
+    /* 位置/宽度/透明度由脚本 rAF 逐帧写入；加 CSS 过渡会被不断重启，滑块追不上目标 */
+    transform-origin: 0 center;
+    transform: translate3d(0, 0, 0) scaleX(0);
+    will-change: transform;
     z-index: 0;
     pointer-events: none;
     opacity: 1;
   }
 
   .category-scroll {
+    /* position 是滚动区内 pill offsetLeft 的基准，勿删 */
     position: relative;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -179,6 +182,8 @@
     color: var(--primary);
   }
 
+  /* 文字变白与背景透明依赖 .category-pill 的 color/background-color 过渡，
+     不要给 [data-active] 单独覆盖这两条过渡：远距离切换会重新出现白字+透明底 */
   .category-pill[data-active] {
     color: white;
     background: transparent;
@@ -258,60 +263,230 @@
 
     function pathOf(href) {
       try {
-        return new URL(href, location.origin).pathname;
+        return (
+          new URL(href, location.origin).pathname.replace(/\/+$/, "") || "/"
+        );
       } catch (e) {
         return href;
       }
     }
 
-    // getBoundingClientRect 定位，滚动期间 rAF 跟随。
-    // 滑块位于滚动区外（无 overflow 裁剪），须与滚动窗口求交集：
-    // 半露只铺可见段、完全滚出隐藏，防止底色溢出相邻 pill/分隔线。
-    function moveLiquid(el, animate) {
-      if (!liquid || !track || !el) return;
-      var trackRect = track.getBoundingClientRect();
-      var elRect = el.getBoundingClientRect();
-      var x = elRect.left - trackRect.left;
-      var w = elRect.width;
-      if (scroll.contains(el)) {
-        var scrollRect = scroll.getBoundingClientRect();
-        var visibleLeft = Math.max(elRect.left, scrollRect.left);
-        var visibleRight = Math.min(elRect.right, scrollRect.right);
-        if (visibleRight <= visibleLeft) {
-          liquid.style.opacity = "0";
-          return;
-        }
-        x = visibleLeft - trackRect.left;
-        w = visibleRight - visibleLeft;
-      }
-      liquid.style.opacity = "";
-      x = Math.max(0, Math.min(x, trackRect.width - w));
-      if (!animate) liquid.style.transition = "none";
-      liquid.style.width = w + "px";
-      liquid.style.transform = "translateX(" + x + "px)";
-      if (!animate) {
-        void liquid.offsetWidth;
-        liquid.style.transition = "";
+    // 特殊 pill 的路由从自身 href 派生，跟随 site.routes 自定义前缀，勿硬编码
+    var homePill = bar.querySelector('.category-pill[data-category-name=""]');
+    var archivePill = bar.querySelector(
+      '.category-pill[data-category-name="__archive__"]',
+    );
+    var categoriesPill = bar.querySelector(
+      '.category-pill[data-category-name="__categories__"]',
+    );
+
+    function pillPathname(pill) {
+      if (!pill) return "";
+      try {
+        return (
+          new URL(pill.href, location.origin).pathname.replace(/\/+$/, "") ||
+          "/"
+        );
+      } catch (e) {
+        return "";
       }
     }
 
-    function moveToActive(animate) {
-      var act =
+    var homePath = pillPathname(homePill);
+    var archivePath = pillPathname(archivePill);
+    var categoriesPath = pillPathname(categoriesPill);
+
+    // ── 滑块动画 ──
+    // 位置/宽度/透明度不写 CSS 过渡：点击、滚动、换页的目标每帧都可能变，
+    // 过渡会被不断重启；改用 rAF 逐帧指数平滑，滚动也用同一循环插值 scrollLeft，
+    // 两者天然同步。宽度用 scaleX 合成（基准 100px），圆角按缩放比反向补偿。
+    var LIQUID_BASE_WIDTH = 100;
+    var LIQUID_RADIUS = 12;
+    // τ=0.05 时约 0.3s 到位。不能按距离拉长：远距离拖到 0.8s+ 会让
+    // 「白字 + 透明底」的中间态暴露成按钮整体消失。
+    var FOLLOW_TAU = 0.05; // 时间常数（秒）
+    var SCROLL_TAU = 0.135; // scrollLeft 插值时间常数
+    var SETTLE_X = 0.15; // 收敛阈值（px）
+    var SETTLE_OPACITY = 0.004; // 收敛阈值（opacity）
+    var SCROLL_PADDING_PX = 8; // 点击滚动时目标 pill 与视口边缘的余量
+    var FOLLOW_ALIGN_EPS = 2; // 判定「已对齐」的位移阈值（px）
+    var SCROLL_EPS = 1; // 滚动判定的通用容差（px）
+
+    var current = { x: 0, w: 0, o: 1 };
+    var target = { x: 0, w: 0, o: 1 };
+    var scrollTarget = null; // 程序化滚动目标；null 表示没有
+    var scrollPos = 0;
+    var prevScrollLeft = null;
+    var liquidRaf = 0;
+    var liquidLastTs = 0;
+    var lastRadius = -1;
+
+    var reduceMotion = false;
+    try {
+      var motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      reduceMotion = motionQuery.matches;
+      var onMotionChange = function (e) {
+        reduceMotion = e.matches;
+        if (!reduceMotion) return;
+        // 先落到滚动目标再停，否则目标可能停在半路、不在视口内
+        if (scrollTarget !== null && scroll) scroll.scrollLeft = scrollTarget;
+        snapToActive();
+      };
+      if (motionQuery.addEventListener)
+        motionQuery.addEventListener("change", onMotionChange);
+      else if (motionQuery.addListener) motionQuery.addListener(onMotionChange);
+    } catch (e) {}
+
+    function activePill() {
+      return (
         bar.querySelector(".category-pill[data-active]") ||
-        bar.querySelector(".category-pill[data-soft-active]");
-      if (act) {
-        moveLiquid(act, animate);
-      } else if (liquid) {
-        liquid.style.opacity = "0";
+        bar.querySelector(".category-pill[data-soft-active]")
+      );
+    }
+
+    // 目标位置：与滚动可见窗口求交集（半露只铺可见段、完全滚出时贴边淡出）。
+    // 用布局坐标而非 getBoundingClientRect，不受 active:scale-95 影响。
+    function computeLiquidTarget(el) {
+      if (!el || !scroll || !track) {
+        target.o = 0;
+        return;
       }
+      var x;
+      var w;
+      var opacity = 1;
+      if (scroll.contains(el)) {
+        var viewLeft = scroll.offsetLeft;
+        var viewRight = viewLeft + scroll.clientWidth;
+        x = viewLeft + el.offsetLeft - scroll.scrollLeft;
+        w = el.offsetWidth;
+        var visibleLeft = Math.max(x, viewLeft);
+        var visibleRight = Math.min(x + w, viewRight);
+        if (visibleRight - visibleLeft < 0.5) {
+          x = x + w <= viewLeft ? viewLeft : viewRight;
+          w = 0;
+          opacity = 0;
+        } else {
+          x = visibleLeft;
+          w = visibleRight - visibleLeft;
+        }
+      } else {
+        x = el.offsetLeft;
+        w = el.offsetWidth;
+      }
+      var maxX = track.clientWidth - w;
+      if (maxX < 0) maxX = 0;
+      target.x = Math.max(0, Math.min(x, maxX));
+      target.w = w;
+      target.o = opacity;
+    }
+
+    function renderLiquid() {
+      if (!liquid) return;
+      liquid.style.transform =
+        "translate3d(" +
+        current.x +
+        "px,0,0) scaleX(" +
+        current.w / LIQUID_BASE_WIDTH +
+        ")";
+      var radius =
+        (LIQUID_RADIUS * LIQUID_BASE_WIDTH) / (current.w > 1 ? current.w : 1);
+      if (Math.abs(radius - lastRadius) > 0.3) {
+        liquid.style.borderRadius = radius + "px / " + LIQUID_RADIUS + "px";
+        lastRadius = radius;
+      }
+      liquid.style.opacity = current.o;
+    }
+
+    function startLiquidLoop() {
+      if (!liquid || liquidRaf) return;
+      liquidLastTs = 0;
+      prevScrollLeft = scroll ? scroll.scrollLeft : null;
+      liquidRaf = requestAnimationFrame(liquidTick);
+    }
+
+    function stopLiquidLoop() {
+      if (!liquidRaf) return;
+      cancelAnimationFrame(liquidRaf);
+      liquidRaf = 0;
+      liquidLastTs = 0;
+    }
+
+    function liquidTick(now) {
+      liquidRaf = 0;
+      var dt = liquidLastTs ? (now - liquidLastTs) / 1000 : 1 / 60;
+      liquidLastTs = now;
+      if (!(dt > 0)) dt = 1 / 60;
+      if (dt > 0.05) dt = 0.05;
+
+      // 程序化滚动与滑块共用同一循环：滚动位置和目标同步推进
+      if (scrollTarget !== null && scroll) {
+        var scrollK = 1 - Math.exp(-dt / SCROLL_TAU);
+        scrollPos += (scrollTarget - scrollPos) * scrollK;
+        if (Math.abs(scrollTarget - scrollPos) < 0.4) scrollPos = scrollTarget;
+        scroll.scrollLeft = scrollPos;
+        if (scrollPos === scrollTarget) scrollTarget = null;
+      }
+
+      var scrollLeft = scroll ? scroll.scrollLeft : 0;
+      var scrollDelta =
+        prevScrollLeft === null ? 0 : scrollLeft - prevScrollLeft;
+      prevScrollLeft = scrollLeft;
+
+      var act = activePill();
+      // 高亮已与目标对齐时随滚动内容同步平移；否则滑块要等下一帧再追，
+      // 快速滚动时会明显落后（视觉上就是抖）
+      if (
+        act &&
+        scroll &&
+        scroll.contains(act) &&
+        Math.abs(target.x - current.x) < FOLLOW_ALIGN_EPS &&
+        scrollDelta !== 0
+      ) {
+        current.x -= scrollDelta;
+      }
+
+      computeLiquidTarget(act);
+
+      var k = 1 - Math.exp(-dt / FOLLOW_TAU);
+      current.x += (target.x - current.x) * k;
+      current.w += (target.w - current.w) * k;
+      current.o += (target.o - current.o) * k;
+
+      var settled =
+        scrollTarget === null &&
+        Math.abs(target.x - current.x) < SETTLE_X &&
+        Math.abs(target.w - current.w) < SETTLE_X &&
+        Math.abs(target.o - current.o) < SETTLE_OPACITY;
+      if (settled) {
+        current.x = target.x;
+        current.w = target.w;
+        current.o = target.o;
+      }
+      renderLiquid();
+
+      if (!settled) liquidRaf = requestAnimationFrame(liquidTick);
+    }
+
+    // 立即落位：首屏、resize、减弱动态效果
+    function snapToActive(pill) {
+      stopLiquidLoop();
+      scrollTarget = null;
+      var act = pill || activePill();
+      computeLiquidTarget(act);
+      current.x = target.x;
+      current.w = target.w;
+      current.o = target.o;
+      prevScrollLeft = scroll ? scroll.scrollLeft : null;
+      renderLiquid();
     }
 
     function updateScrollMask() {
       if (!scroll) return;
-      var hasOverflow = scroll.scrollWidth > scroll.clientWidth + 1;
-      var atStart = scroll.scrollLeft <= 1;
+      var hasOverflow = scroll.scrollWidth > scroll.clientWidth + SCROLL_EPS;
+      var atStart = scroll.scrollLeft <= SCROLL_EPS;
       var atEnd =
-        scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 1;
+        scroll.scrollLeft + scroll.clientWidth >=
+        scroll.scrollWidth - SCROLL_EPS;
       scroll.classList.toggle("can-scroll-left", hasOverflow && !atStart);
       scroll.classList.toggle("can-scroll-right", hasOverflow && !atEnd);
     }
@@ -319,11 +494,14 @@
     function setActiveCategory(currentUrl) {
       currentUrl = currentUrl || new URL(window.location.href);
       var path = currentUrl.pathname.replace(/\/+$/, "") || "/";
-      var params = currentUrl.searchParams;
-      var isHome = path === "/" || path === "";
-      var isArchives = path.startsWith("/archives");
-      var isCategories = path === "/categories";
+      // 特殊页路由从 pill 的 href 派生（跟随 site.routes 自定义前缀）
+      var isHome = path === (homePath || "/");
+      var isArchives =
+        !!archivePath &&
+        (path === archivePath || path.indexOf(archivePath + "/") === 0);
+      var isCategories = !!categoriesPath && path === categoriesPath;
 
+      var allPills = bar.querySelectorAll(".category-pill");
       var targetName = null;
 
       if (isHome) {
@@ -335,9 +513,8 @@
         // （分类筛选由页面内 FilterTabs 承担，不反映到导航栏）
         targetName = "__archive__";
       } else {
-        var pills = bar.querySelectorAll(".category-pill");
-        for (var i = 0; i < pills.length; i++) {
-          var catName = pills[i].getAttribute("data-category-name");
+        for (var i = 0; i < allPills.length; i++) {
+          var catName = allPills[i].getAttribute("data-category-name");
           if (
             catName &&
             catName !== "" &&
@@ -345,7 +522,7 @@
             catName !== "__categories__"
           ) {
             try {
-              var pillUrl = new URL(pills[i].href, window.location.origin);
+              var pillUrl = new URL(allPills[i].href, window.location.origin);
               if (pillUrl.pathname.replace(/\/+$/, "") === path) {
                 targetName = catName;
                 break;
@@ -375,9 +552,8 @@
         currentActiveName === targetName &&
         currentSoftName === targetSoftName
       )
-        return false;
+        return;
 
-      var allPills = bar.querySelectorAll(".category-pill");
       allPills.forEach(function (pill) {
         var name = pill.getAttribute("data-category-name");
         var shouldBeActive = name === targetName;
@@ -394,37 +570,94 @@
           pill.removeAttribute("data-soft-active");
         }
       });
-      return true;
     }
 
-    function scrollPillIntoView(smooth) {
-      if (!scroll) return;
-      var activePill =
-        scroll.querySelector(".category-pill[data-active]") ||
-        scroll.querySelector(".category-pill[data-soft-active]");
-      if (!activePill) return;
-      if (scroll.scrollWidth <= scroll.clientWidth) return;
-      var left =
-        activePill.offsetLeft -
-        (scroll.clientWidth - activePill.offsetWidth) / 2;
-      left = Math.max(
+    // 需要滚动的距离。center=true 居中（首屏进入），false 只补到完整可见（点击/换页）：
+    // 点击已完整可见的 pill 不滚动，避免多余的滚动拉长滑块动画。
+    function pillScrollDelta(pill, center) {
+      if (!scroll || !scroll.contains(pill)) return 0;
+      if (scroll.scrollWidth <= scroll.clientWidth) return 0;
+      var left = pill.offsetLeft;
+      var right = left + pill.offsetWidth;
+      var viewLeft = scroll.scrollLeft;
+      var viewRight = viewLeft + scroll.clientWidth;
+      var target;
+      if (center) {
+        target = left - (scroll.clientWidth - pill.offsetWidth) / 2;
+      } else {
+        var padding = SCROLL_PADDING_PX;
+        if (left >= viewLeft + padding && right <= viewRight - padding)
+          return 0;
+        target =
+          left < viewLeft + padding
+            ? left - padding
+            : right + padding - scroll.clientWidth;
+      }
+      target = Math.max(
         0,
-        Math.min(left, scroll.scrollWidth - scroll.clientWidth),
+        Math.min(target, scroll.scrollWidth - scroll.clientWidth),
       );
-      scroll.scrollTo({ left: left, behavior: smooth ? "smooth" : "auto" });
+      return target - viewLeft;
     }
 
-    // lqbby.com 同款：rAF 节流，滚动期间滑块无动画跟随
-    var liquidRaf = 0;
-    function scheduleLiquidSync() {
-      if (liquidRaf) return;
-      liquidRaf = requestAnimationFrame(function () {
-        liquidRaf = 0;
-        moveToActive(false);
-      });
+    // 统一入口：不需要滚动时只让滑块平滑追目标；需要滚动时把滚动也交给
+    // 同一个 rAF 循环插值，滚动与滑块同步推进（不会出现滚动先到、滑块再补）。
+    function applyActive(animate, center, pill) {
+      var act = pill || activePill();
+      if (!act) {
+        target.o = 0;
+        if (animate && !reduceMotion) {
+          startLiquidLoop();
+        } else {
+          current.o = 0;
+          renderLiquid();
+        }
+        return;
+      }
+      var delta = pillScrollDelta(act, center);
+      if (!animate || reduceMotion) {
+        if (delta !== 0 && scroll) scroll.scrollLeft += delta;
+        snapToActive(act);
+        return;
+      }
+      if (scroll) {
+        if (delta !== 0) {
+          var nextTarget = scroll.scrollLeft + delta;
+          // page:view 会对同一目标再调一次；目标没变就别重置插值起点，
+          // 否则滚动会在中途重新起速（一顿）
+          if (
+            scrollTarget === null ||
+            Math.abs(nextTarget - scrollTarget) > SCROLL_EPS
+          ) {
+            scrollTarget = nextTarget;
+            scrollPos = scroll.scrollLeft;
+          }
+        } else {
+          scrollTarget = null;
+        }
+      }
+      computeLiquidTarget(act);
+      startLiquidLoop();
     }
 
-    function updateCategoryBar(animate) {
+    // 用户手动操作滚动区时取消程序化滚动，交给滚动事件跟随
+    function cancelProgrammaticScroll() {
+      scrollTarget = null;
+      scrollPos = scroll ? scroll.scrollLeft : 0;
+    }
+
+    function handleScroll() {
+      updateScrollMask();
+      // 程序化滚动由 liquidTick 推进，scroll 事件不重复驱动
+      if (scrollTarget !== null) return;
+      if (reduceMotion) {
+        snapToActive();
+        return;
+      }
+      startLiquidLoop();
+    }
+
+    function updateCategoryBar(animate, center) {
       var swupContainer = document.getElementById("swup-container");
       if (swupContainer) {
         var postCategory =
@@ -432,8 +665,7 @@
         bar.setAttribute("data-current-post-category", postCategory);
       }
       setActiveCategory();
-      moveToActive(animate);
-      scrollPillIntoView(true);
+      applyActive(animate, center);
       updateScrollMask();
     }
 
@@ -444,20 +676,23 @@
         return;
       }
       scroll.setAttribute("data-features-bound", "true");
-      scroll.addEventListener(
-        "scroll",
-        function () {
-          updateScrollMask();
-          scheduleLiquidSync();
-        },
-        { passive: true },
-      );
+      scroll.addEventListener("scroll", handleScroll, { passive: true });
+      // 用户主动操作滚动区时让出程序化滚动，避免抢滚动位置
+      scroll.addEventListener("pointerdown", cancelProgrammaticScroll, {
+        passive: true,
+      });
+      scroll.addEventListener("touchstart", cancelProgrammaticScroll, {
+        passive: true,
+      });
+      scroll.addEventListener("wheel", cancelProgrammaticScroll, {
+        passive: true,
+      });
       updateScrollMask();
     }
 
     function init() {
       initScrollFeatures();
-      updateCategoryBar(false);
+      updateCategoryBar(false, true);
 
       bar.addEventListener("click", function (e) {
         var pill = e.target.closest(".category-pill");
@@ -478,10 +713,13 @@
 
         e.preventDefault();
         setActiveCategory(targetUrl);
-        moveLiquid(pill, true);
-        scrollPillIntoView(true);
+        // pill 带 data-no-swup：由本脚本先驱动高亮/滚动，再手动 swup.navigate，
+        // 避免 Swup 默认跳转抢先打断。传入被点击的 pill 兜底：
+        // 路由未匹配到 active 时也照常高亮
+        applyActive(true, false, pill);
 
-        if (pathOf(href) === location.pathname) return;
+        if (pathOf(href) === (location.pathname.replace(/\/+$/, "") || "/"))
+          return;
         if (window.swup) window.swup.navigate(href);
         else location.href = href;
       });
@@ -491,13 +729,13 @@
         if (resizeRaf) return;
         resizeRaf = requestAnimationFrame(function () {
           resizeRaf = 0;
-          moveToActive(false);
+          snapToActive();
           updateScrollMask();
         });
       });
 
       function onSwupPageView() {
-        updateCategoryBar(true);
+        updateCategoryBar(true, false);
         initScrollFeatures();
       }
       if (window.swup && window.swup.hooks) {
