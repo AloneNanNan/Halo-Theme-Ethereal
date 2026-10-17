@@ -3,7 +3,7 @@
 // 运行 node scripts/build-assets.mjs [publicDir] [--watch]）：compileAssets() 把
 // src/scripts/assets/*.ts 编译为 IIFE 经典脚本到 public/assets/、copyVendorAssets() 原样
 // 拷贝 src/scripts/vendor/*.js、compressAssetsInDir() 只压经典脚本、跳过 hashed module
-// 产物。管线全貌与产物约定见 AGENTS.md 5.1。
+// 产物。管线全貌与产物约定见 AGENTS.md 6.1。
 import { build, transform } from "esbuild";
 import { readdir, readFile, writeFile, copyFile } from "node:fs/promises";
 import { join, resolve } from "node:path";

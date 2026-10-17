@@ -86,7 +86,7 @@ export function applyThemeToDocument(theme: LIGHT_DARK_MODE) {
   const wantDark = resolveSchemeDark(theme);
   // 始终同步 colorScheme（幂等赋值，开销可忽略），提示浏览器原生控件配色
   root.style.colorScheme = wantDark ? "dark" : "light";
-  // 插件配色契约（见 AGENTS.md 5.5）：必须在下方「渲染主题未变早退」之前更新——
+  // 插件配色契约（见 AGENTS.md 6.5）：必须在下方「渲染主题未变早退」之前更新——
   // auto ↔ dark 切换时实际明暗可能不变，但模式标记必须跟随
   root.dataset.colorScheme = theme;
   root.classList.remove(
@@ -154,7 +154,7 @@ export function getStoredTheme(): LIGHT_DARK_MODE {
 
 /* ── 访客样式切换（显示设置面板） ─────────────────────────────
  * 键清单、关闭即忽略并清理的语义、默认值链路（theme.config → ConfigCarrier data-* →
- * 本模块）见 AGENTS.md 5.5。首帧应用的重复实现还有 public/assets/visitor-post-layout.js、
+ * 本模块）见 AGENTS.md 6.5。首帧应用的重复实现还有 public/assets/visitor-post-layout.js、
  * public/assets/sakura.js 与 Layout.astro 的 body 启动脚本，改键名时需多处同步。
  */
 

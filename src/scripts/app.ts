@@ -612,7 +612,7 @@ function setupSwup() {
 
   // ── 非主题页不接管 ──
   // 目标页缺主题容器时 SwupHeadPlugin 会先摘掉整套主题 CSS、随后 replaceContent 报错并
-  // 整页刷新（详见 AGENTS.md 5.2）。在 page:load abort()：renderPage / animatePageIn 按
+  // 整页刷新（详见 AGENTS.md 6.2）。在 page:load abort()：renderPage / animatePageIn 按
   // done 直接返回，等价于这次点击不走 Swup。abort 跳过 visit:end 收尾，故下方撤回换页态，
   // 避免定格在「主内容已淡出」。
   window.swup.hooks.on(

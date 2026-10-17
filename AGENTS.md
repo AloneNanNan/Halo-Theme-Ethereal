@@ -26,17 +26,17 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**：先用 Astro 写�
 | `pnpm build`       | `pnpm check` + `astro build` + `pnpm package`（发布 zip 输出到 `dist/`） |
 | `pnpm astro check` | 类型检查，改动后必须 0 error                                             |
 | `pnpm format`      | prettier 格式化全项目，随后自动刷新 README-Halo.md                       |
-| `pnpm readme:halo` | 单独触发 README→README-Halo 转换（见 5.1 的转换说明）                    |
+| `pnpm readme:halo` | 单独触发 README→README-Halo 转换（见 6.1 的转换说明）                    |
 
 ## 2. 目录结构速览
 
 - `src/pages/*.astro` — 页面模板（`post.astro`、`index.astro`、`category.astro` 等）
-- `src/components/*.astro` / `*.svelte` — 可复用组件；`control/` 为分组页共享控件（`FilterTab` / `FilterTabs` / `PageHeader`，表达式以字符串 prop 传入，见 5.6）；`widget/` 为侧边栏小组件（`WidgetSwitch.astro` 是条目分派片段库，见 5.3）
+- `src/components/*.astro` / `*.svelte` — 可复用组件；`control/` 为分组页共享控件（`FilterTab` / `FilterTabs` / `PageHeader`，表达式以字符串 prop 传入，见 6.6）；`widget/` 为侧边栏小组件（`WidgetSwitch.astro` 是条目分派片段库，见 6.3）
 - `src/layouts/*.astro` — 页面布局（`Layout.astro`、`MainGridLayout.astro`）
 - `src/styles/*.css` — 全局样式与 CSS 变量（`variables.css` 定义主题色 / 圆角等）
 - `src/types/config.ts` — `theme.config` 的类型定义
 - `src/utils/*.ts` — 工具（`post-list-config.ts`、`image-suffix.ts`）
-- `src/scripts/assets/*.ts` — 经典脚本源码（见 5.1）；`src/scripts/vendor/` — 第三方 vendored 资产
+- `src/scripts/assets/*.ts` — 经典脚本源码（见 6.1）；`src/scripts/vendor/` — 第三方 vendored 资产
 - `settings.yaml` — 后台主题设置表单；`theme.yaml` — 主题元信息，**`version` 禁止修改**
 - `i18n/` — 多语言文案；`templates/` / `dist/` — 构建产物（勿手改）
 
@@ -71,9 +71,56 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**：先用 Astro 写�
 - 提交信息只描述该提交相对上一个提交的**交付差异**，不写开发过程叙述（「发现问题 → 修复」属于开发日志）。
 - AI 提交时默认排除 `theme.yaml` 的版本号改动，除非用户明确要求包含。
 
-## 5. 架构契约
+## 5. 更新日志规范
 
-### 5.1 构建产物与脚本管线
+`release.md` 是当前版本的发布说明（GitHub Release 与 Halo 应用市场共用），每次发布前整篇重写，不保留历史版本；历史版本见 GitHub Releases。正文**按功能分区，不按新增 / 优化 / 修复分区**。
+
+**结构**（自上而下；「设置项迁移」无内容时整节省略）：
+
+```
+<p align="center">…「HALO 2 博客主题」…</p>
+<h1 align="center">Halo-Theme-Ethereal <版本号></h1>
+<p align="center">一款专为 Halo 打造的 Fuwari 风格增强型主题</p>
+
+## 更新说明
+欢迎语 + 本次更新概述（一段话）+ 设置键变更提醒 + Issue / 交流群入口
+
+## <功能名>
+- 新增 …
+- 优化 …
+- 修复 …
+
+## 设置项迁移
+> 从 <旧版本> 升级到 <新版本> 后，以下设置需重新确认。
+### <分组名>
+- …
+
+## 其它
+- 依赖升级…
+- 版本号提升至 v<版本>
+
+## 本次更新处理的 Issue 与 PR
+### Issue
+- #<编号> <Issue 原始标题>
+### PR
+- #<编号> <说明>
+
+**Full Changelog**: https://github.com/AloneNanNan/Halo-Theme-Ethereal/compare/v<旧版本>...v<新版本>
+```
+
+**写作规则**：
+
+- 功能分区用 `##`，分区名取用户能理解的功能名（如「插件兼容」「页面与路由」「分类导航」），不要用「新增与适配」「问题修复」这类按变更类型分的标题；一条修复写进它所属的功能分区。
+- 分区内条目一律以 `- 新增 ` / `- 优化 ` / `- 修复 ` 开头，并按「新增 → 优化 → 修复」排列；「优化」只用于体验 / 性能提升，问题修复一律用「修复」。
+- 一条一句话，先写用户可见的结果；不复述实现，不照搬提交标题；同类小改动合并成一条，不逐提交罗列。
+- 去掉代码标识与实现细节（类名、选择器、`srcset`、`th:*` 等），保留必要的专有名词（canonical、SEO、Banner、Halo）；体积 / 耗时等成果数字可以保留。
+- 修复条目写「问题 + 结果」，不要只写方案（方案属于代码注释与提交正文）。
+- 「其它」不带前缀，只放格式化、依赖、README、版本号等维护事项；「设置项迁移」只写配置键 / 分组变更与重新设置的位置。
+- 不写日期与「发现问题 → 修复」过程；条目末尾不加句号；「更新说明」一段话概括本次更新，不逐条罗列功能。
+
+## 6. 架构契约
+
+### 6.1 构建产物与脚本管线
 
 `templates/`（`astro build`）、`dist/`（`pnpm package`）、`public/assets/*.js`（脚本编译产物）都是构建生成，勿手改；要改就改 `src/` 后重新构建。
 
@@ -98,7 +145,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 
 **README-Halo 转换**：`scripts/convert-readme.mjs` 把 README.md 转为降级版 README-Halo.md（Halo 应用市场不支持 `<picture>` 徽章，替换为内部首个浅色 `<img>`）。README-Halo.md 是生成产物（已 gitignore / prettierignore），勿手改、不提交；触发方式三选一（`pnpm readme:halo` / `pnpm format` 链尾 / 提交涉及 README 时 pre-commit 自动），产物一致。该文件仅用于发布时手工粘贴到 halo.run 开发者后台的详情页；商店版本说明走 release.md（ci.yaml）。
 
-### 5.2 Swup 与换页时序
+### 6.2 Swup 与换页时序
 
 **非主题页豁免**：插件自带前台页等非主题页不交给 Swup 接管——接管会让 SwupHeadPlugin 先摘掉整套主题 CSS（导航栏 / 侧栏 / 页脚当场无样式），随后 `replaceContent` 容器不匹配报错并整页刷新。守卫在 `app.ts` 的 `page:load` 钩子：目标页缺任一容器（清单取自 `swup.options.containers`）即 `visit.abort()`，交还浏览器原生跳转；新增主题页面无需任何改动。
 
@@ -116,7 +163,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - **标题等落位后再显现（全屏）**：显示由 `revealBannerTitleOnSwitchEnd()`（`animation:in:end` 触发）统一放行；四处守卫（`syncBannerOverlay`、`banner-responsive.ts`、`fullscreen-hero.ts`、`#banner-overlay` 的 `:not(.banner-text-hidden)` 规则）不得各自提前放行。
 - **非顶部换页临时显示 `#page-height-extend`（300vh 撑高）**：撑高按「有位移 + is-home 会变 + scrollY > 0」显示；收起必须等回顶（`hidePageHeightExtendWhenAtTop`），提前收起会因文档高度骤降被钳制、产生抖动。
 
-### 5.3 侧边栏小组件
+### 6.3 侧边栏小组件
 
 **数据模型**（`settings.yaml` 的 `sidebar` 分组）：`widgets` / `rightWidgets` / `mobileWidgets` 是条目数组，每项只有 `{ value, sticky?, name?, html? }`（`mobileWidgets` 条目没有 `sticky`）。`value` 取值：`profile` / `announcement` / `popular-posts` / `categories` / `tag` / `music` / `hitokoto` / `site-stats` / `weather` / `schedule` / `html`（`name` + `html` 仅自定义HTML）。`profile` / `announcement` 也是普通条目，可自由排序、可勾吸顶；各小组件详细配置**外提为独立分组**（`sidebar.profile` / `announcement` / `siteStats` / `weather` / `hitokoto` / `music` / `schedule`），组件只读 `theme.config?.sidebar?.<组>?.<字段>`（不再从条目里读）；同类型可重复添加、共用同一份配置。站点统计「统计项」为多选数组，数组顺序即前台展示顺序。
 
@@ -140,7 +187,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 **其余约定**：右栏 aside 断点——`<768px` 作为第三项可见、`768–1279px` 隐藏、`≥1280px` 三栏可见 / 两栏隐藏；右栏不吸顶区间距只写 `mb-4 xl:mb-0`（xl 起 aside 自身 `flex + gap-4`，再加 margin 会双倍）；多实例组件内部钩子用 `data-*` 不用 `id`（`data-toc-indicator` / `data-toc-empty`，查询一律走实例作用域）；小组件空卡守卫（勾选项全落空时整卡不渲染）必须放在 `th:with` 的**外层**元素上（同元素 `th:if` 先于 `th:with` 执行）；`#sidebar-sticky` / `#right-sidebar-sticky` 两个 id 被 `Layout.astro` 与 `global.css` 引用，勿改名。
 
-### 5.4 主题设置（settings.yaml → theme.config）
+### 6.4 主题设置（settings.yaml → theme.config）
 
 `settings.yaml` 里每个 `group` 对应后台一个设置页分组；每个 `name` 会出现在前端的 `theme.config?.<group>?.<name>`。
 
@@ -156,7 +203,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 
 **`help` 文案要短**：一句话说清「这个设置做什么 / 取值怎么选」，可读性优先——不写长篇大论、不解释实现原理、不用「本选项将…」式公文腔；互斥 / 取值等必要信息用短句补齐即可。正面例（settings.yaml 现有写法）：`经典：单栏居中的细线页脚；卡片：整块卡片式页脚`。
 
-### 5.5 访客样式面板与展示层开关
+### 6.5 访客样式面板与展示层开关
 
 - **面板结构**：后台开关在 `layout.mobileMenu.visitorStyle` 子组，缺省视为开启；开关为**标签页级**（外观 / 壁纸 / 特效），仅在总开关 `enable` 开启时显示；Tab 栏由 `DisplaySettings.svelte` 的 `visibleTabs` 驱动（≥2 个显示 Tab 栏、=1 个直接渲染该分区）。`Navbar.astro` 显示设置按钮的 `th:if` 与 `ConfigCarrier.astro` 的 `th:data-visitor-*` 一一对应——**新增 / 删除标签页开关两处必须同步**（Thymeleaf 无法从 data 属性推导）。
 - **localStorage 键清单（改键名需三处同步）**：`postListLayout`、`cardBorder`、`cardFollowTheme`、`navbarBlur`、`postListMasonry`、`wallpaperOpacity`、`wallpaperBlur`、`wallpaperCardAlpha`、`bannerDisplay`、`bannerWave`、`bannerTitle`、`sakuraEnabled`。开关关闭时对应键会被忽略并清理（与 `fixed` 固定色调、`__eecs` 语义一致）。**`cardHoverLift` 已退役**（卡片悬浮恒用后台默认），首帧脚本仅清理其残留键。
@@ -169,7 +216,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处。
 - **插件配色契约**：`html` 根节点的 `data-color-scheme`（auto/light/dark）+ `color-scheme-*` 类供插件前台组件跟随主题明暗；同步点：`Layout.astro` / `pages/layout.astro` 的 html 标签与启动脚本、`setting-utils.applyThemeToDocument`（改一处必须同步其余）。
 
-### 5.6 组件表达式 prop 约定
+### 6.6 组件表达式 prop 约定
 
 `src/components/control/` 下的 `FilterTab.astro` / `FilterTabs.astro` / `PageHeader.astro` 把 Thymeleaf 表达式当**字符串 prop** 传，务必遵守（否则只在 Halo 渲染期才暴露错误）：
 
@@ -180,7 +227,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **沉默 footgun**：把字面量误当表达式传（或漏写 `${}`）时 `astro build` 不报错，只在 Halo 服务端渲染时抛 Thymeleaf 解析异常。改这些组件前先读懂对应 `.astro` 文件顶部的传参注释。
 - `WidgetSwitch.astro` 不吃表达式 prop：片段内固定用参数 `widget`（引用处传 `${widget}`），自定义 HTML 条目取 `${widget.html}`。
 
-### 5.7 Halo/Thymeleaf 特有约定
+### 6.7 Halo/Thymeleaf 特有约定
 
 - `th:text`、`th:if` / `th:unless`、`th:each`、`th:href`、`th:classappend` 等是 Thymeleaf 指令，不是前端属性。
 - 模板变量来自 Halo 的 Finder API 与上下文：`post`、`posts`、`site`、`theme.config`、`theme.metadata` 等。
@@ -191,14 +238,14 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **favicon 由 Halo 注入**（系统设置里配置）：主题布局不输出 `<link rel="icon">`，否则与注入重复（未配置时主题侧只会渲染出空 href 的无用标签）。
 - **description 的最终归属**：Halo 注入的描述排在主题之后、渲染末尾同名 `name`-meta 只保留最后一条（`theme-color` / `robots` 除外）→ **文章 / 独立页最终 = 页面「摘要」**（未填摘要会输出空标签；主题手写值会被顶掉，要改描述就填「摘要」）；分类 / 标签 = 站长配置优先（未配置时展示主题描述）；首页 = 系统 SEO 描述、未配置时回退主题 bio（首页注入与主题描述并存，主题在 `index.astro` 经 `descriptionShowIfExpr` 让位）。
 
-### 5.8 卡片悬浮语言
+### 6.8 卡片悬浮语言
 
 - **卡片底色**：需要悬浮反馈的卡片统一走 `--btn-card-bg-hover`——`.btn-card` 自带，`.card-base` 卡片补 `hover:bg-(--btn-card-bg-hover)`；深色取值只比 `--card-bg` 亮一档（见 `variables.css` 注释），保持「浅浅的」、不泛主题色。
 - **主色淡底只用于小型卡片 / 条目**（如关于页的 `.about-proj` / `.about-friend`）；大卡片（时间轴、打赏收款码）不加悬浮底色，也不叠主色。别再给卡片加 `group-hover` 渐变遮罩——会与统一底色叠加成双层效果。
 - 上浮 + 主题色阴影由 `.card-hover-lift` 与后台「卡片悬浮效果」开关统一控制，不要各自另写。
 - **过渡时长统一**：唯一取值是 `--card-hover-duration`（`variables.css`，300ms）。`.card-hover-lift` 在 `components.css` 的非分层段统一兜底（原因见该处注释）；关于页卡、页脚友链、状态弹窗、打赏模态框直接引用该变量，勿写死 `0.3s`。
 
-## 6. 常见坑（务必注意）
+## 7. 常见坑（务必注意）
 
 **构建与产物**
 

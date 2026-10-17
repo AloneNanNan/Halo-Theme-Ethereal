@@ -2,7 +2,7 @@
 /**
  * 小组件分派片段（Thymeleaf 片段库）：全套 th:switch 只定义这一份，侧栏用
  * <div th:replace="~{::widgetSwitch(${widget})}"></div> 引用——勿在引用处内联第二份
- * （会撑大每页模板体积，见 AGENTS.md 5.3）。
+ * （会撑大每页模板体积，见 AGENTS.md 6.3）。
  * ⚠️ 两个硬约束：外层 th:if="false" 负责「定义处不渲染」，不能写进片段根元素（副本会连
  * 条件一起复制、渲染为空）；片段根元素自带 class="contents"（th:replace 是整体替换，
  * 不保留引用点属性）。
