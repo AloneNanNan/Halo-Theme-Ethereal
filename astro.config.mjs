@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 
 import { stripHtmlCommentsInDir } from "./scripts/strip-html-comments.mjs";
+import { minifyInlineScriptsInDir } from "./scripts/minify-inline-scripts.mjs";
 import { ensureIconMaskPrefixInDir } from "./scripts/ensure-icon-mask-prefix.mjs";
 import {
   compileAssets,
@@ -36,6 +37,19 @@ const stripHtmlComments = {
   hooks: {
     "astro:build:done": async ({ dir }) => {
       await stripHtmlCommentsInDir(fileURLToPath(dir));
+    },
+  },
+};
+
+// 构建后处理：压缩产物 HTML 内的内联脚本（is:inline 脚本不经 Astro/Vite 打包，
+// 注释与缩进原样下发）。只压「无 th:* / data-th-* 属性、块内无 Thymeleaf 内联语法」的块，
+// 判定与保护原因见 scripts/minify-inline-scripts.mjs。
+/** @type {import("astro").AstroIntegration} */
+const minifyInlineScripts = {
+  name: "minify-inline-scripts",
+  hooks: {
+    "astro:build:done": async ({ dir }) => {
+      await minifyInlineScriptsInDir(fileURLToPath(dir));
     },
   },
 };
@@ -93,6 +107,7 @@ export default defineConfig({
   integrations: [
     stripHtmlComments,
     buildAssets,
+    minifyInlineScripts,
     ensureIconMaskPrefix,
     swup({
       theme: false,

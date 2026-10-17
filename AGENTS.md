@@ -92,6 +92,10 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 - 产物带 `/*__ETHEMEAL_MINIFIED__*/` 标记；build:done 只压缩白名单内 public 产物，不碰 Astro/Vite 的 hashed module 文件。
 - nodemon 的 ext 不含 js 是有意的（防「编译 → 重建」死循环），不要给 nodemon.json 加 js。
 
+**内联脚本压缩**（`astro.config.mjs` 的 `minifyInlineScripts` integration → `scripts/minify-inline-scripts.mjs`）：`is:inline` 脚本不经打包，注释与缩进会原样下发，故 build:done 用 esbuild 就地压缩产物 HTML 的 `<script>` 正文。判定是通用的，新增内联脚本无需登记。
+
+只压「无 `th:*` / `data-th-*` 属性（`th:inline="none"` 除外）且块内无 Thymeleaf 内联语法（`/*[[…]]*/`、`[(#{…})]`）」的块：带 `th:if` 等属性的脚本可能夹带内联表达式，压缩会删注释并改写表达式，服务端渲染直接抛异常。跳过不是缺陷，不要为「压得更多」放宽判定。
+
 **README-Halo 转换**：`scripts/convert-readme.mjs` 把 README.md 转为降级版 README-Halo.md（Halo 应用市场不支持 `<picture>` 徽章，替换为内部首个浅色 `<img>`）。README-Halo.md 是生成产物（已 gitignore / prettierignore），勿手改、不提交；触发方式三选一（`pnpm readme:halo` / `pnpm format` 链尾 / 提交涉及 README 时 pre-commit 自动），产物一致。该文件仅用于发布时手工粘贴到 halo.run 开发者后台的详情页；商店版本说明走 release.md（ci.yaml）。
 
 ### 5.2 Swup 与换页时序

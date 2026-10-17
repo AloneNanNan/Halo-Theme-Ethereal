@@ -2768,7 +2768,7 @@ spec:
               min: 0
               max: 2000
               step: 50
-              help: "建议 300-800，设为 0 则使用原图不压缩。原图宽度不足时仅支持缩小"
+              help: "建议 300-800，0 = 原图不压缩。400/800 两档按屏幕自适应选择，本项超过 800 时追加为顶档；原图不足时仅支持缩小"
             - $formkit: number
               name: article_image_width
               if: "$get(image_processing_provider).value !== 'none'"

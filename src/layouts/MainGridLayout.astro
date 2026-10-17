@@ -334,11 +334,14 @@ const {
         th:if="${theme.config?.style?.bannerText?.links?.items != null and not #lists.isEmpty(theme.config?.style?.bannerText?.links?.items)}"
         class="mt-5 flex flex-wrap items-center justify-center gap-3"
       >
+        <!-- 名称为空的纯图标按钮没有可读名：th:attr 对 null 不输出属性，避免留下无效的
+             title=""；aria-label 仅在未填名称时用链接地址兜底（填了名称时可见文本已提供名称，
+             不再重复输出）。可读名仍建议在后台「名称」里填。 -->
         <a
           th:each="link : ${theme.config?.style?.bannerText?.links?.items}"
           th:if="${not #strings.isEmpty(link.url) and ((link.icon != null and not #strings.isEmpty(link.icon.value)) or not #strings.isEmpty(link.name))}"
           th:href="${link.url}"
-          th:title="${link.name}"
+          th:attr="title=${not #strings.isEmpty(link.name) ? link.name : null},aria-label=${#strings.isEmpty(link.name) ? link.url : null}"
           target="_blank"
           rel="noopener noreferrer"
           class="banner-link social-btn-lift"

@@ -58,6 +58,13 @@ export const CDN_PATTERN_RAW =
   " : provider == 'custom' ? #strings.defaultString(fmt, '') : ''";
 
 /**
+ * 宽度变量的数值形态（FormKit number 在配置里可能存成字符串）：srcset 顶档比较前统一转
+ * Integer，空值回退 0。banner 与卡片封面共用，避免两处手写同一段 #conversions 表达式。
+ */
+const WN_VAR_EXPR =
+  "#strings.isEmpty('' + w) ? 0 : #conversions.convert(w, 'java.lang.Integer')";
+
+/**
  * 生成图片尺寸后缀的完整 th:with 局部变量串。
  * @param widthDefault 宽度取值表达式（Thymeleaf），如 "p?.banner_width ?: 1920"
  */
@@ -101,12 +108,13 @@ export function bannerThWith(): string {
   return (
     imageSuffixThWith("p?.banner_width ?: 1920") +
     ", " +
-    // pat：srcset 分档用的后缀模板；wn：banner_width 的数值形态——FormKit
-    // number 在配置里可能是字符串，比较前统一转 Integer（空值回退 0）
+    // pat：srcset 分档用的后缀模板（wn 由 WN_VAR_EXPR 统一生成）
     "pat=${" +
     CDN_PATTERN_RAW +
     "}, " +
-    "wn=${#strings.isEmpty('' + w) ? 0 : #conversions.convert(w, 'java.lang.Integer')}, " +
+    "wn=${" +
+    WN_VAR_EXPR +
+    "}, " +
     bannerSrcsetTokens() +
     ", " +
     bannerMediaVars(src, "theme.config?.style?.bannerStyle?.mode ?: 'single'") +
@@ -307,6 +315,66 @@ function bannerSrcsetExpr(base: string, eligToken: string): string {
 /** 轮播模式单张图的 th:srcset 表达式（引用 carouselThWith 的 cbase/celig） */
 export function carouselSrcsetExpr(): string {
   return bannerSrcsetExpr("cbase", "celig");
+}
+
+/**
+ * 首页卡片封面图的固定档位：列表模式封面宽约 348px（内容列 1024px ×
+ * --post-card-cover-width 34%），网格模式约 298px（卡片宽减 2rem）。400 覆盖 1x、800 覆盖 2x；
+ * 3x 屏仍只能选 800（与改动前一致）。PostCard 的 sizes 是同步点，改封面占比需一并调整。
+ */
+const CARD_COVER_SRCSET_WIDTHS = [400, 800];
+
+/**
+ * 首页卡片封面图的 th:with 变量串（引用 post.spec.cover）：在图片处理后缀变量基础上追加
+ * pat（后缀模板）、cbase/celig（剥查询串的基准与准入判定）与 wn（宽度的数值形态），
+ * 供 th:src / th:srcset 引用。与 banner 同源，不另写一份 provider 映射。
+ */
+export function cardCoverThWith(): string {
+  return (
+    imageSuffixThWith("p?.card_cover_width ?: 400") +
+    ", pat=${" +
+    CDN_PATTERN_RAW +
+    "}" +
+    ", craw=${#strings.defaultString(post.spec.cover, '')}" +
+    ", cbase=${" +
+    withoutQuery("craw") +
+    "}" +
+    ", celig=${" +
+    cdnSuffixEligible("craw") +
+    "}" +
+    ", wn=${" +
+    WN_VAR_EXPR +
+    "}"
+  );
+}
+
+/**
+ * 卡片封面图 th:src 表达式：先剥查询串再拼后缀，否则 `x.webp?v=2?image_process=…` 会让后缀
+ * 静默失效；不能加后缀时原样返回，避免误删 URL 自身参数（同 banner 的 srcX）。
+ */
+export function cardCoverSrcExpr(): string {
+  return "${celig and suffix != '' ? cbase + suffix : craw}";
+}
+
+/**
+ * 卡片封面图 th:srcset 表达式：固定 400/800 两档，card_cover_width 超过 800 时追加为顶档；
+ * provider 无模板 / width == 0 / 扩展名不符时返回 null（th:srcset 不输出，回退 src 单档）。
+ */
+export function cardCoverSrcsetExpr(): string {
+  const top = CARD_COVER_SRCSET_WIDTHS[CARD_COVER_SRCSET_WIDTHS.length - 1];
+  const ladder = CARD_COVER_SRCSET_WIDTHS.map(
+    (width) => "cbase + " + candidateBody(`'${width}'`, `'${width}'`),
+  ).join(" + ', ' + ");
+  return (
+    "${celig and pat != '' and wn > 0 ? (" +
+    ladder +
+    " + (wn > " +
+    top +
+    " ? ', ' + cbase + " +
+    candidateBody("'' + wn", "wn") +
+    " : '')" +
+    ") : null}"
+  );
 }
 
 /**
