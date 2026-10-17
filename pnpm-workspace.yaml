@@ -14,6 +14,8 @@ allowBuilds:
 #   （array-limit bypass / DoS，GHSA-x5fp-wj9c-mxmx 等）
 # - brace-expansion 的 1.x / 2.x / 5.x 各自存在 DoS（CVE-2026-102276 / 102277 / 102278），
 #   三个主版本 API 不互通，必须按主版本分别锁定修复版
+# - source-map-js@1.2.1 解析 indexed source map 存在 DoS，修复版为 1.2.2
+# - postcss-selector-parser 的扁平选择器 DoS 只在 7.1.6 修复，6.x 分支未回移
 overrides:
   serialize-javascript: ^7.0.7
   fast-uri: ^3.1.6
@@ -21,3 +23,5 @@ overrides:
   "brace-expansion@1": 1.1.21
   "brace-expansion@2": 2.1.7
   "brace-expansion@5": 5.0.12
+  source-map-js: ^1.2.2
+  postcss-selector-parser: 7.1.6
