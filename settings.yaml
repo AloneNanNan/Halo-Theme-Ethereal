@@ -1588,7 +1588,7 @@ spec:
         - $formkit: group
           name: calendar
           label: 站点日历小组件
-          help: "把「站点日历」加入任一侧边栏列表即显示；按发布日展示全站已发布文章的分布，数据实时来自站点文章"
+          help: "把「站点日历」加入任一侧边栏列表即显示；按发布日统计全站公开文章"
           value:
             showHeatmap: true
           children:
@@ -1596,7 +1596,7 @@ spec:
               name: showHeatmap
               label: 年度文章热力图
               value: true
-              help: "在日历下方显示 12 月 × 4 周的文章分布热力图，点格子可跳转该月"
+              help: "在日历下方显示 12 月 × 4 周的热力图，点格子跳到该月"
     - group: post
       label: 文章
       formSchema:

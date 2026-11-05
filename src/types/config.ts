@@ -613,7 +613,7 @@ export interface Sidebar {
   calendar?: SidebarCalendar;
 }
 
-// 以下五个分组是各小组件的「唯一配置源」：条目列表里只放「小组件 + 吸顶」，
+// 以下分组是各小组件的「唯一配置源」：条目列表里只放「小组件 + 吸顶」，
 // 详细配置外提到这里，左右侧边栏共用同一份（原先是每个条目各存一份）
 export interface SidebarSiteStats {
   /**
