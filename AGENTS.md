@@ -167,7 +167,7 @@ src/scripts/vendor/*.js →(原样拷贝, build:start)→ public/assets/*.js
 
 **数据模型**（`settings.yaml` 的 `sidebar` 分组）：`widgets` / `rightWidgets` / `mobileWidgets` 是条目数组，每项只有 `{ value, sticky?, name?, html? }`（`mobileWidgets` 条目没有 `sticky`）。`value` 取值：`profile` / `announcement` / `popular-posts` / `categories` / `tag` / `music` / `hitokoto` / `site-stats` / `weather` / `schedule` / `calendar` / `html`（`name` + `html` 仅自定义HTML）。`profile` / `announcement` 也是普通条目，可自由排序、可勾吸顶；各小组件详细配置**外提为独立分组**（`sidebar.profile` / `announcement` / `siteStats` / `weather` / `hitokoto` / `music` / `schedule` / `calendar`），组件只读 `theme.config?.sidebar?.<组>?.<字段>`（不再从条目里读）；同类型可重复添加、共用同一份配置。站点统计「统计项」为多选数组，数组顺序即前台展示顺序。
 
-**站点日历的数据契约**（`Calendar.astro`）：`postFinder.listAll()` 在渲染期把全部公开文章（`publish == true` + `visible == 'PUBLIC'` + `hideFromList != true`）写成 `data-*` 行，客户端一次性读入、无 fetch。代价随文章数线性增长（每篇约 150 字节），侧栏又不在 Swup 容器内，整段会话看到的是首次加载的快照——注释与设置项文案不要再写「实时」。客户端拼进 `innerHTML` 的标题/链接必须自行转义（`getAttribute` 会把服务端转义解码还原）。
+**站点日历的数据契约**（`Calendar.astro`）：`postFinder.listAll()` 在渲染期把公开文章写成 `data-*` 行，客户端一次性读入、无 fetch；代价随文章数线性增长（每篇约 100–200 字节，取决于标题与 permalink 长度），且侧栏不在 Swup 容器内，整段会话拿到的是首次加载的快照。**可见性必须写 `post.spec.visible?.name() == 'PUBLIC'`**：`spec.visible` 是枚举 `VisibleEnum`，SpEL 的 `==` 不做枚举与字符串强转，写成 `visible == 'PUBLIC'` 恒 false（数据源全空），写成 `!= 'PRIVATE'` 恒 true（内部/私有文章混入）。客户端拼进 `innerHTML` 的标题/链接必须自行转义（`getAttribute` 会把服务端转义解码还原）。
 
 **移动端列表**：留空 = 移动端沿用左右栏条目与顺序；非空 = 只显示本列表（`MobileSideBar.astro`，无吸顶、不吃「只留前 2 个」限额）。条目放在 `<template>` 里由 `is:inline` 脚本克隆挂载（桌面端不为「只在移动端用」的小部件白跑请求），挂载成功才给 `<html>` 加 `has-mobile-sidebar`（禁用 JS 时照旧显示两栏）——细节见组件顶部注释。
 

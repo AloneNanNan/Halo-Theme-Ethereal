@@ -1,13 +1,7 @@
 ---
-// 站点日历小组件（对标 Firefly 的 Calendar 小组件）：日/月/年三视图 + 年度文章热力图
-// + 当月/单日文章列表。
-// - 数据来源：postFinder.listAll() 在渲染期把全部公开文章渲染成 data-* 行，客户端一次性
-//   读入，无 fetch、无构建期快照。代价随文章数线性增长（每篇约 150 字节），侧栏又不在
-//   Swup 容器内、脚本只跑一次，故整段会话内看到的是首次加载时的快照，勿当成实时数据
-// - 后台可配置：年度热力图（sidebar.calendar.showHeatmap，缺省 true，在「站点日历小组件」分组里）
-// - 侧栏不是 Swup 容器：脚本只跑一次，月份/视图状态跨页保留（与 Firefly 的
-//   swup:contentReplaced 重初始化不同，勿加回）；移动端独立列表经 template 克隆挂载后脚本才
-//   执行，实例作用域取法对桌面/移动两份都成立
+// 站点日历小组件：日/月/年三视图 + 年度热力图 + 当月/单日文章列表。
+// 数据由 postFinder.listAll() 在渲染期写成 data-* 行，客户端一次性读入；体积代价见 AGENTS.md 6.3。
+// 视图状态随侧栏常驻而跨页保留，勿加 swup 重初始化（脚本只跑一次）。
 import WidgetLayout from "./WidgetLayout.astro";
 
 interface Props {
@@ -18,59 +12,61 @@ const { class: className, style } = Astro.props;
 ---
 
 <WidgetLayout
+  name="站点日历"
   nameKey="widget.calendar.title"
   id="calendar"
-  class={"relative" + (className ? " " + className : "")}
+  class={["relative", className].filter(Boolean).join(" ")}
   style={style}
 >
-  <!-- 数据源容器：th:each 放在内层 .contents（不产生盒子）逐篇复制，外层只有一份；
-       data-* 值由 th:attr 输出，HTML 转义由 Thymeleaf 处理，客户端按属性读取即得原文。
-       可见性只放行 PUBLIC：INTERNAL 文章的链接对匿名访客不可访问，内嵌其标题等于泄漏 -->
+  <!-- 数据源容器：th:each 放在内层 .contents（不产生盒子）逐篇复制，外层只有一份。
+       ⚠️ 可见性必须用 visible?.name()，写成字符串比较会恒假、数据源整块为空（见 AGENTS.md 6.3） -->
   <div class="calendar-posts-src hidden">
     <div
       class="contents"
       th:each="post : ${postFinder.listAll()}"
-      th:if="${post.spec.publish == true and post.spec.visible == 'PUBLIC' and post.status.hideFromList != true and post.spec.publishTime != null}"
+      th:if="${post.spec.publish == true and post.spec.visible?.name() == 'PUBLIC' and post.status?.hideFromList != true and post.spec.publishTime != null}"
       th:attr="data-title=${post.spec.title}, data-permalink=${post.status.permalink}, data-date=${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
     ></div>
   </div>
 
+  <!-- 回今天按钮放在卡片标题行右侧：留在日历头部会把居中的标题挤偏。
+       初始 hidden 防闪，显隐由脚本按视图与月份切换 -->
+  <button
+    type="button"
+    class="cal-reset btn-regular absolute right-2.5 top-4 h-7 w-7 rounded-md active:scale-90 will-change-transform hidden"
+    th:aria-label="#{widget.calendar.backToToday}"
+    aria-label="Back to today"
+  >
+    <span class="icon-[fa6-solid--arrow-rotate-left] text-[0.875rem] text-(--btn-content)"></span>
+  </button>
+
   <div class="calendar-container">
-    <!-- 导航行：上/下月、回今天、当前标题（点击逐层切换 日→月→年） -->
+    <!-- 导航行：上/下月 + 居中标题（点击逐层切换 日→月→年）。
+         左右只剩等宽的翻页按钮，标题才可能真正居中 -->
     <div class="mb-2 flex items-center justify-between">
       <button
         type="button"
-        class="btn-plain cal-prev h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
+        class="btn-plain cal-prev h-9 w-9 flex items-center justify-center rounded-lg transition active:scale-95"
         th:aria-label="#{widget.calendar.prevMonth}"
         aria-label="Previous month"
       >
-        <span class="icon-[material-symbols--keyboard-arrow-left] text-sm" />
+        <span class="icon-[material-symbols--keyboard-arrow-left] text-xl" />
       </button>
       <!-- 视图标题兼作「日→月→年」切换入口：用 button 换取键盘可达（div 无法聚焦） -->
       <button
         type="button"
-        class="cal-month-display btn-plain text-lg font-bold text-neutral-900 cursor-pointer transition-colors select-none hover:text-(--primary) dark:text-neutral-100"
+        class="cal-month-display btn-plain rounded-lg px-3 py-1 text-lg font-bold text-neutral-900 transition select-none hover:text-(--primary) active:scale-95 dark:text-neutral-100"
       >
         <span th:text="#{widget.calendar.year}">Year</span>
       </button>
-      <div class="flex gap-2">
-        <button
-          type="button"
-          class="btn-plain cal-reset h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
-          th:aria-label="#{widget.calendar.backToToday}"
-          aria-label="Back to today"
-        >
-          <span class="icon-[material-symbols--replay] text-sm" />
-        </button>
-        <button
-          type="button"
-          class="btn-plain cal-next h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
-          th:aria-label="#{widget.calendar.nextMonth}"
-          aria-label="Next month"
-        >
-          <span class="icon-[material-symbols--keyboard-arrow-right] text-sm" />
-        </button>
-      </div>
+      <button
+        type="button"
+        class="btn-plain cal-next h-9 w-9 flex items-center justify-center rounded-lg transition active:scale-95"
+        th:aria-label="#{widget.calendar.nextMonth}"
+        aria-label="Next month"
+      >
+        <span class="icon-[material-symbols--keyboard-arrow-right] text-xl" />
+      </button>
     </div>
 
     <!-- 日视图：星期表头 + 日历格子（客户端脚本填充） -->
@@ -104,12 +100,9 @@ const { class: className, style } = Astro.props;
       style="display: none;"
     ></div>
 
-    <!-- 当月/单日文章列表（客户端脚本填充） -->
-    <div class="cal-posts mt-3">
-      <div
-        class="cal-posts-divider mb-2 border-t border-neutral-200 dark:border-neutral-700"
-        style="display: none;"
-      ></div>
+    <!-- 当月/单日文章列表（客户端脚本填充；空月份时整块由脚本隐藏） -->
+    <div class="cal-posts mt-3 hidden">
+      <div class="cal-posts-divider mb-2 border-t border-neutral-200 dark:border-neutral-700"></div>
       <div class="cal-posts-list flex max-h-48 flex-col gap-1 overflow-y-auto custom-scrollbar"></div>
     </div>
   </div>
@@ -124,6 +117,10 @@ const { class: className, style } = Astro.props;
       document;
     var card = widgetRoot.querySelector('[data-id="calendar"]');
     if (!card) return;
+    // Swup 换页会把新文档里的内联脚本重跑一遍，而侧栏不随换页重建：
+    // 认到同一个卡片就退出，否则月份/视图状态会被重置回今天
+    // （标记在初始化末尾才写，中途抛异常时下次重跑还能补一次）
+    if (card.dataset.calReady === "true") return;
 
     var t =
       window.__etherealI18n ||
@@ -182,8 +179,7 @@ const { class: className, style } = Astro.props;
       "Week {1} of {0}, {2} posts",
     );
     var emptyText = t("widget.calendar.empty", "No posts yet");
-    // 语言标签归一化（复用 Layout.astro 的全局助手）：只有 zh* 用「YYYY年M月」，
-    // 其余一律「Month YYYY」——判据写具体语系，别写成「非 en 即 CJK」
+    // 只有 zh 语系用「YYYY年M月」，其余「Month YYYY」；判据取具体语系，不能用「非 en」
     var langTag = window.__etherealLangTag
       ? window.__etherealLangTag(document.documentElement.lang)
       : document.documentElement.lang;
@@ -196,7 +192,7 @@ const { class: className, style } = Astro.props;
       return card.querySelectorAll(sel);
     };
 
-    // ---- 数据：读服务端内嵌的 data-* 行（非 fetch）----
+    // ---- 数据：读服务端内嵌的 data-* 行后即丢弃容器，不留几千个空节点 ----
     var posts = [];
     qq(".calendar-posts-src [data-date]").forEach(function (el) {
       posts.push({
@@ -205,28 +201,40 @@ const { class: className, style } = Astro.props;
         date: el.getAttribute("data-date") || "",
       });
     });
+    var srcEl = q(".calendar-posts-src");
+    if (srcEl) srcEl.remove();
+
     var postsByDate = {};
+    var postsByMonth = {};
     var yearSet = {};
     posts.forEach(function (p) {
       if (!p.date) return;
       (postsByDate[p.date] = postsByDate[p.date] || []).push(p);
+      (postsByMonth[p.date.slice(0, 7)] =
+        postsByMonth[p.date.slice(0, 7)] || []).push(p);
       yearSet[p.date.slice(0, 4)] = true;
     });
-    var availableYears = Object.keys(yearSet).sort(function (a, b) {
-      return b - a;
-    });
+    // 转成数字再排序：字符串键与 displayYear（数字）用 === 比较会恒假，年视图高亮会失效
+    var availableYears = Object.keys(yearSet)
+      .map(Number)
+      .sort(function (a, b) {
+        return b - a;
+      });
 
     var now = new Date();
     var displayYear = now.getFullYear();
     var displayMonth = now.getMonth();
     var currentView = "day";
+    var heatmapYear = null;
 
     var pad = function (n) {
       return String(n).padStart(2, "0");
     };
+    var monthKey = function (year, month) {
+      return year + "-" + pad(month + 1);
+    };
 
-    // 客户端拼 HTML 必须自行转义：服务端 th:attr 的转义会被 getAttribute 解码还原，
-    // 标题/链接原样拼进 innerHTML 会破坏结构（含引号时可属性逃逸）。同 PopularPosts
+    // 拼 HTML 前必须转义（同 PopularPosts）；原因与后果见 AGENTS.md 6.3
     var escapeHtml = function (str) {
       return String(str)
         .replace(/&/g, "&amp;")
@@ -235,11 +243,10 @@ const { class: className, style } = Astro.props;
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     };
-    // 链接只放行 http(s) 与站内路径，其余置空，避免 javascript: 之类协议
+    // 链接只放行 http(s) 与站内路径（单个 / 开头），其余置空——含 //host 这类协议相对外链
     var toHref = function (href) {
-      return /^https?:\/\//i.test(href) || href.charAt(0) === "/"
-        ? escapeHtml(href)
-        : "";
+      var isSitePath = href.charAt(0) === "/" && href.charAt(1) !== "/";
+      return /^https?:\/\//i.test(href) || isSitePath ? escapeHtml(href) : "";
     };
     // 可点格子统一补键盘等价：div 不能聚焦，role + tabindex + Enter/Space 才有键盘可达性
     var activateOn = function (el, fn) {
@@ -256,13 +263,10 @@ const { class: className, style } = Astro.props;
 
     // ---- 热力图提示框：本实例专属（挂 card 上 absolute 定位，勿用 body 级 fixed——
     //      侧栏 hover 时 card 带 transform，fixed 会随包含块漂移；勿用全局 id 多实例抢占）----
-    var tip = q(".cal-tip");
-    if (!tip) {
-      tip = document.createElement("div");
-      tip.className = "cal-tip";
-      tip.setAttribute("aria-hidden", "true");
-      card.appendChild(tip);
-    }
+    var tip = document.createElement("div");
+    tip.className = "cal-tip";
+    tip.setAttribute("aria-hidden", "true");
+    card.appendChild(tip);
 
     // 先写文本再量尺寸：否则拿到的是上一次（首次为 0）的宽高，提示框位置会偏
     function showTip(text, cell) {
@@ -291,6 +295,10 @@ const { class: className, style } = Astro.props;
       if (!wrap) return; // 后台关闭热力图时整块未渲染
       wrap.style.display = currentView === "day" ? "block" : "none";
       if (currentView !== "day") return;
+      // 热力图只取决于年份：同年不重建。按下期间替换格子会让浏览器把 :active 套到新格子上，
+      // 表现为一次点击内凹两次
+      if (heatmapYear === displayYear) return;
+      heatmapYear = displayYear;
 
       var monthsEl = q(".cal-heatmap-months");
       var gridEl = q(".cal-heatmap-grid");
@@ -305,7 +313,7 @@ const { class: className, style } = Astro.props;
         }).join("");
       }
 
-      // 按「年-月」预分桶：heatmapData[month][week] = count（4 周 × 12 月，row-major）
+      // 按「年-月」预分桶：monthCount[month][week] = count（4 周 × 12 月，row-major）
       var monthCount = {};
       posts.forEach(function (p) {
         if (p.date.slice(0, 4) !== String(displayYear)) return;
@@ -316,8 +324,9 @@ const { class: className, style } = Astro.props;
         monthCount[m][week]++;
       });
 
-      // 离散透明度档：低计数也保持可见（0/1/2/3/4+ 五档）
-      var opacityLevels = [0, 0.45, 0.65, 0.85, 1];
+      // 离散浓度档：低计数也保持可见（0/1/2/3/4+ 五档）。
+      // 用 color-mix 而不是元素 opacity——opacity 会把 hover 的描边一起调淡，浅格子几乎没反馈
+      var tintLevels = [0, 45, 65, 85, 100];
       var cells = "";
       for (var week = 0; week < 4; week++) {
         for (var month = 0; month < 12; month++) {
@@ -326,8 +335,9 @@ const { class: className, style } = Astro.props;
           var bg =
             count === 0
               ? "background-color: var(--btn-plain-bg-hover)"
-              : "background-color: var(--primary); opacity: " +
-                opacityLevels[level];
+              : "background-color: color-mix(in oklch, var(--primary) " +
+                tintLevels[level] +
+                "%, transparent)";
           var tooltip = heatmapWeekTemplate
             .replace("{0}", String(month + 1))
             .replace("{1}", String(week + 1))
@@ -345,6 +355,8 @@ const { class: className, style } = Astro.props;
             '"></div>';
         }
       }
+      // 重建会连悬停中的格子一起移除，先收掉提示框，避免它悬在半空
+      hideTip();
       gridEl.innerHTML = cells;
 
       qq(".cal-heat[data-heat-month]").forEach(function (cell) {
@@ -361,7 +373,7 @@ const { class: className, style } = Astro.props;
     }
 
     function renderCalendar() {
-      // 每次渲染重新取时间：侧栏跨页常驻不重建，跨天后「今天」高亮与重置按钮显隐要跟着变
+      // 时间取在渲染期而非脚本启动期：跨天后「今天」高亮与重置按钮显隐才会跟着走
       now = new Date();
       var dayView = q(".cal-view-day");
       var monthView = q(".cal-view-month");
@@ -419,10 +431,10 @@ const { class: className, style } = Astro.props;
       if (resetBtn) {
         var isCurrent =
           displayYear === now.getFullYear() && displayMonth === now.getMonth();
-        resetBtn.style.display =
-          currentView === "day" && isCurrent ? "none" : "flex";
+        // 用 hidden 类切换而不是写死 display 值：按钮的 display 由 btn-regular 提供
+        resetBtn.classList.toggle("hidden", currentView === "day" && isCurrent);
       }
-      // 年视图显示全部年份，无需翻页
+      // 年视图一次列全部年份，翻页按钮无意义，用 visibility 占位避免标题左右跳动
       if (prevBtn)
         prevBtn.style.visibility =
           currentView === "year" ? "hidden" : "visible";
@@ -446,37 +458,26 @@ const { class: className, style } = Astro.props;
       for (var i = 0; i < firstDay; i++)
         dayArr.push({ day: null, dateKey: "" });
       for (var day = 1; day <= daysInMonth; day++) {
-        var dateKey =
-          displayYear + "-" + pad(displayMonth + 1) + "-" + pad(day);
+        var dateKey = monthKey(displayYear, displayMonth) + "-" + pad(day);
         var has = !!(postsByDate[dateKey] && postsByDate[dateKey].length);
-        dayArr.push({
-          day: day,
-          dateKey: dateKey,
-          has: has,
-          count: has ? postsByDate[dateKey].length : 0,
-        });
+        dayArr.push({ day: day, dateKey: dateKey, has: has });
       }
       var cells = dayArr
         .map(function (it) {
           if (!it.day)
-            return '<div class="cal-day aspect-square flex items-center justify-center rounded-sm text-sm relative text-neutral-400 dark:text-neutral-600"></div>';
+            return '<div class="cal-day aspect-square flex items-center justify-center rounded-lg text-sm relative text-neutral-400 dark:text-neutral-600"></div>';
           var isToday = isCurrentMonth && it.day === now.getDate();
           // 只有带文章的日期可点，无文章日不挂手型光标，避免假可点提示
           var cls =
-            "cal-day aspect-square flex items-center justify-center rounded-sm text-sm relative" +
+            "cal-day aspect-square flex items-center justify-center rounded-lg text-sm relative" +
             (it.has ? " cursor-pointer" : "");
           if (!it.has) cls += " text-neutral-700 dark:text-neutral-300";
           else cls += " text-neutral-900 dark:text-neutral-100 font-bold";
           if (isToday) cls += " ring-2 ring-(--primary)";
+          // 小圆点离底边留 4px：贴边会压在选中高亮的圆角上
           var dot = it.has
-            ? '<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-(--primary)"></span>'
+            ? '<span class="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-(--primary)" aria-hidden="true"></span>'
             : "";
-          var badge =
-            it.has && it.count > 1
-              ? '<span class="absolute top-0 right-0 text-[10px] font-bold text-(--primary)">' +
-                it.count +
-                "</span>"
-              : "";
           return (
             '<div class="' +
             cls +
@@ -484,10 +485,13 @@ const { class: className, style } = Astro.props;
             it.dateKey +
             '" data-has-post="' +
             it.has +
-            '">' +
+            '"' +
+            // 只有可点（有文章）的日期才是切换按钮；无文章日挂 aria-pressed 属于无意义 ARIA
+            (it.has ? ' aria-pressed="false"' : "") +
+            (isToday ? ' aria-current="date"' : "") +
+            ">" +
             it.day +
             dot +
-            badge +
             "</div>"
           );
         })
@@ -504,26 +508,20 @@ const { class: className, style } = Astro.props;
     }
 
     function monthPosts() {
-      return posts
-        .filter(function (p) {
-          return (
-            p.date.slice(0, 7) === displayYear + "-" + pad(displayMonth + 1)
-          );
-        })
-        .sort(byDate);
+      var key = monthKey(displayYear, displayMonth);
+      return (postsByMonth[key] || []).slice().sort(byDate);
     }
 
     function showMonthlyPosts(dayKey) {
       var postsWrap = q(".cal-posts");
       var postsList = q(".cal-posts-list");
-      var divider = q(".cal-posts-divider");
       var list = dayKey
         ? (postsByDate[dayKey] || []).slice().sort(byDate)
         : monthPosts();
 
+      // 分隔线是 .cal-posts 的子元素，父级隐藏时无需单独处理
       if (postsWrap)
         postsWrap.style.display = list.length > 0 ? "block" : "none";
-      if (divider) divider.style.display = list.length > 0 ? "block" : "none";
       if (!postsList) return;
       postsList.innerHTML = list
         .map(function (p) {
@@ -531,7 +529,7 @@ const { class: className, style } = Astro.props;
           return (
             '<a href="' +
             toHref(p.permalink) +
-            '" class="flex justify-between items-center text-sm text-neutral-700 px-2 py-1 rounded-sm transition-colors hover:bg-(--btn-plain-bg-hover) hover:text-(--primary) dark:text-neutral-300 dark:hover:text-(--primary)">' +
+            '" class="flex justify-between items-center rounded-lg px-3 py-1.5 text-sm text-neutral-700 transition-all hover:bg-(--btn-plain-bg-hover) hover:pl-4 hover:text-(--primary) dark:text-neutral-300 dark:hover:text-(--primary)">' +
             '<span class="truncate">' +
             escapeHtml(p.title) +
             "</span>" +
@@ -553,13 +551,18 @@ const { class: className, style } = Astro.props;
           if (selectedDayEl === el) {
             // 再次点击取消选中，恢复当月全量
             el.classList.remove("cal-day-selected");
+            el.setAttribute("aria-pressed", "false");
             selectedDayEl = null;
             showMonthlyPosts();
             return;
           }
-          if (selectedDayEl) selectedDayEl.classList.remove("cal-day-selected");
+          if (selectedDayEl) {
+            selectedDayEl.classList.remove("cal-day-selected");
+            selectedDayEl.setAttribute("aria-pressed", "false");
+          }
           selectedDayEl = el;
           el.classList.add("cal-day-selected");
+          el.setAttribute("aria-pressed", "true");
           showMonthlyPosts(dateKey);
         });
       });
@@ -578,7 +581,7 @@ const { class: className, style } = Astro.props;
           var isCurrent = index === displayMonth;
           var has = !!monthsWithPosts[index];
           var cls =
-            "p-2 text-center text-sm rounded-sm cursor-pointer transition-colors relative hover:bg-(--btn-plain-bg-hover)";
+            "p-2 text-center text-sm rounded-lg cursor-pointer transition relative hover:bg-(--btn-plain-bg-hover) active:scale-95";
           cls += isCurrent
             ? " font-bold text-(--primary) bg-(--btn-plain-bg-hover)"
             : " text-neutral-700 dark:text-neutral-300";
@@ -620,7 +623,7 @@ const { class: className, style } = Astro.props;
         .map(function (year) {
           var isCurrent = year === displayYear;
           var cls =
-            "p-2 text-center text-sm rounded-sm cursor-pointer transition-colors relative hover:bg-(--btn-plain-bg-hover)";
+            "p-2 text-center text-sm rounded-lg cursor-pointer transition relative hover:bg-(--btn-plain-bg-hover) active:scale-95";
           cls += isCurrent
             ? " font-bold text-(--primary) bg-(--btn-plain-bg-hover)"
             : " text-neutral-700 dark:text-neutral-300";
@@ -645,7 +648,7 @@ const { class: className, style } = Astro.props;
     }
 
     function changeMonth(delta) {
-      // 年视图一次列全部年份，无翻页语义，直接忽略
+      // 年视图无翻页语义（按钮已隐藏），键盘或脚本触发时同样忽略
       if (currentView === "year") return;
       if (currentView === "day") {
         displayMonth += delta;
@@ -670,28 +673,29 @@ const { class: className, style } = Astro.props;
       renderCalendar();
     }
 
-    // 事件绑定（导航按钮）
     var prevBtn = q(".cal-prev");
     var nextBtn = q(".cal-next");
     var resetBtn = q(".cal-reset");
     var navDisplay = q(".cal-month-display");
     if (prevBtn)
-      prevBtn.onclick = function () {
+      prevBtn.addEventListener("click", function () {
         changeMonth(-1);
-      };
+      });
     if (nextBtn)
-      nextBtn.onclick = function () {
+      nextBtn.addEventListener("click", function () {
         changeMonth(1);
-      };
-    if (resetBtn) resetBtn.onclick = resetToToday;
+      });
+    if (resetBtn) resetBtn.addEventListener("click", resetToToday);
     if (navDisplay)
-      navDisplay.onclick = function () {
+      navDisplay.addEventListener("click", function () {
         if (currentView === "day") currentView = "month";
         else if (currentView === "month") currentView = "year";
         renderCalendar();
-      };
+      });
 
     renderCalendar();
+    // 初始化成功后才落标记：中途抛异常时，换页重跑还能再试一次
+    card.dataset.calReady = "true";
   })();
 </script>
 
@@ -705,12 +709,20 @@ const { class: className, style } = Astro.props;
       transform 0.2s ease;
     min-height: 32px;
   }
+  /* 悬停上浮 + 底色，按下内凹；圆角由格子的 rounded-lg 提供 */
   .cal-day[data-has-post="true"]:hover {
     transform: translateY(-2px);
+    background-color: var(--btn-plain-bg-hover);
   }
-  .cal-day-selected {
+  .cal-day[data-has-post="true"]:active {
+    transform: scale(0.92);
+    background-color: var(--btn-plain-bg-active);
+  }
+  /* 选中态不随悬停上浮：已选中的格子再跳一下会显得脏 */
+  .cal-day-selected,
+  .cal-day-selected:hover {
     background-color: var(--btn-regular-bg);
-    border-radius: 0.25rem;
+    transform: none;
   }
   .cal-heat {
     cursor: pointer;
@@ -718,10 +730,16 @@ const { class: className, style } = Astro.props;
     width: 85%;
     aspect-ratio: 1;
     margin: auto;
-    transition: box-shadow 0.15s ease;
+    transition:
+      box-shadow 0.15s ease,
+      transform 0.12s ease;
   }
   .cal-heat:hover {
     box-shadow: 0 0 1px 1.5px var(--primary, oklch(0.55 0.15 250));
+  }
+  /* 按下内凹与其它按钮一致；格子底色走内联 style，故这里只缩不换底色 */
+  .cal-heat:active {
+    transform: scale(0.9);
   }
   /* 键盘可达性的可见焦点（格子由脚本补 role/tabindex，见 activateOn） */
   .cal-day:focus-visible,

@@ -651,7 +651,7 @@ export interface SidebarSchedule {
 }
 
 export interface SidebarCalendar {
-  /** 是否在日历下方显示年度文章热力图，缺省 true（后台未配置时视为开启） */
+  /** 是否显示日历下方的年度文章热力图，缺省视为开启 */
   showHeatmap?: boolean;
 }
 
