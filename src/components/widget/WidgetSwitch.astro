@@ -8,6 +8,7 @@
  * 不保留引用点属性）。
  */
 import Announcement from "./Announcement.astro";
+import Calendar from "./Calendar.astro";
 import Categories from "./Categories.astro";
 import Hitokoto from "./Hitokoto.astro";
 import MusicPlayer from "./MusicPlayer.astro";
@@ -54,6 +55,9 @@ import Weather from "./Weather.astro";
     </div>
     <div class="contents" th:case="'schedule'">
       <Schedule class="onload-animation" />
+    </div>
+    <div class="contents" th:case="'calendar'">
+      <Calendar class="onload-animation" />
     </div>
     <div
       th:case="'html'"
