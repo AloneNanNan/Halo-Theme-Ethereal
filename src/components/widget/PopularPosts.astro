@@ -34,8 +34,22 @@ const listId = `${instanceId}-list`;
 
 <script is:inline define:vars={{ MAX_POSTS, instanceId }}>
   (function () {
-    var container = document.getElementById(instanceId + "-list");
+    // instanceId 在构建时生成，但侧栏经 WidgetSwitch 的 Thymeleaf 片段复用，
+    // 同一页面的多个实例（如桌面右栏 + 移动端小组件）会拿到相同的 id；
+    // getElementById 只返回第一个，其余实例永远停在「加载中」。
+    // 因此以当前脚本的前一个兄弟节点（本实例的根元素）为锚点定位列表。
+    var root =
+      document.currentScript && document.currentScript.previousElementSibling;
+    var container =
+      (root && root.querySelector('[id="' + instanceId + '-list"]')) ||
+      document.getElementById(instanceId + "-list");
     if (!container) return;
+    // 同 id 实例按文档顺序编号，供下方 AbortController 分组，避免多实例互相 abort
+    var sameIdLists = document.querySelectorAll(
+      '[id="' + instanceId + '-list"]',
+    );
+    var abortKey =
+      instanceId + ":" + Array.prototype.indexOf.call(sameIdLists, container);
 
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
@@ -172,11 +186,11 @@ const listId = `${instanceId}-list`;
       // AbortController：Swup 导航会重新执行本脚本，先中止该实例上一次未完成的请求，
       // 避免旧响应覆盖新页面；按 instanceId 分组存放，多实例同放时互不 abort
       if (!window.__popularPostsAbort) window.__popularPostsAbort = {};
-      if (window.__popularPostsAbort[instanceId]) {
-        window.__popularPostsAbort[instanceId].abort();
+      if (window.__popularPostsAbort[abortKey]) {
+        window.__popularPostsAbort[abortKey].abort();
       }
       var controller = new AbortController();
-      window.__popularPostsAbort[instanceId] = controller;
+      window.__popularPostsAbort[abortKey] = controller;
       var signal = controller.signal;
 
       // 服务端排序取 Top N（sort=stats.visit,desc；客户端不再排序——
