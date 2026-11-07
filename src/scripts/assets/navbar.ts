@@ -3,6 +3,7 @@
 // 模式：drawer（右侧滑出圆角卡片、子菜单平铺，body.nav-menu-open 驱动）/ accordion（默认，
 // 下拉面板，切 #nav-menu-panel 的 float-panel-closed 类）；模式由 DOM 判定（#nav-menu-root
 // 存在即 drawer）。导航栏在 Swup 容器外，脚本只执行一次（defer），window 标志防重复绑定。
+import { lockPageScroll, unlockPageScroll } from "../../utils/scroll-lock";
 if (!window.__navbarPanelToggleBound) {
   window.__navbarPanelToggleBound = true;
 
@@ -41,7 +42,7 @@ if (!window.__navbarPanelToggleBound) {
     }
   }
 
-  // 切换抽屉模式开关；滚动锁定与模态框同款（仅 body overflow hidden）
+  // 切换抽屉模式开关；滚动锁与模态框共用 scroll-lock.ts（锁 html，勿改回 body overflow）
   function setNavMenuOpen(open) {
     if (open) {
       // 顺序关键：先挂载 root 到 body 再添加 nav-menu-open 触发动画——
@@ -49,10 +50,10 @@ if (!window.__navbarPanelToggleBound) {
       // 动画（首次打开生硬无动画、二次正常）。root 已在 body 时无副作用。
       ensureNavPanelInBody();
       document.body.classList.add("nav-menu-open");
-      document.body.style.overflow = "hidden";
+      lockPageScroll();
     } else {
       document.body.classList.remove("nav-menu-open");
-      document.body.style.overflow = "";
+      unlockPageScroll();
     }
   }
 

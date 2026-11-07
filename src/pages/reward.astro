@@ -1,21 +1,21 @@
 ---
-// 打赏页面模板（Halo 自定义页面，自定义模板选「打赏页面」/ reward）。
-// 收款码 = 文章打赏模态框同源配置（rewardSetting.wechat_qr / alipay_qr），仅读取、
-// 不受「文章操作栏」/「启用打赏」开关影响；文案与名单 = extendPages.reward
-// （名单留空则整卡不渲染）。纯服务端渲染，评论区条件与默认 page 模板一致。
+// 打赏页面：由「打赏插件」（plugin-reward）注册的 /reward 路由渲染，内容全部取自插件路由
+// 注入的 reward.* 模型。
+// ⚠️ 本路由没有单页变量：一律 reward?.xxx，写成 singlePage.xxx 会直接抛模板异常。
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import PageHeader from "../components/control/PageHeader.astro";
 ---
 
 <MainGridLayout
-  title="${singlePage.spec.title + ' - ' + site.title}"
+  title="${(#strings.isEmpty(reward?.title) ? #messages.msg('page.reward.title') : reward.title) + ' - ' + site.title}"
   description="#{page.reward.description(${site.title})}"
 >
   <Fragment slot="head">
-    <!-- 独立页面 canonical（开关见「杂项设置 → SEO 设置」）；og 标签由 Layout.astro 统一输出 -->
+    <!-- 独立页面 canonical（开关见「杂项设置 → SEO 设置」）；og 标签由 Layout.astro 统一输出。
+         路径固定 /reward：本页由插件路由提供，没有单页 permalink 可取 -->
     <link
       rel="canonical"
-      th:href="@{${site.url + singlePage.status.permalink}}"
+      th:href="@{${site.url + '/reward'}}"
       th:if="${theme.config?.misc?.seo?.enable_metadata != false}"
     />
     <!-- 二维码白盒的静态阴影：取主题色（与 card-hover-lift 的悬浮阴影同款取值）。
@@ -29,64 +29,79 @@ import PageHeader from "../components/control/PageHeader.astro";
     </style>
   </Fragment>
 
-  <!-- ================= ① 打赏主卡 =================
-       cfg / rs / wechatQr / alipayQr / hasQr / hasBothQr 统一在本条 th:with 定义 -->
-  <!-- 打赏主区拆两卡：头部卡（新版页头）+ 内容卡（用途说明 + 收款码）。
-       cfg / rs / wechatQr / alipayQr / hasQr / hasBothQr 两卡共用，
-       故 th:with 挂在 th:remove="tag" 的包装层上 -->
+  <!-- 头部卡与内容卡共用的派生量，统一挂在 th:remove="tag" 的包装层上 -->
   <div
     th:remove="tag"
-    th:with="cfg=${theme.config?.extendPages?.reward},
-      rs=${theme.config?.post?.actionBar?.rewardSetting},
-      wechatQr=${rs?.wechat_qr ?: ''},
-      alipayQr=${rs?.alipay_qr ?: ''},
-      hasQr=${!#strings.isEmpty(wechatQr) or !#strings.isEmpty(alipayQr)},
-      hasBothQr=${!#strings.isEmpty(wechatQr) and !#strings.isEmpty(alipayQr)}"
+    th:with="cs=${reward?.currencySymbol ?: ''},
+      hasQr=${!#strings.isEmpty(reward?.wechatQr) or !#strings.isEmpty(reward?.alipayQr)},
+      hasBothQr=${!#strings.isEmpty(reward?.wechatQr) and !#strings.isEmpty(reward?.alipayQr)},
+      hasAfdian=${!#strings.isEmpty(reward?.afdianPageUrl)}"
   >
     <!-- 头部卡：新版页头（modern，含图标水印） -->
     <div class="card-base page-head-card onload-animation relative z-10 mb-4 w-full">
-      <!-- 页头：h1 = 页面标题（Halo 自定义页面自带） -->
+      <!-- 统计徽章取自插件路由模型（reward.totalCount / totalAmount / monthCount），服务端直出、无需前端请求 -->
       <PageHeader
         containerClass=""
-        titleExpr="${singlePage.spec.title}"
+        titleExpr="${#strings.isEmpty(reward?.title) ? #messages.msg('page.reward.title') : reward.title}"
         title="打赏"
         iconClass="icon-[material-symbols--volunteer-activism-outline-rounded]"
         eyebrow="REWARD"
+        stats={[
+          {
+            valueExpr: "${reward?.totalCount ?: 0}",
+            value: "0",
+            labelExpr: "#{page.reward.statCount}",
+            label: "累计人次",
+          },
+          {
+            valueExpr:
+              "|${cs}${#numbers.formatDecimal(reward?.totalAmount ?: 0, 1, 2)}|",
+            value: "¥0.00",
+            labelExpr: "#{page.reward.statAmount}",
+            label: "累计金额",
+          },
+          {
+            valueExpr: "${reward?.monthCount ?: 0}",
+            value: "0",
+            labelExpr: "#{page.reward.statMonth}",
+            label: "本月人次",
+          },
+        ]}
       />
     </div>
 
-    <!-- 内容卡：用途说明 + 收款码 -->
+    <!-- 内容卡：简介 + 收款码 + 爱发电入口 + 收款提示 + 提交入口 -->
     <section class="card-base onload-animation relative z-10 mb-4 w-full px-6 py-6 md:px-9">
-      <!-- 用途说明（留空不显示；支持多行） -->
+      <!-- 页面简介（插件「基础设置 → 页面简介」，留空不显示；支持多行） -->
       <div
-        th:if="${not #strings.isEmpty(cfg?.usage)}"
+        th:if="${not #strings.isEmpty(reward?.intro)}"
         class="mb-6 flex items-start gap-2.5 rounded-xl border border-(--primary)/15 bg-(--primary)/8 px-4 py-3.5"
       >
         <span class="icon-[material-symbols--info-outline] mt-0.5 shrink-0 text-lg text-(--primary)"></span>
         <p
           class="min-w-0 break-words text-sm leading-relaxed whitespace-pre-line text-75"
-          th:text="${cfg?.usage}"
+          th:text="${reward.intro}"
         >
           您的打赏将用于服务器维护、内容创作和功能开发，帮助我持续提供优质内容。
         </p>
       </div>
 
-      <!-- 收款码（微信 / 支付宝，与打赏模态框同源）。两张卡满宽双列、
-           只配一种时降级单卡居中；底色统一取 --card-bg（深浅自适应、与父卡一致），
-           卡片不做悬浮反馈（大卡不叠主色，分档见 AGENTS「卡片悬浮语言」）；仅二维码
-           白盒恒为白色保证识别（.reward-qr-box），文字用 text-90 / text-50 跟进。
-           底侧内边距比顶侧大 4px（pt-4 + pb-5），抵消标题行高。 -->
+      <!-- 收款码（插件「收款设置」，两张卡满宽双列、只配一种时降级单卡居中；
+           底色统一取 --card-bg（深浅自适应、与父卡一致），卡片不做悬浮反馈
+           （大卡不叠主色，分档见 AGENTS「卡片悬浮语言」）；仅二维码白盒恒为白色
+           保证识别（.reward-qr-box），文字用 text-90 / text-50 跟进。
+           底侧内边距比顶侧大 4px（pt-4 + pb-5），抵消标题行高） -->
       <div
         th:if="${hasQr}"
         class="grid grid-cols-1 gap-4"
         th:classappend="${hasBothQr} ? 'sm:grid-cols-2' : 'sm:w-1/2 sm:mx-auto'"
       >
         <div
-          th:if="${!#strings.isEmpty(wechatQr)}"
+          th:if="${!#strings.isEmpty(reward?.wechatQr)}"
           class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-(--card-bg) px-4 pt-4 pb-5"
         >
           <!-- 标题：图标 text-2xl + 标题 text-xl font-semibold。
-             文字色用 text-90 随深浅色切换；图标沿用模态框的主题色 text-(--primary) -->
+               文字色用 text-90 随深浅色切换；图标沿用模态框的主题色 text-(--primary) -->
           <div class="flex items-center gap-3 text-90">
             <span class="icon-[fa6-brands--weixin] text-2xl text-(--primary)"></span>
             <span class="text-xl font-semibold" th:text="#{post.wechat}">
@@ -101,7 +116,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           </p>
           <div class="reward-qr-box aspect-square w-full max-w-50 rounded-(--radius-large) bg-white p-3">
             <img
-              th:src="${wechatQr}"
+              th:src="${reward.wechatQr}"
               th:alt="#{post.wechat}"
               loading="lazy"
               class="h-full w-full object-contain"
@@ -109,7 +124,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           </div>
         </div>
         <div
-          th:if="${!#strings.isEmpty(alipayQr)}"
+          th:if="${!#strings.isEmpty(reward?.alipayQr)}"
           class="flex flex-col items-center gap-3 rounded-xl border border-(--primary)/18 bg-(--card-bg) px-4 pt-4 pb-5"
         >
           <div class="flex items-center gap-3 text-90">
@@ -126,7 +141,7 @@ import PageHeader from "../components/control/PageHeader.astro";
           </p>
           <div class="reward-qr-box aspect-square w-full max-w-50 rounded-(--radius-large) bg-white p-3">
             <img
-              th:src="${alipayQr}"
+              th:src="${reward.alipayQr}"
               th:alt="#{post.alipay}"
               loading="lazy"
               class="h-full w-full object-contain"
@@ -135,9 +150,50 @@ import PageHeader from "../components/control/PageHeader.astro";
         </div>
       </div>
 
-      <!-- 未配置任何收款码时的占位提示 -->
+      <!-- 爱发电入口（插件「爱发电 → 爱发电主页」，未启用时不渲染）：横向条目卡，
+           置于收款码下方；小条目可叠主色淡底，走 card-hover-lift 统一悬浮 -->
+      <a
+        th:if="${hasAfdian}"
+        th:href="${reward.afdianPageUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="card-hover-lift modal-entry-card mt-4 flex items-center gap-3 rounded-xl border border-(--primary)/18 bg-(--card-bg) px-4 py-3 hover:border-(--primary)/40"
+      >
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--primary)/10 text-(--primary)">
+          <span class="icon-[fa6-solid--heart] text-[0.95rem]"></span>
+        </span>
+        <span
+          class="min-w-0 flex-1 truncate text-sm font-bold text-90"
+          th:text="#{page.reward.afdianAction}"
+        >
+          前往爱发电
+        </span>
+        <span class="icon-[fa6-solid--arrow-up-right-from-square] shrink-0 text-[0.7rem] text-(--primary)"></span>
+      </a>
+
+      <!-- 收款提示（插件「收款设置 → 收款提示」，留空不显示） -->
+      <p
+        th:if="${not #strings.isEmpty(reward?.paymentTip)}"
+        class="mt-4 text-center text-xs leading-relaxed text-50"
+        th:text="${reward.paymentTip}"
+      >
+        扫码后请手动输入金额
+      </p>
+
+      <!-- 访客提交入口：打开页尾自建的打赏信息表单（见本页 ③） -->
+      <button
+        th:if="${reward?.enableRecordSubmit}"
+        type="button"
+        id="reward-form-open"
+        class="btn-regular mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold active:scale-95"
+      >
+        <span class="icon-[material-symbols--check-circle-outline-rounded] text-base"></span>
+        <span th:text="#{page.reward.submitRecord}">我已完成打赏</span>
+      </button>
+
+      <!-- 既没有收款码、也没有爱发电入口 -->
       <div
-        th:unless="${hasQr}"
+        th:unless="${hasQr or hasAfdian}"
         class="flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-(--line-divider) px-6 py-10 text-center"
       >
         <span class="icon-[material-symbols--qr-code-rounded] text-3xl text-30"></span>
@@ -148,108 +204,595 @@ import PageHeader from "../components/control/PageHeader.astro";
     </section>
   </div>
 
-  <!-- ================= ② 打赏者名单（可选） =================
-       sponsorItems 必须先在外层 th:with 算好，内层元素再写 th:if：
-       同元素上 th:if（优先级 3）先于 th:with（优先级 4）执行，写在一起会读到未定义变量。
-       选择器 .?[] 内部只引用 #this（引用上下文变量会抛 EL1008E）。 -->
-  <div
-    th:with="sponsorCfg=${theme.config?.extendPages?.reward},
-      sponsorItems=${sponsorCfg?.sponsors == null ? null : sponsorCfg?.sponsors.?[#this.name != null and #this.name != '']}"
-    th:remove="tag"
+  <!-- ================= ② 赞助者墙 =================
+       首屏由插件路由服务端渲染（wallPageSize 条），「加载更多」由页尾脚本调插件公开接口
+       追加；追加卡片的标记见 #reward-wall-item-template，与本节的 th:each 卡片结构同步。 -->
+  <section
+    id="reward-wall"
+    th:if="${reward?.wallEnabled}"
+    th:with="cs=${reward?.currencySymbol ?: ''}"
+    th:data-endpoint="@{/apis/api.reward.nanzhiy.cn/v1alpha1/public/wall}"
+    th:data-page="1"
+    th:data-size="${reward?.wallPageSize}"
+    th:data-total="${reward?.wallTotal}"
+    th:data-currency="${cs}"
+    th:data-label-loading="#{page.reward.loading}"
+    th:data-label-failed="#{page.reward.loadFailed}"
+    class="card-base onload-animation relative z-10 mb-4 w-full px-6 py-6 md:px-9"
   >
-    <section
-      th:if="${sponsorItems != null and not #lists.isEmpty(sponsorItems)}"
-      class="card-base onload-animation relative z-10 mb-4 w-full px-6 py-6 md:px-9"
-    >
-      <div class="mb-6 flex items-center justify-between gap-4">
-        <div class="flex min-w-0 items-center gap-3">
-          <div class="title-icon" aria-hidden="true">
-            <span class="icon-[material-symbols--emoji-people-rounded] text-[1.25rem] text-(--primary)"></span>
-          </div>
-          <h2
-            class="truncate text-xl font-bold text-90"
-            th:text="#{page.reward.sponsorsTitle}"
-          >
-            打赏者名单
-          </h2>
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="title-icon" aria-hidden="true">
+          <span class="icon-[material-symbols--emoji-people-rounded] text-[1.25rem] text-(--primary)"></span>
         </div>
-        <span
-          class="rounded-lg bg-(--btn-regular-bg) px-2.5 py-1 text-xs font-bold text-(--btn-content)"
-          th:text="${#lists.size(sponsorItems)}"
+        <h2
+          class="truncate text-xl font-bold text-90"
+          th:text="#{page.reward.sponsorsTitle}"
         >
-          0
-        </span>
+          赞助者墙
+        </h2>
       </div>
+      <span
+        data-wall-count
+        class="rounded-lg bg-(--btn-regular-bg) px-2.5 py-1 text-xs font-bold text-(--btn-content)"
+        th:text="${reward.wallTotal}"
+      >
+        0
+      </span>
+    </div>
 
-      <!-- 条目最小宽 240px，与友链页条目卡同档 -->
-      <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]">
-        <div
-          th:each="sponsor, sponsorStat : ${sponsorItems}"
-          th:style="|animation-delay: min(calc(var(--content-delay) + ${sponsorStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
-          class="card-hover-lift onload-animation flex items-center gap-3 rounded-xl border border-(--line-divider) p-3 transition hover:border-(--primary)/40"
-        >
+    <div
+      data-wall-empty
+      th:if="${#lists.isEmpty(reward?.wallItems)}"
+      class="flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-(--line-divider) px-6 py-10 text-center"
+    >
+      <span class="icon-[material-symbols--volunteer-activism-outline-rounded] text-3xl text-30"></span>
+      <p class="text-sm text-50" th:text="#{page.reward.wallEmpty}">
+        还没有公开的打赏记录
+      </p>
+    </div>
+
+    <!-- 条目最小宽 240px、卡片语言对齐 /links 的链接卡：首行「头像 + 昵称/日期」垂直居中，
+         整块内容顶端对齐（justify-start），留言行数不同时由卡片下方留白吸收 -->
+    <div
+      data-wall-list
+      class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]"
+    >
+      <div
+        th:each="item, itemStat : ${reward?.wallItems}"
+        th:style="|animation-delay: min(calc(var(--content-delay) + ${itemStat.index} * var(--dur-entry-step)), var(--dur-entry-max, 400ms))|"
+        class="btn-card btn-card-outline min-h-28 justify-start! flex-col! items-stretch! gap-3 rounded-xl p-4 text-left onload-animation card-hover-lift"
+      >
+        <div class="flex items-center gap-4">
           <img
-            th:if="${not #strings.isEmpty(sponsor.avatar)}"
-            th:src="${sponsor.avatar}"
-            th:alt="${sponsor.name}"
+            th:if="${not #strings.isEmpty(item.avatar)}"
+            th:src="${item.avatar}"
+            th:alt="${item.nickname}"
             loading="lazy"
-            class="h-10 w-10 shrink-0 rounded-full object-cover"
+            class="h-12 w-12 shrink-0 rounded-xl bg-(--btn-regular-bg) object-cover"
           />
-          <!-- 无头像时以昵称首字兜底（同技能页取首字写法） -->
+          <!-- 无头像时用插件给的昵称首码点兜底（emoji 不会被截断） -->
           <div
-            th:if="${#strings.isEmpty(sponsor.avatar)}"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--btn-regular-bg) text-sm font-bold text-(--primary)"
-            th:text="${#strings.substring(sponsor.name ?: '?', 0, 1)}"
+            th:if="${#strings.isEmpty(item.avatar)}"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-base font-bold text-(--primary)"
+            th:text="${#strings.isEmpty(item.initial) ? '?' : item.initial}"
           >
             A
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <span
-                class="min-w-0 truncate text-sm font-bold text-90"
-                th:text="${sponsor.name}"
+              <div
+                class="min-w-0 flex-1 truncate text-base font-bold text-90"
+                th:text="${item.nickname}"
               >
                 昵称
-              </span>
-              <!-- 金额：已自带 ¥ 的原样显示，否则自动补全 ¥（后台金额为纯文本） -->
+              </div>
+              <!-- 金额：插件「在赞助者墙显示金额」关闭时 amount 为 null；统一两位小数，
+                   与页尾脚本追加的卡片保持一致 -->
               <span
-                th:if="${not #strings.isEmpty(sponsor.amount)}"
-                class="shrink-0 text-xs font-bold text-(--primary)"
-                th:text="${#strings.startsWith(sponsor.amount ?: '', '¥') ? sponsor.amount : '¥' + (sponsor.amount ?: '')}"
+                th:if="${reward.showAmountOnWall and item.amount != null}"
+                class="shrink-0 text-sm font-bold text-(--primary)"
+                th:text="|${cs}${#numbers.formatDecimal(item.amount, 1, 2)}|"
               >
-                ¥50
+                ¥50.00
               </span>
             </div>
-            <span
-              th:if="${not #strings.isEmpty(sponsor.date)}"
-              class="text-[0.65rem] text-50"
-              th:text="${sponsor.date}"
+            <div
+              th:if="${not #strings.isEmpty(item.createdAt)}"
+              class="mt-1 text-xs font-medium text-30"
+              th:text="${item.createdAt}"
             >
               2026-01-01
-            </span>
+            </div>
           </div>
         </div>
+        <p
+          th:if="${not #strings.isEmpty(item.message)}"
+          class="line-clamp-2 break-words text-sm leading-6 text-50"
+          th:text="${item.message}"
+        >
+          留言
+        </p>
       </div>
-    </section>
+    </div>
+
+    <!-- 节点常驻、按「已渲染条数 vs 总数」隐藏：提交后的刷新会复用同一节点重新显示，
+         写成 th:if 会在“总数刚好等于首屏条数、之后又被确认一条”时没有按钮可用 -->
+    <button
+      type="button"
+      id="reward-wall-more"
+      th:attr="hidden=${not (reward?.wallTotal > #lists.size(reward?.wallItems))}"
+      class="btn-regular mt-4 flex h-10 w-full items-center justify-center rounded-xl text-sm font-bold active:scale-95"
+      th:text="#{page.reward.loadMore}"
+    >
+      加载更多
+    </button>
+  </section>
+
+  <!-- 追加卡片模板：「加载更多」克隆 content 第一层子元素填充（结构须与上面 th:each 的卡片一致）。
+       data-field 只给脚本定位用，不进服务端渲染路径 -->
+  <template id="reward-wall-item-template">
+    <div class="btn-card btn-card-outline min-h-28 justify-start! flex-col! items-stretch! gap-3 rounded-xl p-4 text-left card-hover-lift">
+      <div class="flex items-center gap-4">
+        <img
+          data-field="avatar"
+          alt=""
+          loading="lazy"
+          class="h-12 w-12 shrink-0 rounded-xl bg-(--btn-regular-bg) object-cover"
+        />
+        <div
+          data-field="initial"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-(--btn-regular-bg) text-base font-bold text-(--primary)"
+        ></div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <div
+              data-field="nickname"
+              class="min-w-0 flex-1 truncate text-base font-bold text-90"
+            ></div>
+            <span
+              data-field="amount"
+              class="shrink-0 text-sm font-bold text-(--primary)"
+            ></span>
+          </div>
+          <div data-field="date" class="mt-1 text-xs font-medium text-30"></div>
+        </div>
+      </div>
+      <p
+        data-field="message"
+        class="line-clamp-2 break-words text-sm leading-6 text-50"
+      ></p>
+    </div>
+  </template>
+
+  <!-- ================= ③ 打赏信息表单（自建） =================
+       样式与交互复用 /links「申请友链」模态框（link-apply-modal.css / links.bundle.js）：
+       挂 body、出场动画、Esc / 遮罩关闭、验证码点图刷新、提交态锁定。
+       字段按插件设置开关服务端渲染，提交逻辑见 reward-form.ts。 -->
+  <div
+    th:if="${reward?.enableRecordSubmit}"
+    id="reward-form-modal"
+    class="link-apply-modal reward-form-modal"
+    th:data-require-login="${reward?.requireLogin}"
+    aria-hidden="true"
+  >
+    <div id="reward-form-backdrop" class="link-apply-backdrop"></div>
+    <div
+      id="reward-form-card"
+      class="link-apply-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reward-form-title"
+    >
+      <div class="link-apply-header">
+        <h3
+          id="reward-form-title"
+          class="link-apply-title"
+          th:text="#{page.reward.formTitle}"
+        >
+          填写打赏信息
+        </h3>
+        <span class="link-apply-title-divider"></span>
+        <button
+          type="button"
+          id="reward-form-close"
+          class="link-apply-close"
+          th:aria-label="#{common.close}"
+          th:title="#{common.close}"
+        >
+          <span class="icon-[material-symbols--close-rounded] text-xl leading-none"></span>
+        </button>
+      </div>
+      <form id="reward-form" class="link-apply-form" novalidate>
+        <div class="link-apply-body">
+          <!-- 第一行：打赏金额 | 打赏方式 -->
+          <label class="link-apply-field">
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formAmount}">打赏金额</span>
+              <em>*</em>
+            </span>
+            <!-- type=text + inputmode：避开 number 的上下箭头，金额格式由 reward-form.ts 校验 -->
+            <input
+              type="text"
+              name="amount"
+              required
+              inputmode="decimal"
+              autocomplete="off"
+              spellcheck="false"
+              th:placeholder="#{page.reward.formAmountPlaceholder}"
+            />
+          </label>
+          <label class="link-apply-field">
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formMethod}">打赏方式</span>
+            </span>
+            <select name="method">
+              <option value="wechat" th:text="#{post.wechat}">
+                微信
+              </option>
+              <option value="alipay" th:text="#{post.alipay}">
+                支付宝
+              </option>
+            </select>
+          </label>
+          <!-- 第二行：昵称 | 联系方式 -->
+          <label class="link-apply-field">
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formNickname}">昵称</span>
+              <em>*</em>
+            </span>
+            <input
+              type="text"
+              name="nickname"
+              required
+              maxlength="30"
+              autocomplete="off"
+              spellcheck="false"
+              th:placeholder="#{page.reward.formNicknamePlaceholder}"
+            />
+          </label>
+          <label class="link-apply-field">
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formContact}">联系方式</span>
+              <span
+                class="link-apply-optional"
+                th:text="#{page.reward.formContactHint}"
+              >
+                选填，仅站长可见
+              </span>
+            </span>
+            <input
+              type="text"
+              name="contact"
+              maxlength="100"
+              autocomplete="off"
+              spellcheck="false"
+              th:placeholder="#{page.reward.formContactPlaceholder}"
+            />
+          </label>
+          <!-- 交易单号：插件开启「要求填写交易单号」时显示 -->
+          <label
+            th:if="${reward?.enableTransactionNo}"
+            class="link-apply-field link-apply-field--full"
+          >
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formTransactionNo}">交易单号</span>
+              <em>*</em>
+            </span>
+            <input
+              type="text"
+              name="transactionNo"
+              required
+              maxlength="64"
+              autocomplete="off"
+              spellcheck="false"
+              th:placeholder="#{page.reward.formTransactionNoPlaceholder}"
+            />
+          </label>
+          <!-- 头像链接：插件开启「允许访客填写头像地址」时显示 -->
+          <label
+            th:if="${reward?.enableAvatar}"
+            class="link-apply-field link-apply-field--full"
+          >
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formAvatar}">头像链接</span>
+              <span
+                class="link-apply-optional"
+                th:text="#{page.reward.formOptional}"
+              >
+                选填
+              </span>
+            </span>
+            <input
+              type="url"
+              name="avatar"
+              maxlength="500"
+              autocomplete="off"
+              spellcheck="false"
+              th:placeholder="#{page.reward.formAvatarPlaceholder}"
+            />
+          </label>
+          <!-- 留言：插件开启「允许填写留言」时显示 -->
+          <label
+            th:if="${reward?.allowMessage}"
+            class="link-apply-field link-apply-field--full"
+          >
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formMessage}">留言</span>
+              <span
+                class="link-apply-optional"
+                th:text="#{page.reward.formOptional}"
+              >
+                选填
+              </span>
+            </span>
+            <textarea
+              name="message"
+              rows="2"
+              maxlength="200"
+              autocomplete="off"
+              th:placeholder="#{page.reward.formMessagePlaceholder}"
+            ></textarea>
+          </label>
+          <!-- 验证码：插件开启「提交时校验图形验证码」时显示 -->
+          <div
+            th:if="${reward?.enableCaptcha}"
+            class="link-apply-field link-apply-field--full"
+          >
+            <span class="link-apply-label">
+              <span th:text="#{page.reward.formCaptcha}">验证码</span>
+              <em>*</em>
+            </span>
+            <div class="link-apply-captcha">
+              <input
+                type="text"
+                name="captchaCode"
+                id="reward-form-captcha-code"
+                required
+                maxlength="6"
+                autocomplete="off"
+                spellcheck="false"
+                th:placeholder="#{page.reward.formCaptchaPlaceholder}"
+              />
+              <img
+                id="reward-form-captcha-img"
+                class="link-apply-captcha-img"
+                th:alt="#{page.reward.formCaptcha}"
+                th:title="#{page.reward.formCaptchaRefresh}"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          id="reward-form-message"
+          class="link-apply-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="link-apply-footer">
+          <button
+            type="submit"
+            id="reward-form-submit"
+            class="link-apply-btn-submit"
+          >
+            <span class="icon-[material-symbols--send-rounded] text-base"></span>
+            <span
+              class="reward-form-submit-text"
+              th:text="#{page.reward.formSubmit}"
+            >
+              提交打赏信息
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- ================= ③ 评论区 =================
-       跟随 Halo 页面自带的「允许评论」（同默认 page 模板） -->
-  <div
-    class="card-base relative z-10 w-full px-6 pb-4 pt-6 md:px-9"
-    id="comment"
-    th:if="${haloCommentEnabled && (singlePage.spec.allowComment != false)}"
-  >
-    <h2
-      class="mb-2 text-base font-medium text-gray-900 dark:text-slate-50"
-      th:text="#{common.comment}"
-    >
-      评论
-    </h2>
-    <Fragment
-      set:html={
-        '<halo:comment group="content.halo.run" kind="SinglePage" th:attr="name=${singlePage.metadata.name}" />'
+  <script
+    th:if="${reward?.enableRecordSubmit}"
+    src={`${import.meta.env.BASE_URL.replace(/\/+$/, "")}/assets/reward-form.js?v=${ASSET_VERSION}`}
+    defer
+    is:inline
+  ></script>
+  <script is:inline>
+    // 打赏页脚本：赞助者墙「加载更多」与提交后刷新。
+    // 墙面首屏服务端渲染，追加卡片克隆 #reward-wall-item-template，分页状态存 #reward-wall 的 data-*；
+    // 监听走 document 委托 + window 标记去重（Swup 换页会重执行脚本，委托避免重复绑定）。
+    // window.__rewardWallReload()：提交成功后由 reward-form.ts 调回第一页（自动通过时新记录立刻上墙）。
+    (function () {
+      if (window.__rewardWallBound) return;
+      window.__rewardWallBound = true;
+
+      // 接口挂起兜底：超时按失败处理，避免「加载更多」按钮一直停在加载中
+      var TIMEOUT = 15000;
+
+      // 带超时的 JSON 取数；AbortController 不可用时退化为普通 fetch（老内核只是少了超时兜底）
+      function fetchJson(url, onOk, onFail) {
+        var controller = null;
+        try {
+          controller = new AbortController();
+        } catch (e) {
+          controller = null;
+        }
+        var settled = false;
+        var timer = setTimeout(function () {
+          if (settled) return;
+          settled = true;
+          if (controller) controller.abort();
+          onFail();
+        }, TIMEOUT);
+
+        fetch(url, controller ? { signal: controller.signal } : undefined)
+          .then(function (response) {
+            if (!response.ok) throw new Error("bad status");
+            return response.json();
+          })
+          .then(function (data) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            onOk(data || {});
+          })
+          .catch(function () {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            onFail();
+          });
       }
-    />
-  </div>
+
+      function field(node, name) {
+        return node.querySelector('[data-field="' + name + '"]');
+      }
+
+      function buildCard(template, item, currency) {
+        var card = template.content.firstElementChild.cloneNode(true);
+        var avatar = field(card, "avatar");
+        var initial = field(card, "initial");
+        if (item.avatar) {
+          avatar.src = item.avatar;
+          initial.remove();
+        } else {
+          initial.textContent =
+            item.initial ||
+            Array.from(item.nickname || "?")
+              .slice(0, 1)
+              .join("");
+          avatar.remove();
+        }
+        field(card, "nickname").textContent = item.nickname || "";
+        var amount = field(card, "amount");
+        if (item.amount == null) {
+          amount.remove();
+        } else {
+          amount.textContent = currency + Number(item.amount).toFixed(2);
+        }
+        var date = field(card, "date");
+        if (item.createdAt) date.textContent = item.createdAt;
+        else date.remove();
+        var message = field(card, "message");
+        if (item.message) message.textContent = item.message;
+        else message.remove();
+        return card;
+      }
+
+      function wallNodes() {
+        var wall = document.getElementById("reward-wall");
+        if (!wall) return null;
+        return {
+          wall: wall,
+          list: wall.querySelector("[data-wall-list]"),
+          template: document.getElementById("reward-wall-item-template"),
+          count: wall.querySelector("[data-wall-count]"),
+          empty: wall.querySelector("[data-wall-empty]"),
+          more: document.getElementById("reward-wall-more"),
+        };
+      }
+
+      // 每页条数：服务端没给或给坏值时退回 10，避免拼出 size=NaN
+      function pageSize(wall) {
+        var size = parseInt(wall.dataset.size || "", 10);
+        return size > 0 ? size : 10;
+      }
+
+      // 空闲文案只抓一次：loading / 失败态会覆盖 textContent
+      function idleLabel(btn) {
+        if (!btn.dataset.idleLabel) {
+          btn.dataset.idleLabel = btn.textContent.trim();
+        }
+        return btn.dataset.idleLabel;
+      }
+
+      // 按「已渲染条数 vs 总数」决定按钮是否还留着：隐藏而不移除，
+      // 提交成功后的 reload 需要复用同一个节点重新显示
+      function syncMore(nodes) {
+        if (!nodes.more) return;
+        var total = Number(nodes.wall.dataset.total || 0);
+        var rendered = nodes.list ? nodes.list.children.length : 0;
+        nodes.more.hidden = total > 0 && rendered >= total;
+        nodes.more.disabled = false;
+        nodes.more.textContent = idleLabel(nodes.more);
+      }
+
+      function appendCards(nodes, items) {
+        for (var i = 0; i < items.length; i++) {
+          nodes.list.appendChild(
+            buildCard(
+              nodes.template,
+              items[i],
+              nodes.wall.dataset.currency || "",
+            ),
+          );
+        }
+      }
+
+      // 提交成功后拉回第一页（分页状态一起重置）
+      function reload() {
+        var nodes = wallNodes();
+        if (!nodes || !nodes.list || !nodes.template) return;
+        fetchJson(
+          nodes.wall.dataset.endpoint + "?page=1&size=" + pageSize(nodes.wall),
+          function (data) {
+            var items = data.items || [];
+            nodes.list.innerHTML = "";
+            appendCards(nodes, items);
+            nodes.wall.dataset.page = "1";
+            nodes.wall.dataset.total = String(
+              data.total == null ? items.length : data.total,
+            );
+            if (nodes.count) nodes.count.textContent = nodes.wall.dataset.total;
+            if (nodes.empty) nodes.empty.hidden = items.length > 0;
+            syncMore(nodes);
+          },
+          function () {
+            // 刷新失败保持原样即可：记录已提交成功，不额外打扰用户
+          },
+        );
+      }
+
+      window.__rewardWallReload = reload;
+
+      document.addEventListener("click", function (event) {
+        var btn =
+          event.target && event.target.closest
+            ? event.target.closest("#reward-wall-more")
+            : null;
+        if (!btn || btn.disabled) return;
+
+        var nodes = wallNodes();
+        if (!nodes || !nodes.list || !nodes.template) return;
+
+        var page = parseInt(nodes.wall.dataset.page || "1", 10) || 1;
+        btn.disabled = true;
+        btn.textContent = nodes.wall.dataset.labelLoading || idleLabel(btn);
+
+        fetchJson(
+          nodes.wall.dataset.endpoint +
+            "?page=" +
+            (page + 1) +
+            "&size=" +
+            pageSize(nodes.wall),
+          function (data) {
+            var items = data.items || [];
+            appendCards(nodes, items);
+            nodes.wall.dataset.page = String(page + 1);
+            // total 以接口最新返回为准（新记录可能刚被确认）
+            if (data.total != null) {
+              nodes.wall.dataset.total = String(data.total);
+              if (nodes.count)
+                nodes.count.textContent = nodes.wall.dataset.total;
+            }
+            btn.disabled = false;
+            // 空页 = 已到底（total 可能与实际条数不一致），隐藏按钮别再空翻
+            if (!items.length) btn.hidden = true;
+            else syncMore(nodes);
+          },
+          function () {
+            btn.disabled = false;
+            btn.textContent = nodes.wall.dataset.labelFailed || idleLabel(btn);
+          },
+        );
+      });
+    })();
+  </script>
 </MainGridLayout>

@@ -2304,3 +2304,24 @@ body.card-border-enabled .pagination-pages .btn-card {
   background: var(--primary);
   color: var(--card-bg);
 }
+
+/* 弹层滚动锁：锁 html 不锁 body（原因见 utils/scroll-lock.ts）；!important 用于压过
+   自定义滚动条写在 html 上的 overflow-y: var(--os-viewport-overflow-y)。 */
+html.modal-scroll-locked {
+  overflow: hidden !important;
+}
+
+/* 弹窗内横向条目卡（爱发电等）按下内凹：JS 动态构建的节点拿不到 Tailwind 的 active:scale-*，
+   文章弹窗与 /reward 页共用本类；写在 @layer 外，transition 才能压过 utilities 的简写。 */
+.modal-entry-card {
+  transition:
+    scale 0.15s ease,
+    transform var(--card-hover-duration, 300ms) ease,
+    box-shadow var(--card-hover-duration, 300ms) ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.modal-entry-card:active {
+  scale: 0.97;
+}

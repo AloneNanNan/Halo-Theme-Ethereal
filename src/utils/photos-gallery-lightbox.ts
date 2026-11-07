@@ -11,7 +11,7 @@ import {
   renderPhotoGalleryInfo,
 } from "./photos/gallery-info-panel";
 
-function lockPageScroll() {
+function lockScrollWithBodyFixed() {
   const scrollY = window.scrollY;
   const bodyStyles = {
     overflow: document.body.style.overflow,
@@ -74,17 +74,17 @@ export function initPhotosGalleryLightbox() {
     escKey: true,
     arrowKeys: true,
   });
-  let unlockPageScroll: (() => void) | undefined;
+  let releaseScrollLock: (() => void) | undefined;
 
   lightbox.on("beforeOpen", () => {
-    unlockPageScroll = lockPageScroll();
+    releaseScrollLock = lockScrollWithBodyFixed();
   });
 
   lightbox.on("destroy", () => {
     try {
-      unlockPageScroll?.();
+      releaseScrollLock?.();
     } finally {
-      unlockPageScroll = undefined;
+      releaseScrollLock = undefined;
     }
   });
 

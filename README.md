@@ -138,8 +138,8 @@
 ## 页面支持
 
 - [x] 首页、文章归档、标签 / 分类列表与详情
-- [x] 时间轴、技能、关于页面、打赏页面（主题页面模板，在「扩展页面」中配置）
-- [x] 图库、瞬间、友情链接、朋友圈、装备、项目作品集、心愿便签、日程日历、追番（需安装对应插件，见下方 [插件支持](#插件支持)）
+- [x] 时间轴、技能、关于页面（主题页面模板，在「扩展页面」中配置）
+- [x] 图库、瞬间、友情链接、朋友圈、装备、项目作品集、心愿便签、日程日历、追番、打赏页面（需安装对应插件，见下方 [插件支持](#插件支持)）
 - [x] 自定义页面、404 与通用错误页
 
 ---
@@ -148,20 +148,21 @@
 
 Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整体验：
 
-| 插件         | 市场链接                                                 | 功能                                 |
-| ------------ | -------------------------------------------------------- | ------------------------------------ |
-| 搜索插件     | [应用市场](https://www.halo.run/store/apps/app-DlacW)    | 文章全文搜索                         |
-| 评论插件     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)    | 文章评论系统                         |
-| 瞬间插件     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)    | 瞬间 / 说说功能                      |
-| 图库插件     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)    | 图库展示                             |
-| 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 & 自助提交友链 |
-| 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示                             |
-| 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示                       |
-| 心愿便签     | [应用市场](https://www.halo.run/store/apps/app-vicvoqxy) | 心愿墙便签发布与展示                 |
-| 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0) | 日程 / 日历展示，配合最近日程小组件  |
-| 追番插件     | [应用市场](https://www.halo.run/store/apps/app-OTFPN)    | 追番 / 追剧展示页面                  |
-| 文章订阅     | [应用市场](https://www.halo.run/store/apps/app-yldNX)    | 关于页「订阅更新」卡片邮箱订阅       |
-| API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd) | 文章字数统计 API & 降低后端压力      |
+| 插件         | 市场链接                                                    | 功能                                 |
+| ------------ | ----------------------------------------------------------- | ------------------------------------ |
+| 搜索插件     | [应用市场](https://www.halo.run/store/apps/app-DlacW)       | 文章全文搜索                         |
+| 评论插件     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)       | 文章评论系统                         |
+| 瞬间插件     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)       | 瞬间 / 说说功能                      |
+| 图库插件     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)       | 图库展示                             |
+| 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)       | 友情链接管理 & 朋友圈 & 自助提交友链 |
+| 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml)    | 装备展示                             |
+| 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d)    | 项目作品集展示                       |
+| 心愿便签     | [应用市场](https://www.halo.run/store/apps/app-vicvoqxy)    | 心愿墙便签发布与展示                 |
+| 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0)    | 日程 / 日历展示，配合最近日程小组件  |
+| 追番插件     | [应用市场](https://www.halo.run/store/apps/app-OTFPN)       | 追番 / 追剧展示页面                  |
+| 文章订阅     | [应用市场](https://www.halo.run/store/apps/app-yldNX)       | 关于页「订阅更新」卡片邮箱订阅       |
+| 打赏插件     | [GitHub](https://github.com/AloneNanNan/Halo-Plugin-Reward) | 打赏页面                             |
+| API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd)    | 文章字数统计 API & 降低后端压力      |
 
 同时，也建议安装以下插件，以获得更好的体验：
 

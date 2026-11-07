@@ -1,6 +1,7 @@
 // 外链跳转提示（模态框方案）
 import { getThemeConfig } from "./theme-config";
 import type { ExternalLink } from "../types/config";
+import { lockPageScroll, unlockPageScroll } from "./scroll-lock";
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 const t =
@@ -349,7 +350,7 @@ function clearActiveTimer() {
 
 function closeModal(modal: HTMLElement) {
   clearActiveTimer();
-  document.body.style.overflow = "";
+  unlockPageScroll();
   const card = modal.querySelector<HTMLElement>("#ext-link-card");
   const backdrop = modal.querySelector<HTMLElement>("#ext-link-backdrop");
   if (card) {
@@ -380,7 +381,7 @@ function setupModalBehavior(
 
   // 显示模态框
   modal.style.display = "";
-  document.body.style.overflow = "hidden";
+  lockPageScroll();
 
   // 恢复 card/backdrop 透明度
   const card = modal.querySelector<HTMLElement>("#ext-link-card");
@@ -403,7 +404,7 @@ function setupModalBehavior(
       window.location.href = targetUrl;
     }
     modal.style.display = "none";
-    document.body.style.overflow = "";
+    unlockPageScroll();
   }
 
   // Bind continue button (may have been replaced by Swup)

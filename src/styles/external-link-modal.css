@@ -1,8 +1,9 @@
-/* 外链跳转提示模态框 */
+/* 外链跳转提示模态框：z-index 必须高于所有弹层——它可能从打赏 / 分享弹层
+   （JS 动态构建，99998 / 99999）里被点开，低于它们就点不到「继续访问」。 */
 #ext-link-modal {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 100000;
   display: flex;
   align-items: center;
   justify-content: center;

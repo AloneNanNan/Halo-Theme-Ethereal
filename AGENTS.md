@@ -214,7 +214,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **高度换算基准**：`cssVhViewportHeight()`（与 CSS 100vh 同基准，**不能**用 `window.innerHeight`——动态地址栏浏览器会露缝）；写入统一走 `writeBannerHeightExtend()`（含写守卫）。同步点：`variables.css` 默认值、`Layout.astro` 两处内联脚本（探针手写拷贝）、`banner-sync.ts`。
 - **模式切换过渡**：窗口类 `html.banner-mode-transitioning` 由 `applyBannerDisplay` 临时挂、结束移除；`components.css` 内分四组（窗口过渡 / 层化清单 / 移动端瞬时化 / 媒体层桌面专属）。三个同步点：窗口内**新增带过渡的元素**要加进瞬时化清单；层化容器内**新增 fixed 元素**要移出；两处 **768px 断点**联动。细节见 `components.css` 对应注释块；**勿凭直觉改动**（撤掉移动端层化会回归切换卡顿）。
 - **导航栏显隐**：固定 / 非固定两种模式在桌面端（≥1024px）都是 fixed，区别只在 `navbar-hidden` 是否生效（固定模式强制 `translate:none` 永不隐藏）；**别把非固定模式退回 sticky**（sticky 粘附范围只有 `#top-row`，滚出后上滑回不来）。方向判定有 8px 死区（`SCROLL_DIRECTION_DEADZONE_PX`）；状态统一在 `scrollFunction` 末尾落定（含移动端 / 固定 / 无导航栏的清理），隐藏态同步加 `inert`。隐藏时给 body 加 `dynamic-navbar-hidden`，`Layout.astro` 用它把 `--navbar-sticky-offset` 归零，侧栏吸顶 top 与目录 max-height 统一引用。
-- **脚本顺序与门控**：`visitor-post-layout.js`（同步、首帧换布局类）必须在 `post-list-layout.js`（defer、瀑布流）之前，后者暴露 `window.__postListRelayout` 供换类后重排；文章页三件套 `post-like / post-share / post-reward` 按 `actionBar.*` 子开关 `th:if` 门控，`qrcode.bundle.js` 由 `post-share.js` 首次生成海报时经 `data-qr-src` 注入；banner 6 个脚本按 `mode == 'carousel'` / `isVideo` / `mobileActive` 门控（与 `#banner-wrapper` 的 `th:with` 同源）；`friends.bundle.js` 按列表非空门控、`links.bundle.js` 恒加载（外部门控已改脚本内守卫）；`window.__themeConfig` 缓存契约——首个消费脚本 parse 并写入、其余复用，不得各自 `JSON.parse`；樱花特效门控见 `Layout.astro` 尾部（默认值走 `data-sakura-default`，参数在 `_sakura-config.ts`、绘制核心 `_sakura-core.ts` 共享）。
+- **脚本顺序与门控**：`visitor-post-layout.js`（同步、首帧换布局类）必须在 `post-list-layout.js`（defer、瀑布流）之前，后者暴露 `window.__postListRelayout` 供换类后重排；文章页三件套 `post-like / post-share / post-reward` 按 `actionBar.*` 子开关 `th:if` 门控（`post-reward` 还要 `rewardFinder != null`，插件停用即不渲染），`qrcode.bundle.js` 由 `post-share.js` 首次生成海报时经 `data-qr-src` 注入；banner 6 个脚本按 `mode == 'carousel'` / `isVideo` / `mobileActive` 门控（与 `#banner-wrapper` 的 `th:with` 同源）；`friends.bundle.js` 按列表非空门控、`links.bundle.js` 恒加载（外部门控已改脚本内守卫）；`window.__themeConfig` 缓存契约——首个消费脚本 parse 并写入、其余复用，不得各自 `JSON.parse`；樱花特效门控见 `Layout.astro` 尾部（默认值走 `data-sakura-default`，参数在 `_sakura-config.ts`、绘制核心 `_sakura-core.ts` 共享）。
 - **面板文案 i18n**：`display.*` 键需同时维护 `i18n/*.properties` 与 `Layout.astro` 的 `i18nInlineScript` 两处。
 - **插件配色契约**：`html` 根节点的 `data-color-scheme`（auto/light/dark）+ `color-scheme-*` 类供插件前台组件跟随主题明暗；同步点：`Layout.astro` / `pages/layout.astro` 的 html 标签与启动脚本、`setting-utils.applyThemeToDocument`（改一处必须同步其余）。
 
@@ -282,6 +282,11 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - **外提分组的配置字段一律不写无条件必填校验**（`validation: required`）：「有没有用这个小组件」不再由字段是否存在表达，加了 `required` 会造成「没启用也保存不了设置」；必填语义由「模板侧优雅降级 + help 文案」承担。
 - **`select` 多选（`multiple: true`）是有序选项集合**：提交 `value` 数组、顺序 = 勾选顺序；支持 `maxCount` 与选项 `description`。⚠️ 实测（Halo 2.26）多选下拉**不支持拖动排序**，`sortable: true` 也不生效——help 文案别写成「可拖动排序」，调顺序只能取消后按目标顺序重勾。
 - **`array` 的 `itemLabels.label` 只认 `$value.<字段名>` 字面前缀**（Halo 用 `label.split("$value.")[1]` 取路径），写 `||`、拼接、三元都会解析成空 → 条目列表全空白；不写 `itemLabels` 时默认列出条目所有字段。
+
+**滚动锁与弹层**
+
+- **弹层锁滚动要锁 `<html>`，绝不能锁 `<body>`**：主题的自定义滚动条（OverlayScrollbars）会把 `<html>` 变成滚动视口（`html` 出现 `data-overlayscrollbars-viewport`，`overflow-y` 不再是 `visible`），此时 `body` 的 overflow 不再传播到视口——给 body 设 `overflow:hidden` 会让 body 自成滚动容器（内部 `scrollTop` 恒 0），背景页瞬间回顶。统一走 `src/utils/scroll-lock.ts` 的 `lockPageScroll` / `unlockPageScroll`（类名 `html.modal-scroll-locked`，CSS 在 `components.css` 末尾），换页复位用 `resetPageScrollLock()`。新增弹层别再手写 `document.body.style.overflow`。
+- 该坑只在 OS 真正接管 `<html>` 的环境复现（本地 macOS headless 下 `cancel.nativeScrollbarsOverlaid` 会取消 OS，看不出问题），验证时要在真实站点上滚动后开弹层看 `window.scrollY` 是否归零。
 
 **i18n 与外部资源**
 

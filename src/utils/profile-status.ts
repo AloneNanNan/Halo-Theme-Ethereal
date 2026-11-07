@@ -8,6 +8,7 @@
  */
 
 import { getThemeConfig, setThemeConfig } from "./theme-config";
+import { lockPageScroll, unlockPageScroll } from "./scroll-lock";
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 const t =
@@ -312,7 +313,7 @@ function showModal(bodyNode: HTMLElement, footerNode: HTMLElement | null) {
     if (footerNode) footer.appendChild(footerNode);
   }
   modal.classList.add("is-open");
-  document.body.style.overflow = "hidden";
+  lockPageScroll();
 }
 
 /** 构建状态选项卡片网格（4 列，选中态 is-active） */
@@ -408,7 +409,7 @@ function hideModal() {
       backdrop.style.transition = "";
     }
     closing = false;
-    document.body.style.overflow = "";
+    unlockPageScroll();
   }, 150);
 }
 

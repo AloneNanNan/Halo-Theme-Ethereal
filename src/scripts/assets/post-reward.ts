@@ -1,6 +1,9 @@
-// 文章打赏模态框（微信/支付宝收款二维码）
+// 文章打赏模态框（微信/支付宝收款二维码 + 爱发电入口）
 // 构建产物：public/assets/post-reward.js（源码在 src/scripts/assets/，esbuild 编译，勿手改产物）
+//
+// 收款码 / 文案 / 爱发电地址由服务端经按钮 data-* 传入（空串 = 未配置）。
 import { getThemeConfig } from "./_theme-config";
+import { lockPageScroll, unlockPageScroll } from "../../utils/scroll-lock";
 
 // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
 var t =
@@ -14,23 +17,25 @@ var t =
 
   var RETRY_LIMIT = 10;
 
-  function getActionBarConfig() {
+  function getRewardSettings() {
     var config = getThemeConfig();
-    return (config && config.post && config.post.actionBar) || null;
+    return (config?.post?.actionBar?.rewardSetting || {}) as {
+      page_enable?: boolean;
+    };
   }
 
-  function openRewardModal() {
-    var actionBar = getActionBarConfig();
-    var rs = (actionBar && actionBar.rewardSetting) || {};
-    var title = (
-      rs.title || "如果这篇文章对你有帮助，可以请我喝杯咖啡！"
-    ).trim();
-    var wechat = (rs.wechat_qr || "").trim();
-    var alipay = (rs.alipay_qr || "").trim();
-    var pageEnable = rs.page_enable === true;
-    var pageUrl = (rs.page_url || "/reward").trim();
+  // 打赏页面的目标固定为插件路由 /reward，没有路径设置项
+  var REWARD_PAGE_URL = "/reward";
 
-    if (!wechat && !alipay) {
+  function openRewardModal(btn: HTMLButtonElement) {
+    var data = btn.dataset;
+    var intro = data.rewardIntro || "";
+    var wechat = data.wechatQr || "";
+    var alipay = data.alipayQr || "";
+    var afdian = data.afdianUrl || "";
+    var rs = getRewardSettings();
+
+    if (!wechat && !alipay && !afdian) {
       alert(t("post.noQrConfigured", "博主暂未配置收款二维码"));
       return;
     }
@@ -75,13 +80,16 @@ var t =
     header.appendChild(headerTitle);
     header.appendChild(divider);
 
-    // 自定义文案
+    // 打赏文案：插件「基础设置 → 页面简介」
     var desc = document.createElement("p");
     desc.style.cssText =
       "margin:0;font-size:0.875rem;line-height:1.7;color:var(--text-75,#666);text-align:center;white-space:pre-line;word-break:break-word";
-    desc.textContent = title;
+    desc.textContent = intro;
 
     // 二维码行（微信 + 支付宝，1:1 正方形）
+    // 两卡等分整行宽度（gap 14 的一半从各自宽度里扣），左右边缘与下方爱发电横向卡对齐；
+    // 只有一种收款码时按「半行」宽度居中，避免二维码被放大成整行
+    var qrCount = (wechat ? 1 : 0) + (alipay ? 1 : 0);
     var qrRow = document.createElement("div");
     qrRow.style.cssText =
       "display:flex;justify-content:center;gap:14px;width:100%";
@@ -90,9 +98,9 @@ var t =
       var item = document.createElement("div");
       item.className = "card-hover-lift";
       item.style.cssText =
-        "flex:1;max-width:148px;display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid color-mix(in oklab,var(--primary) 18%,transparent);border-radius:14px;padding:12px 12px 10px 12px;transition:transform var(--card-hover-duration,0.3s) ease,box-shadow var(--card-hover-duration,0.3s) ease";
-      // hover 效果接入项目 card-hover-lift（依赖 body.card-hover-lift-enabled）：
-      // translateY(-4px) + 主题色阴影
+        "flex:1 1 0;min-width:0;" +
+        (qrCount === 1 ? "max-width:calc(50% - 7px);" : "") +
+        "display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid color-mix(in oklab,var(--primary) 18%,transparent);border-radius:14px;padding:12px 12px 10px 12px;transition:transform var(--card-hover-duration,0.3s) ease,box-shadow var(--card-hover-duration,0.3s) ease";
       var img = document.createElement("img");
       img.src = src;
       img.alt = label;
@@ -131,12 +139,35 @@ var t =
       );
     }
 
+    // 爱发电入口：横向条目卡，置于二维码行下方
+    var afdianCard: HTMLAnchorElement | null = null;
+    if (afdian) {
+      var afdianLink = document.createElement("a");
+      afdianLink.href = afdian;
+      afdianLink.target = "_blank";
+      afdianLink.rel = "noopener noreferrer";
+      // modal-entry-card：按下轻微内凹（过渡写在 components.css，与 /reward 页同款卡片共用）
+      afdianLink.className = "card-hover-lift modal-entry-card";
+      afdianLink.style.cssText =
+        "display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid color-mix(in oklab,var(--primary) 18%,transparent);border-radius:14px;background:var(--card-bg,#fff);text-decoration:none";
+      afdianLink.innerHTML =
+        '<span style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:color-mix(in oklab,var(--primary) 10%,transparent)">' +
+        '<span class="icon-[fa6-solid--heart] text-[0.9rem] text-(--primary)"></span></span>' +
+        '<span style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.875rem;font-weight:600;color:var(--text-75,#555)">' +
+        t("page.reward.afdianAction", "前往爱发电") +
+        "</span>" +
+        '<span class="icon-[fa6-solid--arrow-up-right-from-square] text-[0.7rem] text-(--primary)"></span>';
+      // 不监听 click 收起弹窗：外链确认框在 document 捕获阶段拦截并 stopPropagation
+      //（external-link-redirect.ts），本元素收不到点击；确认框层级更高，取消后回到本弹窗。
+      afdianCard = afdianLink;
+    }
+
     // 「打赏页面」跳转按钮（后台「打赏设置 → 显示「打赏页面」按钮」开启时显示，
-    // 路径自定义、默认 /reward；样式对齐分享海报模态框的「复制链接」次要按钮，居中显示）
+    // 目标固定为插件路由 /reward；样式对齐分享海报模态框的「复制链接」次要按钮，居中显示）
     var pageLink: HTMLAnchorElement | null = null;
-    if (pageEnable && pageUrl) {
+    if (rs.page_enable === true) {
       var link = document.createElement("a");
-      link.href = pageUrl;
+      link.href = REWARD_PAGE_URL;
       link.className = "group post-modal-btn";
       link.style.cssText =
         "display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border:none;border-radius:0.75rem;font-size:0.8125rem;font-weight:500;cursor:pointer;background:var(--btn-regular-bg,oklch(0.95 0.025 250));color:var(--btn-content,oklch(0.55 0.12 250));user-select:none;text-decoration:none;transition:background 0.2s,transform 0.1s";
@@ -180,14 +211,17 @@ var t =
     };
 
     body.appendChild(header);
-    if (title) body.appendChild(desc);
-    body.appendChild(qrRow);
+    if (intro) body.appendChild(desc);
+    if (wechat || alipay) body.appendChild(qrRow);
+    if (afdianCard) body.appendChild(afdianCard);
     if (pageLink) body.appendChild(pageLink);
     card.appendChild(closeBtn);
     card.appendChild(body);
 
     document.body.appendChild(backdrop);
     document.body.appendChild(card);
+    // 与其它弹层同一把锁（锁 html，见 utils/scroll-lock.ts），避免背景跟着滚
+    lockPageScroll();
 
     function close() {
       backdrop.style.transition = "opacity 0.15s ease";
@@ -198,6 +232,7 @@ var t =
       setTimeout(function () {
         if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
         if (card.parentNode) card.parentNode.removeChild(card);
+        unlockPageScroll();
       }, 150);
     }
 
@@ -217,8 +252,11 @@ var t =
       "post-reward-btn",
     ) as HTMLButtonElement | null;
     if (!btn || btn.dataset.rewardBound) return false;
-    btn.dataset.rewardBound = "true";
-    btn.addEventListener("click", openRewardModal);
+    var target = btn;
+    target.dataset.rewardBound = "true";
+    target.addEventListener("click", function () {
+      openRewardModal(target);
+    });
     return true;
   }
 
@@ -239,7 +277,7 @@ var t =
       return;
     }
     // 按钮可能因 Swup 渲染时机延迟出现，有限重试后放弃
-    // （后台关闭打赏时按钮不存在，避免无限轮询）
+    // （后台关闭打赏或未装插件时按钮不存在，避免无限轮询）
     if (!retryTimer) {
       retryCount = 0;
       retryTimer = setInterval(function () {

@@ -242,9 +242,18 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
                 <span class="icon-[tabler--share] mr-1.5 text-base"></span>
                 <span th:text="#{post.share}">分享</span>
               </button>
+              <!-- 收款码 / 文案 / 爱发电地址全部来自「打赏插件」Finder（rc），经 data-* 交给
+                   post-reward.ts（afdianPageUrl 未启用或未填写时是空串，脚本按空串隐藏入口）。
+                   插件停用（rewardFinder 为空）时整个按钮不渲染，避免点开是空弹窗。
+                   「打赏页面」跳转按钮仍读主题设置 actionBar.rewardSetting -->
               <button
                 id="post-reward-btn"
-                th:if="${theme.config?.post?.actionBar?.reward != false}"
+                th:if="${theme.config?.post?.actionBar?.reward != false and rewardFinder != null}"
+                th:with="rc=${rewardFinder?.getConfig()}"
+                th:data-wechat-qr="${rc?.wechatQr}"
+                th:data-alipay-qr="${rc?.alipayQr}"
+                th:data-reward-intro="${rc?.intro}"
+                th:data-afdian-url="${rc?.afdianPageUrl}"
                 type="button"
                 class="btn-regular group flex h-11 w-fit items-center justify-center rounded-xl px-4 text-sm font-bold active:scale-95"
                 aria-label="打赏"
@@ -403,8 +412,9 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
     defer
     is:inline
   ></script>
+  <!-- 门控必须与上方 #post-reward-btn 的 th:if 一致（含 rewardFinder != null），否则按钮与脚本二缺一 -->
   <script
-    th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.reward != false}"
+    th:if="${theme.config?.post?.actionBar?.enable != false and theme.config?.post?.actionBar?.reward != false and rewardFinder != null}"
     src={`${basePath}/assets/post-reward.js?v=${ASSET_VERSION}`}
     defer
     is:inline
