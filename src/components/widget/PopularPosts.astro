@@ -9,8 +9,9 @@ interface Props {
 const className = Astro.props.class;
 const style = Astro.props.style;
 const MAX_POSTS = 5;
-// 实例级唯一 id：支持同一小组件在多处渲染（如左右侧边栏同放）互不冲突，
-// 参照 MusicPlayer 的随机 uid 范式，构建时每个组件实例各自生成
+// instanceId 只在构建期生成一次：能区分不同的小组件，但区分不了同一小组件的多份副本
+// （侧栏经 WidgetSwitch 片段复用，左/右栏与移动端各一份，id 完全相同）。
+// 故脚本必须按实例作用域查找元素、按实例分组 abort（见下方脚本），不能用 getElementById。
 const instanceId = `popular-posts-${Math.random().toString(36).slice(2, 9)}`;
 const listId = `${instanceId}-list`;
 ---
@@ -34,15 +35,12 @@ const listId = `${instanceId}-list`;
 
 <script is:inline define:vars={{ MAX_POSTS, instanceId }}>
   (function () {
-    // instanceId 在构建时生成，但侧栏经 WidgetSwitch 的 Thymeleaf 片段复用，
-    // 同一页面的多个实例（如桌面右栏 + 移动端小组件）会拿到相同的 id；
-    // getElementById 只返回第一个，其余实例永远停在「加载中」。
-    // 因此以当前脚本的前一个兄弟节点（本实例的根元素）为锚点定位列表。
-    var root =
-      document.currentScript && document.currentScript.previousElementSibling;
-    var container =
-      (root && root.querySelector('[id="' + instanceId + '-list"]')) ||
-      document.getElementById(instanceId + "-list");
+    // 以脚本父节点为作用域（同 Hitokoto / Weather / SiteStats）：每份副本只操作自己那份列表。
+    // 全局查找为何不可用见文件头 instanceId 注释。
+    var widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+    var container = widgetRoot.querySelector('[id="' + instanceId + '-list"]');
     if (!container) return;
     // 同 id 实例按文档顺序编号，供下方 AbortController 分组，避免多实例互相 abort
     var sameIdLists = document.querySelectorAll(
@@ -184,7 +182,7 @@ const listId = `${instanceId}-list`;
       }
 
       // AbortController：Swup 导航会重新执行本脚本，先中止该实例上一次未完成的请求，
-      // 避免旧响应覆盖新页面；按 instanceId 分组存放，多实例同放时互不 abort
+      // 避免旧响应覆盖新页面；按 abortKey（实例）分组存放，同 id 多实例互不 abort
       if (!window.__popularPostsAbort) window.__popularPostsAbort = {};
       if (window.__popularPostsAbort[abortKey]) {
         window.__popularPostsAbort[abortKey].abort();

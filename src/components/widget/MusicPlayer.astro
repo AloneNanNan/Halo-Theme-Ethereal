@@ -326,7 +326,13 @@ const layoutId = `${widgetId}-layout`;
 <script define:vars={{ widgetId }} is:inline>
   // @ts-nocheck 本脚本组多处使用 define:vars 注入常量，检查器无法感知（构建期注入）
   (() => {
-    const widget = document.getElementById(widgetId);
+    // 同 id 多实例：侧栏经 WidgetSwitch 片段复用，左/右栏与移动端副本的 widgetId 相同，
+    // getElementById 只命中第一份（同 PopularPosts）；按脚本父节点限定作用域，
+    // 每份副本只绑定自己的播放器与播放列表模板。
+    const widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+    const widget = widgetRoot.querySelector(`#${widgetId}`);
     if (!widget || widget.dataset.fireflyBound === "true") return;
     widget.dataset.fireflyBound = "true";
 
@@ -425,8 +431,8 @@ const layoutId = `${widgetId}-layout`;
       btnDrawer: widget.querySelector(".btn-drawer-toggle"),
       playlistDrawer: widget.querySelector(".playlist-drawer"),
       playlistContainer: widget.querySelector(".playlist-container"),
-      itemTemplate: document.getElementById(
-        `playlist-item-template-${widgetId}`,
+      itemTemplate: widgetRoot.querySelector(
+        `#playlist-item-template-${widgetId}`,
       ),
     };
 
