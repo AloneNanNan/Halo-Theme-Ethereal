@@ -7,21 +7,29 @@ allowBuilds:
   sharp: true
 # 安全修复：
 # - rollup-plugin-terser（已停更）锁定的 serialize-javascript@4.x 存在
-#   CVE-2024-11831（XSS），强制升级至修复版（7.x 保持 CommonJS，API 兼容）
+#   CVE-2024-11831（XSS），强制升级至修复版（7.x 保持 CommonJS，API 兼容）；
+#   7.1.3 以下另有 </script 未转义导致的 XSS（CVE-2026-115897）
 # - @astrojs/check → @astrojs/language-server → yaml-language-server → ajv 锁定的
-#   fast-uri@3.1.5 存在 4 个 HIGH（SSRF / host confusion，GHSA-jqff-g426-hqxp 等）
+#   fast-uri 存在 SSRF / host confusion / scheme 伪造等问题（GHSA-jqff-g426-hqxp、
+#   GHSA-wjr9-j795-jxcr 等），3.1.9 是首个全部修复的版本
 # - @halo-dev/api-client 锁定的 qs@6.15.3 存在 2 个 moderate
 #   （array-limit bypass / DoS，GHSA-x5fp-wj9c-mxmx 等）
 # - brace-expansion 的 1.x / 2.x / 5.x 各自存在 DoS（CVE-2026-102276 / 102277 / 102278），
 #   三个主版本 API 不互通，必须按主版本分别锁定修复版
 # - source-map-js@1.2.1 解析 indexed source map 存在 DoS，修复版为 1.2.2
 # - postcss-selector-parser 的扁平选择器 DoS 只在 7.1.6 修复，6.x 分支未回移
+# - glob 10.x（archiver-utils 打包用）/ minimatch 9.x、10.x（glob、nodemon 用）存在
+#   AbortSignal 绕过与 ReDoS（GHSA-3g3m-2fjr-6pw4 / GHSA-g3hv-75wg-m249），修复只在
+#   glob 14 / minimatch 11；glob 7 不受影响故按主版本锁定，避免误伤老包
 overrides:
-  serialize-javascript: ^7.0.7
-  fast-uri: ^3.1.6
+  serialize-javascript: ^7.1.3
+  fast-uri: ^3.1.9
   qs: ^6.16.0
   "brace-expansion@1": 1.1.21
   "brace-expansion@2": 2.1.7
   "brace-expansion@5": 5.0.12
+  "glob@10": ^14.0.2
+  "minimatch@9": ^11.0.1
+  "minimatch@10": ^11.0.1
   source-map-js: ^1.2.2
   postcss-selector-parser: 7.1.6
