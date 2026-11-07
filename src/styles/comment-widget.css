@@ -53,3 +53,30 @@
     --halo-cw-muted-3-color: oklch(0.3 0.026 var(--hue));
   }
 }
+
+/* 面板显隐靠插件运行时注入 head 的 style，而 SwupHeadPlugin 换页会删掉「新页面没有」的
+   style（persistTags 为 false）且插件不再补注入——面板随即常显、点外关不掉，只能刷新。
+   此处复刻同一份（含视觉值）解除依赖；类名与取值取自插件 emoji-button（3.5.0），需同步。 */
+.form__emoji-panel {
+  display: none;
+  overflow: hidden;
+  border-radius: 0.875em;
+  box-shadow: 0 0.5em 1em rgb(0 0 0 / 0.1);
+}
+
+.form__emoji-panel.visible {
+  display: block;
+}
+
+/* 同一份 style 里的配色映射，丢失后 picker 回落到 emoji-mart 默认配色 */
+.form__emoji-panel em-emoji-picker {
+  --rgb-color: var(--halo-cw-emoji-picker-rgb-color, 34, 36, 39);
+  --rgb-accent: var(--halo-cw-emoji-picker-rgb-accent, 34, 102, 237);
+  --rgb-background: var(--halo-cw-emoji-picker-rgb-background, 255, 255, 255);
+  --rgb-input: var(--halo-cw-emoji-picker-rgb-input, 255, 255, 255);
+  --color-border: var(--halo-cw-emoji-picker-color-border, rgb(0 0 0 / 0.05));
+  --color-border-over: var(
+    --halo-cw-emoji-picker-color-border-over,
+    rgb(0 0 0 / 0.1)
+  );
+}
