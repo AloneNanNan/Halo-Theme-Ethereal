@@ -9,8 +9,9 @@ interface Props {
 const className = Astro.props.class;
 const style = Astro.props.style;
 const MAX_POSTS = 5;
-// 实例级唯一 id：支持同一小组件在多处渲染（如左右侧边栏同放）互不冲突，
-// 参照 MusicPlayer 的随机 uid 范式，构建时每个组件实例各自生成
+// instanceId 只在构建期生成一次：能区分不同的小组件，但区分不了同一小组件的多份副本
+// （侧栏经 WidgetSwitch 片段复用，左/右栏与移动端各一份，id 完全相同）。
+// 故脚本必须按实例作用域查找元素、按实例分组 abort（见下方脚本），不能用 getElementById。
 const instanceId = `popular-posts-${Math.random().toString(36).slice(2, 9)}`;
 const listId = `${instanceId}-list`;
 ---
@@ -34,8 +35,19 @@ const listId = `${instanceId}-list`;
 
 <script is:inline define:vars={{ MAX_POSTS, instanceId }}>
   (function () {
-    var container = document.getElementById(instanceId + "-list");
+    // 以脚本父节点为作用域（同 Hitokoto / Weather / SiteStats）：每份副本只操作自己那份列表。
+    // 全局查找为何不可用见文件头 instanceId 注释。
+    var widgetRoot =
+      (document.currentScript && document.currentScript.parentElement) ||
+      document;
+    var container = widgetRoot.querySelector('[id="' + instanceId + '-list"]');
     if (!container) return;
+    // 同 id 实例按文档顺序编号，供下方 AbortController 分组，避免多实例互相 abort
+    var sameIdLists = document.querySelectorAll(
+      '[id="' + instanceId + '-list"]',
+    );
+    var abortKey =
+      instanceId + ":" + Array.prototype.indexOf.call(sameIdLists, container);
 
     // 客户端 i18n：复用 Layout.astro 注入的全局助手（缺失时退化为回退文案）
     var t =
@@ -170,13 +182,13 @@ const listId = `${instanceId}-list`;
       }
 
       // AbortController：Swup 导航会重新执行本脚本，先中止该实例上一次未完成的请求，
-      // 避免旧响应覆盖新页面；按 instanceId 分组存放，多实例同放时互不 abort
+      // 避免旧响应覆盖新页面；按 abortKey（实例）分组存放，同 id 多实例互不 abort
       if (!window.__popularPostsAbort) window.__popularPostsAbort = {};
-      if (window.__popularPostsAbort[instanceId]) {
-        window.__popularPostsAbort[instanceId].abort();
+      if (window.__popularPostsAbort[abortKey]) {
+        window.__popularPostsAbort[abortKey].abort();
       }
       var controller = new AbortController();
-      window.__popularPostsAbort[instanceId] = controller;
+      window.__popularPostsAbort[abortKey] = controller;
       var signal = controller.signal;
 
       // 服务端排序取 Top N（sort=stats.visit,desc；客户端不再排序——
