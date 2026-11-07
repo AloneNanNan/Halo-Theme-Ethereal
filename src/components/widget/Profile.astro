@@ -1,20 +1,22 @@
 ---
 import ImageWrapper from "../misc/ImageWrapper.astro";
-import { imageSuffixThWith } from "../../utils/image-suffix";
 ---
 
 <div class="card-base p-3">
   <a
     aria-label="Profile"
     th:href="${theme.config?.sidebar?.profile?.url ?: '/about'}"
-    th:with={imageSuffixThWith("p?.avatar_size ?: 512")}
     class="group relative mx-auto mb-3 mt-1 block max-w-[12rem] overflow-hidden rounded-xl active:scale-95 lg:mx-0 lg:mt-0 lg:max-w-none"
   >
     <div class="pointer-events-none absolute z-50 flex h-full w-full items-center justify-center transition group-hover:bg-black/30 group-active:bg-black/50">
       <span class="icon-[fa6-regular--address-card] scale-90 text-5xl text-white opacity-0 transition group-hover:scale-100 group-hover:opacity-100"></span>
     </div>
+    <!-- sizes 必须给：头像自身不输出 srcset，Halo 2.22+ 会用默认 sizes 注入档位，
+         DPR 屏会被带到最大档。按实际显示宽度（移动端 12rem、桌面侧栏 w-full 约 256px）
+         取值，注入的 srcset 才会落在 400/800 档 -->
     <ImageWrapper
-      src="${(theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png') + suffix}"
+      src="${theme.config?.sidebar?.profile?.avatar ?: '/themes/Ethereal/assets/images/demo-avatar.png'}"
+      sizes="(min-width: 1024px) 256px, 192px"
       alt="${theme.config?.sidebar?.profile?.name ?: 'Profile'}"
       class="mx-auto aspect-square h-full lg:mt-0 lg:w-full"
     />

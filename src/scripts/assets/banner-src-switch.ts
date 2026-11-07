@@ -24,7 +24,7 @@
   var bannerCfg =
     cfg && cfg.style && cfg.style.bannerStyle ? cfg.style.bannerStyle : null;
   if (!bannerCfg || bannerCfg.useMobileSrc !== true) return;
-  // 移动端是否有有效来源由 SSR 统一判定（image-suffix.ts 的 mobileActive），移动容器仅在
+  // 移动端是否有有效来源由 SSR 统一判定（responsive-image.ts 的 mobileActive），移动容器仅在
   // true 时渲染；此处以容器是否存在为准，避免 JS 侧重复实现造成双实现漂移。
   var hasMobileSrc = !!document.getElementById("banner-mobile");
   if (!hasMobileSrc) return;

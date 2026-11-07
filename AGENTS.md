@@ -35,7 +35,7 @@ Ethereal 是一款基于 Astro 构建的 **Halo CMS 主题**：先用 Astro 写�
 - `src/layouts/*.astro` — 页面布局（`Layout.astro`、`MainGridLayout.astro`）
 - `src/styles/*.css` — 全局样式与 CSS 变量（`variables.css` 定义主题色 / 圆角等）
 - `src/types/config.ts` — `theme.config` 的类型定义
-- `src/utils/*.ts` — 工具（`post-list-config.ts`、`image-suffix.ts`）
+- `src/utils/*.ts` — 工具（`post-list-config.ts`、`responsive-image.ts`）
 - `src/scripts/assets/*.ts` — 经典脚本源码（见 6.1）；`src/scripts/vendor/` — 第三方 vendored 资产
 - `settings.yaml` — 后台主题设置表单；`theme.yaml` — 主题元信息，**`version` 禁止修改**
 - `i18n/` — 多语言文案；`templates/` / `dist/` — 构建产物（勿手改）
@@ -235,7 +235,7 @@ widget.sticky == false and widgets.subList(0, widgetStat.index).?[#this.sticky =
 - 模板变量来自 Halo 的 Finder API 与上下文：`post`、`posts`、`site`、`theme.config`、`theme.metadata` 等。
 - `theme.config?.xxx` 用 `?.` 安全导航；字面值可写成 `|${...}|` 拼接。
 - 静态资源用 `#theme.assets("/assets/...")` 或 `@{/assets/...}` 引用，构建后路径带 `/themes/Ethereal` 前缀。
-- 图片拼 CDN 参数使用 `imageSuffixThWith(...)`（见 `src/utils/image-suffix.ts`），不要在模板里手写硬编码后缀。
+- 响应式图片统一用 Halo 官方 `thumbnail.gen(uri, size)`（档位 s/m/l/xl = 400/800/1200/1600，见 `src/utils/responsive-image.ts`），不要在模板里自己拼图片 URL 参数；外部图床的图片由 Halo 重定向回原图。
 - **`<halo:footer />` 页脚注入挂载点**：位于 `src/layouts/Layout.astro` 的 `</body>` 前（`<Fragment set:html={...} />` 字符串注入）。后台「代码注入 → 页脚」与页脚类插件（`TemplateFooterProcessor`）的输出都依赖它，**勿删除、勿移入 Swup 容器**（容器外才能换页不重建、注入内容跨页常驻）；全站只此一份，别在 `MainGridLayout` 等处重复添加。head 注入无需模板标签（Halo 直接处理 `<head>` 元素）。
 - **favicon 由 Halo 注入**（系统设置里配置）：主题布局不输出 `<link rel="icon">`，否则与注入重复（未配置时主题侧只会渲染出空 href 的无用标签）。
 - **description 的最终归属**：Halo 注入的描述排在主题之后、渲染末尾同名 `name`-meta 只保留最后一条（`theme-color` / `robots` 除外）→ **文章 / 独立页最终 = 页面「摘要」**（未填摘要会输出空标签；主题手写值会被顶掉，要改描述就填「摘要」）；分类 / 标签 = 站长配置优先（未配置时展示主题描述）；首页 = 系统 SEO 描述、未配置时回退主题 bio（首页注入与主题描述并存，主题在 `index.astro` 经 `descriptionShowIfExpr` 让位）。

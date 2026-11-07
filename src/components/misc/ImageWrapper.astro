@@ -7,9 +7,9 @@ interface Props {
   position?: string;
   loading?: "lazy" | "eager";
   fetchpriority?: "high" | "low" | "auto";
-  /** 可选：Thymeleaf 表达式文本（如 MainGridLayout 传入的 rawSrcset 变量引用），原样输出到 th:srcset */
+  /** 可选：srcset 属性值（如 MainGridLayout 传入的 bannerSrcsetExpr 结果），原样输出到 th:srcset */
   srcset?: string;
-  /** 可选：sizes 字面量，如 "100vw"（全宽图用，见 MainGridLayout Banner） */
+  /** 可选：sizes 属性值，如 "100vw"（全宽 Banner）、"(min-width: 1024px) 256px, 192px"（头像） */
   sizes?: string;
 }
 
