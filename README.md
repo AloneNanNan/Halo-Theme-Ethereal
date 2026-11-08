@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <strong>文档：<a href="https://www.nanzhiy.cn/docs/ethereal">主题文档</a>　｜　交流群：<a href="https://qm.qq.com/q/onMpJjYvgQ">1098801176</a></strong>
+  <strong>文档：<a href="https://docs.nanzhiy.cn/ethereal/index.html">主题文档</a>　｜　交流群：<a href="https://qm.qq.com/q/onMpJjYvgQ">1098801176</a></strong>
 </p>
 
 ---
@@ -38,7 +38,7 @@
   <img src="./screenshot/home.png" alt="Ethereal 主题预览" width="800" />
 </p>
 
-> 更多页面预览见 [演示站点](#演示站点) 或 [主题文档 · 页面预览](https://www.nanzhiy.cn/docs/ethereal/yulan/yulan-yemian)。
+> 更多页面预览见 [演示站点](#演示站点)。
 
 ---
 
@@ -89,7 +89,7 @@
 1. 前往 [Releases](https://github.com/AloneNanNan/halo-theme-ethereal/releases) 下载最新版本的主题包（`.zip`）
 2. 进入「**Halo 后台 → 主题 → 安装**」，上传主题包
 
-> 详细的配置说明请参阅 [主题文档](https://www.nanzhiy.cn/docs/ethereal)。
+> 详细的配置说明请参阅 [主题文档](https://docs.nanzhiy.cn/ethereal/index.html)。
 
 ---
 
@@ -112,7 +112,7 @@
 ### 性能与媒体
 
 - **图片加速**：Banner 与卡片封面按屏幕分档加载 Halo 缩略图，无需额外配置（外部图床由 Halo 回退原图）
-- **分享与赞赏**：文章页生成分享海报与赞赏入口
+- **分享与赞赏**：文章页生成分享海报与赞赏入口，赞赏支持爱发电等外部赞助通道
 
 ### 侧边栏小组件
 
@@ -132,6 +132,7 @@
 | 自定义 HTML | 自由嵌入任意内容，支持自定义名称                          |
 | 目录（TOC） | 文章内容导航，可挂载左侧栏或右侧栏                        |
 | 最近日程    | 配合「日程日历」插件，展示近期日程安排，展示条数可配置    |
+| 站点日历    | 日 / 月 / 年三视图浏览全站文章发布，可开关年度热力图      |
 
 ---
 
@@ -148,21 +149,21 @@
 
 Ethereal 与以下 Halo 插件深度集成，建议搭配使用以获得完整体验：
 
-| 插件         | 市场链接                                                    | 功能                                 |
-| ------------ | ----------------------------------------------------------- | ------------------------------------ |
-| 搜索插件     | [应用市场](https://www.halo.run/store/apps/app-DlacW)       | 文章全文搜索                         |
-| 评论插件     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)       | 文章评论系统                         |
-| 瞬间插件     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)       | 瞬间 / 说说功能                      |
-| 图库插件     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)       | 图库展示                             |
-| 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)       | 友情链接管理 & 朋友圈 & 自助提交友链 |
-| 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml)    | 装备展示                             |
-| 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d)    | 项目作品集展示                       |
-| 心愿便签     | [应用市场](https://www.halo.run/store/apps/app-vicvoqxy)    | 心愿墙便签发布与展示                 |
-| 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0)    | 日程 / 日历展示，配合最近日程小组件  |
-| 追番插件     | [应用市场](https://www.halo.run/store/apps/app-OTFPN)       | 追番 / 追剧展示页面                  |
-| 文章订阅     | [应用市场](https://www.halo.run/store/apps/app-yldNX)       | 关于页「订阅更新」卡片邮箱订阅       |
-| 打赏插件     | [GitHub](https://github.com/AloneNanNan/Halo-Plugin-Reward) | 打赏页面                             |
-| API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd)    | 文章字数统计 API & 降低后端压力      |
+| 插件         | 市场链接                                                 | 功能                                 |
+| ------------ | -------------------------------------------------------- | ------------------------------------ |
+| 搜索插件     | [应用市场](https://www.halo.run/store/apps/app-DlacW)    | 文章全文搜索                         |
+| 评论组件     | [应用市场](https://www.halo.run/store/apps/app-YXyaD)    | 文章评论系统                         |
+| 瞬间插件     | [应用市场](https://www.halo.run/store/apps/app-SnwWD)    | 瞬间 / 说说功能                      |
+| 图库插件     | [应用市场](https://www.halo.run/store/apps/app-BmQJW)    | 图库展示                             |
+| 链接管理插件 | [应用市场](https://www.halo.run/store/apps/app-hfbQg)    | 友情链接管理 & 朋友圈 & 自助提交友链 |
+| 装备管理     | [应用市场](https://www.halo.run/store/apps/app-ytygyqml) | 装备展示                             |
+| 项目集       | [应用市场](https://www.halo.run/store/apps/app-ix3j4n6d) | 项目作品集展示                       |
+| 心愿便签     | [应用市场](https://www.halo.run/store/apps/app-vicvoqxy) | 心愿墙便签发布与展示                 |
+| 日程日历     | [应用市场](https://www.halo.run/store/apps/app-1ubowut0) | 日程 / 日历展示，配合最近日程小组件  |
+| 追番插件     | [应用市场](https://www.halo.run/store/apps/app-OTFPN)    | 追番 / 追剧展示页面                  |
+| 文章订阅     | [应用市场](https://www.halo.run/store/apps/app-yldNX)    | 关于页「订阅更新」卡片邮箱订阅       |
+| 打赏插件     | [应用市场](https://www.halo.run/store/apps/app-etgfmvxb) | 打赏页面与自助提交打赏信息           |
+| API 扩展包   | [应用市场](https://www.halo.run/store/apps/app-di1jh8gd) | 文章字数统计 API & 降低后端压力      |
 
 同时，也建议安装以下插件，以获得更好的体验：
 
