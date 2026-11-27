@@ -7,14 +7,30 @@
 // showTitle == false 互为补集，改动需同步两处。
 // site-title-text 是 post-share.ts 定位站点标题的 hook（勿改名）；Logo 与标题的间距由标题的
 // ml-2 提供（勿改回 Logo 的 mr-2）——标题隐藏时该间距随之下树，否则悬浮高亮区右侧留白偏宽。
-const { iconClass = "text-[1.75rem] mb-1" } = Astro.props;
+// 深色 Logo（logoDark）配置后输出两张图，靠 dark: 变体切换显隐；未配置时浅色图不挂 dark:hidden。
+// useLogoHeight：只有导航栏（按钮高 3.25rem = 52px，即 logoHeight 上限）应用「Logo 高度」，
+// 抽屉头部按钮仅 h-10，沿用默认 h-7 以免撑破。
+const { iconClass = "text-[1.75rem] mb-1", useLogoHeight = false } =
+  Astro.props;
+const heightStyle = useLogoHeight
+  ? "${theme.config?.layout?.mobileMenu?.logoHeight != null ? 'height:' + theme.config?.layout?.mobileMenu?.logoHeight + 'px' : null}"
+  : undefined;
 ---
 
 <img
   th:if="${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"
   th:src="${theme.config?.layout?.mobileMenu?.logo}"
   th:alt="${site.title}"
+  th:style={heightStyle}
+  th:classappend="${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logoDark) ? 'dark:hidden' : ''}"
   class="navbar-logo h-7 w-auto shrink-0 rounded object-contain"
+/>
+<img
+  th:if="${not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logo) and not #strings.isEmpty(theme.config?.layout?.mobileMenu?.logoDark)}"
+  th:src="${theme.config?.layout?.mobileMenu?.logoDark}"
+  th:alt="${site.title}"
+  th:style={heightStyle}
+  class="navbar-logo hidden h-7 w-auto shrink-0 rounded object-contain dark:inline-block"
 />
 <span
   th:if="${#strings.isEmpty(theme.config?.layout?.mobileMenu?.logo)}"

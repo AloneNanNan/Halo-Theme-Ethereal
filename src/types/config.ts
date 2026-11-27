@@ -145,6 +145,10 @@ export interface BannerLayout {
 export interface MobileMenuConfig {
   /** 菜单栏 Logo：自定义 Logo 图片地址，留空使用主题默认图标 */
   logo?: string;
+  /** 深色模式 Logo：深色模式下替换菜单栏 Logo，留空沿用 logo */
+  logoDark?: string;
+  /** Logo 高度：菜单栏 Logo 显示高度（px，20~52，默认 28），仅导航栏生效，抽屉头部固定 28px */
+  logoHeight?: number;
   /** 显示网站名：开启后在 Logo 右侧显示站点标题文字，关闭后菜单栏只显示 Logo（仅影响菜单栏处，缺省视为开启） */
   showTitle?: boolean;
   /** 导航菜单：选择导航栏展示的 Halo 菜单，留空使用主菜单 */
