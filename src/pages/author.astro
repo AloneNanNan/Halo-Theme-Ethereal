@@ -8,9 +8,9 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
   title="|#{page.author.title(${author.spec.displayName})} - ${site.title}|"
   description="#{page.author.description(${site.title}, ${author.spec.displayName})}"
 >
-  <!-- Halo 作者路由 /authors/{name} 提供 author（UserVo）与 posts，和标签页同构 -->
+  <!-- 页面 <title> 由 Layout.astro 统一输出，此处不再重复定义 -->
   <TaxonomyHeader
-    labelExpr="#{page.author.label}"
+    labelExpr="#{common.author}"
     label="作者"
     titleExpr="${author.spec.displayName}"
     title="Author"
